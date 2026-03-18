@@ -1,0 +1,35 @@
+{
+  "name": "company-sdk",
+  "version": "0.1.0",
+  "description": "Reusable AI agent team boilerplate — role prompts, project templates, and protocols for running a software project with an AI agent team.",
+  "keywords": [
+    "ai",
+    "agents",
+    "sdk",
+    "team",
+    "boilerplate",
+    "prompts",
+    "claude"
+  ],
+  "author": "matiasbargas",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/matiasbargas/company-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/matiasbargas/company-sdk/issues"
+  },
+  "homepage": "https://github.com/matiasbargas/company-sdk#readme",
+  "files": [
+    "roles/",
+    "project-template/",
+    "example-bitcoin-wallet/",
+    "protocol.md",
+    "AGENTS.md",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
