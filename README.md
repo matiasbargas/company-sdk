@@ -1,176 +1,273 @@
-# Team SDK -- Reusable Agent Team Boilerplate
+# company-sdk
 
-## What This Is
+> AI agent team operating system. Roles, levels, squads, protocol, and CLI — everything you need to run a software project with an AI team.
 
-A copy-paste starter kit for running a software project using an AI agent team. Each file in `roles/` is a complete agent prompt -- paste it into a conversation and the agent is operational. Copy the `example-bitcoin-wallet/` folder, replace the content, and you have a running project with a full team in under an hour.
+```bash
+npm install -g company-sdk
 
-Every role is an agent. Not a document. Not a template to be summarized. A prompt that, when activated in a conversation, makes that agent a thinking participant in the project.
-
-A team is complete when all areas are represented. Use the table below to decide which roles to activate -- but do not activate only the engineering roles and call it done. Legal, security, finance, people, and operations are not optional for a serious product. They are the difference between a project that ships and a company that survives shipping.
+sdk-bootstrap my-project --squad mvp
+```
 
 ---
 
-## The Complete Role Set
+## What It Is
 
-### Strategic Layer (always active)
-| Role | File | What they own |
+Three layers that work together:
+
+| Layer | What it is | Files |
 |---|---|---|
-| **Coordinator** | `roles/coordinator.md` | Release management, organizational memory, Sprint 0 gate |
+| **Roles** | Agent prompts. Paste one into a conversation and that agent is live. | `roles/` |
+| **Protocol** | How agents talk to each other. Bus format, escalation, decision log. | `protocol.md` |
+| **Squads** | Activation sequences for a specific workflow (website, feature, MVP, startup). | `squads/` |
+
+Same roles, same protocol — different squad for different work. A website doesn't need a CLO. A startup does.
+
+For the full walkthrough → **[HOW_IT_WORKS.md](./HOW_IT_WORKS.md)**
+
+---
+
+## Quick Start
+
+### Via npm (recommended)
+```bash
+npm install -g company-sdk
+
+# Bootstrap a new project
+sdk-bootstrap my-saas --squad mvp
+
+# See the activation sequence for that squad
+sdk-squad mvp
+```
+
+### Manual
+```bash
+git clone git@github.com:matiasbargas/company-sdk.git
+
+node path/to/company-sdk/scripts/bootstrap.js my-saas --squad mvp
+```
+
+---
+
+## Pick a Squad
+
+```
+Do you have an existing product?
+  ├── No → Do you need the full org structure?
+  │         ├── Yes → startup   (~3–6 weeks, all 16 agents)
+  │         └── No  → mvp       (~1–2 weeks, 10 agents)
+  └── Yes → Is it a website?
+             ├── Yes → website   (~3–7 days, 6 agents)
+             └── No  → feature   (~days, 3 agents)
+```
+
+| Squad | Agents | Time | Use for |
+|---|---|---|---|
+| `website` | 6 | 3–7 days | Landing page, marketing site, static site |
+| `feature` | 3 | Days | Adding a feature to an existing product |
+| `mvp` | 10 | 1–2 weeks | New product, lean activation |
+| `startup` | 16 | 3–6 weeks | Full org: strategy → legal → security → engineering |
+
+---
+
+## The Role Set
+
+### Strategic Layer
+| Role | File | Owns |
+|---|---|---|
+| **Coordinator** | `roles/coordinator.md` | Release management, org memory, Sprint 0 gate |
 | **CEO** | `roles/ceo.md` | Strategic framing, final escalation, gate reviews |
 
-### Domain Specialists (activate based on what the project touches)
-| Role | File | What they own | Activate when... |
+### Domain Specialists
+| Role | File | Owns | Activate when |
 |---|---|---|---|
-| **CLO** | `roles/clo.md` | Legal, compliance, regulatory map, contracts | Any financial, legal, or user data feature |
-| **CFO** | `roles/cfo.md` | Budget, runway, unit economics, financial model | Any project with a cost or revenue component |
-| **CISO** | `roles/ciso.md` | Threat model, security non-negotiables, compliance roadmap | Any product handling user data, keys, or money |
-| **CMO** | `roles/cmo.md` | Market context, positioning, launch sequence | Before architecture is designed -- market shapes product |
-| **CRO** | `roles/cro.md` | Revenue model, GTM, pricing, pipeline | Any project with a monetization component |
+| **CLO** | `roles/clo.md` | Legal, compliance, contracts | Any legal, financial, or user data feature |
+| **CFO** | `roles/cfo.md` | Budget, runway, unit economics | Any cost or revenue component |
+| **CISO** | `roles/ciso.md` | Threat model, security, compliance | Any product handling user data, keys, or money |
+| **CMO** | `roles/cmo.md` | Market, positioning, launch | Before architecture — market shapes product |
+| **CRO** | `roles/cro.md` | Revenue, GTM, pricing | Any monetization component |
 | **CDO** | `roles/cdo.md` | Instrumentation, metrics, data governance | Any product that needs to measure itself |
-| **COO** | `roles/coo.md` | Vendor relationships, support model, operational runbook | Any project with external vendors or customer-facing operations |
-| **CHRO** | `roles/chro.md` | Hiring, onboarding, team health, culture | Any project that requires new hires or team composition changes |
+| **COO** | `roles/coo.md` | Vendors, support, operational runbook | External vendors or customer-facing ops |
+| **CHRO** | `roles/chro.md` | Hiring, onboarding, team health | Any project requiring new hires or team changes |
 
-### Execution Layer (activate when engineering begins)
-| Role | File | What they own |
+### Execution Layer
+| Role | File | Owns |
 |---|---|---|
-| **CTO** | `roles/cto.md` | Architecture, make/buy decisions, team sizing, technical risk |
-| **Mario (Chief Engineer)** | `roles/chief-engineer.md` | Irreversible decision review, architectural authority over all ICs and Staff Engineers, cross-project technical coherence, quality floor |
-| **PM** | `roles/pm.md` | User story, scope definition, friction log, vision alignment |
-| **Staff Engineer** | `roles/staff-engineer.md` | Interface contracts, platform primitives, cross-cell coherence, PR review |
-| **EM** | `roles/em.md` | Cell management (max 2 cells), critical path, sprint planning, squad status |
-| **Liaison** | `roles/liaison.md` | Execution communication bridge (team ↔ CEO/Coordinator) |
+| **CTO** | `roles/cto.md` | Architecture, make/buy, team sizing, technical risk |
+| **Mario (Chief Engineer)** | `roles/chief-engineer.md` | Irreversible decision review, architectural authority over all ICs |
+| **PM** | `roles/pm.md` | User story, scope, friction log, vision alignment |
+| **Staff Engineer** | `roles/staff-engineer.md` | Interface contracts, platform primitives, cross-cell coherence |
+| **EM** | `roles/em.md` | Cell management (max 2 cells), critical path, sprint |
+| **Liaison** | `roles/liaison.md` | Execution ↔ leadership communication bridge |
+
+---
+
+## The Level Ladder
+
+Every role has a level. Compose teams at the right level for the work.
+
+### IC Track
+| Level | Title | What they do |
+|---|---|---|
+| L1 | Junior | Learns inside well-scoped tasks. Needs daily check-ins. |
+| L2 | Mid | Executes reliably within defined scope. Needs weekly alignment. |
+| L3 | Senior | Owns a module end-to-end. Drives scope definition. |
+| L4 | Staff | Cross-team technical direction. Owns the platform layer. |
+| L5 | Principal | Org-wide technical strategy. Sets irreversible decisions. |
+
+### Management Track
+| Level | Title | Scope |
+|---|---|---|
+| M1 | EM | 1–2 cells, day-to-day execution |
+| M2 | Senior EM | 2–4 cells, cross-cell coherence |
+| M3 | Director | Multiple EMs, 1 product area |
+| M4 | VP | Multiple Directors, org-wide delivery |
+| M5 | C-Suite | Company-wide strategy and accountability |
+
+Full ladder → `levels/ladder.md`
 
 ---
 
 ## The Cell Model
 
-The atomic unit of an engineering team is a **cell**. Teams are assembled from cells. An EM manages a maximum of two cells.
-
-**Cell-2:** 1 Senior + 1 Mid or Senior. Owns one service or module end-to-end. Minimal coordination overhead. The default pairing unit.
-
-**Cell-4:** 1 Staff + 2 Senior + 1 Mid. Owns a full product slice. Can ship independently. Used when the ownership boundary is larger than one module.
-
-**EM ratio:** 1 EM per 2 cells. At 3+ cells, add another EM. One EM managing 3 cells is not an EM -- they are a project tracker, and the cell model stops working.
+The atomic unit of an engineering team.
 
 ```
-Team tiers:
+Cell-2:   1 Senior + 1 Mid/Senior      →  owns 1 service or module
+Cell-4:   1 Staff + 2 Senior + 1 Mid   →  owns a full product slice
 
-Tier 1 (Solo):         1 person                 -- not a cell, a spike
-Tier 2 (Small):        1x cell-2 (2 eng)        -- 1 EM (lightweight)
-Tier 3 (Medium):       1x cell-4 or 2x cell-2   -- 1 EM
-Tier 4 (Large):        2x cell-4 or 4x cell-2   -- 2 EMs
-Tier 5 (Program):      3-6x cell-4              -- 1 EM per 2 cells
+EM ratio: 1 EM per 2 cells max.
 ```
 
-Cell anti-patterns:
-- A cell of 3 is not a cell. Either staff the cell-2 correctly or add the fourth person for cell-4.
-- A cell of 5+ is two cells with blurred ownership. Split it and name the boundary explicitly.
-- An EM managing 3+ cells is a bottleneck waiting to happen. Add an EM.
+```
+Tier 1 (Solo):     1 person
+Tier 2 (Small):    1× cell-2    →  1 EM
+Tier 3 (Medium):   2× cell-2    →  1 EM
+Tier 4 (Large):    4× cell-2    →  2 EMs
+Tier 5 (Program):  3–6× cell-4  →  1 EM per 2 cells
+```
+
+Anti-patterns: a cell of 3 is not a cell. A cell of 5+ is two cells with blurred ownership. An EM managing 3+ cells is a bottleneck.
 
 ---
 
-## How to Start a New Project
+## Communication Flow
 
-### Step 1: Copy two directories
-```
-cp -r team-sdk/roles/            your-project/roles/
-cp -r team-sdk/project-template/ your-project/
-cp    team-sdk/protocol.md       your-project/protocol.md
-cp    team-sdk/AGENTS.md         your-project/AGENTS.md
-```
-
-You now have: 16 agent prompts (including Mario, the Chief Engineer), a blank `project.md`, a blank `history.md`, a `liaison-log.md` template, a `general-requirements.md` with all 12 domain rows, 12 empty domain requirements stubs, and the shared protocol and agent manifest. Everything pre-wired.
-
-### Step 2: Fill in placeholders
-In every role file and in project.md, replace:
-
-| Placeholder | Replace with |
-|---|---|
-| `[COMPANY]` | Your project or company name |
-| `[PERSONA NAME]` | A name for the agent (use names -- they create identity) |
-| `[DOMAIN]` | The domain this agent owns |
-| `[PROJECT_DIR]` | Path to your project directory |
-| `[PROJECT NAME]` | The project name (in project.md, history.md, requirements) |
-| `v[YEAR].Q[QUARTER].[INCREMENT]` | Your release ID (e.g., v2026.Q2.1) |
-
-### Step 3: Activate agents in sequence
-Follow the activation order in `AGENTS.md`. Every agent reads `protocol.md` and `project.md` before producing output. The order matters -- CLO + CISO output gates CTO architecture.
-
-### Step 4: Run the project
-The conversation goes into `project.md`. Decisions go into `history.md`. Domain tasks go into their requirements files. The Coordinator aggregates to `general-requirements.md` every sprint.
-
-**Three structural files govern everything:**
-- `protocol.md` -- how agents communicate (Bus format, escalation, decision logs, cell model)
-- `AGENTS.md` -- who does what, activation order, dependency graph, peer handoffs
-- `project.md` -- the conversation record and source of truth
-
-### Step 5 (optional): Study the example
-`example-bitcoin-wallet/` shows a complete project conversation for a Bitcoin wallet SDK. Read it before starting your own.
-
----
-
-## Agent Communication Model
-
-The Owner communicates through the CEO or Coordinator only. Execution is always through the flow of agents, never a direct command to an execution agent. See `protocol.md` Section 0.
+The Owner speaks only to CEO or Coordinator. Never directly to execution agents.
 
 ```
 OWNER
-  |  \
-  |   \──────────────────────────────────────────────────────────────────┐
-  v                                                                       v
-CEO <─────────────────────────────────────── Liaison (escalation only)  COORDINATOR
-  |                                                    ^                    |
-  v                                                    |                    |
-COORDINATOR <────────────────────────── Liaison (daily sprint health)       |
-  |                                                                        (or direct from Owner
-  |──> CLO | CFO | CISO | CMO | CRO | CDO | COO | CHRO                    for process/status)
-  |         (domain specialists, async)
-  |
-  |──> CTO ──────────────────────────────> Mario (Chief Engineer)
-  |                                              |
-  |──> PM                              ┌─────────┤
-  |                                    v         v
-  |                            Staff Engineer  all ICs (quality floor)
-  |                                    |
-  |                    Cell-A (2 eng) <──> EM <──> Liaison
-  |                    Cell-B (4 eng) <──> EM
+  ├──> CEO ──────────────────────────────────────────> COORDINATOR
+  │      |                                                   |
+  │      └──> CLO | CFO | CISO | CMO | CRO | CDO | COO | CHRO
+  │                                                          |
+  │      └──> CTO ──> Mario (Chief Engineer)                |
+  │                        |                                 |
+  │      └──> PM     Staff Engineer                         |
+  │                        |                                 |
+  │                  Cell-A ←──> EM ←──> Liaison ──────────┘
+  │                  Cell-B ←──> EM
+  │
+  └──> COORDINATOR (process, status, gate reviews)
 ```
 
-The Liaison is the only agent that crosses between the execution layer and leadership simultaneously. Mario is the only agent whose authority is horizontal across all engineering teams — not management, but craft. All other agents stay in their lane.
+Liaison is the only agent that crosses between execution and leadership simultaneously. Mario is the only agent with horizontal authority across all engineering teams — craft, not management.
+
+---
+
+## CLI Reference
+
+```bash
+# Bootstrap a new project directory with all template files
+sdk-bootstrap <name> [--squad <type>] [--output <dir>]
+
+# View squad activation sequence
+sdk-squad list
+sdk-squad <website|feature|mvp|startup>
+
+# Document operations
+sdk-doc list <file>                                     # list sections
+sdk-doc read <file> --section <heading>                 # read a section
+sdk-doc append <file> --section <heading> --content     # append to section
+sdk-doc rewrite <file> --section <heading> --content    # replace a section
+sdk-doc add-item <file> --section <heading> --item      # append a list item
+sdk-doc decision <file> --decision --context --made-by  # log a decision
+```
+
+Examples:
+```bash
+# Start an MVP project
+sdk-bootstrap analytics-tool --squad mvp
+
+# Log an architecture decision
+sdk-doc decision projects/analytics-tool/history.md \
+  --decision "Use Supabase instead of raw Postgres" \
+  --context "Saves 2 weeks of auth setup" \
+  --made-by CTO \
+  --reversible yes
+
+# Update a requirements section
+sdk-doc append projects/analytics-tool/product-requirements.md \
+  --section "## Out of Scope" \
+  --item "Admin dashboard — post-MVP"
+```
 
 ---
 
 ## File Map
 
 ```
-team-sdk/
+company-sdk/
   README.md
+  HOW_IT_WORKS.md         ← Full narrative walkthrough
+  AGENTS.md               ← Activation order + dependency graph
+  SQUADS.md               ← Squad comparison and decision guide
+  protocol.md             ← Bus format, escalation, decision log rules
+  package.json
+
   roles/
-    _template.md              -- Blank 4-block prompt template
-    -- Strategic layer --
-    coordinator.md
-    ceo.md
-    -- Domain specialists --
-    clo.md                    -- Legal, compliance, contracts
-    cfo.md                    -- Budget, runway, unit economics
-    ciso.md                   -- Security, threat model, compliance
-    cmo.md                    -- Market, positioning, launch
-    cro.md                    -- Revenue, GTM, pricing, pipeline
-    cdo.md                    -- Data, instrumentation, metrics, governance
-    coo.md                    -- Vendors, support model, operations
-    chro.md                   -- Hiring, onboarding, team health
-    -- Execution layer --
-    cto.md                    -- Architecture, make/buy, team sizing
-    chief-engineer.md         -- Mario: irreversible decision review, architectural authority over all ICs
-    pm.md                     -- User story, scope, friction log
-    staff-engineer.md         -- Interface contracts, platform primitives
-    em.md                     -- Cell management, critical path, sprint
-    liaison.md                -- Execution communication bridge
+    _template.md          ← Blank 4-block prompt template
+    coordinator.md | ceo.md
+    clo.md | cfo.md | ciso.md | cmo.md | cro.md | cdo.md | coo.md | chro.md
+    cto.md | chief-engineer.md | pm.md | staff-engineer.md | em.md | liaison.md
+
+  levels/
+    ladder.md             ← IC and Management track definitions
+
+  squads/
+    website.md | feature.md | mvp.md | startup.md
+
+  project-template/
+    project.md            ← Owner brief and conversation record
+    history.md            ← Decision log
+    liaison-log.md        ← Daily sprint health
+    general-requirements.md
+    [domain]-requirements.md  ← 12 domain stubs
+
+  scripts/
+    bootstrap.js          ← sdk-bootstrap
+    squad.js              ← sdk-squad
+    doc.js                ← sdk-doc
+
   example-bitcoin-wallet/
-    project.md                -- Complete example: Owner -> CEO -> Team -> Plan
-    marketing-review.md       -- CMO market analysis for simplicity positioning
+    project.md            ← Complete example conversation
+    marketing-review.md   ← CMO market analysis
 ```
 
 ---
 
-*SDK v2.0. 16 roles. Cell model. All areas represented. Owner flow governed. Copy, customize, ship.*
+## Golden Rules
+
+1. Owner speaks only to CEO or Coordinator. Never directly to execution agents.
+2. Every consequential decision gets written to `history.md`. If it's not written, it didn't happen.
+3. "Almost done" is not a status.
+4. Blockers escalate the same day.
+5. Sprint 0 gate is real. Nothing gets coded until all boxes are checked.
+6. 1 Senior + 1 Mid/Senior per cell. EM manages 2 cells max.
+7. The requirements files are the source of truth, not conversations.
+8. Different squad, same protocol. Don't rewrite the rules — pick the right squad.
+9. Level determines behavior. Compose teams at the right level for the work.
+10. The Liaison crosses layers. Everyone else stays in their lane.
+
+---
+
+*`company-sdk` — 16 roles · 4 squads · 2-track level ladder · 3 CLI tools*
