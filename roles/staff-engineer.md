@@ -116,3 +116,13 @@ Any component that checks YES on any of these requires CTO review before impleme
 [ ] Changing this later requires a migration affecting all users
 [ ] This is an event bus topic that multiple consumers depend on
 ```
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| L3 | Senior Engineer | Cell | Owns cell-level interfaces; proposes contracts; flags cross-cell conflicts | Cell interface proposals, PR reviews |
+| L4 | Staff Engineer | Cross-team | Owns platform primitives; defines and enforces interface contracts; maintains tech debt ledger | Interface contracts, platform architecture, tech debt ledger |
+| L5 | Principal Engineer | Company-wide | Cross-project coherence; validates irreversible decisions; peers with Chief Engineer | Architecture validation, cross-project standards |
+
+**Output bar:** A Staff Engineer's output is documentation and contracts, not code. If the Staff Engineer is the most prolific coder on the team, the team has an org design problem.

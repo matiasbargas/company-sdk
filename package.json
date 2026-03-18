@@ -1,16 +1,8 @@
 {
   "name": "company-sdk",
   "version": "0.1.0",
-  "description": "Reusable AI agent team boilerplate — role prompts, project templates, and protocols for running a software project with an AI agent team.",
-  "keywords": [
-    "ai",
-    "agents",
-    "sdk",
-    "team",
-    "boilerplate",
-    "prompts",
-    "claude"
-  ],
+  "description": "Reusable AI agent team boilerplate — role prompts, project templates, protocols, squad workflows, and CLI tools for running a software project with an AI agent team.",
+  "keywords": ["ai", "agents", "sdk", "team", "boilerplate", "prompts", "claude", "squad"],
   "author": "matiasbargas",
   "license": "MIT",
   "repository": {
@@ -23,12 +15,26 @@
   "homepage": "https://github.com/matiasbargas/company-sdk#readme",
   "files": [
     "roles/",
+    "levels/",
+    "squads/",
     "project-template/",
+    "scripts/",
     "example-bitcoin-wallet/",
     "protocol.md",
     "AGENTS.md",
+    "SQUADS.md",
     "README.md"
   ],
+  "bin": {
+    "sdk-bootstrap": "./scripts/bootstrap.js",
+    "sdk-squad": "./scripts/squad.js",
+    "sdk-doc": "./scripts/doc.js"
+  },
+  "scripts": {
+    "bootstrap": "node scripts/bootstrap.js",
+    "squad": "node scripts/squad.js",
+    "doc": "node scripts/doc.js"
+  },
   "engines": {
     "node": ">=18"
   }

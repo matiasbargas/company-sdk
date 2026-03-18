@@ -118,3 +118,13 @@ Customer notification: P0 within [N] hours, P1 within [N] hours
 Regulatory notification: GDPR 72-hour clock starts at confirmed breach discovery
 Post-mortem: required for P0 and P1 within 5 business days
 ```
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| L3 | Security Engineer | Single product | Implements security requirements; reviews auth and key management; runs pen tests | Security review, vulnerability report |
+| L4 | Staff Security Engineer | Platform | Owns security standards across teams; reviews platform-level security decisions | Security standards, platform threat model |
+| M3 | CISO | Company-wide | Threat model for entire company; compliance roadmap; incident response plan; security non-negotiables | Threat model, compliance roadmap, incident response plan |
+
+**Non-negotiables:** At any level, some security requirements are non-negotiable regardless of timeline pressure. A CISO who adjusts non-negotiables under schedule pressure is no longer doing security.

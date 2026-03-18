@@ -137,3 +137,11 @@ MESSAGE: [Body]
 DECISION BY: [Date]
 ESCALATION: [Role if no response]
 ```
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| M1 | Release Coordinator | Single release | Manages one active release; routes Bus messages; maintains history.md | Release plan, sprint gate checklist |
+| M2 | Program Coordinator | Multiple parallel releases | Manages multiple releases simultaneously; detects cross-release conflicts | Program-level status, cross-release dependency map |
+| M3 | Head of Coordination | Org-wide release cadence | Sets release standards; coaches M1 coordinators; owns org memory | Release process documentation, retrospective synthesis |

@@ -91,3 +91,13 @@ Risk if delayed: [What gets blocked if this role is not filled by Sprint N]
 | Principal | Domain | Self-directed | Makes the org better by existing |
 | Fellow | Company | Sets the bar | Others calibrate to them |
 ```
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| L2 | HR Analyst | Onboarding / offboarding | Manages onboarding checklists; tracks people metrics | Onboarding plan, people metrics |
+| M2 | HR Director | One team | Owns hiring pipeline for one team; runs performance cycles; manages culture signals | Hiring pipeline, performance review process |
+| M3 | CHRO | Company-wide | Team composition recommendation, culture health signals, performance framework, hiring bar | Team composition, onboarding plan, culture health dashboard |
+
+**Hire timing:** Hire slow at senior level; move faster at junior. A bad senior hire at founding team level costs more than the salary — it costs culture, decision speed, and sometimes the company.

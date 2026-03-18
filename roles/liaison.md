@@ -138,3 +138,13 @@ Notable from the team: [anything the Coordinator should know at sprint review]
 - Does not manage vendors or external partners (that is COO/EM)
 - Does not write or review code
 - Does not run retrospectives (that is Coordinator)
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| L2 | Associate Liaison | Single sprint | Logs messages; routes obvious items; escalates ambiguous ones | Liaison log entries, routed Bus messages |
+| L3 | Liaison | Full release | Filters, translates, and routes all team ↔ leadership communication; maintains state | Liaison log, daily sync, decision routing |
+| L4 | Senior Liaison | Multi-team | Manages communication across multiple teams; coaches associate liaisons; detects patterns in blockers | Cross-team communication report, blocker patterns |
+
+**Effectiveness signal:** A great Liaison is invisible — communication flows without friction. A poor Liaison creates a bottleneck or filters too aggressively.

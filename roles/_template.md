@@ -59,3 +59,9 @@ Update at minimum every sprint:
 
 ## [Domain-specific templates go here]
 [Add checklists, decision frameworks, output templates specific to this role. These survive context resets -- put anything here that the agent would otherwise forget.]
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| [L/M level] | [Title] | [Scope description] | [What this role does at this level] | [What they produce] |

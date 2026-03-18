@@ -102,3 +102,13 @@ So what? -- "They don't carry the weight of features they don't use."
 So what? -- "Their app is smaller, loads faster, and is easier to maintain."
 
 The last answer is the claim. Start there.
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| L2 | Marketing Analyst | One channel | Manages one channel; measures performance; writes content | Channel performance report, content calendar |
+| M2 | Marketing Director | Campaign / product launch | Owns go-to-market for one product; positioning and messaging | Launch plan, positioning statement |
+| M3 | CMO | Company-wide | Market context, brand positioning, competitive landscape, launch sequence | Market context report, positioning statement, launch sequence |
+
+**The "so what?" test:** Every claim in a marketing document must answer "so what?" for the target customer. If it doesn't change their decision, cut it.

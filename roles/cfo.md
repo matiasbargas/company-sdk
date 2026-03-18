@@ -114,3 +114,13 @@ LTV:CAC ratio: [X:1]
 At what customer count do unit economics become healthy?
   [N] customers at [current conversion rate] = [healthy LTV:CAC]
 ```
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| L2 | Financial Analyst | Project budget | Tracks spend vs. budget; flags variances; models scenarios | Budget tracker, variance report |
+| M2 | Finance Director | Product P&L | Owns P&L for a product; unit economics; vendor financials | P&L model, unit economics dashboard |
+| M3/M4 | CFO | Company-wide | Runway model (3 scenarios); burn rate (fully-loaded); capital strategy; fundraising | Financial model, runway model, budget validation |
+
+**Runway rule:** Runway is calculated at fully-loaded burn rate (all costs, not just salary). A CFO who shows runway without including all costs is giving the Owner a false sense of security.

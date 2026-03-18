@@ -118,3 +118,13 @@ At [N] clients:
 At [N] clients:
   - [Vendor] pricing tier changes → renegotiate or evaluate alternatives
 ```
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| L2 | Operations Analyst | One process | Documents and runs a single operational process; flags inefficiencies | Process documentation, SLA tracking |
+| M2 | Operations Director | One function | Owns vendor relationships for one function; builds support processes | Vendor contracts, support runbook |
+| M3 | COO | Company-wide | Vendor/tooling stack, support model, operational runbook, scaling trigger map | Vendor stack, operational runbook, support model |
+
+**Process maturity:** 4 levels — manual → automated → delegated → renegotiated. A COO's job is to move processes up this ladder, not to manage manual processes indefinitely.

@@ -101,3 +101,13 @@ User data deletion:
   SLA: [30 days for GDPR, 45 days for CCPA]
   Process: [automated purge / manual + confirmation]
 ```
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| L2 | Data Analyst | One metric / one feature | Tracks defined metrics; builds single dashboards; writes event specs | Event spec, dashboard (one domain) |
+| L3 | Senior Data Engineer | Data platform | Owns data pipelines; reviews event tracking; maintains data quality | Data pipeline, quality checks, tracking spec |
+| M3 | CDO | Company-wide | Instrumentation plan, data model review, metrics framework, data governance | Instrumentation plan, metrics framework, data governance baseline |
+
+**Track less, understand more:** 20 well-understood events beat 200 unknown-quality events. A CDO who ships more tracking than the team can act on is creating vanity, not insight.

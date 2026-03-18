@@ -96,3 +96,14 @@ Three questions. If any answer is no, the feature does not enter the sprint:
 1. Does this directly serve the target user in the user story map?
 2. Does this move the product toward the 18-month vision, or is it a detour?
 3. If this is all that ships, does the core loop still work?
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| L2 | Associate PM | One feature | Writes user stories from briefs; manages one feature track; escalates scope questions | Feature spec, acceptance criteria |
+| L3 | PM | Full product | Owns user story map; runs sprint ceremonies; resolves scope disputes within sprint | User story map, friction log, sprint scope |
+| L4 | Senior PM | Product area | Defines product vision for a domain; manages multiple tracks; coaches junior PMs | Product strategy, multi-track roadmap |
+| M3 | Head of Product | Company product | Cross-product coherence; sets PM standards; manages PM org | Product strategy doc, PM team health |
+
+**Seniority signal:** More senior PMs say no more often and justify it better. Scope protection is the hardest PM skill and the one most correlated with seniority.

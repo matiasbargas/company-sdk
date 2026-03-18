@@ -1,0 +1,128 @@
+# Squad: Startup / Company Bootstrap
+
+> **Use this squad when:** You are starting a company or building a full product from scratch.
+> **Duration:** 3–6 weeks
+> **Roles:** All 16 activated in sequence
+> **Protocol:** Same `protocol.md` — same Bus format, same escalation ladder, same requirements files.
+
+---
+
+## Purpose
+
+Full activation of the company-sdk. All 16 agents run in the defined sequence from AGENTS.md. Use this when the scope is a full product or company — not just a website or a feature. This squad runs through all four phases: Brief, Discovery, Release Plan, and Execution.
+
+## When to Use
+
+- ✅ Building a new product from scratch
+- ✅ Starting a company and need the full org activated
+- ✅ Major pivot requiring a full re-plan across all domains
+- ❌ You only need a website → use Website squad
+- ❌ You only need one feature → use Feature squad
+- ❌ You need an MVP in 1–2 weeks → use MVP squad
+
+---
+
+## Activation Sequence
+
+Full activation sequence per `AGENTS.md`. Abbreviated here for reference:
+
+### Phase 0 — Brief (Day 1)
+| # | Role | Output |
+|---|------|--------|
+| 1 | Coordinator | Receives Owner brief; creates project structure; opens `project.md` |
+
+### Phase 1 — Discovery (Days 1–7)
+| # | Role | Output | Gates |
+|---|------|--------|-------|
+| 2 | CEO | Strategic framing brief | Activates all C-suite |
+| 3 | CLO | Regulatory map | Gates CTO |
+| 4 | CISO | Security non-negotiables | Gates CTO |
+| 5 | CFO | Budget validation, runway (3 scenarios) | — |
+| 6 | CMO | Market context, positioning statement | — |
+| 7 | CRO | GTM model, pricing | — |
+| 8 | CDO | Instrumentation plan | — |
+| 9 | COO | Vendor timelines | Gates EM |
+| 10 | CHRO | Team composition recommendation | — |
+
+### Phase 2 — Release Plan (Days 7–14)
+| # | Role | Output | Gates |
+|---|------|--------|-------|
+| 11 | CTO | Architecture brief (1-page max), make/buy matrix | — |
+| 12 | Mario | Irreversible decision review | Validates CTO |
+| 13 | PM | User story map, scope definition | — |
+| 14 | Staff Engineer | Interface contracts, platform primitives | — |
+| 15 | EM | Cell composition, critical path, sprint plan | — |
+
+### Phase 3 — Execution (Sprint 1 → Ship)
+| # | Role | Output |
+|---|------|--------|
+| 16 | Liaison | Daily communication bridge (active until ship) |
+| All | All execution agents | Domain requirements files continuously updated |
+
+### Phase 4 — Completion
+| # | Role | Output |
+|---|------|--------|
+| All | Coordinator | Retro synthesis; all agents write to `history.md` |
+
+---
+
+## Role Roster
+
+| Role | Level | Layer | Owns |
+|------|-------|-------|------|
+| Coordinator | M3 | Strategic | Release management, org memory |
+| CEO | M4 | Strategic | Company direction, strategic brief |
+| CLO | M3 | Domain | Legal, `legal-requirements.md` |
+| CFO | M3/M4 | Domain | Finance, runway, `finance-requirements.md` |
+| CISO | M3 | Domain | Security, threat model, `security-requirements.md` |
+| CMO | M3 | Domain | Marketing, positioning, `marketing-requirements.md` |
+| CRO | M3 | Domain | Revenue, GTM, `revenue-requirements.md` |
+| CDO | M3 | Domain | Data, instrumentation, `data-requirements.md` |
+| COO | M3 | Domain | Operations, vendors, `operations-requirements.md` |
+| CHRO | M3 | Domain | People, hiring, `people-requirements.md` |
+| CTO | M4 | Execution | Architecture, `product-engineering-requirements.md` |
+| Mario | L5 | Execution | Quality floor, `release-architecture-requirements.md` |
+| PM | L3/M1 | Execution | Scope, stories, `product-requirements.md` |
+| Staff Engineer | L4 | Execution | Contracts, platform, `release-architecture-requirements.md` |
+| EM | M1 | Execution | Delivery, cells, `delivery-requirements.md` |
+| Liaison | L3 | Execution | Communication, `liaison-log.md` |
+
+---
+
+## Sprint 0 Gate (Hard Stop)
+
+All of the following must be true before engineering starts:
+
+- [ ] CEO brief written
+- [ ] Regulatory map (CLO) complete
+- [ ] Security non-negotiables (CISO) documented
+- [ ] Budget validated (CFO), runway > 12 months (or decision made)
+- [ ] Market context (CMO) written
+- [ ] GTM model (CRO) defined
+- [ ] Instrumentation plan (CDO) drafted
+- [ ] Vendor timelines (COO) mapped
+- [ ] Team composition (CHRO) confirmed
+- [ ] Architecture brief (CTO) written, 1-page max
+- [ ] Irreversible decisions reviewed (Mario)
+- [ ] User story map (PM) complete
+- [ ] Interface contracts (Staff Engineer) drafted
+- [ ] Cell composition (EM) confirmed
+- [ ] Coordinator confirms Sprint 0 gate passed
+
+---
+
+## Success Criteria
+
+- [ ] All Sprint 0 gate items complete
+- [ ] First sprint shipped with defined acceptance criteria
+- [ ] All domain requirements files active and current
+- [ ] `history.md` entry written for Sprint 0
+
+---
+
+## Example Projects
+
+- Building a B2B SaaS from scratch
+- Launching a fintech product (CLO + CISO are critical gates)
+- Starting an e-commerce company
+- Bootstrapping a developer tool with a full org

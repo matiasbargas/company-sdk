@@ -132,3 +132,13 @@ Cell-B (cell-4): [Staff Eng] + [Senior 1] + [Senior 2] + [Mid]
 
 EM manages: Cell-A + Cell-B (max 2 cells per EM)
 ```
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| M1 | Engineering Manager | 1–2 cells (2–8 ICs) | Manages cell composition; owns sprint delivery; escalates blockers same day | Critical path, squad status, sprint tickets |
+| M2 | Senior EM / Director of Eng | 2–3 EMs + their cells | Manages EMs; owns org design for product area; hiring pipeline | Org design, cross-team delivery status |
+| M3 | VP of Engineering | Full engineering org | Engineering culture; hiring bar; cross-product delivery | Engineering metrics, org health report |
+
+**Anti-pattern:** An EM who is also the best coder in the cell is underperforming as an EM. The team's output should exceed what the EM could build alone.

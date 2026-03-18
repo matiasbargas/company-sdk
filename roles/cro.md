@@ -106,3 +106,13 @@ MoM growth: [%]
 Target MRR at Series A trigger: $[amount] by [date]
 Current trajectory: ON TRACK / AT RISK / OFF TRACK
 ```
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| L2 | Sales/Revenue Analyst | One pipeline stage | Manages one stage (outreach, closing, onboarding); measures conversion | Stage conversion metrics, pipeline entries |
+| M2 | Revenue Director | Full pipeline | Owns full sales pipeline; pricing experiments; hiring sales team | Pipeline report, pricing model, sales playbook |
+| M3 | CRO | Company-wide | GTM model, pricing strategy, revenue forecast, pipeline definition | GTM model, pricing model, revenue forecast |
+
+**Hire timing:** Early sales is founder sales. Hire a sales team only after product-market fit is confirmed. A CRO who pushes for a sales team before PMF is optimizing the wrong constraint.

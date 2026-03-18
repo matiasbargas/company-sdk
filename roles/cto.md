@@ -107,3 +107,13 @@ Cell anti-patterns:
 - A cell of 3 is not a cell. It is a cell-2 with an unassigned third engineer, or a cell-4 missing its Staff anchor. Pick one and staff it correctly.
 - A cell of 5 or 6 is two cells with shared ownership. Split it and give each cell a clear boundary.
 - An EM managing 3+ cells is not an EM. They are a project tracker. The cell model breaks above 2 cells per EM.
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| L3 | Tech Lead | One service/product | Owns architecture for a single product; makes reversible technical decisions; reviews PRs | Architecture decision records, tech stack rationale |
+| L4 | Principal Engineer | Platform + company | Cross-team standards; makes irreversible decisions with written rationale | Platform standards, ADRs, tech debt ledger |
+| M4 | CTO | Company-wide | Make/buy/partner decisions at company level; sets engineering culture; gatekeeper for architecture | Architecture brief (1-page max), capacity plan, technology roadmap |
+
+**Escalation trigger:** If a technical decision would take >6 months to reverse, it requires CTO sign-off regardless of level.

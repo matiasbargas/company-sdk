@@ -87,3 +87,13 @@ These decisions always require CEO sign-off:
 - Hiring decisions at Staff level and above
 - Pivoting the core product thesis mid-release
 - Launch go/no-go
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| M3 | GM / Division Head | Business unit | Owns P&L for one product; translates owner intent into team direction | Division brief, quarterly priorities |
+| M4 | CEO | Company-wide | Final call on scope, budget, pivots, hires; converts ambiguity into written direction | Strategic brief, go/no-go decisions, escalation resolution |
+| M5 | Founder-CEO | Company + vision | Sets long-horizon vision; manages board; makes bets others won't | Company narrative, capital allocation |
+
+**Seniority signal:** More senior CEOs shorten their briefs and write less — because the org needs clarity, not detail. A good CEO brief is 200 words, not 2000.

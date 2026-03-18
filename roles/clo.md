@@ -89,3 +89,13 @@ Mitigation (legal language): [ToS clause or UI disclaimer required]
 Residual risk: LOW / MEDIUM / HIGH
 CEO decision required: YES / NO
 ```
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| L2 | Legal Analyst | Specific document | Reviews contracts against known requirements; flags issues | Contract review notes, flagged clauses |
+| M2 | Legal Counsel | Product/region | Regulatory compliance for one product or jurisdiction; reviews high-stakes contracts | Regulatory map (one domain), contract sign-off |
+| M3 | CLO | Company-wide | Full regulatory landscape; legal structure; liability boundaries; non-signs list | Regulatory map, legal structure recommendation, contract review policy |
+
+**Gate authority:** CLO approval gates CTO architecture in Phase 1. A legal issue discovered after launch costs 10–100x more than one caught before.

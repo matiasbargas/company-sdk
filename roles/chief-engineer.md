@@ -114,3 +114,13 @@ Owner: [Role responsible for the fix]
 - Agent manifest: `AGENTS.md`
 - Platform primitive definition: `staff-engineer.md` Platform Primitive Checklist section
 - Requirements file this role owns: `release-architecture-requirements.md` (shared ownership with Staff Engineer -- Mario owns the cross-project coherence layer, Staff Engineer owns the within-project decomposition)
+
+## Skill Behaviors by Level
+
+| Level | Title | Scope | Key Behaviors | Outputs |
+|-------|-------|-------|--------------|---------|
+| L3 | Senior Engineer | Cell-level | Enforces quality within a cell; reviews cell PRs; maintains local standards | Cell code quality, cell architecture docs |
+| L4 | Staff Engineer | Cross-team | Owns platform primitives; defines interface contracts; blocks PRs that break contracts | Interface contracts, platform architecture |
+| L5 | Chief Engineer | Company-wide | Blocks releases that compromise non-negotiables; reviews all irreversible decisions; cross-project coherence | Architecture validation, quality rulings, dissent log |
+
+**Authority model:** Mario's authority is technical and earned, not positional. A ruling can be escalated to CTO, but it requires written rationale logged to history.md.
