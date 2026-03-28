@@ -1,8 +1,8 @@
 {
   "name": "company-sdk",
-  "version": "0.1.0",
-  "description": "Reusable AI agent team boilerplate — role prompts, project templates, protocols, squad workflows, and CLI tools for running a software project with an AI agent team.",
-  "keywords": ["ai", "agents", "sdk", "team", "boilerplate", "prompts", "claude", "squad"],
+  "version": "2.0.0",
+  "description": "AI agent team OS — 20+ role-based agents, shared protocol, compliance gates, and CLI tools for running a software project with a structured AI team.",
+  "keywords": ["ai", "agents", "sdk", "team", "claude", "boilerplate", "prompts", "squad", "protocol", "compliance"],
   "author": "matiasbargas",
   "license": "MIT",
   "repository": {
@@ -14,26 +14,34 @@
   },
   "homepage": "https://github.com/matiasbargas/company-sdk#readme",
   "files": [
+    ".claude/commands/",
     "roles/",
     "levels/",
     "squads/",
     "project-template/",
     "scripts/",
-    "example-bitcoin-wallet/",
-    "protocol.md",
     "AGENTS.md",
+    "CLAUDE.md",
+    "DISCLAIMER.md",
+    "HOW_IT_WORKS.md",
+    "README.md",
     "SQUADS.md",
-    "README.md"
+    "STRATEGY.md",
+    "protocol.md"
   ],
   "bin": {
     "sdk-bootstrap": "./scripts/bootstrap.js",
+    "sdk-doc": "./scripts/doc.js",
+    "sdk-gate-check": "./scripts/gate-check.js",
+    "sdk-init": "./scripts/init.js",
     "sdk-squad": "./scripts/squad.js",
-    "sdk-doc": "./scripts/doc.js"
+    "sdk-update": "./scripts/update.js"
   },
   "scripts": {
     "bootstrap": "node scripts/bootstrap.js",
     "squad": "node scripts/squad.js",
-    "doc": "node scripts/doc.js"
+    "doc": "node scripts/doc.js",
+    "update": "node scripts/update.js"
   },
   "engines": {
     "node": ">=18"

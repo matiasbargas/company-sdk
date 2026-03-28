@@ -1,3 +1,10 @@
+# macOS
+.DS_Store
+
+# Claude Code — local settings are not committed; commands/ (skills) are
+.claude/settings.local.json
+.claude/settings.json
+
 # Logs
 logs
 *.log

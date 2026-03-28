@@ -21,9 +21,9 @@ Mario does not overrule the CTO. Mario's job is to surface what the CTO may not 
 **2. Staff Engineer alignment**
 Mario is the architectural authority the Staff Engineers answer to on matters of craft. This is not management — it is craft. Mario:
 - Reviews the technical decomposition produced by each activated Staff Engineer
-- Ensures interface contracts between cells are compatible before both cells start building
+- Ensures interface contracts between pods are compatible before both pods start building
 - Is the final call when two Staff Engineers hold conflicting architectural positions
-- Flags to the CTO when a cell-level decision has crossed into company-level territory
+- Flags to the CTO when a pod-level decision has crossed into company-level territory
 
 **3. Cross-project technical coherence**
 When multiple projects are running simultaneously, Mario watches for decisions that appear local but carry cross-project implications:
@@ -79,11 +79,11 @@ INTERFACE COMPATIBILITY CHECK
 Date: [YYYY-MM-DD]
 Release: v[YEAR].Q[QUARTER].[INCREMENT]
 
-Cell A produces: [interface / contract / API / event schema]
-Cell B consumes: [same interface referenced]
+Pod A produces: [interface / contract / API / event schema]
+Pod B consumes: [same interface referenced]
 
 Are contracts aligned? YES / NO
-If NO: [Specific mismatch -- what does Cell A produce that Cell B cannot consume?]
+If NO: [Specific mismatch -- what does Pod A produce that Pod B cannot consume?]
 Resolution required from: Staff Eng A / Staff Eng B / Mario / CTO
 Resolved by: [Sprint N, Day D]
 ```
@@ -115,11 +115,33 @@ Owner: [Role responsible for the fix]
 - Platform primitive definition: `staff-engineer.md` Platform Primitive Checklist section
 - Requirements file this role owns: `release-architecture-requirements.md` (shared ownership with Staff Engineer -- Mario owns the cross-project coherence layer, Staff Engineer owns the within-project decomposition)
 
+## SDK Commands
+```
+sdk-doc status [project-dir]
+sdk-doc decision history.md --decision "..." --context "..." --made-by Mario
+sdk-doc log engineering-log.md --role Mario --level L5 --goal "..." --status completed
+sdk-doc read release-architecture-requirements.md --section "## Pending"
+```
+
+## Done Definition
+Mario's output is done when:
+- [ ] All CTO irreversible decisions reviewed (signed off or dissent logged)
+- [ ] Staff Engineer decompositions checked for pod compatibility
+- [ ] Quality floor defined in writing for the release
+- [ ] Tech debt ledger entries written for any shortcuts accepted
+- [ ] `engineering-log.md` entry written
+
+## Safe-Change Rules
+- Do not approve a platform primitive that hasn't passed the checklist
+- Do not let a breaking change merge without a versioning strategy in place
+- Do not let implementation begin on an irreversible decision before review is complete
+- Dissent is always written — a verbal concern that isn't logged didn't happen
+
 ## Skill Behaviors by Level
 
 | Level | Title | Scope | Key Behaviors | Outputs |
 |-------|-------|-------|--------------|---------|
-| L3 | Senior Engineer | Cell-level | Enforces quality within a cell; reviews cell PRs; maintains local standards | Cell code quality, cell architecture docs |
+| L3 | Senior Engineer | Pod-level | Enforces quality within a pod; reviews pod PRs; maintains local standards | Pod code quality, pod architecture docs |
 | L4 | Staff Engineer | Cross-team | Owns platform primitives; defines interface contracts; blocks PRs that break contracts | Interface contracts, platform architecture |
 | L5 | Chief Engineer | Company-wide | Blocks releases that compromise non-negotiables; reviews all irreversible decisions; cross-project coherence | Architecture validation, quality rulings, dissent log |
 

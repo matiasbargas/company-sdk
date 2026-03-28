@@ -154,8 +154,8 @@ if (fs.existsSync(squadSrc)) {
   count++;
 }
 
-// Copy protocol and AGENTS
-const extras = ['protocol.md', 'AGENTS.md'];
+// Copy protocol, AGENTS, and STRATEGY
+const extras = ['protocol.md', 'AGENTS.md', 'STRATEGY.md'];
 for (const extra of extras) {
   const src = path.join(sdkRoot, extra);
   if (fs.existsSync(src)) {
@@ -170,7 +170,13 @@ console.log(`\n✅ Project "${projectName}" bootstrapped (${count} files)`);
 console.log(`   Path: ${outputDir}`);
 console.log(`   Release: ${releaseId}`);
 console.log(`\nNext steps:`);
-console.log(`  1. Open ${outputDir}/project.md`);
-console.log(`  2. Fill in the Owner brief`);
-console.log(`  3. Activate agents in the order defined in SQUAD.md`);
-console.log(`  4. Or use: node scripts/squad.js ${squadType} to view the squad roster\n`);
+console.log(`  1. Open ${outputDir}/idea.md — fill in your raw idea and iterate with AI`);
+console.log(`  2. When ready: copy the brief from idea.md Section 4 and say "Hey Greg" to start Discovery`);
+console.log(`  3. Check ${outputDir}/current-status.md — your session continuity file (read this first on every resume)`);
+console.log(`  4. Read ${outputDir}/STRATEGY.md — align on the 4 success themes before the team activates`);
+console.log(`  5. Activate agents in the order defined in SQUAD.md`);
+console.log(`\nUseful doc commands:`);
+console.log(`  sdk-doc status ${outputDir}                          # Resume from where you left off`);
+console.log(`  sdk-doc log engineering-log.md --role EM --level M1 --goal "..." # Write area log entry`);
+console.log(`  sdk-doc pod-update current-status.md --mission "..." --status Active --next "..." # Track mission`);
+console.log(`  sdk-doc decision history.md --decision "..." --context "..." --made-by [Role]\n`);

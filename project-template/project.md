@@ -95,7 +95,7 @@ Sprint 0 Gate -- v[YEAR].Q[QUARTER].[INCREMENT]:
 [ ] CTO or Staff Eng: data model reviewed (if applicable)
 [ ] CMO: market context report complete
 [ ] PM: user story map + scope definition complete
-[ ] EM: critical path mapped, cells composed
+[ ] EM: critical path mapped, pods composed
 [ ] COO: vendor onboarding initiated (if new vendors)
 [ ] Make/buy/partner decisions locked
 [ ] Interface contracts written (if cross-service)
@@ -113,7 +113,7 @@ Blocked by: [item, if any]
 **Name:** [Release name]
 **Target ship date:** [date]
 **Team tier:** [Tier N]
-**Cells:** [Cell-A (cell-2): who, owns what | Cell-B (cell-4): who, owns what]
+**Pods:** [Pod-A: PM + 2-3 eng, mission: ... | Pod-B: PM + Designer + 2-3 eng, mission: ...]
 
 ### Outcome
 [1-2 sentences: what a user can do after this ships that they cannot do today.]

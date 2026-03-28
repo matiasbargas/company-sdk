@@ -23,17 +23,17 @@
 - **Produces:** User stories (PM track), implementation tickets (Eng track), section of requirements files
 - **Escalates:** Cross-domain tradeoffs, scope changes, anything touching shared interfaces
 - **Communication:** Weekly async updates; asks with proposed answer, not just questions
-- **Pairing:** Works within a cell; self-reviews before submitting
+- **Pairing:** Works within a mission pod; self-reviews before submitting
 - **Success bar:** Feature ships on time, acceptance criteria met, no regressions
 
 ### L3 — Senior
-- **Scope:** Full domain or full service; cell lead
-- **Decides alone:** Architecture within a cell, non-platform tooling make/buy, scope tradeoffs within sprint
-- **Produces:** Full domain artifacts, cell design, interface proposals, technical reviews
-- **Escalates:** Platform decisions, cross-cell dependencies, anything that changes another team's contract
-- **Communication:** Proactive blockers same day; status is specific ("3 of 5 tasks done, 1 blocked on auth decision")
+- **Scope:** Full domain or full service; mission pod technical lead
+- **Decides alone:** Architecture within a pod, non-platform tooling make/buy, scope tradeoffs within sprint
+- **Produces:** Full domain artifacts, pod design, interface proposals, technical reviews
+- **Escalates:** Platform decisions, cross-pod dependencies, anything that changes another team's contract
+- **Communication:** Proactive blockers same day; status is specific ("3 of 5 tasks done, 1 blocked on auth decision"); writes to engineering-log.md when goals change
 - **Pairing:** Mentors L1/L2; reviews PRs; flags platform concerns to Staff Engineer
-- **Success bar:** Cell ships predictably; no escalation surprises; L1/L2 in cell growing
+- **Success bar:** Pod ships predictably; no escalation surprises; L1/L2 in pod growing
 
 ### L4 — Staff
 - **Scope:** Cross-team; owns platform primitives and interface contracts
@@ -58,13 +58,13 @@
 ## Management Track
 
 ### M1 — Manager (EM)
-- **Scope:** 1–2 cells (2–8 ICs); maximum 2 cells before adding another EM
-- **Decides alone:** Cell composition, sprint scope within PM-approved backlog, daily priorities
-- **Produces:** Critical path map, squad status, sprint tickets, retro input
-- **Escalates:** Blockers same day; scope changes to PM + Coordinator; hiring needs to CHRO
-- **Communication:** Squad status format: "completed N, in-progress N, blocked N, at-risk N"; "almost done" is not a status
-- **Anti-patterns:** Managing 3+ cells; hiding blockers; scope-creeping in silence
-- **Success bar:** Cell ships predictably at 80% velocity; no burnout; blockers resolved same day
+- **Scope:** 1–2 active mission pods (3–8 total members); maximum 2 pods before adding another EM
+- **Decides alone:** Pod composition, sprint scope within PM-approved backlog, Appetite adjustments
+- **Produces:** Critical path map, pod status, sprint tickets, pod map, engineering-log entries, retro input
+- **Escalates:** Blockers same day; scope changes to PM + Coordinator; hiring needs to CHRO; Appetite exhaustion to CTO
+- **Communication:** Pod status format: "completed N, in-progress N, blocked N, at-risk N, appetite remaining N weeks"; "almost done" is not a status
+- **Anti-patterns:** Managing 3+ pods; hiding blockers; scope-creeping in silence; running a pod past its Appetite without a re-evaluation
+- **Success bar:** Pods ship predictably at 80% velocity; no burnout; blockers resolved same day; area log current
 
 ### M2 — Director
 - **Scope:** Multiple EMs and their cells; one product area
@@ -109,10 +109,10 @@
 |------|-------|-------|---------------|
 | Analyst (generic IC) | IC | L1 | None alone |
 | Associate IC | IC | L2 | Tactical within constraints |
-| Senior Engineer / Senior IC | IC | L3 | Cell-level architecture |
+| Senior Engineer / Senior IC | IC | L3 | Pod-level architecture |
 | Staff Engineer | IC | L4 | Cross-team platform |
 | Chief Engineer (Mario) | IC | L5 | Company quality floor |
-| Engineering Manager (EM) | Management | M1 | 1–2 cells |
+| Engineering Manager (EM) | Management | M1 | 1–2 mission pods |
 | PM | IC → M | L3/M1 | Product scope; bridges both tracks |
 | Liaison | IC | L3 | Communication bridge |
 | Coordinator | Management | M3 | Release management, org memory |

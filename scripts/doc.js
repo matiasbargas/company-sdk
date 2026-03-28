@@ -9,11 +9,17 @@
  *   node scripts/doc.js read    <file> --section <heading>
  *   node scripts/doc.js add-item <file> --section <heading> --item <text> [--status pending|done|blocked]
  *   node scripts/doc.js decision <file> --decision <text> --context <text> --made-by <role>
+ *   node scripts/doc.js log <area-log-file> --role <role> --level <level> --goal <text> [--outcome <text>] [--reqs <text>] [--status active|completed|blocked]
+ *   node scripts/doc.js status [<project-dir>]
+ *   node scripts/doc.js pod-update <current-status-file> --mission <name> --status <status> --next <action>
  *
  * Examples:
  *   node scripts/doc.js append project.md --section "## Sprint 1" --content "Day 1: Auth complete"
  *   node scripts/doc.js add-item security-requirements.md --section Pending --item "Implement rate limiting"
  *   node scripts/doc.js decision history.md --decision "Use Postgres" --context "Needed ACID" --made-by CTO
+ *   node scripts/doc.js log engineering-log.md --role EM --level M1 --goal "Pod-A completed auth service" --status completed
+ *   node scripts/doc.js status ./projects/my-project
+ *   node scripts/doc.js pod-update current-status.md --mission "Auth Service" --status "Active" --next "EM: integrate with API gateway"
  */
 
 const fs = require('fs');
@@ -36,22 +42,28 @@ Usage:
   node scripts/doc.js <command> <file> [options]
 
 Commands:
-  append   <file> --section <heading> --content <text>    Append content after a section heading
-  rewrite  <file> --section <heading> --content <text>    Replace section content
-  read     <file> --section <heading>                     Read a section
-  add-item <file> --section <heading> --item <text>       Add a checklist item to a section
-               [--status pending|done|blocked]
-  decision <file> --decision <text> --context <text>      Append a decision entry
-               --made-by <role> [--release <id>]
-               [--rationale <text>] [--reversible yes|no]
-  list     <file>                                         List all headings in the file
+  append      <file> --section <heading> --content <text>   Append content after a section heading
+  rewrite     <file> --section <heading> --content <text>   Replace section content
+  read        <file> --section <heading>                    Read a section
+  add-item    <file> --section <heading> --item <text>      Add a checklist item to a section
+                     [--status pending|done|blocked]
+  decision    <file> --decision <text> --context <text>     Append a decision entry
+                     --made-by <role> [--release <id>]
+                     [--rationale <text>] [--reversible yes|no]
+  log         <area-log-file> --role <role> --level <level> Write a structured area log entry
+                     --goal <text> [--outcome <text>]        (saves tokens vs. full file read/write)
+                     [--reqs <text>] [--status active|completed|blocked|cancelled]
+  status      [<project-dir>]                               Print current-status.md (session resume)
+  pod-update  <current-status-file> --mission <name>        Update a mission row in current-status.md
+                     --status <status> --next <action>
+  list        <file>                                        List all headings in the file
 
 Examples:
-  node scripts/doc.js append project.md --section "## Sprint 1" --content "Day 1 complete"
-  node scripts/doc.js add-item security-requirements.md --section Pending --item "Rate limiting"
+  node scripts/doc.js log engineering-log.md --role EM --level M1 --goal "Pod-A completed auth" --status completed
+  node scripts/doc.js status ./projects/my-project
+  node scripts/doc.js pod-update current-status.md --mission "Auth Service" --status Active --next "EM: wire API"
   node scripts/doc.js decision history.md --decision "Use Postgres" --context "ACID needed" --made-by CTO
   node scripts/doc.js read general-requirements.md --section "## Pending"
-  node scripts/doc.js list project.md
 `);
 }
 
@@ -305,6 +317,82 @@ function cmdDecision() {
   console.log(`✓ Decision logged to ${filePath}`);
 }
 
+// ─── New commands ─────────────────────────────────────────────────────────────
+
+function cmdLog() {
+  if (!opts.role || !opts.level || !opts.goal) {
+    console.error('Missing required options: --role, --level, --goal');
+    process.exit(1);
+  }
+
+  const now = new Date().toISOString().split('T')[0];
+  const status = opts.status || 'active';
+  const outcome = opts.outcome || '—';
+  const reqs = opts.reqs || 'None';
+
+  const entry = `
+## ${now} ${opts.role} ${opts.level}
+Goal/Change: ${opts.goal}
+Expected outcome: ${outcome}
+Requirements discovered: ${reqs}
+Status: ${status.toUpperCase()}
+`.trimStart();
+
+  const content = readFile(filePath);
+  const newContent = content.trimEnd() + '\n\n---\n\n' + entry;
+  writeFile(filePath, newContent);
+  console.log(`✓ Area log entry written to ${filePath}`);
+}
+
+function cmdStatus() {
+  // filePath is the project dir when command is 'status'
+  const projectDir = filePath ? path.resolve(filePath) : process.cwd();
+  const statusFile = path.join(projectDir, 'current-status.md');
+
+  if (!fs.existsSync(statusFile)) {
+    console.error(`current-status.md not found in: ${projectDir}`);
+    console.error('Run sdk-bootstrap first or check the project directory.');
+    process.exit(1);
+  }
+
+  const content = fs.readFileSync(statusFile, 'utf8');
+  console.log('\n' + content);
+}
+
+function cmdPodUpdate() {
+  if (!opts.mission || !opts.status || !opts.next) {
+    console.error('Missing required options: --mission, --status, --next');
+    process.exit(1);
+  }
+
+  const content = readFile(filePath);
+  const now = new Date().toISOString().split('T')[0] + ' ' + new Date().toTimeString().slice(0, 5);
+
+  // Update "Last updated" line
+  let updated = content.replace(
+    /\*\*Last updated:\*\* .+/,
+    `**Last updated:** ${now}`
+  );
+
+  // Try to find and update the mission row in the Active Missions table
+  const missionRegex = new RegExp(`(\\|[^|]*${opts.mission}[^|]*\\|[^|]*\\|[^|]*\\|)[^|]*(\\|)[^|]*(\\|)`, 'i');
+  if (missionRegex.test(updated)) {
+    updated = updated.replace(missionRegex, (match, p1, p2, p3) => {
+      return `${p1} ${opts.status} ${p2} ${opts.next} ${p3}`;
+    });
+    console.log(`✓ Updated mission "${opts.mission}" in ${filePath}`);
+  } else {
+    // Append to Active Missions section
+    updated = updated.replace(
+      /(\| \[Mission name\][^\n]*\n)/,
+      `$1| ${opts.mission} | — | — | ${opts.status} | ${opts.next} |\n`
+    );
+    console.log(`✓ Added mission "${opts.mission}" to ${filePath}`);
+  }
+
+  writeFile(filePath, updated);
+}
+
 // ─── Dispatch ────────────────────────────────────────────────────────────────
 
 switch (command) {
@@ -314,6 +402,9 @@ switch (command) {
   case 'rewrite': cmdRewrite(); break;
   case 'add-item': cmdAddItem(); break;
   case 'decision': cmdDecision(); break;
+  case 'log': cmdLog(); break;
+  case 'status': cmdStatus(); break;
+  case 'pod-update': cmdPodUpdate(); break;
   default:
     console.error(`Unknown command: "${command}"`);
     printHelp();

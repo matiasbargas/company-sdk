@@ -28,22 +28,32 @@ For the full walkthrough → **[HOW_IT_WORKS.md](./HOW_IT_WORKS.md)**
 
 ## Quick Start
 
-### Via npm (recommended)
+### Start a project
 ```bash
 npm install -g company-sdk
 
-# Bootstrap a new project
-sdk-bootstrap my-saas --squad mvp
+# Full init — scaffold + Claude project + Greg primer  ← recommended
+sdk-init my-saas --squad mvp
+sdk-init my-saas --squad startup --idea "Burn rate tracker for solo founders"
 
-# See the activation sequence for that squad
-sdk-squad mvp
+# Lower-level scaffold only
+sdk-bootstrap my-saas --squad mvp
 ```
+
+### Ask an agent a question (no project needed)
+```
+/ask CTO should we build this in-house or use a managed service?
+/ask Greg what's the biggest strategic risk in entering two markets at once?
+/ask CLO what does GDPR actually require for behavioral analytics?
+/ask what's the right data model for a multi-tenant SaaS?
+```
+
+Agents are independent of any project. They answer from domain expertise and may spawn peer consultations for depth. See `roles/CONSULT.md`.
 
 ### Manual
 ```bash
 git clone git@github.com:matiasbargas/company-sdk.git
-
-node path/to/company-sdk/scripts/bootstrap.js my-saas --squad mvp
+node path/to/company-sdk/scripts/init.js my-saas --squad mvp
 ```
 
 ---
@@ -177,7 +187,10 @@ Liaison is the only agent that crosses between execution and leadership simultan
 ## CLI Reference
 
 ```bash
-# Bootstrap a new project directory with all template files
+# Init a new project — scaffold, Claude project, and primer for Greg  ← recommended
+sdk-init <name> [--squad <type>] [--output <dir>] [--idea "..."]
+
+# Bootstrap a new project directory with all template files (lower-level)
 sdk-bootstrap <name> [--squad <type>] [--output <dir>]
 
 # View squad activation sequence
@@ -191,11 +204,19 @@ sdk-doc append <file> --section <heading> --content     # append to section
 sdk-doc rewrite <file> --section <heading> --content    # replace a section
 sdk-doc add-item <file> --section <heading> --item      # append a list item
 sdk-doc decision <file> --decision --context --made-by  # log a decision
+
+# Update a project's team-sdk copy with the latest SDK (run from the project folder)
+sdk-update <sdk-source-path>                            # sync roles, scripts, protocol, templates
+sdk-update <sdk-source-path> --dry-run                 # preview changes without writing
 ```
 
 Examples:
 ```bash
-# Start an MVP project
+# Full init — scaffold + Claude project + Greg primer
+sdk-init my-saas --squad mvp
+sdk-init fintech --squad startup --idea "Burn rate tracker for solo founders"
+
+# Lower-level bootstrap only
 sdk-bootstrap analytics-tool --squad mvp
 
 # Log an architecture decision
@@ -244,7 +265,8 @@ company-sdk/
     [domain]-requirements.md  ← 12 domain stubs
 
   scripts/
-    bootstrap.js          ← sdk-bootstrap
+    init.js               ← sdk-init  (scaffold + Claude project + Greg primer)
+    bootstrap.js          ← sdk-bootstrap  (scaffold only)
     squad.js              ← sdk-squad
     doc.js                ← sdk-doc
 
@@ -252,6 +274,37 @@ company-sdk/
     project.md            ← Complete example conversation
     marketing-review.md   ← CMO market analysis
 ```
+
+---
+
+## The Project
+
+### What it is
+
+Most AI agent frameworks give you tools. team-sdk gives you a company.
+
+The problem with every other framework is not capability — they can all call APIs, loop on tasks, and pass context between agents. The problem is that they hand you a blank canvas. You still have to figure out who decides what, how decisions get logged, when legal review is required, how to escalate a security incident, what "done" means. Every team using those frameworks rebuilds the same organizational infrastructure from scratch, badly, under pressure. Then they ship something and six months later no one can explain why any of the decisions were made.
+
+team-sdk starts from a different premise: the missing ingredient in AI-assisted product development is not more capability — it is legitimate organizational structure. The SDK ships with 20+ role-based agents, each with a defined operating loop, a clear scope of authority, and a skill ladder. They share a versioned protocol with a standard communication format, a decision logging standard, an escalation ladder, and a machine-enforced compliance gate. On day one of any new project, legal and security reviews happen before architecture does — because that is when they should happen, not as a retrofit after you've committed to a stack and a launch date.
+
+It is designed for founders, senior engineers, and product leads who are serious about building something that lasts. Not prototypes — products. Not demos — companies.
+
+---
+
+### Pitch Deck
+
+| Slide | Core message | Key points |
+|---|---|---|
+| **1 — The Problem** | Every team rebuilds the same broken org chart from scratch | AI frameworks give capability without structure · Teams spend most of their time on coordination overhead · Output is capable but unaccountable |
+| **2 — The Insight** | The missing ingredient is organizational legitimacy, not intelligence | Every company that ships consistently has the same infrastructure: roles, authority, compliance gates · AI capability is commoditizing · Structure is the differentiator |
+| **3 — What it is** | A complete company OS you stand up in minutes | 20+ role-based agents with operating loops and skill ladders · Shared protocol: Bus format, decision logging, escalation, gate enforcement · Project template with every artifact a new team needs on day one |
+| **4 — How it works** | Structure drives execution — gates are enforced before work begins | Discovery → Execution → Close with defined activation sequences · CLO + CISO gate is machine-enforced before CTO activates · `/ask CLO`, `/ask CTO` — query any specialist without opening a full project |
+| **5 — Compliance first** | The first AI agent framework where legal and security are first-class architecture | `gate-check.js` enforces CLO+CISO gate programmatically · Decision log requires human approval for decisions affecting natural persons · EU AI Act notice and jurisdiction declaration built into the discovery gate · `DISCLAIMER.md` embedded in every project |
+| **6 — Two modes** | Full team for building, specialists on demand for deciding | **Project Mode**: full Discovery → Execution → Close cycle · **Consultation Mode**: `/ask [role] [question]` — agents spawn peers to stress-test their own reasoning, not just split tasks |
+| **7 — Squad compositions** | Four pre-configured patterns for the four most common build scenarios | Website (3–10 days) · Feature (days) · MVP (1–3 weeks) · Startup (3–6 weeks, full org) · One command: `sdk-init <name> --squad startup` |
+| **8 — Memory architecture** | The project map is the durable output — the full record of why | Every decision logged with context and human approver · Area logs by domain (strategy, design, engineering, ops, product, people) · Session continuity: any agent resumes from `current-status.md` · CEO validates project map before release is sealed |
+| **9 — Who it's for** | Founders and senior engineers building products, not prototypes | Teams of 1–10 who need to move fast without rebuilding org infrastructure · Technical founders who understand the cost of unstructured AI output · Regulated industries (fintech, healthtech, legaltech) where compliance is a feature, not overhead |
+| **10 — Where it's going** | The SDK is the foundation. The network is the product. | Squad marketplace: community-contributed agent definitions for specialized verticals · Cross-team protocol: federated decisions and shared audit trails across organizations · The bet: as AI capability commoditizes, teams with structured, auditable, human-in-the-loop operating systems are the ones regulators trust, enterprises buy from, and customers stay with |
 
 ---
 
