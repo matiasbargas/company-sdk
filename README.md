@@ -1,326 +1,225 @@
 # company-sdk
 
-> AI agent team operating system. Roles, levels, squads, protocol, and CLI — everything you need to run a software project with an AI team.
+> Most AI agent frameworks give you capability. This one gives you a company.
 
 ```bash
 npm install -g company-sdk
-
-sdk-bootstrap my-project --squad mvp
+sdk-init my-product --squad startup --idea "Burn rate tracker for solo founders"
 ```
 
 ---
 
-## What It Is
+## The problem
 
-Three layers that work together:
+Every team building with AI agents hits the same wall. The agents are capable. The coordination is a mess.
 
-| Layer | What it is | Files |
-|---|---|---|
-| **Roles** | Agent prompts. Paste one into a conversation and that agent is live. | `roles/` |
-| **Protocol** | How agents talk to each other. Bus format, escalation, decision log. | `protocol.md` |
-| **Squads** | Activation sequences for a specific workflow (website, feature, MVP, startup). | `squads/` |
+Who decides what? Who reviews the security posture before you commit to a stack? When does legal weigh in — before or after the API design? What happens when two agents disagree? How do you know a decision was made by a human, not inferred from context? Six months after shipping, can anyone explain why any of the decisions were made?
 
-Same roles, same protocol — different squad for different work. A website doesn't need a CLO. A startup does.
-
-For the full walkthrough → **[HOW_IT_WORKS.md](./HOW_IT_WORKS.md)**
+Other frameworks hand you a blank canvas. You still have to rebuild the organizational infrastructure — roles, authority, compliance gates, decision logging, escalation ladders — from scratch, under pressure, badly. Then you live with the consequences.
 
 ---
 
-## Quick Start
+## What it is
 
-### Start a project
-```bash
-npm install -g company-sdk
+company-sdk is a structured AI team OS. 20+ role-based agents that work together from idea to shipped product — each with a defined scope of authority, an operating loop, a skill ladder, and a protocol they all share.
 
-# Full init — scaffold + Claude project + Greg primer  ← recommended
-sdk-init my-saas --squad mvp
-sdk-init my-saas --squad startup --idea "Burn rate tracker for solo founders"
+On day one of any project, legal and security reviews happen before architecture does. Not as a retrofit. Not as a checklist you fill in after the fact. As a machine-enforced gate that the CTO cannot bypass until CLO and CISO have delivered. That is when those reviews should happen. This is the only framework where they do.
 
-# Lower-level scaffold only
-sdk-bootstrap my-saas --squad mvp
-```
+Two modes:
 
-### Ask an agent a question (no project needed)
+**Project Mode** — activate a full team for a specific build. Discovery → Execution → Ship. Every decision logged. Every gate checked. Every agent knows their lane.
+
+**Consultation Mode** — ask any specialist a standalone question, no project context needed. The agent may spawn 1–3 peer consultations to stress-test its own answer before responding. You get a synthesis, not a raw output.
+
 ```
 /ask CTO should we build this in-house or use a managed service?
-/ask Greg what's the biggest strategic risk in entering two markets at once?
 /ask CLO what does GDPR actually require for behavioral analytics?
+/ask Greg what's the biggest strategic risk in entering two markets at once?
 /ask what's the right data model for a multi-tenant SaaS?
 ```
 
-Agents are independent of any project. They answer from domain expertise and may spawn peer consultations for depth. See `roles/CONSULT.md`.
-
-### Manual
-```bash
-git clone git@github.com:matiasbargas/company-sdk.git
-node path/to/company-sdk/scripts/init.js my-saas --squad mvp
-```
-
 ---
 
-## Pick a Squad
-
-```
-Do you have an existing product?
-  ├── No → Do you need the full org structure?
-  │         ├── Yes → startup   (~3–6 weeks, all 16 agents)
-  │         └── No  → mvp       (~1–2 weeks, 10 agents)
-  └── Yes → Is it a website?
-             ├── Yes → website   (~3–7 days, 6 agents)
-             └── No  → feature   (~days, 3 agents)
-```
-
-| Squad | Agents | Time | Use for |
-|---|---|---|---|
-| `website` | 6 | 3–7 days | Landing page, marketing site, static site |
-| `feature` | 3 | Days | Adding a feature to an existing product |
-| `mvp` | 10 | 1–2 weeks | New product, lean activation |
-| `startup` | 16 | 3–6 weeks | Full org: strategy → legal → security → engineering |
-
----
-
-## The Role Set
-
-### Strategic Layer
-| Role | File | Owns |
-|---|---|---|
-| **Coordinator** | `roles/coordinator.md` | Release management, org memory, Sprint 0 gate |
-| **CEO** | `roles/ceo.md` | Strategic framing, final escalation, gate reviews |
-
-### Domain Specialists
-| Role | File | Owns | Activate when |
-|---|---|---|---|
-| **CLO** | `roles/clo.md` | Legal, compliance, contracts | Any legal, financial, or user data feature |
-| **CFO** | `roles/cfo.md` | Budget, runway, unit economics | Any cost or revenue component |
-| **CISO** | `roles/ciso.md` | Threat model, security, compliance | Any product handling user data, keys, or money |
-| **CMO** | `roles/cmo.md` | Market, positioning, launch | Before architecture — market shapes product |
-| **CRO** | `roles/cro.md` | Revenue, GTM, pricing | Any monetization component |
-| **CDO** | `roles/cdo.md` | Instrumentation, metrics, data governance | Any product that needs to measure itself |
-| **COO** | `roles/coo.md` | Vendors, support, operational runbook | External vendors or customer-facing ops |
-| **CHRO** | `roles/chro.md` | Hiring, onboarding, team health | Any project requiring new hires or team changes |
-
-### Execution Layer
-| Role | File | Owns |
-|---|---|---|
-| **CTO** | `roles/cto.md` | Architecture, make/buy, team sizing, technical risk |
-| **Mario (Chief Engineer)** | `roles/chief-engineer.md` | Irreversible decision review, architectural authority over all ICs |
-| **PM** | `roles/pm.md` | User story, scope, friction log, vision alignment |
-| **Staff Engineer** | `roles/staff-engineer.md` | Interface contracts, platform primitives, cross-cell coherence |
-| **EM** | `roles/em.md` | Cell management (max 2 cells), critical path, sprint |
-| **Liaison** | `roles/liaison.md` | Execution ↔ leadership communication bridge |
-
----
-
-## The Level Ladder
-
-Every role has a level. Compose teams at the right level for the work.
-
-### IC Track
-| Level | Title | What they do |
-|---|---|---|
-| L1 | Junior | Learns inside well-scoped tasks. Needs daily check-ins. |
-| L2 | Mid | Executes reliably within defined scope. Needs weekly alignment. |
-| L3 | Senior | Owns a module end-to-end. Drives scope definition. |
-| L4 | Staff | Cross-team technical direction. Owns the platform layer. |
-| L5 | Principal | Org-wide technical strategy. Sets irreversible decisions. |
-
-### Management Track
-| Level | Title | Scope |
-|---|---|---|
-| M1 | EM | 1–2 cells, day-to-day execution |
-| M2 | Senior EM | 2–4 cells, cross-cell coherence |
-| M3 | Director | Multiple EMs, 1 product area |
-| M4 | VP | Multiple Directors, org-wide delivery |
-| M5 | C-Suite | Company-wide strategy and accountability |
-
-Full ladder → `levels/ladder.md`
-
----
-
-## The Cell Model
-
-The atomic unit of an engineering team.
-
-```
-Cell-2:   1 Senior + 1 Mid/Senior      →  owns 1 service or module
-Cell-4:   1 Staff + 2 Senior + 1 Mid   →  owns a full product slice
-
-EM ratio: 1 EM per 2 cells max.
-```
-
-```
-Tier 1 (Solo):     1 person
-Tier 2 (Small):    1× cell-2    →  1 EM
-Tier 3 (Medium):   2× cell-2    →  1 EM
-Tier 4 (Large):    4× cell-2    →  2 EMs
-Tier 5 (Program):  3–6× cell-4  →  1 EM per 2 cells
-```
-
-Anti-patterns: a cell of 3 is not a cell. A cell of 5+ is two cells with blurred ownership. An EM managing 3+ cells is a bottleneck.
-
----
-
-## Communication Flow
-
-The Owner speaks only to CEO or Coordinator. Never directly to execution agents.
-
-```
-OWNER
-  ├──> CEO ──────────────────────────────────────────> COORDINATOR
-  │      |                                                   |
-  │      └──> CLO | CFO | CISO | CMO | CRO | CDO | COO | CHRO
-  │                                                          |
-  │      └──> CTO ──> Mario (Chief Engineer)                |
-  │                        |                                 |
-  │      └──> PM     Staff Engineer                         |
-  │                        |                                 |
-  │                  Cell-A ←──> EM ←──> Liaison ──────────┘
-  │                  Cell-B ←──> EM
-  │
-  └──> COORDINATOR (process, status, gate reviews)
-```
-
-Liaison is the only agent that crosses between execution and leadership simultaneously. Mario is the only agent with horizontal authority across all engineering teams — craft, not management.
-
----
-
-## CLI Reference
+## Quick start
 
 ```bash
-# Init a new project — scaffold, Claude project, and primer for Greg  ← recommended
-sdk-init <name> [--squad <type>] [--output <dir>] [--idea "..."]
+npm install -g company-sdk
 
-# Bootstrap a new project directory with all template files (lower-level)
-sdk-bootstrap <name> [--squad <type>] [--output <dir>]
+# Start a new project — scaffolds everything, primes the team, opens with Greg
+sdk-init my-saas --squad startup --idea "your raw idea here"
 
-# View squad activation sequence
-sdk-squad list
-sdk-squad <website|feature|mvp|startup>
+# Or skip the idea for now
+sdk-init my-saas --squad mvp
+```
+
+Then open `my-saas/idea.md`, complete Section 4, and say:
+> "Hey Greg — [paste the brief from idea.md Section 4]"
+
+Greg activates the team. The protocol handles the rest.
+
+---
+
+## Squads
+
+Squads are starting templates — pre-configured team compositions for common scenarios. They are not rigid prescriptions. Every squad uses the same roles and the same protocol. The difference is which agents activate and in what order.
+
+```
+Starting a new product?
+  ├── Need full org coverage (legal, security, finance, market)? → startup
+  └── Want to move lean and add coverage as you go?            → mvp
+
+Adding to an existing product?
+  ├── It's a website or marketing surface?  → website
+  └── It's a product feature?               → feature
+```
+
+| Squad | Agents | Best for |
+|---|---|---|
+| `startup` | 20+ | New product where legal, security, finance, and market context all matter before you write a line of code |
+| `mvp` | 10 | New product, lean team, add coverage later |
+| `feature` | 3 | Adding a scoped feature to a product that already has architecture and context |
+| `website` | 6 | Landing page, marketing site, or any static surface |
+
+You can always activate more agents mid-project. Squads define where you start, not where you can go.
+
+---
+
+## How a project works
+
+```
+Phase 0  — Coordinator receives the brief
+Phase 1  — CEO frames strategy · CLO maps legal · CISO sets security
+           CFO validates budget · CMO provides market context
+           UX Researcher plans user research · PM shapes mission scope
+Phase 2  — CTO architects (only after CLO + CISO gate clears)
+           Mario reviews irreversible decisions
+           Designer sets interface direction · Staff Engineer defines contracts
+           EM composes pods and maps critical path
+Phase 3  — Liaison activates Sprint 1 · Engineers execute
+Phase 4  — All agents write area logs · PM seals kanban
+           CEO validates project map · Coordinator seals the release
+```
+
+The CLO + CISO gate is machine-enforced. `sdk-gate-check` will fail until both have delivered and jurisdictions are declared. Architecture that begins before this gate is unreviewed architecture.
+
+---
+
+## The agents
+
+20+ roles across four layers. Each has a persona, an operating loop, a domain scope, a skill ladder, and a consultation mode.
+
+**Strategic** — CEO (Greg), Coordinator
+
+**Domain specialists** — CLO · CISO · CFO · CMO · CRO · CDO · COO · CHRO
+
+**Extended specialists** — Chief Risk Officer · Chief Compliance Officer · Chief AI Officer · Chief Analytics Officer · Chief Customer Officer · Chief Credit Officer · Chief Protocol Officer · Chief Partnerships Officer
+
+**Execution** — CTO · Chief Engineer (Mario) · PM · Designer · UX Researcher · Staff Engineer · EM · Engineer (IC) · Liaison (Gabriela)
+
+Full index with activation triggers and first words → `roles/CLAUDE.md`
+
+---
+
+## What gets logged
+
+Every consequential decision is written to `history.md` with:
+- What was decided and why
+- Who made it (AI-assisted / AI-generated / Human)
+- Human approver name and date — required for any decision affecting natural persons
+- Whether it's reversible
+
+Area logs capture the running record by domain: engineering, product, design, operations, people, strategy. `current-status.md` is the session continuity file — every agent reads it first on resume.
+
+Six months after shipping, you can explain every decision. That is not an accident.
+
+---
+
+## CLI
+
+```bash
+# Start a project
+sdk-init <name> [--squad <type>] [--idea "..."]   # scaffold + Claude project + Greg primer
+sdk-bootstrap <name> [--squad <type>]              # scaffold only
+
+# Gate check (run before activating CTO)
+sdk-gate-check <project-dir>
 
 # Document operations
-sdk-doc list <file>                                     # list sections
-sdk-doc read <file> --section <heading>                 # read a section
-sdk-doc append <file> --section <heading> --content     # append to section
-sdk-doc rewrite <file> --section <heading> --content    # replace a section
-sdk-doc add-item <file> --section <heading> --item      # append a list item
-sdk-doc decision <file> --decision --context --made-by  # log a decision
+sdk-doc status <project-dir>                       # where are we right now
+sdk-doc read <file> --section <heading>
+sdk-doc append <file> --section <heading> --content "..."
+sdk-doc decision <file> --decision "..." --context "..." --made-by [Role]
 
-# Update a project's team-sdk copy with the latest SDK (run from the project folder)
-sdk-update <sdk-source-path>                            # sync roles, scripts, protocol, templates
-sdk-update <sdk-source-path> --dry-run                 # preview changes without writing
-```
+# Squad reference
+sdk-squad <startup|mvp|feature|website>
 
-Examples:
-```bash
-# Full init — scaffold + Claude project + Greg primer
-sdk-init my-saas --squad mvp
-sdk-init fintech --squad startup --idea "Burn rate tracker for solo founders"
-
-# Lower-level bootstrap only
-sdk-bootstrap analytics-tool --squad mvp
-
-# Log an architecture decision
-sdk-doc decision projects/analytics-tool/history.md \
-  --decision "Use Supabase instead of raw Postgres" \
-  --context "Saves 2 weeks of auth setup" \
-  --made-by CTO \
-  --reversible yes
-
-# Update a requirements section
-sdk-doc append projects/analytics-tool/product-requirements.md \
-  --section "## Out of Scope" \
-  --item "Admin dashboard — post-MVP"
+# Keep your local team-sdk copy current
+sdk-update <sdk-source-path>
+sdk-update <sdk-source-path> --dry-run
 ```
 
 ---
 
-## File Map
+## File map
 
 ```
 company-sdk/
   README.md
-  HOW_IT_WORKS.md         ← Full narrative walkthrough
-  AGENTS.md               ← Activation order + dependency graph
-  SQUADS.md               ← Squad comparison and decision guide
-  protocol.md             ← Bus format, escalation, decision log rules
-  package.json
+  HOW_IT_WORKS.md       ← Full narrative walkthrough — start here if you want the full picture
+  AGENTS.md             ← Activation sequence, dependency graph, peer integration map
+  STRATEGY.md           ← Corporate strategy layer: 4 success themes, Betting Table rules
+  protocol.md           ← Bus format, escalation, decision log standard (v3.3)
+  DISCLAIMER.md         ← AI agent liability, EU AI Act notice, human-in-the-loop requirement
+  CLAUDE.md             ← SDK-level instructions for Claude Code
+
+  .claude/commands/     ← /ask, /askGreg, /askCTO skills (Claude Code slash commands)
 
   roles/
-    _template.md          ← Blank 4-block prompt template
-    coordinator.md | ceo.md
-    clo.md | cfo.md | ciso.md | cmo.md | cro.md | cdo.md | coo.md | chro.md
-    cto.md | chief-engineer.md | pm.md | staff-engineer.md | em.md | liaison.md
+    CLAUDE.md           ← Agent index: all roles, activation triggers, first words
+    CONSULT.md          ← Consultation mode reference: spawning policy, synthesis standard
+    _template.md        ← 4-block prompt template for new agents
+    [role].md           ← 20+ agent definitions
 
   levels/
-    ladder.md             ← IC and Management track definitions
+    ladder.md           ← IC and Management track definitions
 
   squads/
-    website.md | feature.md | mvp.md | startup.md
+    startup.md | mvp.md | feature.md | website.md
 
-  project-template/
-    project.md            ← Owner brief and conversation record
-    history.md            ← Decision log
-    liaison-log.md        ← Daily sprint health
+  project-template/     ← Every file a new project gets on bootstrap
+    idea.md             ← Raw idea brief — Owner fills this, Greg reads it
+    current-status.md   ← Session continuity — every agent reads this first
+    project-map.md      ← CEO-validated release artifact, sealed at close
+    history.md          ← Decision log
     general-requirements.md
-    [domain]-requirements.md  ← 12 domain stubs
+    discovery-requirements.md   ← CLO + CISO gate + jurisdiction declaration
+    product-requirements.md
+    engineering-requirements.md
+    design-requirements.md
+    business-requirements.md
+    security-requirements.md    ← CISO non-negotiables, present in every project
+    [area]-log.md × 6          ← engineering, product, design, operations, people, strategy
+    CLAUDE.md | DISCLAIMER.md
 
   scripts/
-    init.js               ← sdk-init  (scaffold + Claude project + Greg primer)
-    bootstrap.js          ← sdk-bootstrap  (scaffold only)
-    squad.js              ← sdk-squad
-    doc.js                ← sdk-doc
-
-  example-bitcoin-wallet/
-    project.md            ← Complete example conversation
-    marketing-review.md   ← CMO market analysis
+    init.js             ← sdk-init
+    bootstrap.js        ← sdk-bootstrap
+    gate-check.js       ← sdk-gate-check
+    doc.js              ← sdk-doc
+    squad.js            ← sdk-squad
+    update.js           ← sdk-update
 ```
 
 ---
 
-## The Project
+## Who it's for
 
-### What it is
+Founders, technical leads, and senior engineers who are building products, not prototypes. Teams of 1–10 who need to move fast without rebuilding organizational infrastructure from scratch every time.
 
-Most AI agent frameworks give you tools. team-sdk gives you a company.
+It is especially useful in regulated industries — fintech, healthtech, legaltech — where compliance is a feature, not an afterthought. The framework treats legal and security as first-class architecture, not a retrofit.
 
-The problem with every other framework is not capability — they can all call APIs, loop on tasks, and pass context between agents. The problem is that they hand you a blank canvas. You still have to figure out who decides what, how decisions get logged, when legal review is required, how to escalate a security incident, what "done" means. Every team using those frameworks rebuilds the same organizational infrastructure from scratch, badly, under pressure. Then they ship something and six months later no one can explain why any of the decisions were made.
-
-team-sdk starts from a different premise: the missing ingredient in AI-assisted product development is not more capability — it is legitimate organizational structure. The SDK ships with 20+ role-based agents, each with a defined operating loop, a clear scope of authority, and a skill ladder. They share a versioned protocol with a standard communication format, a decision logging standard, an escalation ladder, and a machine-enforced compliance gate. On day one of any new project, legal and security reviews happen before architecture does — because that is when they should happen, not as a retrofit after you've committed to a stack and a launch date.
-
-It is designed for founders, senior engineers, and product leads who are serious about building something that lasts. Not prototypes — products. Not demos — companies.
+If you want to understand every decision your AI team made and why, six months after it made them: this is the framework for that.
 
 ---
 
-### Pitch Deck
-
-| Slide | Core message | Key points |
-|---|---|---|
-| **1 — The Problem** | Every team rebuilds the same broken org chart from scratch | AI frameworks give capability without structure · Teams spend most of their time on coordination overhead · Output is capable but unaccountable |
-| **2 — The Insight** | The missing ingredient is organizational legitimacy, not intelligence | Every company that ships consistently has the same infrastructure: roles, authority, compliance gates · AI capability is commoditizing · Structure is the differentiator |
-| **3 — What it is** | A complete company OS you stand up in minutes | 20+ role-based agents with operating loops and skill ladders · Shared protocol: Bus format, decision logging, escalation, gate enforcement · Project template with every artifact a new team needs on day one |
-| **4 — How it works** | Structure drives execution — gates are enforced before work begins | Discovery → Execution → Close with defined activation sequences · CLO + CISO gate is machine-enforced before CTO activates · `/ask CLO`, `/ask CTO` — query any specialist without opening a full project |
-| **5 — Compliance first** | The first AI agent framework where legal and security are first-class architecture | `gate-check.js` enforces CLO+CISO gate programmatically · Decision log requires human approval for decisions affecting natural persons · EU AI Act notice and jurisdiction declaration built into the discovery gate · `DISCLAIMER.md` embedded in every project |
-| **6 — Two modes** | Full team for building, specialists on demand for deciding | **Project Mode**: full Discovery → Execution → Close cycle · **Consultation Mode**: `/ask [role] [question]` — agents spawn peers to stress-test their own reasoning, not just split tasks |
-| **7 — Squad compositions** | Four pre-configured patterns for the four most common build scenarios | Website (3–10 days) · Feature (days) · MVP (1–3 weeks) · Startup (3–6 weeks, full org) · One command: `sdk-init <name> --squad startup` |
-| **8 — Memory architecture** | The project map is the durable output — the full record of why | Every decision logged with context and human approver · Area logs by domain (strategy, design, engineering, ops, product, people) · Session continuity: any agent resumes from `current-status.md` · CEO validates project map before release is sealed |
-| **9 — Who it's for** | Founders and senior engineers building products, not prototypes | Teams of 1–10 who need to move fast without rebuilding org infrastructure · Technical founders who understand the cost of unstructured AI output · Regulated industries (fintech, healthtech, legaltech) where compliance is a feature, not overhead |
-| **10 — Where it's going** | The SDK is the foundation. The network is the product. | Squad marketplace: community-contributed agent definitions for specialized verticals · Cross-team protocol: federated decisions and shared audit trails across organizations · The bet: as AI capability commoditizes, teams with structured, auditable, human-in-the-loop operating systems are the ones regulators trust, enterprises buy from, and customers stay with |
-
----
-
-## Golden Rules
-
-1. Owner speaks only to CEO or Coordinator. Never directly to execution agents.
-2. Every consequential decision gets written to `history.md`. If it's not written, it didn't happen.
-3. "Almost done" is not a status.
-4. Blockers escalate the same day.
-5. Sprint 0 gate is real. Nothing gets coded until all boxes are checked.
-6. 1 Senior + 1 Mid/Senior per cell. EM manages 2 cells max.
-7. The requirements files are the source of truth, not conversations.
-8. Different squad, same protocol. Don't rewrite the rules — pick the right squad.
-9. Level determines behavior. Compose teams at the right level for the work.
-10. The Liaison crosses layers. Everyone else stays in their lane.
-
----
-
-*`company-sdk` — 16 roles · 4 squads · 2-track level ladder · 3 CLI tools*
+*company-sdk — 20+ roles · 4 squads · protocol v3.3 · 6 CLI tools*
