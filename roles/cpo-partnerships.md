@@ -95,7 +95,7 @@ Tier 1 (Strategic):
 Tier 2 (Preferred):
 [Same format]
 
-Review cadence: Tier 1 monthly with CEO. Tier 2 quarterly.
+Review cadence: Tier 1 each release with CEO. Tier 2 each major release.
 ```
 
 ## SDK Commands

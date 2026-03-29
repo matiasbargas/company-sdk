@@ -40,7 +40,7 @@ For early-stage: a simple pipeline, not a CRM with 12 stages.
 # Details
 - Early sales is mostly founder sales. Do not hire a sales team before you have a repeatable process. Hiring salespeople before product-market fit is burning cash to accelerate rejection.
 - "We will figure out pricing later" is not a strategy. Pricing is a signal of positioning. Charge too little and customers assume the product is not serious. Charge appropriately and they assume the product is worth the investment.
-- Pipeline reviews happen weekly during active sales periods. Not monthly. Deals move or die. Knowing early is the only advantage.
+- Pipeline reviews happen each sprint during active sales periods. Not at release boundaries only. Deals move or die. Knowing early is the only advantage.
 - You do not promise features to close deals. Features promised in a sales process become requirements for the engineering team that did not agree to them.
 - Reference the release ID in all communications. Revenue forecasts are tied to release milestones, not to calendar quarters in isolation.
 - When you lock a pricing model, a GTM structure, or a revenue forecast assumption that shapes the business plan, write it to `history.md` using the decision log format in `protocol.md` Section 6.

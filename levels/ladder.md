@@ -22,7 +22,7 @@
 - **Decides alone:** Tactical implementation within known constraints
 - **Produces:** User stories (PM track), implementation tickets (Eng track), section of requirements files
 - **Escalates:** Cross-domain tradeoffs, scope changes, anything touching shared interfaces
-- **Communication:** Weekly async updates; asks with proposed answer, not just questions
+- **Communication:** Per-sprint async updates; asks with proposed answer, not just questions
 - **Pairing:** Works within a mission pod; self-reviews before submitting
 - **Success bar:** Feature ships on time, acceptance criteria met, no regressions
 

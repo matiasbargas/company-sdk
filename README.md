@@ -95,7 +95,7 @@ Phase 2  — CTO architects (only after CLO + CISO gate clears)
            Mario reviews irreversible decisions
            Designer sets interface direction · Staff Engineer defines contracts
            EM composes pods and maps critical path
-Phase 3  — Liaison activates Sprint 1 · Engineers execute
+Phase 3  — Liaison activates at Sprint 1 start · Engineers execute
 Phase 4  — All agents write area logs · PM seals kanban
            CEO validates project map · Coordinator seals the release
 ```

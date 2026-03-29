@@ -1,7 +1,7 @@
 # Squad: Website
 
 > **Use this squad when:** You need to design, build, and ship a public-facing website.
-> **Duration:** 3–10 days
+> **Size:** Small–Medium (5–7 roles, lean delivery)
 > **Roles:** 5–7 activated
 > **Protocol:** Same `protocol.md` — same Bus format, same escalation ladder, same requirements files.
 
@@ -23,29 +23,29 @@ A lean squad for shipping a website — from landing page to full marketing site
 
 ## Activation Sequence
 
-### Phase 0 — Brief (Day 1)
+### Phase 0 — Brief
 | # | Role | Output | Notes |
 |---|------|--------|-------|
 | 1 | Coordinator | Brief received, `project.md` created, squad roster confirmed | Owner → Coordinator only |
 | 2 | PM | Scope document: pages, content sections, user goals, success definition | Gates CTO |
 
-### Phase 1 — Architecture (Day 1–2)
-| # | Role | Output | Duration |
-|---|------|--------|---------|
-| 3 | CTO | Tech stack decision (framework, CMS, hosting, CDN), make/buy/partner matrix | 1 day |
-| 4 | CMO _(optional)_ | Positioning statement, brand voice, key messages per page | 1 day |
-| 5 | CISO _(if user data/forms)_ | Auth requirements, data handling non-negotiables | 0.5 day |
+### Phase 1 — Architecture
+| # | Role | Output |
+|---|------|--------|
+| 3 | CTO | Tech stack decision (framework, CMS, hosting, CDN), make/buy/partner matrix |
+| 4 | CMO _(optional)_ | Positioning statement, brand voice, key messages per page |
+| 5 | CISO _(if user data/forms)_ | Auth requirements, data handling non-negotiables |
 
-### Phase 2 — Plan (Day 2–3)
-| # | Role | Output | Duration |
-|---|------|--------|---------|
-| 6 | Staff Engineer | Interface contracts: component library, routing, CMS schema, API contracts if any | 1 day |
-| 7 | EM | Cell composition, sprint plan, critical path | 0.5 day |
+### Phase 2 — Plan
+| # | Role | Output |
+|---|------|--------|
+| 6 | Staff Engineer | Interface contracts: component library, routing, CMS schema, API contracts if any |
+| 7 | EM | Cell composition, sprint plan, critical path |
 
-### Phase 3 — Execution (Days 3–N)
-| # | Role | Output | Duration |
-|---|------|--------|---------|
-| 8 | Liaison | Daily communication bridge between cell and Coordinator | Active until ship |
+### Phase 3 — Execution
+| # | Role | Output | Notes |
+|---|------|--------|-------|
+| 8 | Liaison | Communication bridge between cell and Coordinator | Active until ship |
 | 9 | EM + Cell | Page implementations, content integration, performance passes | Sprint-based |
 
 ### Phase 4 — Completion
@@ -66,7 +66,7 @@ A lean squad for shipping a website — from landing page to full marketing site
 | CTO | M4 | ✅ | Tech stack, `product-engineering-requirements.md` |
 | Staff Engineer | L4 | ✅ | Interface contracts, component standards |
 | EM | M1 | ✅ | Sprint delivery, cell management, `delivery-requirements.md` |
-| Liaison | L3 | ✅ | Daily communication, `liaison-log.md` |
+| Liaison | L3 | ✅ | Communication bridge, `liaison-log.md` |
 | CMO | M3 | ⚡ optional | Positioning, brand voice, copy review |
 | CISO | M3 | ⚡ if user data | Auth requirements, data handling |
 | CLO | M3 | ⚡ if regulated content | Legal review |

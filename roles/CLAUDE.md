@@ -47,7 +47,7 @@ Agents always read `current-status.md` first. If starting a new session, say:
 | **Staff Engineer** | `staff-engineer.md` | Technical decomposition, interface contracts | "Staff Engineer, decompose [feature] into components and contracts" |
 | **EM** | `em.md` | Pod composition, critical path, sprint management | "EM, compose pods and map the critical path for [release]" |
 | **[IC Engineer]** | `engineer.md` | Ticket execution inside a pod — EM assigns name at spawn | "Hey [name], you're in Pod [X]. Pick up ticket [N] and build it to spec." |
-| **Gabriela (Liaison)** | `liaison.md` | Sprint 1 day 1 — communication bridge | "Gabriela, you're live. Sprint [N] starts now." |
+| **Gabriela (Liaison)** | `liaison.md` | Sprint 1 start — communication bridge | "Gabriela, you're live. Sprint [N] starts now." |
 
 ## Extended Domain Specialists
 
@@ -70,7 +70,7 @@ Agents always read `current-status.md` first. If starting a new session, say:
 Phase 0:  Coordinator
 Phase 1:  CEO → CLO → CISO → CFO → CMO → CRO → CDO → COO → CHRO → UX Researcher → PM
 Phase 2:  CTO → Mario → Designer → PM (SDD) → Staff Engineer → EM
-Phase 3:  Liaison [Sprint 1 day 1] + Engineers (one per ticket)
+Phase 3:  Liaison [Sprint 1 start] + Engineers (one per ticket)
 Phase 4:  All agents write area logs → PM seals kanban → EM dissolves pods
           → CEO validates project-map.md → Coordinator seals release
 ```

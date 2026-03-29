@@ -1,7 +1,7 @@
 # Squad: Feature
 
 > **Use this squad when:** You are adding a specific feature to an existing product.
-> **Duration:** 1–5 days
+> **Size:** Small (3–5 roles, single sprint scope)
 > **Roles:** 3–5 activated
 > **Protocol:** Same `protocol.md` — same Bus format, same escalation ladder, same requirements files.
 
@@ -24,24 +24,24 @@ A minimal squad for delivering a single, well-scoped feature. No discovery phase
 
 ## Activation Sequence
 
-### Phase 0 — Brief (Hours 1–2)
+### Phase 0 — Brief
 | # | Role | Output |
 |---|------|--------|
 | 1 | PM | Feature brief: user story, acceptance criteria, success metric, scope boundary |
 
-### Phase 1 — Plan (Hours 2–4)
+### Phase 1 — Plan
 | # | Role | Output |
 |---|------|--------|
 | 2 | Staff Engineer _(if platform touches)_ | Interface contract or confirmation that no contract changes required |
 | 3 | EM | Sprint plan: task breakdown, cell assignment, critical path, estimated duration |
 
-### Phase 2 — Execution (Days 1–N)
+### Phase 2 — Execution
 | # | Role | Output |
 |---|------|--------|
 | 4 | Liaison | Routes blockers and decisions; updates `liaison-log.md` |
 | 5 | EM + Cell | Implementation, PR reviews, testing |
 
-### Phase 3 — Completion (Final day)
+### Phase 3 — Completion
 | # | Role | Output |
 |---|------|--------|
 | 6 | PM | Acceptance review against feature brief |

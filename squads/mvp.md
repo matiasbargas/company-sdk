@@ -1,7 +1,7 @@
 # Squad: MVP
 
-> **Use this squad when:** You need to ship a minimum viable product quickly, without full org activation.
-> **Duration:** 1–3 weeks
+> **Use this squad when:** You need to ship a minimum viable product without full org activation.
+> **Size:** Medium (8–12 roles, compressed discovery)
 > **Roles:** 8–12 activated
 > **Protocol:** Same `protocol.md` — same Bus format, same escalation ladder, same requirements files.
 
@@ -9,13 +9,13 @@
 
 ## Purpose
 
-A compressed version of the Startup squad. Runs abbreviated discovery (CEO + CISO + CLO only — the gates that prevent expensive mistakes) and jumps quickly to architecture and execution. Defers non-critical domain specialists (CDO, COO, CHRO) until post-MVP. The goal is a working product in the hands of users in 1–3 weeks.
+A compressed version of the Startup squad. Runs abbreviated discovery (CEO + CISO + CLO only — the gates that prevent expensive mistakes) and jumps quickly to architecture and execution. Defers non-critical domain specialists (CDO, COO, CHRO) until post-MVP. The goal is a working product in the hands of users with the minimum scope needed to test the hypothesis.
 
 ## When to Use
 
 - ✅ Building an MVP to validate a hypothesis
-- ✅ Need working product in < 3 weeks
-- ✅ Scope is defined and discovery is abbreviated
+- ✅ Scope is defined and bounded; compressed discovery is sufficient
+- ✅ Discovery can be abbreviated without expensive blind spots
 - ❌ You need full org coverage (legal, revenue, ops) → use Startup squad
 - ❌ You're just building a website → use Website squad
 - ❌ Scope is undefined → do discovery first, then use this squad
@@ -24,33 +24,33 @@ A compressed version of the Startup squad. Runs abbreviated discovery (CEO + CIS
 
 ## Activation Sequence
 
-### Phase 0 — Brief (Day 1, morning)
+### Phase 0 — Brief
 | # | Role | Output |
 |---|------|--------|
 | 1 | Coordinator | Brief received, squad roster confirmed, `project.md` created |
 | 2 | CEO | Strategic framing: target user, hypothesis, success definition, MVP boundary |
 
-### Phase 1 — Compressed Discovery (Day 1, afternoon)
+### Phase 1 — Compressed Discovery
 | # | Role | Output | Notes |
 |---|------|--------|-------|
-| 3 | CLO | Regulatory blockers only — what MUST be true before first user | 2-hour abbreviated version |
-| 4 | CISO | Security non-negotiables — auth, data handling, keys | 2-hour abbreviated version |
-| 5 | CFO | Runway check: is budget sufficient for this MVP? 1-scenario only | 1-hour abbreviated version |
+| 3 | CLO | Regulatory blockers only — what MUST be true before first user | Abbreviated: blockers only |
+| 4 | CISO | Security non-negotiables — auth, data handling, keys | Abbreviated: non-negotiables only |
+| 5 | CFO | Runway check: is budget sufficient for this MVP? 1-scenario only | Abbreviated: single scenario |
 | 6 | CMO _(optional)_ | Positioning statement and launch channel | Useful if public launch |
 
-### Phase 2 — Architecture (Day 2)
+### Phase 2 — Architecture
 | # | Role | Output |
 |---|------|--------|
 | 7 | CTO | Architecture brief (< 1 page), tech stack, make/buy matrix |
-| 8 | Mario | Irreversible decision review (30-min abbreviated version) |
+| 8 | Mario | Irreversible decision review (abbreviated) |
 | 9 | PM | User story map (MVP scope only; ruthless prioritization) |
 | 10 | Staff Engineer | Interface contracts for MVP scope only |
 | 11 | EM | Cell composition, sprint plan |
 
-### Phase 3 — Execution (Days 3–N)
+### Phase 3 — Execution
 | # | Role | Output |
 |---|------|--------|
-| 12 | Liaison | Daily communication, `liaison-log.md` |
+| 12 | Liaison | Communication bridge, `liaison-log.md` |
 | All | EM + Cell | Sprint delivery |
 
 ### Phase 4 — Completion
@@ -116,7 +116,7 @@ These domain specialists are NOT activated in MVP mode. Activate them when the M
 
 ## Example Projects
 
-- Auth + core CRUD for a SaaS tool in 2 weeks
+- Auth + core CRUD for a SaaS tool
 - Mobile app prototype for a marketplace
 - API + dashboard for an analytics product
 - E-commerce store with 1 product category

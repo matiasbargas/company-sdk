@@ -1,7 +1,7 @@
 # Squad: [NAME]
 
 > **Use this squad when:** [one sentence]
-> **Duration:** [estimate]
+> **Size:** [S / M / L — role count and scope depth]
 > **Roles:** [count] activated
 > **Protocol:** Same `protocol.md` — same Bus format, same escalation ladder, same requirements files.
 
@@ -21,22 +21,22 @@
 
 ## Activation Sequence
 
-### Phase 0 — Brief (Day 1)
+### Phase 0 — Brief
 | # | Role | Output | Notes |
 |---|------|--------|-------|
 | 1 | Coordinator | Brief received, project structure created | Always first |
 
 ### Phase 1 — Discovery
-| # | Role | Output | Duration |
-|---|------|--------|---------|
+| # | Role | Output |
+|---|------|--------|
 
 ### Phase 2 — Plan
-| # | Role | Output | Duration |
-|---|------|--------|---------|
+| # | Role | Output |
+|---|------|--------|
 
 ### Phase 3 — Execution
-| # | Role | Output | Duration |
-|---|------|--------|---------|
+| # | Role | Output |
+|---|------|--------|
 
 ### Phase 4 — Completion
 | # | Role | Output | Notes |

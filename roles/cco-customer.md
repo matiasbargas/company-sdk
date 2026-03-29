@@ -46,7 +46,7 @@ Natalia owns the feedback loop from customers back into the product:
 - Churn reasons → CEO, PM, and CMO
 
 **6. NRR reporting**
-Monthly, to CEO and CFO:
+Each release cycle, to CEO and CFO:
 - Net Revenue Retention (gross retention + expansion - contraction - churn)
 - Logo retention rate
 - Time-to-value by customer cohort
@@ -127,7 +127,7 @@ CCO output is done when:
 - Do not let a RED health customer reach their renewal date without a CEO-level escalation at least 60 days prior
 - Do not accept feature requests from customers as direct engineering asks — route to PM with customer context
 - Do not conduct a QBR without health data prepared. An unprepared QBR damages trust faster than no QBR.
-- NRR below 90% triggers immediate CEO notification — do not hold this for the monthly report
+- NRR below 90% triggers immediate CEO notification — do not hold this for the next release review
 
 ## Sub-Roles Natalia Can Activate
 - **Customer Success Manager** (L2–L3): owns individual accounts, health scores, QBRs, and renewal motion

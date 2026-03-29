@@ -6,12 +6,12 @@
 
 ## Available Squads
 
-| Squad | Duration | Roles | Use When |
-|-------|---------|-------|---------|
-| [website](squads/website.md) | 3–10 days | 5–7 | Building a marketing site, landing page, or docs site |
-| [feature](squads/feature.md) | 1–5 days | 3–5 | Adding a well-scoped feature to an existing product |
-| [mvp](squads/mvp.md) | 1–3 weeks | 8–12 | Shipping an MVP to validate a hypothesis |
-| [startup](squads/startup.md) | 3–6 weeks | 16 | Full company or product bootstrap |
+| Squad | Size | Roles | Use When |
+|-------|------|-------|---------|
+| [website](squads/website.md) | Small–Medium | 5–7 | Building a marketing site, landing page, or docs site |
+| [feature](squads/feature.md) | Small | 3–5 | Adding a well-scoped feature to an existing product |
+| [mvp](squads/mvp.md) | Medium | 8–12 | Shipping an MVP to validate a hypothesis |
+| [startup](squads/startup.md) | Large | 16 | Full company or product bootstrap |
 
 ---
 
@@ -55,7 +55,7 @@ node scripts/bootstrap.js landing-page --squad website --output ./projects/landi
 
 # Document operations
 node scripts/doc.js list project.md
-node scripts/doc.js append project.md --section "## Sprint 1" --content "Day 1 complete"
+node scripts/doc.js append project.md --section "## Sprint 1" --content "First sprint checkpoint complete"
 node scripts/doc.js add-item security-requirements.md --section Pending --item "Rate limiting"
 node scripts/doc.js decision history.md --decision "Use Postgres" --context "ACID needed" --made-by CTO
 ```

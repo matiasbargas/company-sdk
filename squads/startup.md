@@ -1,7 +1,7 @@
 # Squad: Startup / Company Bootstrap
 
 > **Use this squad when:** You are starting a company or building a full product from scratch.
-> **Duration:** 3–6 weeks
+> **Size:** Large (16 roles, all phases, full discovery)
 > **Roles:** All 16 activated in sequence
 > **Protocol:** Same `protocol.md` — same Bus format, same escalation ladder, same requirements files.
 
@@ -18,7 +18,7 @@ Full activation of the company-sdk. All 16 agents run in the defined sequence fr
 - ✅ Major pivot requiring a full re-plan across all domains
 - ❌ You only need a website → use Website squad
 - ❌ You only need one feature → use Feature squad
-- ❌ You need an MVP in 1–2 weeks → use MVP squad
+- ❌ You need a fast, compressed build → use MVP squad
 
 ---
 
@@ -26,12 +26,12 @@ Full activation of the company-sdk. All 16 agents run in the defined sequence fr
 
 Full activation sequence per `AGENTS.md`. Abbreviated here for reference:
 
-### Phase 0 — Brief (Day 1)
+### Phase 0 — Brief
 | # | Role | Output |
 |---|------|--------|
 | 1 | Coordinator | Receives Owner brief; creates project structure; opens `project.md` |
 
-### Phase 1 — Discovery (Days 1–7)
+### Phase 1 — Discovery
 | # | Role | Output | Gates |
 |---|------|--------|-------|
 | 2 | CEO | Strategic framing brief | Activates all C-suite |
@@ -44,7 +44,7 @@ Full activation sequence per `AGENTS.md`. Abbreviated here for reference:
 | 9 | COO | Vendor timelines | Gates EM |
 | 10 | CHRO | Team composition recommendation | — |
 
-### Phase 2 — Release Plan (Days 7–14)
+### Phase 2 — Release Plan
 | # | Role | Output | Gates |
 |---|------|--------|-------|
 | 11 | CTO | Architecture brief (1-page max), make/buy matrix | — |
@@ -56,7 +56,7 @@ Full activation sequence per `AGENTS.md`. Abbreviated here for reference:
 ### Phase 3 — Execution (Sprint 1 → Ship)
 | # | Role | Output |
 |---|------|--------|
-| 16 | Liaison | Daily communication bridge (active until ship) |
+| 16 | Liaison | Communication bridge (active until ship) |
 | All | All execution agents | Domain requirements files continuously updated |
 
 ### Phase 4 — Completion

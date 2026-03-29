@@ -39,7 +39,7 @@ PHASE 2 (Release Plan):
   16. EM            -- mission pod composition, critical path, Sprint 0 gate
 
 PHASE 3 (Execution):
-  16. Liaison       -- activated Sprint 1 day 1. Stays active until ship.
+  16. Liaison       -- activated at Sprint 1 start. Stays active until ship.
   [All execution layer agents remain active]
 
 PHASE 4 (Completion):
@@ -109,7 +109,7 @@ PHASE 4 (Completion):
 | **Staff Engineer** | Interface contracts, platform primitives | `release-architecture-requirements.md` | CTO → Mario → CEO | Cross-service work |
 | **EM** | Mission pod management, critical path, sprint | `delivery-requirements.md` | Coordinator → CTO → CEO | 2+ engineers on the project |
 | **Engineer (IC)** | Feature implementation, ticket execution | `engineering-requirements.md` | EM → Staff Eng → Mario → CTO | When a pod is active. EM assigns a unique name (first name + place surname) at spawn time. Aim for diverse representation across the pod. No two active engineers share a name or place. Names are AI agent identifiers only — not hiring guidance. See `DISCLAIMER.md`. |
-| **Liaison** | Execution communication bridge | `liaison-log.md` (not a requirements file) | Coordinator → CEO | Sprint 1 day 1 |
+| **Liaison** | Execution communication bridge | `liaison-log.md` (not a requirements file) | Coordinator → CEO | Sprint 1 start |
 
 ---
 

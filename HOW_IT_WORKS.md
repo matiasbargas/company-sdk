@@ -81,7 +81,7 @@ Execution agents activate when engineering begins. They work in a defined depend
 
 *EM* — Cell management (max two cells), critical path, sprint planning, and squad status. Translates requirements into sprint tickets with testable acceptance criteria. "Almost done" is not a status.
 
-*Liaison* — The only agent that operates across layers simultaneously. Active from Sprint 1 day 1 until the release ships. Translates between team language and executive language. Filters what leadership needs to see. Routes blockers up the escalation ladder.
+*Liaison* — The only agent that operates across layers simultaneously. Active from Sprint 1 start until the release ships. Translates between team language and executive language. Filters what leadership needs to see. Routes blockers up the escalation ladder.
 
 **Communication flow**
 
@@ -92,7 +92,7 @@ OWNER
 CEO <──────────────────────── Liaison (escalation only)  COORDINATOR
   |                                   ^                       |
   v                                   |                       |
-COORDINATOR <──────────── Liaison (daily sprint health)       |
+COORDINATOR <──────────── Liaison (sprint health updates)     |
   |
   |──> CLO | CFO | CISO | CMO | CRO | CDO | COO | CHRO
   |         (domain specialists, run before CTO)
@@ -234,12 +234,12 @@ Items are checked `[x]` only when work is demonstrably done: tested, reviewed, m
 
 Four squad types. Same protocol. Different activation sequences and role rosters.
 
-| Squad | Duration | Roles | Use case |
-|-------|----------|-------|----------|
-| website | 3–10 days | 5–7 | Marketing site, landing page, docs site |
-| feature | 1–5 days | 3–5 | Adding a feature to an existing product |
-| mvp | 1–3 weeks | 8–12 | Shipping an MVP to validate a hypothesis |
-| startup | 3–6 weeks | 16 | Full company or product bootstrap |
+| Squad | Size | Roles | Use case |
+|-------|------|-------|----------|
+| website | Small–Medium | 5–7 | Marketing site, landing page, docs site |
+| feature | Small | 3–5 | Adding a feature to an existing product |
+| mvp | Medium | 8–12 | Shipping an MVP to validate a hypothesis |
+| startup | Large | 16 | Full company or product bootstrap |
 
 **How to choose:**
 
@@ -256,25 +256,25 @@ Do you have an existing product?
 **MVP activation sequence** — the most instructive example because it compresses all four phases into a tight window:
 
 ```
-Phase 0 — Brief (Day 1, morning):
+Phase 0 — Brief:
   1. Coordinator  → Brief received, project.md created, squad confirmed
   2. CEO          → Strategic framing: hypothesis, target user, success definition, MVP boundary
 
-Phase 1 — Compressed Discovery (Day 1, afternoon):
-  3. CLO          → Regulatory blockers only (2-hour abbreviated version)
-  4. CISO         → Security non-negotiables: auth, data handling, keys (2-hour abbreviated)
-  5. CFO          → Runway check: is budget sufficient? One scenario only (1-hour abbreviated)
+Phase 1 — Compressed Discovery:
+  3. CLO          → Regulatory blockers only (abbreviated: blockers only)
+  4. CISO         → Security non-negotiables: auth, data handling, keys (abbreviated: non-negotiables only)
+  5. CFO          → Runway check: is budget sufficient? One scenario only (abbreviated: single scenario)
   6. CMO          → Positioning statement and launch channel (optional; useful if public launch)
 
-Phase 2 — Architecture (Day 2):
+Phase 2 — Architecture:
   7. CTO          → Architecture brief (< 1 page), tech stack, make/buy matrix
-  8. Mario        → Irreversible decision review (30-minute abbreviated version)
+  8. Mario        → Irreversible decision review (abbreviated)
   9. PM           → User story map (MVP scope only; ruthless prioritization)
   10. Staff Eng   → Interface contracts for MVP scope
   11. EM          → Cell composition, sprint plan
 
-Phase 3 — Execution (Days 3–N):
-  12. Liaison     → Active until ship; daily liaison-log.md updates
+Phase 3 — Execution:
+  12. Liaison     → Active until ship; liaison-log.md updated on significant events
 
 Phase 4 — Completion:
   PM acceptance: does it test the hypothesis?
@@ -304,7 +304,7 @@ This creates:
 projects/analytics-tool/
   project.md                     — Owner brief template + project record
   history.md                     — Decision log and release history
-  liaison-log.md                 — Daily sprint health (Liaison's working doc)
+  liaison-log.md                 — Sprint health log (Liaison's working doc)
   general-requirements.md        — Coordinator's aggregate view of all domains
   legal-requirements.md          — CLO's domain file
   security-requirements.md       — CISO's domain file
@@ -617,21 +617,21 @@ Gate status: PASSED — Sprint 1 authorized to begin.
 
 ### Step 8: Execution (Liaison goes live)
 
-The Liaison activates on Sprint 1 Day 1 and does not deactivate until the release ships.
+The Liaison activates at Sprint 1 start and does not deactivate until the release ships.
 
-The daily rhythm:
+The task-driven rhythm (event-driven, not time-driven):
 
-**Morning:** Liaison reads EM's latest squad status update. Checks for new Bus messages. Updates `liaison-log.md` with current sprint state.
+**At sprint start / after each significant event:** Liaison reads EM's latest squad status update. Checks for new Bus messages. Updates `liaison-log.md` with current sprint state.
 
-**During the day:** Anything that surfaces from the team goes through the routing filter:
+**When something surfaces from the team:** Route through the filter:
 - Blocker → EM immediately; if unresolved in 4 hours → Coordinator as BLOCKER
 - Decision needed from leadership → 3-sentence decision request → Coordinator
 - Status → log it; surface at sprint review
 - Team concern → EM privately; not on the Bus; not to leadership
 
-**End of day:** One Bus message to Coordinator with sprint health (GREEN / YELLOW / RED) and a one-paragraph explanation. Nothing more unless there is a BLOCKER.
+**On significant sprint events (milestone, blocker resolved, sprint goal reached):** One Bus message to Coordinator with sprint health (GREEN / YELLOW / RED) and a one-paragraph explanation. Nothing more unless there is a BLOCKER.
 
-A real daily health message:
+A real sprint health message:
 
 ```
 FROM: Sam (Liaison)
@@ -809,7 +809,7 @@ This is not a limitation — it is the design. It means the team can run asynchr
 
 The four squad types cover the full range of project scopes. Here is how they differ in practice.
 
-### Website squad (3–10 days, 5–7 roles)
+### Website squad (Small–Medium, 5–7 roles)
 
 Skip CEO and all domain specialists unless the site involves user data, PII, or regulated content. Jump straight to PM scope definition, then CTO stack decision, then Staff Engineer component contracts, then EM delivery.
 
@@ -832,7 +832,7 @@ Liaison (active until launch)
 
 Good for: marketing sites, landing pages, documentation sites, portfolios. Not appropriate if the site has auth, payments, or user data — activate CISO and CLO from the full sequence in that case.
 
-### Feature squad (1–5 days, 3–5 roles)
+### Feature squad (Small, 3–5 roles)
 
 No discovery. No architecture phase. No Sprint 0 gate (lightweight version only). Assumes the product exists, the team exists, and the feature is well-scoped.
 
@@ -848,9 +848,9 @@ Liaison (routes blockers and decisions; updates liaison-log.md)
 
 Good for: adding dark mode, building a CSV export, implementing OAuth login, adding a notification system. Not appropriate if the feature requires discovery, security review, or new platform primitives — escalate to MVP or Startup squad.
 
-### Startup squad (3–6 weeks, 16 roles)
+### Startup squad (Large, 16 roles)
 
-Full activation. All 16 agents in sequence. Discovery phase is one full week. Sprint 0 gate is mandatory. Nothing gets coded until all 15 Sprint 0 checkboxes are checked.
+Full activation. All 16 agents in sequence. Sprint 0 gate is mandatory. Nothing gets coded until all 15 Sprint 0 checkboxes are checked.
 
 ```
 Coordinator (brief)
@@ -870,7 +870,7 @@ PM (user story map) + Staff Engineer (interface contracts)
   ↓
 EM (cell composition, critical path, sprint plan)
   ↓
-Liaison (active Sprint 1 day 1 until ship)
+Liaison (active from Sprint 1 start until ship)
   ↓
 Coordinator (retro synthesis, history.md entry)
 ```

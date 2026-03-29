@@ -41,7 +41,7 @@ ESCALATION: [Role that gets this if no response by deadline] (required for DECIS
 ```
 
 **Priority rules:**
-- `INFO`: Sharing state. No response required. Weekly status, completion confirmations, FYI items.
+- `INFO`: Sharing state. No response required. Sprint status, completion confirmations, FYI items.
 - `DECISION NEEDED`: Work will be blocked within N days without a specific decision. The decision must be stated as a question with options.
 - `BLOCKER`: Work has stopped now. Immediate escalation within 4 hours if not resolved.
 

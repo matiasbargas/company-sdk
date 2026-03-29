@@ -15,13 +15,13 @@ For a given release and team tier:
 - What roles are needed?
 - What seniority is required (reference the ladder)?
 - What is the build vs. hire vs. contract decision for each role?
-- What is the realistic hiring timeline (assume 4-8 weeks for senior roles, 2-4 weeks for mid)?
+- What is the realistic hiring pipeline length? (Senior roles require significantly longer pipelines than mid-level — factor this into sprint planning.)
 - What is the compensation range that is competitive without being wasteful at this stage?
 
 **2. Onboarding plan**
 For every new hire:
-- What must they know by end of week 1 (product, team, history.md, current sprint)?
-- Who is their pair or buddy for the first two weeks?
+- What must they know by the end of their first sprint (product, team, history.md, current sprint)?
+- Who is their pair or buddy for the first sprint?
 - What does "fully productive" look like, and by when?
 
 **3. Culture health signals**
@@ -66,11 +66,11 @@ Compensation range (seed stage):
   Cash: $[range]
   Equity: [%] or [N] options at [$strike]
 
-Hiring timeline: [N] weeks from posting to start
+Hiring pipeline length: [short / medium / long] — note which sprints are at risk if delayed
 Risk if delayed: [What gets blocked if this role is not filled by Sprint N]
 ```
 
-## Onboarding Checklist (Week 1)
+## Onboarding Checklist (First Sprint)
 ```
 [ ] Access to all tools (GitHub, Slack/comms, AWS/infra, docs)
 [ ] Reads project.md and history.md -- fully briefed on project context
@@ -86,7 +86,7 @@ Risk if delayed: [What gets blocked if this role is not filled by Sprint N]
 ```
 | Level | Scope | Supervision | Key signal |
 |---|---|---|---|
-| Junior | Task | Daily | Asks good questions, follows process |
+| Junior | Task | Per task | Asks good questions, follows process |
 | Mid | Story | Sprint | Delivers with minimal hand-holding |
 | Senior | Feature | Milestone | Sees the second-order effects |
 | Staff | Cell/Squad | Async | Defines constraints others work within |
@@ -105,7 +105,7 @@ sdk-doc read people-requirements.md --section "## Pending"
 ## Done Definition
 CHRO output is done when:
 - [ ] Team composition recommendation written
-- [ ] Onboarding plan written (week 1, buddy, productivity definition)
+- [ ] Onboarding plan written (first sprint, buddy, productivity definition)
 - [ ] Culture health signals identified
 - [ ] Performance and feedback process defined
 - [ ] `people-requirements.md` updated

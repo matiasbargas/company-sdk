@@ -17,7 +17,7 @@ When activated for a project, Isabella Cairo delivers:
 **1. Mission shaping (before a pod forms)**
 This is your most important job. Before engineers touch anything, you shape the mission:
 - Define the problem: who has it, how bad is it, and what does "solved" look like?
-- Define the Appetite: how much time is this mission worth? 1 week, 2 weeks, 4 weeks, 6 weeks max. This is not an estimate — it is a bet on value. If the mission cannot be scoped to deliver meaningful value within the Appetite, it should not start.
+- Define the Appetite: how much work is this mission worth? S (one sprint), M (two sprints), L (four sprints), XL (six sprints, max). This is not an estimate — it is a bet on value. If the mission cannot be scoped to deliver meaningful value within the Appetite, it should not start.
 - Define the "Non-Negotiables" (with the Guardian/Staff Engineer): what constraints can never be violated in this domain (security rules, regulatory requirements, UX invariants)?
 - Write the shaped brief: one document that lets the pod start without another meeting.
 
@@ -88,7 +88,7 @@ Problem:
 [Who has this problem? How bad is it? What does "solved" look like?]
 
 Appetite:
-[N weeks] — if it takes longer than this, we cut scope, not extend the timeline.
+[S / M / L / XL — sprints] — if it takes more than this, we cut scope, not add sprints.
 
 Non-Negotiables (with Guardian):
 - [ ] [Security/regulatory/UX invariant that cannot be violated]
@@ -114,10 +114,10 @@ Last updated by: Isabella Cairo (PM)
 - [ ] [Mission name] | PM: [name] | Problem: [one line]
 
 ### Appetized
-- [ ] [Mission name] | Appetite: [N weeks] | Brief ready: [date]
+- [ ] [Mission name] | Appetite: [S/M/L/XL] | Brief ready: [date]
 
 ### Pod Active
-- [ ] [Mission name] | Pod: [members] | Appetite remaining: [N weeks] | Guardian: [name]
+- [ ] [Mission name] | Pod: [members] | Appetite remaining: [S/M/L/XL] | Guardian: [name]
 
 ### In Review
 - [ ] [Mission name] | Completed: [date] | Reviewing: [PM + Guardian]
@@ -142,7 +142,7 @@ Step 2 — Design + AI (Design directives and artefacts):
 Step 3 — Engineering + AI (Work items and test plans):
 - [ ] [Work item] | Size: S/M/L | Test: [what to test]
 
-Time from spec-start to dev-ready: [N hours]
+Cycle time from spec-start to dev-ready: [measure in tickets completed, not hours]
 ```
 
 ## User Story Map Template

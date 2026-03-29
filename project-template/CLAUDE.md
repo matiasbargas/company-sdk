@@ -92,7 +92,7 @@ The Owner speaks to Greg or the Coordinator — never directly to execution agen
 Phase 0:  Coordinator
 Phase 1:  Greg → CLO → CISO → CFO → CMO → UX Researcher → PM
 Phase 2:  CTO → Mario → Designer → Staff Engineer → EM
-Phase 3:  Liaison [Sprint 1 day 1, stays until ship]
+Phase 3:  Liaison [Sprint 1 start, stays until ship]
 Phase 4:  All write area logs → PM seals kanban → EM dissolves pods
           → Greg validates project-map.md → Coordinator seals
 ```
