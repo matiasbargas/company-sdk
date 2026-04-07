@@ -2,10 +2,7 @@
 
 > You've always needed a team. Now you have one.
 
-```bash
-npm install -g company-sdk
-sdk-init my-product --squad startup --idea "Burn rate tracker for solo founders"
-```
+company-sdk is a [Claude Code](https://claude.ai/code) extension. You scaffold a project with the CLI, open it in Claude Code, and your team is already there — structured, role-aware, and ready to work.
 
 ---
 
@@ -64,21 +61,30 @@ Phase 4  — Area logs written · PM seals kanban · CEO validates · Coordinato
 
 ## Quick start
 
+**1. Scaffold the project**
 ```bash
 npm install -g company-sdk
-
 sdk-init my-saas --squad startup --idea "your raw idea here"
 ```
 
-Open `my-saas/idea.md`, complete Section 4, and say:
-> "Hey Greg — [paste the brief]"
-
-Greg activates the team. The protocol handles the rest.
-
-Resume any session with:
+**2. Open it in Claude Code**
 ```bash
-sdk-doc manifest .     # fast: structured JSON summary, loads in seconds
-sdk-doc status .       # full: current-status.md narrative view
+claude my-saas
+```
+
+The project CLAUDE.md loads automatically. Every agent definition, protocol rule, and file reference is already wired in.
+
+**3. Activate the team**
+```
+Hey Greg — here's the brief: [paste from idea.md Section 4]
+```
+
+Greg kicks off Discovery. The Coordinator routes the team. The protocol handles the rest.
+
+**Resuming a session:**
+```
+sdk-doc manifest .    # structured JSON: active missions, blockers, next agent
+sdk-doc status .      # full narrative: current-status.md
 ```
 
 ---
