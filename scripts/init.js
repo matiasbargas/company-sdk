@@ -192,6 +192,14 @@ const settingsPath   = path.join(claudeDir, 'settings.json');
 
 ensureDir(claudeDir);
 
+// Copy .claude/commands/ — slash commands (/ask, /askGreg, /askCTO)
+const sdkCommandsSrc  = path.join(sdkRoot, '.claude', 'commands');
+const sdkCommandsDest = path.join(claudeDir, 'commands');
+if (fs.existsSync(sdkCommandsSrc)) {
+  copyDir(sdkCommandsSrc, sdkCommandsDest);
+  console.log(`    ✓  .claude/commands/  (/ask, /askGreg, /askCTO)`);
+}
+
 const claudeSettings = {
   projectName,
   releaseId,

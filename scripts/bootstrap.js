@@ -182,6 +182,15 @@ if (fs.existsSync(teamSrc)) {
   count++;
 }
 
+// .claude/commands/ — slash commands (/ask, /askGreg, /askCTO)
+const sdkCommandsSrc  = path.join(sdkRoot, '.claude', 'commands');
+const sdkCommandsDest = path.join(outputDir, '.claude', 'commands');
+if (fs.existsSync(sdkCommandsSrc)) {
+  copyDir(sdkCommandsSrc, sdkCommandsDest);
+  console.log(`  ✓ .claude/commands/  (/ask, /askGreg, /askCTO)`);
+  count++;
+}
+
 console.log(`\n✅ Project "${projectName}" bootstrapped (${count} files)`);
 console.log(`   Path: ${outputDir}`);
 console.log(`   Release: ${releaseId}`);

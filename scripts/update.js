@@ -160,6 +160,11 @@ const DIRECTORIES = [
 
 // ─── Run ─────────────────────────────────────────────────────────────────────
 
+// Sync .claude/commands/ from source SDK → project/.claude/commands/
+// (these live at the project root, not inside team-sdk/)
+const sourceCommandsDir = path.join(sourcePath, '.claude', 'commands');
+const destCommandsDir   = path.join(projectDir, '.claude', 'commands');
+
 console.log(`\nteam-sdk update`);
 console.log(`  Source: ${sourcePath}`);
 console.log(`  Target: ${targetSdk}`);
@@ -183,6 +188,16 @@ for (const dir of DIRECTORIES) {
   const destDir = path.join(targetSdk, dir);
   const results = syncDir(srcDir, destDir);
   allResults.push(...results);
+}
+
+// Sync .claude/commands/ into the project root (not inside team-sdk/)
+if (fs.existsSync(sourceCommandsDir)) {
+  const commandResults = syncDir(sourceCommandsDir, destCommandsDir);
+  // Re-label paths relative to projectDir for clarity
+  for (const r of commandResults) {
+    r.file = path.join('.claude', 'commands', path.basename(r.file));
+    allResults.push(r);
+  }
 }
 
 // ─── Remove obsolete files ────────────────────────────────────────────────────
