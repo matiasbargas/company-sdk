@@ -14,9 +14,9 @@
  *   node team-sdk/scripts/update.js ../team-sdk
  *
  * What it syncs:
- *   roles/            All agent prompts
+ *   team/roles/            All agent prompts
  *   scripts/          CLI scripts
- *   levels/           Skill ladder
+ *   team/levels/           Skill ladder
  *   project-template/ Bootstrap template files
  *   squads/           Squad definitions
  *   protocol.md       Inter-agent communication standard

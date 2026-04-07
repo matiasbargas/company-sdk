@@ -5,7 +5,7 @@ An AI agent orchestration framework for product teams. 20+ role-based agents tha
 ## What this repo is
 
 The SDK itself — not a project. It contains:
-- `roles/` — every agent's persona, operating loop, consultation mode, and skill ladder
+- `team/roles/` — every agent's persona, operating loop, consultation mode, and skill ladder
 - `project-template/` — all files a new project gets on bootstrap (5 requirements files, not 18)
 - `squads/` — pre-configured team compositions (website, mvp, feature, startup)
 - `scripts/` — CLI tools (init, bootstrap, squad, doc)
@@ -42,7 +42,7 @@ Then open `<project-name>/idea.md`, complete Section 4, and say:
 `/ask [role] [question]` — routes directly to that agent, who may spawn peers for depth.
 `/ask [question]` — Coordinator routes to the best agent and synthesizes.
 
-Agents prioritize **understanding over speed** and may spawn 1–3 peer consultations to enrich the answer. See `roles/CONSULT.md`.
+Agents prioritize **understanding over speed** and may spawn 1–3 peer consultations to enrich the answer. See `team/roles/CONSULT.md`.
 
 ## Key agents
 
@@ -57,7 +57,7 @@ Agents prioritize **understanding over speed** and may spawn 1–3 peer consulta
 | **Mario** | Chief Engineer. Reviews irreversible decisions. |
 | **EM** | Pod management. Activated when 2+ engineers are on the project. |
 
-See `roles/CLAUDE.md` for the full agent index.
+See `team/roles/CLAUDE.md` for the full agent index.
 
 ## Communication protocol (Project Mode)
 
@@ -101,7 +101,7 @@ node scripts/doc.js status project/
 **Squad:** startup
 **Phase:** Phase 2 — CTO architecture brief delivered. Mario irreversible decision review next. CLO + CISO gates cleared.
 
-**Agents:** roles are at `./roles/` — no copy needed. All SDK files are the project's files.
+**Agents:** roles are at `./team/roles/` — no copy needed. All SDK files are the project's files.
 
 ---
 
@@ -122,7 +122,7 @@ These rules apply to all agents and to Claude when acting as the owner's interfa
 ## Conventions
 
 - Role and agent files use `{{name}}` as a placeholder. Never hardcode a name in a role template. Names are assigned at spawn time using the naming formula below.
-- New agents follow `roles/_template.md` exactly — no skipping sections.
+- New agents follow `team/roles/_template.md` exactly — no skipping sections.
 - Protocol version in `protocol.md` header must be bumped on any interface change.
 - Requirements files use the Pending / In Progress / Done / Blocked status model. A control or task is only marked Done when it is implemented AND evidenced — not when it is planned or documented.
 
@@ -139,7 +139,7 @@ The cultural profile shapes how the agent reasons about their domain — it is n
 **Rules:**
 - No two active agents in the same project share a first name or a city
 - Aim for genuine geographic spread — avoid defaulting to North American or Western European cities
-- The names in `roles/CLAUDE.md` are defaults for the startup squad. Actual activations use this formula.
+- The names in `team/roles/CLAUDE.md` are defaults for the startup squad. Actual activations use this formula.
 
 Full spec: `protocol.md` Section 14.
 
@@ -148,6 +148,6 @@ Full spec: `protocol.md` Section 14.
 ## Modifying the SDK
 
 - Adding a new agent: follow the checklist in `AGENTS.md > How to Add a New Agent`
-- All agents follow the structure in `roles/_template.md` (includes consultation + challenge blocks)
+- All agents follow the structure in `team/roles/_template.md` (includes consultation + challenge blocks)
 - Protocol changes require bumping the version in `protocol.md` header
 - Do not modify `project-template/` without updating the corresponding role's context loading

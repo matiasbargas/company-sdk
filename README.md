@@ -200,7 +200,7 @@ You can always activate more agents mid-project. Squads define where you start, 
 
 **Execution** — CTO · Chief Engineer (Mario) · PM · Designer · UX Researcher · Staff Engineer · EM · Engineer (IC) · Liaison
 
-Full index with activation triggers and first words at `roles/CLAUDE.md`.
+Full index with activation triggers and first words at `team/roles/CLAUDE.md`.
 
 ---
 
@@ -259,13 +259,13 @@ company-sdk/
 
   .claude/commands/     ← /ask, /askGreg, /askCTO skills (Claude Code slash commands)
 
-  roles/
+  team/roles/
     CLAUDE.md           ← Agent index: all roles, activation triggers, first words
     CONSULT.md          ← Consultation mode reference: spawning policy, synthesis standard
     _template.md        ← 4-block prompt template for new agents
     [role].md           ← 20+ agent definitions
 
-  levels/
+  team/levels/
     ladder.md           ← IC and Management track definitions (L1–L5, M1–M5)
 
   squads/

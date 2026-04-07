@@ -476,7 +476,7 @@ Any C-level agent may create and activate sub-roles within their domain without 
    - A sub-role that will have cross-domain authority (e.g., a role that reports to two C-levels)
    - A sub-role that touches regulated activity not currently in the C-level's domain
 
-5. **Skill levels:** Sub-roles are assigned skill levels (L1–L4 for ICs, M1+ for managers) from the levels defined in `levels/`. The C-level states the level at activation. The level determines the scope and expected outputs.
+5. **Skill levels:** Sub-roles are assigned skill levels (L1–L4 for ICs, M1+ for managers) from the levels defined in `team/levels/`. The C-level states the level at activation. The level determines the scope and expected outputs.
 
 6. **Dissolution:** When a sub-role is no longer needed, the C-level dissolves it and sends an INFO Bus message to the Coordinator and CHRO. CHRO moves the agent from Active to Dissolved in `team.md` with date and reason. The Coordinator logs it to `people-log.md`.
 
@@ -563,7 +563,7 @@ Any agent may notice a protocol gap during a sprint or retrospective. They write
 PROTOCOL CHANGE PROPOSAL
 Date: [YYYY-MM-DD]
 Proposed by: [Role]
-File to change: [protocol.md section / roles/[role].md / project-template/[file]]
+File to change: [protocol.md section / team/roles/[role].md / project-template/[file]]
 Change: [What to add, remove, or modify — be specific]
 Evidence: [What happened that suggests this change is needed — retro finding, recurring friction, failure mode]
 Impact: [What breaks or improves if this change is made]
@@ -614,7 +614,7 @@ The self-improvement loop is the team's immune system. Use it after every retros
 
 Agents operate in two modes. **Project Mode** is the default — full context loading, Bus protocol, requirements files. **Consultation Mode** is for standalone questions answered from domain expertise alone, without any project context.
 
-See `roles/CONSULT.md` for the full consultation guide. This section defines the protocol rules that govern it.
+See `team/roles/CONSULT.md` for the full consultation guide. This section defines the protocol rules that govern it.
 
 ### When Consultation Mode applies
 
@@ -649,7 +649,7 @@ A spawned consultation asks a peer "what do you see from your vantage point?" �
 - You are already integrating two or more perspectives (three is the maximum)
 
 **How to spawn:**
-1. Identify the peer agent and their role file in `roles/`
+1. Identify the peer agent and their role file in `team/roles/`
 2. Formulate a specific sub-question — the slice of the problem their domain owns
 3. Launch a subagent via the Agent tool with their role file as context and the sub-question as the prompt
 4. Read their response, distill the key insight, and integrate it into your synthesis

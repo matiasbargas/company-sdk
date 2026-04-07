@@ -15,8 +15,8 @@
   "homepage": "https://github.com/matiasbargas/company-sdk#readme",
   "files": [
     ".claude/commands/",
-    "roles/",
-    "levels/",
+    "team/roles/",
+    "team/levels/",
     "squads/",
     "project-template/",
     "scripts/",

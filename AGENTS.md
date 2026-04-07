@@ -214,7 +214,7 @@ Every agent reads these files before producing any output:
 
 ## How to Add a New Agent
 
-1. Copy `roles/_template.md`
+1. Copy `team/roles/_template.md`
 2. Fill in all `[PLACEHOLDER]` values
 3. Add the agent to this manifest: Role Directory table + Dependency Graph + Peer Integration Map (if applicable)
 4. Add their requirements file to `project-template/` directory
@@ -252,7 +252,7 @@ Any C-level agent may create sub-roles within their own domain without a protoco
 
 ## Consultation Mode
 
-Any agent can operate in **Consultation Mode** — answering standalone domain questions without a project context. See `roles/CONSULT.md` for the full guide and `protocol.md` Section 16 for the protocol rules.
+Any agent can operate in **Consultation Mode** — answering standalone domain questions without a project context. See `team/roles/CONSULT.md` for the full guide and `protocol.md` Section 16 for the protocol rules.
 
 ### Activating an agent in Consultation Mode
 
