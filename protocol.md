@@ -1,5 +1,5 @@
 # Protocol -- Shared Interface Contract
-**Version:** 3.4
+**Version:** 3.5
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
 
@@ -502,6 +502,12 @@ Status: ACTIVE | COMPLETED | BLOCKED | CANCELLED
 
 **`current-status.md` is the session continuity file.** It is updated at the end of every working session and at every significant state change. Any agent can read it and know exactly where the team is and what the next action is.
 
+**Write authority:** The **Coordinator is the sole write authority for the canonical block** of `current-status.md` at session close. No other agent may overwrite the canonical block (Active Missions, Waiting On, Next Agent To Activate). Execution agents may append to Session Notes only.
+
+**Session close trigger:** The canonical block must be written by the Coordinator when: (a) a session ends, (b) a phase transition occurs, or (c) a blocker is resolved that changes the next action.
+
+**Fallback:** If the Coordinator was not activated before a session ends, the last active agent appends a timestamped note to Session Notes flagging the gap. The canonical block is written at the start of the next session before any other work begins.
+
 **Format:**
 ```
 # Current Status -- [Project Name]
@@ -525,12 +531,14 @@ Release: v[YEAR].Q[QUARTER].[INCREMENT]
 
 ## Next Agent To Activate
 [Role] — because [reason]
+Activation phrase: "[exact phrase to paste]"
 ```
 
 **Rules:**
-- Any agent who completes work updates `current-status.md` before closing the session.
+- The Coordinator writes the canonical block at every session close. Execution agents do not overwrite it.
 - If a session ends mid-task, the incomplete item goes into "Active Missions" with status "Paused" and a specific "Next action."
-- When a new session begins, the first file read after `project.md` is `current-status.md`.
+- The Next Agent To Activate section must include a copy-paste-ready activation phrase, not just a role name.
+- When a new session begins, the first file read is `context-manifest.json` (if present) or `current-status.md` as fallback.
 
 ---
 

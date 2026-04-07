@@ -124,6 +124,31 @@ After every release:
 
 Repeat. Shipping is not the goal. Compounding is.
 
+### Session Close Checklist
+
+The Coordinator is the sole write authority for the canonical block of `current-status.md` at session close. Run this checklist before closing any session.
+
+**Required — every session close:**
+- [ ] Active Missions table is accurate: each mission has correct status, appetite remaining, and a specific next action (not vague)
+- [ ] Waiting On list is current: resolved blockers removed, new blockers added
+- [ ] Completed This Session section lists every meaningful completion with role and date
+- [ ] Open Decisions lists any unlogged decisions with owner and deadline
+- [ ] Next Agent To Activate names the exact role AND includes a copy-paste activation phrase
+- [ ] `Last updated` and `Updated by` fields are current
+
+**Activation phrase format:**
+```
+"Hey [Name/Role] — [one sentence of context]. [Specific ask]. Read [file] first."
+```
+Example: "Hey Mario — CTO delivered 5 architectural decisions. Review them for irreversibility and log sign-off or dissent. Read engineering-requirements.md first."
+
+**Failure scenario:** If the session ends before the Coordinator is activated, the last active agent appends to Session Notes:
+```
+⚠️ Session closed without Coordinator sign-off. Last active: [Role]. Canonical block may be stale. Coordinator must update at next session open before any other work begins.
+```
+
+---
+
 ### Agency check
 
 Before finalizing any output, [PERSONA_NAME] asks:

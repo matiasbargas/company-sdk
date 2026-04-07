@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * gate-check.js — Enforce the CLO + CISO discovery gate before CTO activation
+ * gate-check.js — Enforce phase gates before CTO activation and Sprint 1
  *
  * Usage:
- *   node scripts/gate-check.js <project-dir>
+ *   node scripts/gate-check.js <project-dir>                  # CLO + CISO gate (pre-CTO)
+ *   node scripts/gate-check.js <project-dir> --mario          # Mario gate (pre-Sprint 1)
+ *   node scripts/gate-check.js <project-dir> --all            # Run all gates
  *
- * Exits 0 if both CLO and CISO sections in discovery-requirements.md are Done.
- * Exits 1 with a clear message if either gate is not cleared.
- *
- * CTO agents and the Coordinator reference this check before activating CTO.
- * It is also safe to run manually at any time.
+ * Gates:
+ *   CLO + CISO gate: discovery-requirements.md must show both Done before CTO activates.
+ *   Mario gate:      history.md must contain a Mario sign-off entry before Sprint 1 starts.
  */
 
 const fs   = require('fs');
@@ -21,20 +21,22 @@ const args = process.argv.slice(2);
 if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   console.log(`
 Usage:
-  node scripts/gate-check.js <project-dir>
+  node scripts/gate-check.js <project-dir>           # CLO + CISO gate (default)
+  node scripts/gate-check.js <project-dir> --mario   # Mario gate only
+  node scripts/gate-check.js <project-dir> --all     # All gates
 
-Checks that discovery-requirements.md shows both CLO (Legal) and CISO (Security)
-sections as Done before CTO architecture begins.
-
-Run this before activating the CTO agent. CTO cannot produce useful architecture
-output without knowing the legal and security constraints. Skipping this gate is
-the most expensive mistake in the activation sequence.
+Gates:
+  CLO + CISO  — discovery-requirements.md must show both Done before CTO activates.
+  Mario       — history.md must contain a Mario sign-off entry before Sprint 1 starts.
 `);
   process.exit(0);
 }
 
 const projectDir    = path.resolve(args[0]);
+const runMario      = args.includes('--mario') || args.includes('--all');
+const runDiscovery  = !args.includes('--mario') || args.includes('--all');
 const discoveryFile = path.join(projectDir, 'discovery-requirements.md');
+const historyFile   = path.join(projectDir, 'history.md');
 
 // ─── Checks ──────────────────────────────────────────────────────────────────
 
@@ -54,67 +56,96 @@ if (!fs.existsSync(projectDir)) {
   fail(`Project directory not found: ${projectDir}`);
 }
 
-if (!fs.existsSync(discoveryFile)) {
-  fail(`discovery-requirements.md not found in ${projectDir}\n    Has this project been bootstrapped? Run: node scripts/init.js <name>`);
-}
-
-const content = fs.readFileSync(discoveryFile, 'utf8');
-
-// ─── Gate Status table check ─────────────────────────────────────────────────
-
-const gateTableMatch = content.match(/\|\s*Legal\s*\|\s*CLO\s*\|\s*(\w+)/i);
-const secTableMatch  = content.match(/\|\s*Security\s*\|\s*CISO\s*\|\s*(\w+)/i);
-
-const legalStatus = gateTableMatch  ? gateTableMatch[1].trim()  : null;
-const secStatus   = secTableMatch   ? secTableMatch[1].trim()   : null;
-
-// ─── Jurisdiction check ───────────────────────────────────────────────────────
-
-const hasJurisdictions = /## Jurisdictions/i.test(content) ||
-                         /\*\*Jurisdictions declared\*\*/i.test(content) ||
-                         /Jurisdiction.*:/i.test(content);
-
-// ─── Pending items check ──────────────────────────────────────────────────────
-
-const legalPending = (content.match(/## Legal \(CLO\)[\s\S]*?### Pending([\s\S]*?)### In Progress/i) || [])[1] || '';
-const hasPendingLegal = /- \[ \]/.test(legalPending);
-
-const secPending = (content.match(/## Security \(CISO\)[\s\S]*?### Pending([\s\S]*?)### In Progress/i) || [])[1] || '';
-const hasPendingSec = /- \[ \]/.test(secPending);
-
-// ─── Evaluate ────────────────────────────────────────────────────────────────
-
 const errors   = [];
 const warnings = [];
 
-if (!legalStatus) {
-  errors.push('CLO (Legal) gate status not found in Gate Status table.');
-} else if (legalStatus.toLowerCase() !== 'done') {
-  errors.push(`CLO (Legal) gate is "${legalStatus}" — must be "Done" before CTO activates.`);
+// ─── CLO + CISO Discovery Gate ───────────────────────────────────────────────
+
+if (runDiscovery) {
+  if (!fs.existsSync(discoveryFile)) {
+    errors.push(`discovery-requirements.md not found in ${projectDir}\n    Has this project been bootstrapped? Run: node scripts/init.js <name>`);
+  } else {
+    const content = fs.readFileSync(discoveryFile, 'utf8');
+
+    const gateTableMatch = content.match(/\|\s*Legal\s*\|\s*CLO\s*\|\s*(\w+)/i);
+    const secTableMatch  = content.match(/\|\s*Security\s*\|\s*CISO\s*\|\s*(\w+)/i);
+    const legalStatus    = gateTableMatch ? gateTableMatch[1].trim() : null;
+    const secStatus      = secTableMatch  ? secTableMatch[1].trim()  : null;
+
+    const hasJurisdictions = /## Jurisdictions/i.test(content) ||
+                             /\*\*Jurisdictions declared\*\*/i.test(content) ||
+                             /Jurisdiction.*:/i.test(content);
+
+    const legalPending    = (content.match(/## Legal \(CLO\)[\s\S]*?### Pending([\s\S]*?)### In Progress/i) || [])[1] || '';
+    const hasPendingLegal = /- \[ \]/.test(legalPending);
+    const secPending      = (content.match(/## Security \(CISO\)[\s\S]*?### Pending([\s\S]*?)### In Progress/i) || [])[1] || '';
+    const hasPendingSec   = /- \[ \]/.test(secPending);
+
+    if (!legalStatus) {
+      errors.push('CLO (Legal) gate status not found in Gate Status table.');
+    } else if (legalStatus.toLowerCase() !== 'done') {
+      errors.push(`CLO (Legal) gate is "${legalStatus}" — must be "Done" before CTO activates.`);
+    }
+
+    if (!secStatus) {
+      errors.push('CISO (Security) gate status not found in Gate Status table.');
+    } else if (secStatus.toLowerCase() !== 'done') {
+      errors.push(`CISO (Security) gate is "${secStatus}" — must be "Done" before CTO activates.`);
+    }
+
+    if (!hasJurisdictions) {
+      errors.push('No jurisdictions declared in discovery-requirements.md.\n    Add a "## Jurisdictions" section listing: incorporation, employee locations, user locations, data processing locations, money handling locations.');
+    }
+
+    if (hasPendingLegal) warnings.push('CLO section still has pending items. Confirm all are intentionally deferred before marking Done.');
+    if (hasPendingSec)   warnings.push('CISO section still has pending items. Confirm all are intentionally deferred before marking Done.');
+  }
 }
 
-if (!secStatus) {
-  errors.push('CISO (Security) gate status not found in Gate Status table.');
-} else if (secStatus.toLowerCase() !== 'done') {
-  errors.push(`CISO (Security) gate is "${secStatus}" — must be "Done" before CTO activates.`);
-}
+// ─── Mario Gate ──────────────────────────────────────────────────────────────
+//
+// Looks for a Mario sign-off entry in history.md.
+// Expected format (any heading containing "Mario Gate"):
+//   ## Mario Gate ...
+//   ...
+//   Status: COMPLETED
+//
+// The check fails if no such entry exists or if the status is not COMPLETED.
 
-if (hasPendingLegal) {
-  warnings.push('CLO section still has pending items. Confirm all are intentionally deferred before marking Done.');
-}
+if (runMario) {
+  if (!fs.existsSync(historyFile)) {
+    errors.push(`history.md not found in ${projectDir}\n    Mario sign-off must be logged there before Sprint 1 starts.\n    Run: sdk-doc decision history.md --decision "Mario gate" --context "..." --made-by "Mario"`);
+  } else {
+    const history = fs.readFileSync(historyFile, 'utf8');
 
-if (hasPendingSec) {
-  warnings.push('CISO section still has pending items. Confirm all are intentionally deferred before marking Done.');
-}
+    // Find any section headed with "Mario Gate" (case-insensitive)
+    const marioMatch = history.match(/##\s+Mario Gate[^\n]*([\s\S]*?)(?=\n##\s|\n---|\s*$)/i);
 
-if (!hasJurisdictions) {
-  errors.push('No jurisdictions declared in discovery-requirements.md.\n    Jurisdiction declaration is required (GDPR, CCPA, EU AI Act, and other frameworks depend on it).\n    Add a "## Jurisdictions" section listing: incorporation, employee locations, user locations, data processing locations, money handling locations.');
+    if (!marioMatch) {
+      errors.push(
+        'Mario gate sign-off not found in history.md.\n' +
+        '    Mario (Chief Engineer) must review irreversible architectural decisions before Sprint 1.\n' +
+        '    Activate Mario with: "Hey Mario, review the irreversible decisions in engineering-requirements.md and log sign-off to history.md."'
+      );
+    } else {
+      const marioSection = marioMatch[0];
+      const statusMatch  = marioSection.match(/\*\*Status:\*\*\s*([^\n]+)/i) ||
+                           marioSection.match(/Status:\s*([^\n]+)/i);
+      const status       = statusMatch ? statusMatch[1].trim() : null;
+
+      if (!status) {
+        warnings.push('Mario Gate entry found in history.md but no Status field detected. Confirm sign-off is complete.');
+      } else if (!status.toUpperCase().includes('COMPLETED') && !status.toUpperCase().includes('CLEARED')) {
+        errors.push(`Mario gate status is "${status}" — must be COMPLETED before Sprint 1 starts.`);
+      }
+    }
+  }
 }
 
 // ─── Output ───────────────────────────────────────────────────────────────────
 
 if (errors.length > 0) {
-  const lines = errors.map((e, i) => `    ${i + 1}. ${e}`).join('\n');
+  const lines = errors.map((e, i) => `    ${i + 1}. ${e}`).join('\n\n');
   fail(`Gate not cleared:\n\n${lines}`);
 }
 
@@ -122,20 +153,27 @@ for (const w of warnings) {
   warn(w);
 }
 
+const discoveryPassed = runDiscovery ? '✓  CLO (Legal) + CISO (Security): Done' : '—  Discovery gate (not checked)';
+const marioPassed     = runMario     ? '✓  Mario (Chief Engineer) sign-off: Logged' : '—  Mario gate (not checked)';
+
 console.log(`
 ✅  GATE CLEARED
 
-    CLO (Legal):    Done
-    CISO (Security): Done
-    Jurisdictions:   Declared
-
-    CTO can now be activated.
-    Architecture decisions will be grounded in the legal and security constraints above.
-
-    Reminder: Mario (Chief Engineer) reviews irreversible architectural decisions
-    before Sprint 1 begins. That is the second gate.
+    ${discoveryPassed}
+    ${marioPassed}
 
     Project: ${projectDir}
 `);
+
+if (runDiscovery && !runMario) {
+  console.log(`    CTO can now be activated.
+    Architecture decisions will be grounded in the legal and security constraints above.
+
+    Next gate: run with --mario before Sprint 1 starts.\n`);
+}
+
+if (runMario && !runDiscovery) {
+  console.log(`    Sprint 1 can now start.\n`);
+}
 
 process.exit(0);

@@ -1,5 +1,5 @@
 # Current Status
-**Last updated:** 2026-04-06
+**Last updated:** 2026-04-07
 **Updated by:** Soren Aarhus (Coordinator)
 **Release:** v2026.Q2.1
 
@@ -13,43 +13,41 @@
 
 | Mission | Owner | Appetite remaining | Status | Next action |
 |---|---|---|---|---|
-| Mario gate — 5 irreversible decision reviews | Ravi Colombo (Chief Engineer) | S (< 1 day) | **ACTIVE** | Mario reviews CTO's 5 irreversible decisions; signs off or logs dissent |
-| PM mission shaping — 9 mission cards → sprint tickets | PM | S-M (1-2 days) | **ACTIVE** | PM shapes each mission card into acceptance criteria + Appetite + kanban entry |
-| Protocol Section 13 update | Coordinator | S (< 1 day) | **ACTIVE** | Write Coordinator as sole write authority for current-status.md at session close |
+| EM pod composition + Sprint 1 critical path | Lena Tbilisi (EM) | S (1 session) | **READY TO ACTIVATE** | EM maps pods and tickets from the 7 Appetized missions in product-requirements.md kanban |
 
 ---
 
 ## Waiting On
 
-- [ ] Mario sign-off on 5 irreversible CTO decisions | Blocks: Sprint 1 start
-- [ ] CEO/Coordinator decision: doc.js session-close role enforcement model (technical `--role` flag vs social convention) | Blocks: coordinator-owns-session-close mission
-- [ ] PM mission shaping complete | Blocks: EM pod composition
 - [ ] EM pod composition + critical path map | Blocks: Sprint 1 tickets assigned
 
 ---
 
 ## Completed Since Last Session
 
-- Phase 1 Discovery — all four Domain Specialists delivered | By: CLO (Fatima Nairobi), CISO (Yuki Kampala), CFO (Kenji Montevideo), CMO (Priya Colombo) | Completed: 2026-04-06
-- CLO + CISO gate CLEARED — CTO activation unlocked | By: Fatima Nairobi (CLO) + Yuki Kampala (CISO) | Completed: 2026-04-06
-- CTO architecture brief delivered (Tariq Bishkek) — mission sequencing, platform primitives, make/buy matrix, GitHub auth model, CISO NN compliance map | Completed: 2026-04-06
-- Mario (Ravi Colombo) autonomy gap analysis delivered — 7 layers, 9 mission cards, 3 decisions flagged for sign-off | Completed: 2026-04-06
-- CEO scope decision: GitHub Integration reduced to git-native + GitHub releases/tags/Actions. gh-sync.js and gh-close.js CANCELLED. | By: Amara Lagos (CEO) | Completed: 2026-04-06
-- CEO ruling: Coordinator owns current-status.md session-close writes | By: Amara Lagos (CEO) | Completed: 2026-04-06
-- Project structure cleanup: non-load-bearing docs removed (INDEX.md, HOW_IT_WORKS.md, SQUADS.md), versioning stripped from paths (sdk-v3/ → project/) | Completed: 2026-04-06
-- idea.md and README.md rewritten — cinematic narrative voice | Completed: 2026-04-06
+- Mario gate — 5 irreversible CTO decisions reviewed and signed off | By: Ravi Colombo (Chief Engineer) | Completed: 2026-04-06
+- PM mission shaping — 9 mission cards shaped into sprint tickets | By: Isabella (PM) | Completed: 2026-04-06
+- Protocol Section 13 updated — Coordinator named sole write authority for current-status.md at session close | By: Coordinator | Completed: 2026-04-07
+- coordinator-owns-session-close shipped — session-close checklist in coordinator.md, Protocol Section 13 updated | By: Coordinator | Completed: 2026-04-07
+- mario-gate-script shipped — `sdk-gate-check --mario` now enforces Mario sign-off in history.md before Sprint 1 | By: Coordinator | Completed: 2026-04-07
+- Enforcement model decision logged — social enforcement confirmed (history.md 2026-04-06) | By: CEO + Coordinator | Completed: 2026-04-06
+- Phase 1 Discovery — all Domain Specialists delivered | By: CLO, CISO, CFO, CMO | Completed: 2026-04-06
+- CLO + CISO gate CLEARED | By: Fatima Nairobi + Yuki Kampala | Completed: 2026-04-06
+- CTO architecture brief delivered | By: Tariq Bishkek | Completed: 2026-04-06
 
 ---
 
-## Open Decisions (not yet logged to history.md)
+## Open Decisions
 
-- doc.js session-close role enforcement: technical (`--role` flag check logs a warning if non-Coordinator) vs social (convention + PR checklist). CTO recommended social enforcement pending CEO/Coordinator confirmation. | Needs: CEO + Coordinator sign-off | By: before coordinator-owns-session-close mission ships | Impact: how hard the session-close ownership is enforced
+None.
 
 ---
 
 ## Next Agent To Activate
 
-**EM (Engineering Manager)** — activate after Mario gate clears AND PM mission shaping is done. EM composes pods and maps critical path for Sprint 1.
+**Lena Tbilisi (EM)** — all gates cleared, all missions shaped. EM composes pods and maps critical path for Sprint 1.
+
+Activation phrase: "Lena — all gates are cleared and missions are shaped. Read product-requirements.md kanban (7 Appetized missions) and engineering-requirements.md. Compose pods, assign tickets, and produce the Sprint 1 critical path."
 
 After EM: **Liaison** activates at Sprint 1 start.
 
