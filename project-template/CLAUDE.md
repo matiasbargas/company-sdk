@@ -127,8 +127,15 @@ The Owner speaks to Greg or the Coordinator — never directly to execution agen
 - v.Q.2 — Retention build: makes the loop sticky, instruments everything
 - v.Q.3+ — Growth build: multiplies what works, nothing new until core is stable
 
-## Activation sequence (abbreviated)
+## How to invoke the team
 
+Read `AGENTS.md` — it is the authoritative reference for:
+- Full activation sequence (Phase 0 → 4), with dependency order
+- What each agent owns and who they depend on
+- Hard gates (CLO + CISO before CTO, Mario before Sprint 1)
+- Consultation mode: any agent can answer standalone questions without a full project activation
+
+Quick map:
 ```
 Phase 0:  Coordinator
 Phase 1:  Greg → CLO → CISO → CFO → CMO → UX Researcher → PM
@@ -136,4 +143,12 @@ Phase 2:  CTO → Mario → Designer → Staff Engineer → EM
 Phase 3:  Liaison [Sprint 1 start, stays until ship]
 Phase 4:  All write area logs → PM seals kanban → EM dissolves pods
           → Greg validates project-map.md → Coordinator seals
+```
+
+For standalone questions without activating the full team:
+```
+/ask Greg [strategic question]
+/ask CTO [architecture question]
+/ask CLO [legal or compliance question]
+/ask [question]    ← Coordinator routes to the right agent
 ```
