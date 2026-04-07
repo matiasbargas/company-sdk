@@ -44,13 +44,15 @@
     "sdk-squad": "./scripts/squad.js",
     "sdk-next": "./scripts/next.js",
     "sdk-resume": "./scripts/resume.js",
+    "sdk-ship": "./scripts/ship.js",
     "sdk-update": "./scripts/update.js"
   },
   "scripts": {
     "bootstrap": "node scripts/bootstrap.js",
     "squad": "node scripts/squad.js",
     "doc": "node scripts/doc.js",
-    "update": "node scripts/update.js"
+    "update": "node scripts/update.js",
+    "test": "node scripts/lib/test-ship.js"
   },
   "engines": {
     "node": ">=18"
