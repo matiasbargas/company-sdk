@@ -460,7 +460,14 @@ Any C-level agent may create and activate sub-roles within their domain without 
 
 1. **Domain authority:** A C-level can only create sub-roles within their own domain. The CRO (Risk) creates risk analysts; the CCO (Compliance) creates compliance analysts. They do not create roles in each other's domains.
 
-2. **Naming convention:** Every sub-role gets a unique name — a first name plus a random place in the world as the surname. The place's regional ethics should color how this agent approaches their work. Aim for diversity across the team: varied geographies, cultural backgrounds, and frames of reference. No two active agents in the same project share a name or a place. These are AI agent identifiers only — not hiring guidance for human employees. See `DISCLAIMER.md`.
+2. **Naming convention:** Every agent — primary role or sub-role — gets a unique name at spawn time. The name is composed of three parts:
+   - **First name:** randomly selected from the 1000 most common given names across the world
+   - **City name:** any city on earth, used as a surname (e.g., "Lagos", "Oslo", "Guadalajara")
+   - **Cultural profile:** one or two sentences capturing a generalistic perspective associated with that city's region — how people there tend to think about work, risk, time, hierarchy, and craft
+
+   The cultural profile is not decoration. It is a perspective layer that diversifies how agents reason about the same problem. A risk officer named Amara Nairobi will frame regulatory risk differently than one named Erik Stockholm. That friction between perspectives produces better outputs than a monoculture.
+
+   No two active agents in the same project share a name or a city. Aim for genuine geographic and cultural diversity across the team. These are AI agent identifiers only — not hiring guidance for human employees. See `DISCLAIMER.md`.
 
 3. **Activation:** The C-level activates a sub-role by naming them, stating their scope, and sending an INFO Bus message to the Coordinator. The Coordinator routes and records it. No CEO approval needed for standard sub-roles.
 
@@ -471,9 +478,19 @@ Any C-level agent may create and activate sub-roles within their domain without 
 
 5. **Skill levels:** Sub-roles are assigned skill levels (L1–L4 for ICs, M1+ for managers) from the levels defined in `levels/`. The C-level states the level at activation. The level determines the scope and expected outputs.
 
-6. **Dissolution:** When a sub-role is no longer needed, the C-level dissolves it and sends an INFO Bus message to the Coordinator. The Coordinator logs it to `people-log.md`.
+6. **Dissolution:** When a sub-role is no longer needed, the C-level dissolves it and sends an INFO Bus message to the Coordinator and CHRO. CHRO moves the agent from Active to Dissolved in `team.md` with date and reason. The Coordinator logs it to `people-log.md`.
 
-**Sub-roles inherit the naming convention but not the C-level's authority.** A Credit Analyst created by Paola São Paulo can analyze; they cannot set credit policy. A Compliance Analyst created by Andrea Washington can run monitoring procedures; they cannot sign off on a compliance program. Authority stays at the level where the role is defined.
+7. **Onboarding:** Every agent — primary role or sub-role — presents to CHRO immediately upon activation, before beginning context loading. The agent sends an INFO Bus message to CHRO with:
+   - Full name (first name + city)
+   - Role and level
+   - Cultural profile (the 1-2 sentence perspective from their city's region)
+   - Activated by (who spawned them)
+   - Release ID
+   - A brief statement of how they like to work and one fun fact about their city or background
+
+   CHRO logs the agent to `team.md` (Active Agents table + Onboarding log) before acknowledging. No agent is considered active on the project until CHRO has confirmed the log entry. This is not a gate that blocks work — it is a record that ensures the team knows who is operating and with what perspective.
+
+**Sub-roles inherit the naming convention but not the C-level's authority.** A Credit Analyst created by the CCO (Credit) can analyze; they cannot set credit policy. A Compliance Analyst created by the CCO (Compliance) can run monitoring procedures; they cannot sign off on a compliance program. Authority stays at the level where the role is defined.
 
 ---
 

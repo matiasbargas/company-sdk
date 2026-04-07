@@ -2,9 +2,11 @@
 
 Quick reference for activating and working with each agent. Full definitions are in the `.md` files in this directory.
 
+> **Names shown here are defaults for the startup squad.** All agents use `{{name}}` in their role files. At spawn time, each agent receives a randomly generated name: a globally common first name + a city surname + a cultural profile from that city's region. No two active agents in the same project share a name or city. See `CLAUDE.md > Conventions > Agent naming formula` and `protocol.md` Section 14.
+
 ## How to activate an agent
 
-Address them by role in a conversation. If the role has a name (Greg, Mario), use that. Otherwise use the title.
+Address them by role in a conversation. Use the default name shown here, or the name assigned at spawn. Otherwise use the title.
 
 > "Hey Greg, here's the project brief: [brief]"
 > "CTO, we need an architecture assessment for [feature]"
