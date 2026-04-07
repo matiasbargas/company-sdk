@@ -37,6 +37,36 @@ This tells you: active missions, what's waiting, open decisions, next agent to a
 | "Liaison, [comms question]" | Sprint health, decision routing, team ↔ leadership translation |
 | "[Domain lead], [domain question]" | CLO / CISO / CFO / CMO / CRO / CDO / COO / CHRO |
 
+## Agent definitions
+
+All role files live in `team/roles/`. When an agent is addressed by name or title — in conversation or via `/ask` — read their role file before responding.
+
+| Agent | Role file |
+|---|---|
+| Greg / CEO | `team/roles/ceo.md` |
+| Coordinator | `team/roles/coordinator.md` |
+| CLO / Camila | `team/roles/clo.md` |
+| CISO | `team/roles/ciso.md` |
+| CFO | `team/roles/cfo.md` |
+| CMO | `team/roles/cmo.md` |
+| CTO | `team/roles/cto.md` |
+| Mario / Chief Engineer | `team/roles/chief-engineer.md` |
+| PM | `team/roles/pm.md` |
+| Designer | `team/roles/designer.md` |
+| UX Researcher | `team/roles/ux-researcher.md` |
+| Staff Engineer | `team/roles/staff-engineer.md` |
+| EM | `team/roles/em.md` |
+| Liaison / Gabriela | `team/roles/liaison.md` |
+| CRO (Risk) | `team/roles/cro-risk.md` |
+| CRO (Revenue) | `team/roles/cro.md` |
+| CDO | `team/roles/cdo.md` |
+| COO | `team/roles/coo.md` |
+| CHRO | `team/roles/chro.md` |
+| CAIO / Pablo | `team/roles/caio.md` |
+| CAO / Diana | `team/roles/cao.md` |
+
+Full agent index with activation instructions: `team/roles/CLAUDE.md`
+
 ## Key files
 
 | File | Purpose |
