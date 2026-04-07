@@ -148,8 +148,6 @@ const TOP_LEVEL_FILES = [
   'STRATEGY.md',
   'CLAUDE.md',
   'README.md',
-  'HOW_IT_WORKS.md',
-  'SQUADS.md',
   'DISCLAIMER.md',
   'package.json',
 ];

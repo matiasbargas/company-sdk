@@ -4,11 +4,21 @@ Built with team-sdk. This project uses a structured set of AI agents coordinated
 
 ## Start here — every session
 
-**Always read `current-status.md` first.**
+**Step 1 — Generate the context manifest (preferred first command):**
 
+```bash
+sdk-doc manifest .
 ```
+
+This produces `context-manifest.json` — a structured, machine-readable summary of the project state. Load it first. It contains: active release, current phase, active missions, waiting-on items, open decisions, next agent to activate, and a staleness flag.
+
+**Step 2 — If the manifest is absent or you want the full narrative view:**
+
+```bash
 sdk-doc status .
 ```
+
+This prints `current-status.md` directly. Use this as the fallback when `context-manifest.json` does not yet exist (e.g., first session on a new project).
 
 This tells you: active missions, what's waiting, open decisions, next agent to activate.
 
@@ -59,7 +69,8 @@ This tells you: active missions, what's waiting, open decisions, next agent to a
 ## CLI commands
 
 ```bash
-sdk-doc status .                                    # Where are we right now
+sdk-doc manifest .                                  # Generate context-manifest.json (run first, every session)
+sdk-doc status .                                    # Print current-status.md (fallback / full narrative)
 sdk-doc log [area]-log.md --role X --level Y --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by [Role]
 sdk-doc pod-update current-status.md --mission "..." --status "..." --next "..."

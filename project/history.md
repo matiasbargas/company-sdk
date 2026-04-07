@@ -64,3 +64,37 @@ Ravi Colombo conducted the mandatory Mario gate review of all 5 irreversible arc
 **Escalation path:** Any CTO disagreement with these findings is logged here. CTO makes final call. Mario's dissent stands in the record regardless.
 
 **Sprint 1 gate:** UNBLOCKED for Decisions 1–4. Decision 5 condition must be confirmed in writing by CTO before consumers of context-manifest.json are written.
+
+---
+
+## CTO Confirmation — context-manifest.json schemaVersion Field
+**Date:** 2026-04-06
+**Made by:** Tariq Bishkek (CTO, M4)
+**Release:** v2026.Q2.1
+**Status:** CONFIRMED
+
+**What happened:**
+CTO confirms Mario gate Decision 5 condition: the locked `context-manifest.json` schema includes a `schemaVersion` field with value `"1.0"`. Consumers of context-manifest.json may now be written.
+
+**Schema field confirmed:** `"schemaVersion": "1.0"` — required in every manifest file written by the generator. Consumers must validate this field on read and fail gracefully (fallback to current-status.md) if absent or unrecognised.
+
+**Decision:** CONFIRMED — consumer tickets CM-02 through CM-05 unblocked.
+**Reversible:** No — schema field is part of the locked schema contract.
+
+---
+
+## coordinator-owns-session-close — Enforcement Model Decision
+**Date:** 2026-04-06
+**Made by:** Amara Lagos (CEO) + Soren Aarhus (Coordinator)
+**Release:** v2026.Q2.1
+**Status:** DECIDED
+
+**What happened:**
+Tariq Bishkek (CTO) recommended social enforcement for the Coordinator session-close write authority (convention + PR checklist, not a technical --role flag block). CEO and Coordinator reviewed and confirm.
+
+**Decision:** Social enforcement. The `doc.js session-close` subcommand logs a warning if the caller role is not Coordinator, but does not block the write. Enforcement is by convention, protocol documentation, and PR review checklist — not a hard technical gate.
+
+**Rationale:** The cost of a technical block (sprint held up because the Coordinator agent wasn't explicitly named) is higher than the cost of the occasional wrong-role write. The protocol documents the rule; the PR checklist catches violations before merge. A hard gate can be added in a later release if convention proves insufficient.
+**Reversible:** Yes — can add technical enforcement later without breaking existing usage.
+
+**Effect:** coordinator-owns-session-close mission PM hold is lifted. Pod may now form.

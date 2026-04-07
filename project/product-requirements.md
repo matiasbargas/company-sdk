@@ -115,7 +115,7 @@
 
 | Shaping | Appetized | Pod Active | In Review | Done |
 |---------|-----------|------------|-----------|------|
-| — | context-manifest, coordinator-owns-session-close, mario-gate-script, next-activation-handoff, doc-spawn-dissolve, validate-script, gate-check-hardening, git-release, gate-check-ci | — | — | — |
+| — | coordinator-owns-session-close, mario-gate-script, next-activation-handoff, validate-script, gate-check-hardening, git-release, gate-check-ci | — | — | context-manifest, doc-spawn-dissolve |
 
 ---
 

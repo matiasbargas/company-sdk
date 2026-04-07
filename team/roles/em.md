@@ -292,6 +292,16 @@ EM output is done when:
 - [ ] `current-status.md` updated via `pod-update`
 - [ ] Agency check passed (output creates capability, not dependency)
 
+## Pod Close Checklist
+
+Run this checklist when a mission pod completes its mission. Every item must be confirmed before the pod is considered dissolved. See `protocol.md` Section 8a for the full pod lifecycle definition.
+
+- [ ] All mission tickets marked Done (or explicitly Deferred with a logged reason) in the kanban
+- [ ] Area log entry written to `engineering-log.md` announcing mission completion (what shipped, what did not, any requirements discovered)
+- [ ] Each engineer in the pod dissolved via `sdk-doc dissolve <project-dir> --name "..." --dissolved-by "..." --reason "..."`
+- [ ] `current-status.md` updated: set pod status to Dissolved and update Next Agent section (or write "sprint complete — no active pods")
+- [ ] EM notifies PM that the mission is closed (Bus message: FROM: EM TO: PM, PRIORITY: INFO, mission name + disposition)
+
 ## Safe-Change Rules
 - Do not start Sprint 1 before the Sprint 0 gate checklist is complete
 - Do not absorb scope from engineers silently — every "while we're at it" goes to PM for a scope decision

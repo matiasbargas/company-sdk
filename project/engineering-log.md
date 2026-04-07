@@ -494,3 +494,82 @@ Requirements discovered:
 Decisions made: None requiring history.md — sprint scope decisions are within EM authority (M1)
 Pod affected: All
 Status: ACTIVE
+
+---
+
+## 2026-04-06 Kofi Accra (IC Engineer) L2
+
+```
+FROM: Kofi Accra (IC Engineer, L2)
+TO: Lena Tbilisi (EM)
+RELEASE: v2026.Q2.1
+PRIORITY: INFO
+MESSAGE:
+  Pod STANDALONE-B — doc-spawn-dissolve mission complete.
+
+  Tickets completed:
+    DS-01 — sdk-doc spawn subcommand added to scripts/doc.js
+    DS-02 — sdk-doc dissolve subcommand added to scripts/doc.js
+    DS-03 — protocol.md Section 8a (Mission Pod Lifecycle) written; version bumped 3.3 → 3.4
+    DS-04 — em.md Pod Close Checklist added under Done Definition section
+  Completion entry appended to engineering-log.md (this entry).
+  Kanban updated: doc-spawn-dissolve moved from Appetized to Done.
+
+  No deviations from spec. CLI signatures confirmed below.
+  Appetite used: S (1 session). No blockers encountered.
+```
+
+Goal/Change: Pod STANDALONE-B mission complete — doc-spawn-dissolve shipped (DS-01 through DS-04)
+Expected outcome:
+  - EM and CHRO can now use sdk-doc spawn/dissolve to maintain team.md without manual edits
+  - Protocol v3.4 defines the pod lifecycle states and transition owners
+  - EM role file has a testable pod-close checklist
+  - Kanban reflects Done state for doc-spawn-dissolve
+Requirements discovered: None
+Decisions made: None requiring history.md — implementation followed spec exactly
+Pod affected: STANDALONE-B
+Status: COMPLETED
+
+---
+
+## 2026-04-07 Omar Kigali (IC Engineer) L2
+
+```
+FROM: Omar Kigali (IC Engineer, L2)
+TO: Lena Tbilisi (EM)
+RELEASE: v2026.Q2.1
+PRIORITY: INFO
+MESSAGE:
+  Pod FOUNDATION-A — context-manifest mission complete.
+
+  Tickets completed:
+    CM-01 — context-manifest.json schema template created at project-template/context-manifest.json
+             Fields: schemaVersion, manifestVersion, generatedAt, release, phase, activeMissions,
+             waitingOn, openDecisions, lastUpdatedBy, nextAgentToActivate, staleness.
+             schemaVersion locked at "1.0" per Mario gate Decision 5 Condition 1.
+    CM-02 — sdk-doc manifest <project-dir> subcommand added to scripts/doc.js.
+             Reads current-status.md, parses Active Missions table, Waiting On list,
+             Open Decisions, Next Agent section. Writes context-manifest.json.
+             Fallback: if current-status.md missing, writes minimal stale manifest (flag: "stale").
+             Deterministic: generatedAt sourced from source file mtime.
+    CM-03 — team/roles/CLAUDE.md updated: "How to activate an agent" section now
+             instructs agents to check context-manifest.json first, fall back to
+             current-status.md if absent. Wording is identical across all agents.
+    CM-04 — project-template/CLAUDE.md updated: sdk-doc manifest . added as Step 1
+             in "Start here — every session" section. sdk-doc status . is now Step 2 (fallback).
+    CM-05 — Live manifest generated for sdk project.
+             node scripts/doc.js manifest project/ → project/context-manifest.json written.
+             Output validated: release v2026.Q2.1, phase Phase 1, 3 active missions,
+             4 waiting-on items, 1 open decision, next agent EM (Engineering Manager).
+             Staleness flag: fresh.
+
+  No deviations from spec.
+  Appetite used: S (1 session). No blockers encountered.
+```
+
+Goal/Change: Pod FOUNDATION-A mission complete — context-manifest shipped (CM-01 through CM-05)
+Expected outcome: context-manifest.json schema template, sdk-doc manifest subcommand, agent role file update, project-template CLAUDE.md update, and live manifest generated for sdk project. All 5 CM tickets completed. Kanban updated: context-manifest moved to Done.
+Requirements discovered: None
+Decisions made: None requiring history.md — implementation followed spec exactly
+Pod affected: FOUNDATION-A
+Status: COMPLETED

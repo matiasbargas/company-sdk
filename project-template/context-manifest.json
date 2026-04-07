@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0",
+  "manifestVersion": 1,
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "release": "v[YEAR].Q[QUARTER].[INCREMENT]",
+  "phase": "[Phase 0 | Phase 1 | Phase 2 | Phase 3 | Phase 4]",
+  "activeMissions": [
+    {
+      "name": "[Mission name]",
+      "status": "[Active | Blocked | Paused]",
+      "nextAction": "[Specific next step with owner]"
+    }
+  ],
+  "waitingOn": [
+    {
+      "item": "[What is needed]",
+      "blocks": "[what this blocks]"
+    }
+  ],
+  "openDecisions": [
+    {
+      "decision": "[Decision pending]",
+      "neededBy": "[Role or date]"
+    }
+  ],
+  "lastUpdatedBy": "[Role name]",
+  "nextAgentToActivate": {
+    "role": "[Role name]",
+    "activationPrompt": "[Exact phrase to paste to activate this agent]"
+  },
+  "staleness": {
+    "currentStatusAge": 0,
+    "flag": "unknown"
+  }
+}

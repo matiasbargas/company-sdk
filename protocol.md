@@ -1,5 +1,5 @@
 # Protocol -- Shared Interface Contract
-**Version:** 3.3
+**Version:** 3.4
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
 
@@ -296,6 +296,90 @@ Lead/Staff Engineers and PMs who remain fixed in specific business domains. Whil
 - Pod without a defined Appetite: if there's no time boundary, there's no mission. Define it before the pod forms.
 
 **Pod ownership contract:** Each pod has a single PM owner. That person is accountable for the mission outcome. Nobody outside the pod assigns work to pod members without going through the PM. The Guardian can inject constraints but does not assign work.
+
+---
+
+## 8a. Mission Pod Lifecycle
+
+A mission pod moves through four states. Each transition has a defined owner and a required write to `team.md`. Pod state is never inferred — it is always written.
+
+### Pod states
+
+| State | Definition | Entry condition | Exit condition |
+|---|---|---|---|
+| **Forming** | Pod has been composed by EM; members assigned; mission and Appetite confirmed | EM names pod members and mission in engineering-log.md | EM runs `sdk-doc spawn` for each member; EM confirms Sprint 0 gate passed |
+| **Active** | Sprint 1 has begun; pod is executing against tickets | Sprint 0 gate complete; all members logged in team.md | All mission tickets marked Done or Deferred; EM triggers close |
+| **Review** | Mission deliverables submitted; Guardian sign-off pending | EM sends Bus message to Guardian requesting final gate review | Guardian approves or requests rework; if approved, pod transitions to Dissolved |
+| **Dissolved** | Mission complete; pod members returned to talent pool | Guardian sign-off confirmed; area log entry written | Permanent — dissolved pods are never re-activated. New mission = new pod. |
+
+### Who writes each transition
+
+| Transition | Who writes | Where |
+|---|---|---|
+| Forming → Active | EM | `engineering-log.md` (pod map entry) + `sdk-doc spawn` for each member in `team.md` |
+| Active → Review | EM | Bus message to Guardian; `current-status.md` pod status updated via `sdk-doc pod-update` |
+| Review → Dissolved | EM | `sdk-doc dissolve` for each pod member; area log entry in `engineering-log.md` |
+| Onboarding log | CHRO (or EM on behalf of CHRO) | `team.md` Onboarding log section, written at spawn time |
+
+### CLI commands for each transition
+
+**Spawn (Forming → Active):** Run once per pod member when the pod activates.
+```bash
+sdk-doc spawn <project-dir> \
+  --name "Fatima Nairobi" \
+  --role CLO \
+  --level M3 \
+  --activated-by "Soren Aarhus (Coordinator)" \
+  --profile "Nairobi's startup energy shaped her approach — lean, trust-based, always asking what actually ships." \
+  --how "Async-first. Writes a brief before any meeting. Prefers one focused question over a long thread." \
+  --fun-fact "Nairobi is the only capital city in the world with a national park inside its boundaries."
+```
+
+**Dissolve (Review → Dissolved):** Run once per pod member at mission close. NEVER deletes rows — dissolution moves the agent row from Active Agents to Dissolved Agents and preserves the full history.
+```bash
+sdk-doc dissolve <project-dir> \
+  --name "Fatima Nairobi" \
+  --dissolved-by "Lena Tbilisi (EM)" \
+  --reason "Mission complete — doc-spawn-dissolve shipped"
+```
+
+### Dissolution rule
+
+**Rows are never removed.** `sdk-doc dissolve` moves a row from the Active Agents table to the Dissolved Agents table in `team.md`. The dissolution date, dissolved-by agent, and reason are recorded. The full agent history — who was on the team, when, at what level, and why they left — is always recoverable from `team.md`.
+
+### End-to-end example: Pod STANDALONE-B
+
+```
+1. FORMING
+   EM (Lena Tbilisi) composes pod: 1 IC Engineer (Kofi Accra, L2)
+   Mission: doc-spawn-dissolve — document pod lifecycle, build CLI commands
+   Appetite: S (1 session)
+   EM writes pod map to engineering-log.md
+
+2. SPAWN (Forming → Active)
+   sdk-doc spawn ./project --name "Kofi Accra" --role "IC Engineer" --level L2 \
+     --activated-by "Lena Tbilisi (EM)" \
+     --profile "Accra's pragmatic builder culture — ships first, refines from real feedback." \
+     --how "Reads full spec before writing a line. Comments decisions in code, not just logic." \
+     --fun-fact "Accra has one of the youngest median populations of any African capital."
+   → team.md: Kofi Accra added to Active Agents; metrics incremented; onboarding log entry written
+
+3. ACTIVE
+   Kofi executes DS-01 through DS-04. EM updates current-status.md on ticket completion.
+
+4. REVIEW
+   Kofi posts completion Bus message to Lena (EM).
+   Lena notifies Ravi Colombo (Guardian) for final gate review.
+   Guardian confirms protocol coherence and CLI contract.
+
+5. DISSOLVE (Review → Dissolved)
+   sdk-doc dissolve ./project --name "Kofi Accra" \
+     --dissolved-by "Lena Tbilisi (EM)" \
+     --reason "Mission complete — DS-01 through DS-04 shipped"
+   → team.md: Kofi Accra moved to Dissolved Agents; Current active agents decremented
+   EM writes area log entry to engineering-log.md announcing mission close.
+   EM notifies PM that doc-spawn-dissolve mission is closed.
+```
 
 ---
 
@@ -683,4 +767,4 @@ This means consultation-style spawning is not a special mode. It is the standard
 
 ---
 
-*Protocol v3.3. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, ideation and shipping cycles, SDK self-improvement, and consultation mode. Every agent references it. No agent duplicates it.*
+*Protocol v3.4. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, and consultation mode. Every agent references it. No agent duplicates it.*

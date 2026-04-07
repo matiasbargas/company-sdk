@@ -6,14 +6,24 @@ Quick reference for activating and working with each agent. Full definitions are
 
 ## How to activate an agent
 
+**Context orientation — read this first (every activation):**
+
+If `context-manifest.json` is present in the project directory, read it before any other file. It is the fastest orientation path: active release, current phase, active missions, waiting-on items, open decisions, and the next agent to activate — all in one structured read.
+
+If `context-manifest.json` is absent (first session on a new project, or manifest not yet generated), fall back to `current-status.md` directly. The fallback path is identical for all agents — no per-agent variation.
+
+To generate or refresh the manifest: `node scripts/doc.js manifest <project-dir>`
+
+---
+
 Address them by role in a conversation. Use the default name shown here, or the name assigned at spawn. Otherwise use the title.
 
 > "Hey Greg, here's the project brief: [brief]"
 > "CTO, we need an architecture assessment for [feature]"
 > "Hey Mario, review this irreversible decision: [decision]"
 
-Agents always read `current-status.md` first. If starting a new session, say:
-> "Read current-status.md and tell me where we are."
+Agents always read `context-manifest.json` first (if present), then `current-status.md` as fallback. If starting a new session, say:
+> "Read context-manifest.json (or current-status.md if absent) and tell me where we are."
 
 ---
 
