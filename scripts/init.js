@@ -164,6 +164,27 @@ for (const extra of ['protocol.md', 'AGENTS.md', 'STRATEGY.md']) {
   }
 }
 
+// team/ — roles, levels, squads (agents read these at activation)
+const teamSrc  = path.join(sdkRoot, 'team');
+const teamDest = path.join(outputDir, 'team');
+function copyDir(src, dest) {
+  ensureDir(dest);
+  for (const entry of fs.readdirSync(src)) {
+    const s = path.join(src, entry);
+    const d = path.join(dest, entry);
+    if (fs.statSync(s).isDirectory()) {
+      copyDir(s, d);
+    } else {
+      fs.copyFileSync(s, d);
+    }
+  }
+}
+if (fs.existsSync(teamSrc)) {
+  copyDir(teamSrc, teamDest);
+  console.log(`    ✓  team/  (roles, levels, squads)`);
+  count++;
+}
+
 // ─── 2. Init Claude project (.claude/) ───────────────────────────────────────
 
 const claudeDir      = path.join(outputDir, '.claude');

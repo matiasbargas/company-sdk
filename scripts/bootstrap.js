@@ -166,6 +166,22 @@ for (const extra of extras) {
   }
 }
 
+// team/ — roles, levels, squads (agents read these at activation)
+function copyDir(src, dest) {
+  if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+  for (const entry of fs.readdirSync(src)) {
+    const s = path.join(src, entry);
+    const d = path.join(dest, entry);
+    fs.statSync(s).isDirectory() ? copyDir(s, d) : fs.copyFileSync(s, d);
+  }
+}
+const teamSrc = path.join(sdkRoot, 'team');
+if (fs.existsSync(teamSrc)) {
+  copyDir(teamSrc, path.join(outputDir, 'team'));
+  console.log(`  ✓ team/  (roles, levels, squads)`);
+  count++;
+}
+
 console.log(`\n✅ Project "${projectName}" bootstrapped (${count} files)`);
 console.log(`   Path: ${outputDir}`);
 console.log(`   Release: ${releaseId}`);
