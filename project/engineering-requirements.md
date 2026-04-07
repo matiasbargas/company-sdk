@@ -72,46 +72,55 @@ In this bootstrapped project (owner + AI agents, no human engineers) a **sprint*
 
 ```
 POD MAP: v2026.Q2.1
-Date: 2026-04-06
+Date: 2026-04-07 (Sprint 2 re-map)
 EM: Lena Tbilisi (M1)
 
-Mission Pod — FOUNDATION-A: context-manifest
+--- SPRINT 1 COMPLETE ---
+Dissolved pods:
+  - FOUNDATION-A: context-manifest — DONE
+  - STANDALONE-B: doc-spawn-dissolve — DONE
+  - (coordinator-owns-session-close and mario-gate-script also shipped Sprint 1)
+
+--- SPRINT 2 ACTIVE ---
+
+Mission Pod — SPRINT2-A: validate-script
   PM: Isabella (PM, L4)
   Designer: none
   Engineers: one AI IC agent (spawned per ticket)
-  Guardian: Ravi Colombo (Chief Engineer, L5) — schema lock + Decision 5 conditions
-  Mission: Build the context-manifest.json generator and schema so every agent can
-           orient itself at activation without reading raw log files.
-  Appetite: S (1 session) | Started: pending Sprint 1 start | Remaining: S
-  Current sprint goal: Ship manifest generator + locked schema including schemaVersion
-                       field; confirm CTO Decision 5 Condition 1 in history.md before
-                       consumers written.
-  Special condition: CTO must log schemaVersion confirmation to history.md before
-                     consumer scripts are written. EM will block consumer tickets
-                     until that entry exists.
+  Guardian: Ravi Colombo (Chief Engineer, L5) — gate-check interface coherence
+  Mission: Build the validation script that checks project file health against SDK
+           required structure so owners get actionable pre-flight errors before sdk-ship runs.
+  Appetite: M (2 sessions) | Started: 2026-04-07 | Remaining: M
+  Current sprint goal: Ship VS-01 (script skeleton + advisory mode) and VS-02 (placeholder
+                       detection + actionable error messages). VS-03 (--strict flag + sdk-ship
+                       integration) and VS-04 (config module for thresholds) in Sprint 3.
+  Dependencies: context-manifest (DONE), mario-gate-script (DONE) — fully unblocked.
+  Blocks: gate-check-hardening (cannot start until validate-script ships)
 
-Mission Pod — STANDALONE-B: doc-spawn-dissolve
+Mission Pod — SPRINT2-B: git-release
   PM: Isabella (PM, L4)
   Designer: none
   Engineers: one AI IC agent (spawned per ticket)
-  Guardian: Ravi Colombo (Chief Engineer, L5) — protocol coherence
-  Mission: Document the pod lifecycle (spawn, active, dissolve) in protocol.md and
-           surface pod state in the kanban board so pod transitions never drop context.
-  Appetite: S (1 session) | Started: pending Sprint 1 start | Remaining: S
-  Current sprint goal: Protocol.md pod lifecycle section written; EM role file updated
-                       with pod-close checklist; sdk-doc commands documented.
-  Note: Zero dependencies — parallel-eligible from Sprint 1 day one.
+  Guardian: Ravi Colombo (Chief Engineer, L5) — git atomicity + rollback design
+  Mission: Make release creation a single CLI command (sdk-ship) that produces a git tag,
+           a GitHub release, and a history.md entry atomically without manual steps.
+  Appetite: L (4 sessions total) | Started: 2026-04-07 | Remaining: S (1 session — GR-04 only)
+  Note: GR-01 (git.js), GR-02 (release-notes.js), GR-03 (ship.js) all shipped 2026-04-07.
+        GR-04 (integration test) also shipped 2026-04-07 (scripts/lib/test-ship.js, 11 tests).
+  **STATUS: DONE — all 4 GR tickets complete. Pod SPRINT2-B dissolved.**
+  Dependencies: None — standalone. GitHub auth model resolved (git-native, 2026-04-06).
+  Blocks: nothing in the critical chain — parallel track
 
-EM manages: Pod FOUNDATION-A + Pod STANDALONE-B (max 2 active per EM — at capacity for Sprint 1)
+EM manages: Pod SPRINT2-A + Pod SPRINT2-B (at capacity — 2 active pods)
 
-Pods waiting (not yet active):
-  - mario-gate-script: depends on context-manifest completion
-  - validate-script: depends on context-manifest + mario-gate-script
-  - next-activation-handoff: depends on coordinator-owns-session-close (PM hold)
-  - coordinator-owns-session-close: PM HOLD — pending CEO+Coordinator enforcement decision
-  - gate-check-hardening: depends on validate-script
-  - git-release: standalone, Track B — queued after Foundation pods close
-  - gate-check-ci: depends on gate-check-hardening, Track C
+--- QUEUED (not yet active) ---
+  - next-activation-handoff: UNBLOCKED (coordinator-owns-session-close DONE). Remaining
+    scope: structured handoff block format in current-status.md + machine-parseability
+    acceptance criteria. Appetite: S (1 session). Slots Sprint 3 as Pod SPRINT3-A when
+    one of the Sprint 2 pods dissolves.
+  - gate-check-hardening: blocked on validate-script. Slots Sprint 3-4 as Pod SPRINT3-B.
+    Appetite: S-M.
+  - gate-check-ci: blocked on gate-check-hardening. Slots Sprint 4-5. Appetite: S.
 ```
 
 ---
@@ -120,72 +129,80 @@ Pods waiting (not yet active):
 
 ```
 CRITICAL PATH: v2026.Q2.1
-Date: 2026-04-06
+Date: 2026-04-07 (updated Sprint 2 — Sprint 1 complete)
 EM: Lena Tbilisi (M1)
 
-TRACK FOUNDATION (longest chain — must complete before Tracks A/B can start):
-  1. [CTO confirmation] schemaVersion field logged to history.md — no dependencies — XS (pre-Sprint gate)
-  2. context-manifest — depends on CTO confirmation — S
-  3. mario-gate-script — depends on context-manifest — S
-  4. validate-script — depends on context-manifest + mario-gate-script — M
-     └── gate-check-hardening — depends on validate-script — S-M
-         └── gate-check-ci — depends on gate-check-hardening — S [Track C]
+COMPLETED (Sprint 1):
+  ✓ context-manifest — DONE
+  ✓ doc-spawn-dissolve — DONE
+  ✓ coordinator-owns-session-close — DONE
+  ✓ mario-gate-script — DONE
 
-TRACK A (parallel from Foundation complete):
-  5. coordinator-owns-session-close — PM HOLD (CEO+Coordinator enforcement decision)
-     └── next-activation-handoff — depends on coordinator-owns-session-close — S-M
+ACTIVE CHAIN (longest remaining chain — critical path):
+  1. validate-script — unblocked, IN PROGRESS (Sprint 2) — M (2 sessions)
+     └── gate-check-hardening — blocked on validate-script — S-M
+         └── gate-check-ci — blocked on gate-check-hardening — S [Track C]
 
-TRACK B (parallel from Foundation complete):
-  6. git-release — standalone, no dependencies — L
+COMPLETED THIS SESSION:
+  2. git-release (ALL 4 GR tickets) — DONE 2026-04-07
+     GR-01: scripts/lib/git.js, GR-02: scripts/lib/release-notes.js
+     GR-03: scripts/ship.js (sdk-ship bin), GR-04: scripts/lib/test-ship.js (11 tests)
 
-STANDALONE (parallel from Sprint 1 day one):
-  7. doc-spawn-dissolve — no dependencies — S
+QUEUED — UNBLOCKED:
+  3. next-activation-handoff — depends on coordinator-owns-session-close (DONE)
+     Remaining scope: handoff block format + machine-parseability — S
+     Slots Sprint 3 as first pod when SPRINT2-A dissolves.
 
-Critical path (longest chain):
-  schemaVersion confirmation → context-manifest → mario-gate-script → validate-script →
-  gate-check-hardening → gate-check-ci
-  Total: ~5-6 sessions
+Critical path (longest remaining chain):
+  validate-script → gate-check-hardening → gate-check-ci
+  Total remaining: ~4 sessions
 
 Schedule slack:
-  - doc-spawn-dissolve: fully parallel — no slack risk
-  - git-release: no dependencies; can start any session — buffer exists
-  - coordinator-owns-session-close: externally blocked by CEO+Coordinator decision;
-    every session this stays open adds latency to next-activation-handoff
-  - gate-check-hardening + gate-check-ci: sit at the end of the critical chain — no buffer
+  - git-release: parallel track, no blocking dependencies downstream — buffer exists
+  - next-activation-handoff: S remaining, queued Sprint 3 — no schedule pressure
+  - gate-check-hardening + gate-check-ci: end of the critical chain — no buffer once
+    validate-script ships; must pod immediately after validate-script closes
 
 External dependencies:
 | Dependency | Owner | Status | Risk if delayed |
 |---|---|---|---|
-| CTO confirms schemaVersion field to history.md | Tariq Bishkek (CTO) | PENDING — pre-Sprint gate | Blocks all context-manifest consumer tickets |
-| CEO+Coordinator enforcement decision (technical vs social) | Amara Lagos (CEO) + Soren Aarhus (Coordinator) | OPEN | Blocks coordinator-owns-session-close → next-activation-handoff chain |
+| GitHub auth (git-native, PAT) | CISO + CTO | RESOLVED (2026-04-06) | No remaining risk |
+| CEO+Coordinator enforcement model | Amara Lagos + Soren Aarhus | RESOLVED (2026-04-06) | No remaining risk |
 ```
 
 ---
 
-### Sprint 1 Scope
+### Sprint 1 — COMPLETE
 
-**What ships in Sprint 1:**
-- context-manifest (Pod FOUNDATION-A) — generator script, locked schema with schemaVersion,
-  agent role file update, fallback-to-current-status.md documented and tested
-- doc-spawn-dissolve (Pod STANDALONE-B) — protocol.md pod lifecycle section, EM role file
-  pod-close checklist, sdk-doc commands, kanban Pod Active column update, end-to-end example
+**Shipped in Sprint 1:**
+- context-manifest — generator script, locked schema with schemaVersion, agent role file
+  update, fallback-to-current-status.md documented and tested
+- doc-spawn-dissolve — protocol.md pod lifecycle section, EM role file pod-close checklist,
+  sdk-doc commands, kanban Pod Active column update, end-to-end example
+- coordinator-owns-session-close — session-close checklist in coordinator.md, Protocol
+  Section 13 updated, enforcement model logged
+- mario-gate-script — sdk-gate-check --mario enforces Mario sign-off in history.md
 
-**Pre-Sprint 1 gate (must clear before Sprint 1 opens):**
-- CTO logs schemaVersion confirmation to history.md (Decision 5 Condition 1)
+---
 
-**What does NOT ship in Sprint 1:**
-- mario-gate-script — queued Sprint 2 (depends on context-manifest)
-- validate-script — queued Sprint 2-3 (depends on context-manifest + mario-gate-script)
-- coordinator-owns-session-close — PM HOLD; cannot pod until enforcement decision logged
-- next-activation-handoff — blocked by coordinator-owns-session-close
-- gate-check-hardening — queued Sprint 3-4
-- git-release — queued Sprint 2-3 (standalone but large Appetite: L)
-- gate-check-ci — queued Sprint 4-5
+### Sprint 2 Scope
+
+**What ships in Sprint 2:**
+- validate-script (Pod SPRINT2-A) — VS-01 (script skeleton + advisory mode) + VS-02
+  (placeholder detection + actionable error messages). First session of an M appetite.
+- git-release ALL tickets (GR-01 through GR-04) — FULLY SHIPPED this session.
+  sdk-ship bin, clean-tree guard, rollback, --dry-run, 11-test integration suite.
+
+**What does NOT ship in Sprint 2:**
+- validate-script VS-03 + VS-04 — held for Sprint 3 (second session of M appetite)
+- next-activation-handoff — unblocked but queued Sprint 3; fits as Pod SPRINT3-A
+- gate-check-hardening — queued Sprint 3-4; blocked on validate-script
+- gate-check-ci — queued Sprint 4-5; blocked on gate-check-hardening
 
 **Appetite per session (AI-agent execution):**
 - AI agents execute at high speed within a session but each ticket needs its own activation.
-  Realistic throughput: 2-3 tickets per session if acceptance criteria are clear and dependencies
-  are unblocked. A mission with 4-5 tickets = 2 sessions.
+  Realistic throughput: 2-3 tickets per session if acceptance criteria are clear and
+  dependencies are unblocked. A mission with 4-5 tickets = 2 sessions.
   Do not compress more than 3 missions into one session.
 
 ---
@@ -493,19 +510,250 @@ Definition of done:
 
 ---
 
+**Pod: SPRINT2-A — validate-script**
+
+---
+```
+TICKET: VS-01 — Build sdk-validate script skeleton with advisory mode
+Epic: v2026.Q2.1 / validate-script
+Owner: IC Engineer (spawned by EM, Pod SPRINT2-A)
+Size: S
+
+Description:
+Build the entry point for sdk-validate. The script accepts a project directory path and
+checks all five required project files: current-status.md, history.md,
+product-requirements.md, engineering-requirements.md, general-requirements.md. In
+advisory mode (default), it reports each missing file as a warning and exits 0. No
+placeholder detection yet — that is VS-02. The goal of this ticket is a working,
+testable skeleton with clean output formatting and a clear per-failure message structure.
+
+Acceptance criteria:
+- [ ] `node scripts/validate.js <project-dir>` runs without error on a valid project directory
+- [ ] Missing required files each produce a distinct warning line: "WARN: <file> is missing —
+      create it with sdk-doc init <file>"
+- [ ] All five required files are checked
+- [ ] Exit code is 0 in advisory mode regardless of warnings
+- [ ] Script is importable as a module (exports a validate() function) for future sdk-ship integration
+- [ ] At least one unit test confirms: missing file → warning line + exit 0
+
+Dependencies:
+- Blocked by: none
+- Blocks: VS-02, VS-03
+
+Definition of done:
+[ ] Code written and passes local tests
+[ ] Unit test covers missing-file path
+[ ] Reviewed by Ravi Colombo (Chief Engineer) for interface consistency with existing sdk-* scripts
+[ ] Merged to main
+```
+
+---
+```
+TICKET: VS-02 — Add placeholder detection and actionable error messages
+Epic: v2026.Q2.1 / validate-script
+Owner: IC Engineer (spawned by EM, Pod SPRINT2-A)
+Size: S
+
+Description:
+Extend sdk-validate with placeholder detection: scan each required file for unfilled
+`[PLACEHOLDER]` patterns and empty required sections. Every failure must produce a
+specific, actionable message that names the file, the section, and the exact command
+to fix it. Generic "validation failed" is not acceptable output. This ticket extends
+VS-01 — do not rewrite the skeleton, extend it.
+
+Acceptance criteria:
+- [ ] Unfilled `[PLACEHOLDER]` tokens in any required file produce: "WARN: <file> section
+      '<section>' has unfilled placeholder — run `sdk-doc append <file> --section '<section>'
+      --content '...'"
+- [ ] Empty required sections (defined by a constants module, not hardcoded) produce an
+      equivalent specific message
+- [ ] A constants module (or config file) defines the list of required sections per file —
+      not hardcoded in the detection logic
+- [ ] Acceptance criteria 2 from the mission brief met: every failure is a specific,
+      actionable message — no generic errors
+- [ ] Advisory mode still exits 0; all warnings are collected and printed at end of run
+
+Dependencies:
+- Blocked by: VS-01 (skeleton must exist before extension)
+- Blocks: VS-03
+
+Definition of done:
+[ ] Code written and passes local tests
+[ ] Unit test covers: placeholder found, empty section, clean file (no warnings)
+[ ] Constants/config module exists for required sections list
+[ ] Reviewed by Ravi Colombo (Chief Engineer)
+[ ] Merged to main
+```
+
+---
+```
+TICKET: VS-03 — Add --strict flag and integrate into sdk-ship pre-flight
+Epic: v2026.Q2.1 / validate-script
+Owner: IC Engineer (spawned by EM, Pod SPRINT2-A)
+Size: S
+NOTE: Sprint 3 ticket — do not start until VS-01 and VS-02 are merged.
+
+Description:
+Add `--strict` flag to sdk-validate: in strict mode, any failure exits 1 instead of 0.
+Integrate sdk-validate into the sdk-ship pre-flight sequence so it runs automatically
+before the release gate. Both modes (advisory and strict) must be documented.
+
+Acceptance criteria:
+- [ ] `--strict` flag causes exit 1 on any failure; advisory mode (no flag) always exits 0
+- [ ] sdk-ship (or sdk-gate-check) calls sdk-validate as a pre-flight step before proceeding
+- [ ] Acceptance criteria 3 from the mission brief met: both modes documented with expected
+      behavior and exit codes
+- [ ] Acceptance criteria 4 from the mission brief met: script integrated into sdk-ship
+      pre-flight sequence
+
+Dependencies:
+- Blocked by: VS-02
+- Blocks: VS-04
+
+Definition of done:
+[ ] --strict flag implemented and tested (exit 0 and exit 1 paths)
+[ ] sdk-ship integration added and tested end-to-end
+[ ] Documentation updated
+[ ] Reviewed by Ravi Colombo (Chief Engineer)
+[ ] Merged to main
+```
+
+---
+```
+TICKET: VS-04 — Config module for "minimum viable documentation" thresholds
+Epic: v2026.Q2.1 / validate-script
+Owner: IC Engineer (spawned by EM, Pod SPRINT2-A)
+Size: S
+NOTE: Sprint 3 ticket — do not start until VS-03 is merged.
+
+Description:
+Extract all hardcoded threshold definitions (required sections per file, placeholder
+patterns, required file list) into a single config module or constants file. This is
+the gate ticket for the validate-script mission — it ensures the thresholds are
+configurable, not scattered across the implementation.
+
+Acceptance criteria:
+- [ ] A single config module (e.g., scripts/lib/validate-config.js) defines: required files,
+      required sections per file, placeholder pattern(s)
+- [ ] Acceptance criteria 5 from the mission brief met: "minimum viable documentation"
+      threshold is defined in a config, not hardcoded across multiple places
+- [ ] The constants module from VS-02 is consolidated into this config module (no duplication)
+- [ ] VS-01 through VS-03 implementation points to this module — no threshold values live
+      in the detection logic
+
+Dependencies:
+- Blocked by: VS-03
+- Blocks: none — this is the gate ticket for validate-script mission close
+
+Definition of done:
+[ ] Config module written
+[ ] All prior validate-script code updated to reference the config module
+[ ] PM (Isabella) verifies all 5 mission acceptance criteria are met
+[ ] EM (Lena Tbilisi) confirms mission done — writes dissolution entry to engineering-log.md
+[ ] Merged to main
+```
+
+---
+
+**Pod: SPRINT2-B — git-release (GR-03 + GR-04)**
+
+*Foundation: GR-01 (scripts/lib/git.js) and GR-02 (scripts/lib/release-notes.js) already shipped.*
+
+---
+```
+TICKET: GR-03 — Build sdk-ship command: atomic tag + push + GitHub release
+Epic: v2026.Q2.1 / git-release
+Owner: IC Engineer (spawned by EM, Pod SPRINT2-B)
+Size: M
+
+Description:
+Build the sdk-ship command that wires together GR-01 (git.js) and GR-02
+(release-notes.js) into one atomic operation: (1) validate clean working tree,
+(2) create git tag from current release ID in settings.json, (3) push tag to remote,
+(4) create GitHub release using release notes from history.md latest entry. If any
+step fails, roll back cleanly — no partial tag, no partial release. The failure message
+must name exactly what happened and what to retry.
+
+Acceptance criteria:
+- [ ] `sdk-ship` requires a clean git working tree — fails with an explicit message if
+      uncommitted changes are present (acceptance criteria 4 from mission brief)
+- [ ] Git tag is created using release ID format vYYYY.QQ.N from settings.json
+- [ ] Tag is pushed to remote; GitHub release is created with auto-generated release notes
+      from history.md latest entry — formatted as GitHub-flavored markdown
+- [ ] If any step fails: tag creation attempted → push fails → tag is deleted locally;
+      no partial state is left (acceptance criteria 2 from mission brief)
+- [ ] Failure message names: which step failed, what was left in what state, and what
+      command to retry
+- [ ] Git-native only: no gh-sync.js, no gh-close.js (acceptance criteria 5 confirmed)
+
+Dependencies:
+- Blocked by: GR-01 (git.js — already shipped), GR-02 (release-notes.js — already shipped)
+- Blocks: GR-04
+
+Definition of done:
+[ ] Code written and passes local tests
+[ ] Rollback path tested: network failure after tag creation → local tag deleted
+[ ] Reviewed by Ravi Colombo (Chief Engineer) for atomicity design
+[ ] Merged to main
+```
+
+---
+```
+TICKET: GR-04 — Integration test: sdk-ship end-to-end in a test repo
+Epic: v2026.Q2.1 / git-release
+Owner: IC Engineer (spawned by EM, Pod SPRINT2-B)
+Size: S
+NOTE: Sprint 3 ticket — do not start until GR-03 is merged.
+
+Description:
+Write an integration test that runs sdk-ship against a test git repository (can be
+a temporary local repo created in the test setup). The test confirms: clean-tree check,
+tag creation, rollback on simulated network failure, and release notes content. This is
+the gate ticket for the git-release mission.
+
+Acceptance criteria:
+- [ ] Integration test creates a temporary git repo, seeds it with a settings.json and
+      a history.md entry, and runs sdk-ship
+- [ ] Test asserts: tag created with correct name, release notes contain content from
+      history.md latest entry
+- [ ] Rollback path tested: test simulates a push failure and confirms no tag remains
+      locally after rollback
+- [ ] Test runs without network access (GitHub release creation stubbed/mocked)
+- [ ] Acceptance criteria 1 and 2 from the mission brief confirmed by this test
+
+Dependencies:
+- Blocked by: GR-03
+- Blocks: none — gate ticket for git-release mission close
+
+Definition of done:
+[ ] Integration test written and passes
+[ ] Rollback path confirmed by test
+[ ] PM (Isabella) verifies all 5 mission acceptance criteria are met
+[ ] EM (Lena Tbilisi) confirms mission done — writes dissolution entry to engineering-log.md
+[ ] Merged to main
+```
+
+---
+
 ### Pending
-- [ ] mario-gate-script tickets — write after context-manifest ships
-- [ ] validate-script tickets — write after context-manifest + mario-gate-script ship
-- [ ] coordinator-owns-session-close tickets — blocked on PM hold; write after enforcement decision logged
+- [ ] next-activation-handoff tickets — write at Sprint 3 pod activation (S appetite remaining)
+- [ ] gate-check-hardening tickets — write after validate-script ships
+- [ ] gate-check-ci tickets — write after gate-check-hardening ships
 
 ### In Progress
-- [x] Sprint 1 pod map and ticket list — written 2026-04-06 by Lena Tbilisi (EM)
+- [ ] validate-script (VS-01, VS-02) — Pod SPRINT2-A | IC agent to be spawned | Sprint 2
+- [ ] git-release GR-03 — Pod SPRINT2-B | IC agent to be spawned | Sprint 2
 
 ### Done
+- [x] Sprint 2 pod map and tickets — written 2026-04-07 by Lena Tbilisi (EM)
+- [x] Sprint 1 pod map and ticket list — written 2026-04-06 by Lena Tbilisi (EM)
+- [x] context-manifest — SHIPPED (Sprint 1)
+- [x] doc-spawn-dissolve — SHIPPED (Sprint 1)
+- [x] coordinator-owns-session-close — SHIPPED (Sprint 1)
+- [x] mario-gate-script — SHIPPED (Sprint 1)
 
 ### Blocked
-- [ ] coordinator-owns-session-close pod: PM hold pending CEO+Coordinator enforcement model decision
-- [ ] CTO Decision 5 Condition 1: schemaVersion confirmation must be logged to history.md before CM-01 ticket can close
+(none — all Sprint 2 pods are unblocked)
 
 ---
 
