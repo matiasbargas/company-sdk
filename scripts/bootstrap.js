@@ -93,17 +93,20 @@ const year = now.getFullYear();
 const quarter = Math.ceil((now.getMonth() + 1) / 3);
 const releaseId = `v${year}.Q${quarter}.1`;
 const dateStr = now.toISOString().split('T')[0];
+const timeStr = now.toISOString().replace('T', ' ').slice(0, 16);
 
 // ─── Variables ───────────────────────────────────────────────────────────────
 
 const vars = {
-  PROJECT_NAME: projectName,
-  PROJECT_DIR: outputDir,
-  RELEASE: releaseId,
-  DATE: dateStr,
-  YEAR: String(year),
-  SQUAD: squadType,
-  COMPANY: projectName,
+  'PROJECT NAME': projectName,
+  PROJECT_NAME:   projectName,
+  PROJECT_DIR:    outputDir,
+  RELEASE:        releaseId,
+  DATE:           dateStr,
+  'YYYY-MM-DD HH:MM': timeStr,
+  YEAR:           String(year),
+  SQUAD:          squadType,
+  COMPANY:        projectName,
 };
 
 // ─── Run ─────────────────────────────────────────────────────────────────────

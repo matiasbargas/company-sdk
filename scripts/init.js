@@ -333,7 +333,7 @@ NEXT STEPS
 
 4.  Resume any session with:
 
-      node ${path.relative(process.cwd(), path.join(sdkRoot, 'scripts/doc.js'))} status ${outputDir}
+      sdk-doc status ${outputDir}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `);

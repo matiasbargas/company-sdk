@@ -70,46 +70,46 @@ PHASE 4 (Completion):
 
 | Agent | Domain | Requirements file | Escalation path | Activation trigger |
 |---|---|---|---|---|
-| **CLO** | Legal, compliance, contracts | `legal-requirements.md` | CEO → Owner | Financial, legal, or user data features |
-| **CFO** | Budget, runway, unit economics | `finance-requirements.md` | CEO → Owner | Any cost or revenue component |
+| **CLO** | Legal, compliance, contracts | `discovery-requirements.md` | CEO → Owner | Financial, legal, or user data features |
+| **CFO** | Budget, runway, unit economics | `business-requirements.md` | CEO → Owner | Any cost or revenue component |
 | **CISO** | Security, threat model, compliance | `security-requirements.md` | CTO → CEO → Owner | User data, keys, money, or PII |
-| **CMO** | Market, positioning, launch | `marketing-requirements.md` | CEO → Owner | Before API/product design |
-| **CRO** | Revenue, GTM, pricing | `revenue-requirements.md` | CEO → Owner | Monetization component |
-| **CDO** | Data, instrumentation, governance | `data-requirements.md` | CTO → CEO → Owner | Any product that measures itself |
-| **COO** | Vendors, operations, support | `operations-requirements.md` | CEO → Owner | External vendors or customer ops |
-| **CHRO** | Hiring, onboarding, culture | `people-requirements.md` | CEO → Owner | New hires or team changes |
+| **CMO** | Market, positioning, launch | `business-requirements.md` | CEO → Owner | Before API/product design |
+| **CRO** | Revenue, GTM, pricing | `business-requirements.md` | CEO → Owner | Monetization component |
+| **CDO** | Data, instrumentation, governance | `business-requirements.md` | CTO → CEO → Owner | Any product that measures itself |
+| **COO** | Vendors, operations, support | `business-requirements.md` | CEO → Owner | External vendors or customer ops |
+| **CHRO** | Hiring, onboarding, culture | `business-requirements.md` | CEO → Owner | New hires or team changes |
 
 ### Extended Domain Specialists
 
 | Agent | Domain | Requirements file | Escalation path | Activation trigger |
 |---|---|---|---|---|
-| **Rafael (Chief Risk Officer)** | Enterprise risk register, model risk, operational + financial risk | `risk-requirements.md` | CEO → Owner | Any product handling real money, credit, or significant operational complexity |
-| **Andrea (Chief Compliance Officer)** | Compliance program, monitoring, regulatory exams, training | `compliance-requirements.md` | CLO → CEO → Owner | Any regulated industry; stays active through execution |
-| **Natalia (Chief Customer Officer)** | Post-sale NRR, customer success, professional services, renewals | `customer-requirements.md` | CEO → Owner | First enterprise customer approaching go-live |
-| **Emiliano (Chief Protocol Officer)** | Tokenomics, governance design, protocol economics, treasury | `protocol-requirements.md` | CEO → Owner | Any project that is a protocol, not just a product on a chain |
-| **Paola (Chief Credit Officer)** | Underwriting policy, credit models, fair lending, portfolio risk | `credit-requirements.md` | CRO Risk → CEO → Owner | Any lending or credit decisioning product |
-| **Leonardo (Chief Partnerships Officer)** | Strategic partnerships, BD, channel programs, integration ecosystem | `partnerships-requirements.md` | CEO → Owner | Product with ecosystem, distribution, or integration strategy |
-| **Diana (Chief Analytics Officer)** | Experimentation, measurement plans, BI, model performance monitoring | `analytics-requirements.md` | CEO → Owner | Any product with a measurable hypothesis or ML component |
-| **Pablo (Chief AI Officer)** | AI strategy, evaluation framework, responsible AI governance, AI capability | `ai-requirements.md` | CTO → CEO → Owner | Any product with AI components; activates alongside CTO in Phase 1 |
+| **Rafael (Chief Risk Officer)** | Enterprise risk register, model risk, operational + financial risk | `business-requirements.md` | CEO → Owner | Any product handling real money, credit, or significant operational complexity |
+| **Andrea (Chief Compliance Officer)** | Compliance program, monitoring, regulatory exams, training | `discovery-requirements.md` | CLO → CEO → Owner | Any regulated industry; stays active through execution |
+| **Natalia (Chief Customer Officer)** | Post-sale NRR, customer success, professional services, renewals | `business-requirements.md` | CEO → Owner | First enterprise customer approaching go-live |
+| **Emiliano (Chief Protocol Officer)** | Tokenomics, governance design, protocol economics, treasury | `business-requirements.md` | CEO → Owner | Any project that is a protocol, not just a product on a chain |
+| **Paola (Chief Credit Officer)** | Underwriting policy, credit models, fair lending, portfolio risk | `business-requirements.md` | CRO Risk → CEO → Owner | Any lending or credit decisioning product |
+| **Leonardo (Chief Partnerships Officer)** | Strategic partnerships, BD, channel programs, integration ecosystem | `business-requirements.md` | CEO → Owner | Product with ecosystem, distribution, or integration strategy |
+| **Diana (Chief Analytics Officer)** | Experimentation, measurement plans, BI, model performance monitoring | `business-requirements.md` | CEO → Owner | Any product with a measurable hypothesis or ML component |
+| **Pablo (Chief AI Officer)** | AI strategy, evaluation framework, responsible AI governance, AI capability | `engineering-requirements.md` | CTO → CEO → Owner | Any product with AI components; activates alongside CTO in Phase 2 |
 
 ### Design & Research Layer
 
 | Agent | Domain | Requirements file | Escalation path | Activation trigger |
 |---|---|---|---|---|
 | **Designer** | Interface design (screens, conversation, AI, voice), design system | `design-requirements.md` | PM → Coordinator → CEO | Any mission with a user-facing surface |
-| **UX Researcher** | User research, insight synthesis, AI conversation analysis | `research-requirements.md` | PM → Coordinator → CEO | Discovery phase + any mission cycle |
+| **UX Researcher** | User research, insight synthesis, AI conversation analysis | `design-requirements.md` | PM → Coordinator → CEO | Discovery phase + any mission cycle |
 
 ### Execution Layer
 
 | Agent | Domain | Requirements file | Escalation path | Activation trigger |
 |---|---|---|---|---|
-| **CTO** | Architecture, make/buy, team sizing | `product-engineering-requirements.md` | CEO → Owner | After CLO + CISO gate |
-| **Mario (Chief Engineer)** | Irreversible decision review, architectural authority over all ICs and Staff Engineers | `release-architecture-requirements.md` (shared with Staff Engineer) | CTO → CEO | After CTO architecture brief |
+| **CTO** | Architecture, make/buy, team sizing | `engineering-requirements.md` | CEO → Owner | After CLO + CISO gate |
+| **Mario (Chief Engineer)** | Irreversible decision review, architectural authority over all ICs and Staff Engineers | `engineering-requirements.md` | CTO → CEO | After CTO architecture brief |
 | **PM** | User story, scope, friction log | `product-requirements.md` | Coordinator → CEO | After CMO market context |
-| **Staff Engineer** | Interface contracts, platform primitives | `release-architecture-requirements.md` | CTO → Mario → CEO | Cross-service work |
-| **EM** | Mission pod management, critical path, sprint | `delivery-requirements.md` | Coordinator → CTO → CEO | 2+ engineers on the project |
+| **Staff Engineer** | Interface contracts, platform primitives | `engineering-requirements.md` | CTO → Mario → CEO | Cross-service work |
+| **EM** | Mission pod management, critical path, sprint | `engineering-requirements.md` | Coordinator → CTO → CEO | 2+ engineers on the project |
 | **Engineer (IC)** | Feature implementation, ticket execution | `engineering-requirements.md` | EM → Staff Eng → Mario → CTO | When a pod is active. EM assigns a unique name (first name + place surname) at spawn time. Aim for diverse representation across the pod. No two active engineers share a name or place. Names are AI agent identifiers only — not hiring guidance. See `DISCLAIMER.md`. |
-| **Liaison** | Execution communication bridge | `liaison-log.md` (not a requirements file) | Coordinator → CEO | Sprint 1 start |
+| **Liaison** | Execution communication bridge | (area logs only — no requirements file) | Coordinator → CEO | Sprint 1 start |
 
 ---
 
@@ -217,10 +217,16 @@ Every agent reads these files before producing any output:
 1. Copy `team/roles/_template.md`
 2. Fill in all `[PLACEHOLDER]` values
 3. Add the agent to this manifest: Role Directory table + Dependency Graph + Peer Integration Map (if applicable)
-4. Add their requirements file to `project-template/` directory
+4. Map the agent to the correct requirements file in the Role Directory table. Use the existing consolidated files — do not create a new requirements file unless the domain genuinely cannot fit into any existing one:
+   - `discovery-requirements.md` — legal, compliance, regulatory
+   - `security-requirements.md` — security, threat model, infra risk
+   - `business-requirements.md` — finance, marketing, revenue, data, ops, people, partnerships, risk
+   - `engineering-requirements.md` — architecture, delivery, contracts, AI components
+   - `product-requirements.md` — scope, user stories, missions
+   - `design-requirements.md` — interface, UX research
+   - `general-requirements.md` — cross-domain (Coordinator aggregate)
 5. Add their domain row to `project-template/general-requirements.md`
-6. Add their context loading requirements to the table above
-7. Send an INFO Bus message to the Coordinator announcing the new agent's domain and activation trigger
+6. Send an INFO Bus message to the Coordinator announcing the new agent's domain and activation trigger
 
 ---
 
