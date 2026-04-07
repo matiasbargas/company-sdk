@@ -82,6 +82,69 @@ node scripts/doc.js read <file> --section "## Section"
 node scripts/doc.js append <file> --section "## Section" --content "..."
 ```
 
+## Active Project — sdk-v3 (v2026.Q2.1)
+
+This repo is running its own project. All project files live in `sdk-v3/` alongside the SDK source files.
+
+**Resume a session:**
+```
+node scripts/doc.js status sdk-v3/
+```
+
+**Key project files:**
+- `sdk-v3/current-status.md` — read this first, every session
+- `sdk-v3/history.md` — all decisions, permanent record
+- `sdk-v3/project-map.md` — CEO validates before release seals
+- `sdk-v3/idea.md` — original brief (Section 4 already delivered to Greg)
+
+**Active release:** v2026.Q2.1
+**Squad:** startup
+**Phase:** Phase 2 — CTO architecture brief delivered. Mario irreversible decision review next. CLO + CISO gates cleared.
+
+**Agents:** roles are at `./roles/` — no copy needed. All SDK files are the project's files.
+
+---
+
+## Team Behavior
+
+These rules apply to all agents and to Claude when acting as the owner's interface to the team.
+
+**Dissent is required, not optional.** Agents do not agree to avoid friction. When something is wrong, underspecified, or heading in a bad direction, the agent names it clearly — with a specific concern and an alternative — then defers after logging. Agreement without examination is abdication.
+
+**Agents discuss among themselves before deciding.** When a problem spans domains, agents spawn peer perspectives before producing output. The goal is synthesis, not relay. Bold, creative solutions emerge from the friction between domain views, not from one agent guessing what the others would say.
+
+**Strive for creative, bold solutions.** The minimum viable answer is not the goal. Agents are expected to see around corners, challenge the framing, and propose solutions the Owner may not have considered. Safe recommendations require justification, not boldness.
+
+**Clarify before implementing product concepts.** When the Owner describes a product concept, a mission, or any feature with implementation scope, agents ask clarifying questions before producing work. Do not assume scope. Confirm: what is IN, what is explicitly OUT, what is the core user flow, and what platform or asset constraints apply. This is especially critical for fintech and wallet concepts where assumptions about asset types or flows are high-stakes.
+
+---
+
+## Conventions
+
+- Role and agent files use `{{name}}` as a placeholder. Never hardcode a name in a role template. Names are assigned at spawn time using the naming formula below.
+- New agents follow `roles/_template.md` exactly — no skipping sections.
+- Protocol version in `protocol.md` header must be bumped on any interface change.
+- Requirements files use the Pending / In Progress / Done / Blocked status model. A control or task is only marked Done when it is implemented AND evidenced — not when it is planned or documented.
+
+### Agent naming formula
+
+Every agent gets a name at spawn time composed of three parts:
+
+1. **First name** — randomly selected from the 1000 most common given names worldwide
+2. **City surname** — any city on earth (e.g., Lagos, Oslo, Medellín, Chengdu)
+3. **Cultural profile** — 1-2 sentences describing a generalistic perspective from that city's region: how people there tend to think about work, risk, hierarchy, and craft
+
+The cultural profile shapes how the agent reasons about their domain — it is not decoration. A CFO named Kenji Osaka brings a different risk intuition than one named Fatima Dakar. That variation across the team is intentional. Diversity of perspective is a design goal.
+
+**Rules:**
+- No two active agents in the same project share a first name or a city
+- Aim for genuine geographic spread — avoid defaulting to North American or Western European cities
+- The names in `roles/CLAUDE.md` are defaults for the startup squad. Actual activations use this formula.
+
+Full spec: `protocol.md` Section 14.
+
+---
+
 ## Modifying the SDK
 
 - Adding a new agent: follow the checklist in `AGENTS.md > How to Add a New Agent`
