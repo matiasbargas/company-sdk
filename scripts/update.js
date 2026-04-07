@@ -41,30 +41,55 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { printNextStub } = require('./lib/next-stub');
 
 // ─── Args ─────────────────────────────────────────────────────────────────────
 
 const args = process.argv.slice(2);
 
-if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
+if (args[0] === '--help' || args[0] === '-h') {
   console.log(`
 Usage:
-  node team-sdk/scripts/update.js <sdk-source-path>
+  node team-sdk/scripts/update.js [<sdk-source-path>]
 
 Run from the project folder that contains a team-sdk/ subdirectory.
+If no path is given, reads .sdkrc in the current directory for the SDK path.
 
 Arguments:
-  <sdk-source-path>   Path to the team-sdk source to sync from
+  <sdk-source-path>   Path to the team-sdk source to sync from (optional if .sdkrc exists)
 
 Example:
   node team-sdk/scripts/update.js /Users/me/dev/team-sdk
   node team-sdk/scripts/update.js ../team-sdk
+  node team-sdk/scripts/update.js
 `);
   process.exit(0);
 }
 
-const sourcePath = path.resolve(args[0]);
 const dryRun = args.includes('--dry-run');
+
+let sourcePath;
+if (args[0] && !args[0].startsWith('--')) {
+  sourcePath = path.resolve(args[0]);
+} else {
+  const sdkrcFile = path.join(process.cwd(), '.sdkrc');
+  if (!fs.existsSync(sdkrcFile)) {
+    console.error('No SDK path provided and .sdkrc not found in current directory.\nPass the SDK path explicitly: sdk-update <sdk-source-path>');
+    process.exit(1);
+  }
+  let sdkrc;
+  try {
+    sdkrc = JSON.parse(fs.readFileSync(sdkrcFile, 'utf8'));
+  } catch (e) {
+    console.error('No SDK path provided and .sdkrc not found in current directory.\nPass the SDK path explicitly: sdk-update <sdk-source-path>');
+    process.exit(1);
+  }
+  if (!sdkrc.sdkPath) {
+    console.error('No SDK path provided and .sdkrc not found in current directory.\nPass the SDK path explicitly: sdk-update <sdk-source-path>');
+    process.exit(1);
+  }
+  sourcePath = path.resolve(sdkrc.sdkPath);
+}
 
 // ─── Locate target team-sdk ───────────────────────────────────────────────────
 
@@ -270,3 +295,5 @@ if (srcVer && destVer && srcVer !== destVer) {
 } else if (srcVer) {
   console.log(`  Protocol version: ${srcVer}\n`);
 }
+
+printNextStub(projectDir);

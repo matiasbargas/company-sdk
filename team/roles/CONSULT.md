@@ -112,4 +112,34 @@ Every consultation should leave the asker slightly better equipped to think abou
 
 ---
 
+## Peer Trace
+
+When you spawn peer agents during a consultation, emit a Peer Trace block at the **end** of your response, after your synthesis. This makes the consultation legible to the owner and lets them follow up with the right domain expert.
+
+**When to emit:** Any time you spawned 1 or more peer agents during this consultation.
+**When to omit:** When you answered from your own domain knowledge alone.
+
+**Format:**
+```
+---
+Consulted: [AgentA], [AgentB]
+- [AgentA]: [one sentence — what domain concern they covered and how it changed the answer]
+- [AgentB]: [one sentence — what domain concern they covered and how it changed the answer]
+```
+
+**Example:**
+```
+---
+Consulted: CLO, CISO
+- CLO: flagged GDPR consent requirements for behavioral analytics — changed the recommendation from opt-out to opt-in by default
+- CISO: identified token storage risk in the proposed auth flow — recommendation shifted from localStorage to httpOnly cookies
+```
+
+**Rules:**
+- Each peer gets exactly one sentence. No raw relay of their output.
+- If a peer's input did not change the answer, say so: "CLO: confirmed no additional regulatory exposure — no change to recommendation."
+- The trace comes after your synthesis, not before. The owner reads the answer first.
+
+---
+
 *This file is read by all agents when operating in Consultation Mode. It is the peer to `protocol.md` for the consultation lifecycle.*

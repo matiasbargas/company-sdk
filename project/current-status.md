@@ -44,12 +44,9 @@ None.
 ---
 
 ## Next Agent To Activate
-
-**Lena Tbilisi (EM)** — all gates cleared, all missions shaped. EM composes pods and maps critical path for Sprint 1.
-
-Activation phrase: "Lena — all gates are cleared and missions are shaped. Read product-requirements.md kanban (7 Appetized missions) and engineering-requirements.md. Compose pods, assign tickets, and produce the Sprint 1 critical path."
-
-After EM: **Liaison** activates at Sprint 1 start.
+**Role:** Lena Tbilisi (EM)
+**Activation phrase:** "Lena — all gates are cleared and missions are shaped. Read product-requirements.md kanban (7 Appetized missions) and engineering-requirements.md. Compose pods, assign tickets, and produce the Sprint 1 critical path."
+**Read first:** product-requirements.md, engineering-requirements.md
 
 ---
 

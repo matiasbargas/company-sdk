@@ -21,6 +21,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { printNextStub } = require('./lib/next-stub');
 
 // ─── Parse args ──────────────────────────────────────────────────────────────
 
@@ -274,11 +275,17 @@ statusContent = statusContent
 fs.writeFileSync(statusPath, statusContent, 'utf8');
 console.log(`    ✓  current-status.md  ← primed for Day 0`);
 
+// Write .sdkrc — persists SDK source path for sdk-update
+const sdkrcPath = path.join(outputDir, '.sdkrc');
+fs.writeFileSync(sdkrcPath, JSON.stringify({ sdkPath: sdkRoot }, null, 2) + '\n', 'utf8');
+console.log(`    ✓  .sdkrc  (SDK path persisted for sdk-update)`);
+
 // ─── Done ─────────────────────────────────────────────────────────────────────
 
 const ideaFile    = path.join(outputDir, 'idea.md');
 const claudeMdFile = path.join(outputDir, 'CLAUDE.md');
 
+printNextStub(outputDir);
 console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅  ${projectName}  ready  (${count + 2} files)

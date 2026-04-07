@@ -1,54 +1,27 @@
 {
   "schemaVersion": "1.0",
-  "manifestVersion": 3,
-  "generatedAt": "2026-04-07T01:33:18.888Z",
+  "manifestVersion": 4,
+  "generatedAt": "2026-04-07T02:45:43.256Z",
   "release": "v2026.Q2.1",
   "phase": "Phase 1",
   "activeMissions": [
     {
-      "name": "Mario gate — 5 irreversible decision reviews",
-      "status": "**ACTIVE**",
-      "nextAction": "Mario reviews CTO's 5 irreversible decisions; signs off or logs dissent"
-    },
-    {
-      "name": "PM mission shaping — 9 mission cards → sprint tickets",
-      "status": "**ACTIVE**",
-      "nextAction": "PM shapes each mission card into acceptance criteria + Appetite + kanban entry"
-    },
-    {
-      "name": "Protocol Section 13 update",
-      "status": "**ACTIVE**",
-      "nextAction": "Write Coordinator as sole write authority for current-status.md at session close"
+      "name": "EM pod composition + Sprint 1 critical path",
+      "status": "**READY TO ACTIVATE**",
+      "nextAction": "EM maps pods and tickets from the 7 Appetized missions in product-requirements.md kanban"
     }
   ],
   "waitingOn": [
-    {
-      "item": "Mario sign-off on 5 irreversible CTO decisions",
-      "blocks": "Sprint 1 start"
-    },
-    {
-      "item": "CEO/Coordinator decision: doc.js session-close role enforcement model (technical `--role` flag vs social convention)",
-      "blocks": "coordinator-owns-session-close mission"
-    },
-    {
-      "item": "PM mission shaping complete",
-      "blocks": "EM pod composition"
-    },
     {
       "item": "EM pod composition + critical path map",
       "blocks": "Sprint 1 tickets assigned"
     }
   ],
-  "openDecisions": [
-    {
-      "decision": "doc.js session-close role enforcement: technical (`--role` flag check logs a warning if non-Coordinator) vs social (convention + PR checklist). CTO recommended social enforcement pending CEO/Coordinator confirmation.",
-      "neededBy": "CEO + Coordinator sign-off"
-    }
-  ],
+  "openDecisions": [],
   "lastUpdatedBy": "Soren Aarhus (Coordinator)",
   "nextAgentToActivate": {
-    "role": "EM (Engineering Manager)",
-    "activationPrompt": "**EM (Engineering Manager)** — activate after Mario gate clears AND PM mission shaping is done. EM composes pods and maps critical path for Sprint 1."
+    "role": "Lena Tbilisi (EM)",
+    "activationPrompt": "**Lena Tbilisi (EM)** — all gates cleared, all missions shaped. EM composes pods and maps critical path for Sprint 1."
   },
   "staleness": {
     "currentStatusAge": 0,

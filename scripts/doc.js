@@ -29,10 +29,12 @@
 
 const fs = require('fs');
 const path = require('path');
+const { printNextStub } = require('./lib/next-stub');
 
 // ─── Parse args ──────────────────────────────────────────────────────────────
 
 const args = process.argv.slice(2);
+const dryRun = args.includes('--dry-run');
 const command = args[0];
 const filePath = args[1];
 
@@ -75,6 +77,9 @@ Commands:
                      --dissolved-by <dissolvedBy>            Agents in team.md; decrement Current active
                      --reason <text>                         agents. Never deletes rows.
 
+Options:
+  --dry-run         Preview what would be written without modifying any file
+
 Examples:
   node scripts/doc.js log engineering-log.md --role EM --level M1 --goal "Pod-A completed auth" --status completed
   node scripts/doc.js status ./projects/my-project
@@ -112,6 +117,12 @@ function readFile(filePath) {
 }
 
 function writeFile(filePath, content) {
+  if (dryRun) {
+    console.log(`\nDRY RUN — no files modified`);
+    console.log(`  File: ${filePath}`);
+    console.log(`  Content:\n${content.slice(0, 500)}${content.length > 500 ? '\n  ... (truncated)' : ''}`);
+    return;
+  }
   const abs = path.resolve(filePath);
   fs.writeFileSync(abs, content, 'utf8');
 }
@@ -376,6 +387,7 @@ function cmdStatus() {
 
   const content = fs.readFileSync(statusFile, 'utf8');
   console.log('\n' + content);
+  printNextStub(projectDir);
 }
 
 function cmdPodUpdate() {
@@ -493,7 +505,7 @@ function cmdSpawn() {
     content = content.trimEnd() + '\n' + onboardingEntry;
   }
 
-  fs.writeFileSync(teamFile, content, 'utf8');
+  writeFile(teamFile, content);
   console.log(`Agent ${opts['name']} (${opts['role']}) added to team.md`);
 }
 
@@ -563,7 +575,7 @@ function cmdDissolve() {
   // Clean up any double blank lines left by row removal
   content = content.replace(/\n{3,}/g, '\n\n');
 
-  fs.writeFileSync(teamFile, content, 'utf8');
+  writeFile(teamFile, content);
   console.log(`Agent ${opts['name']} dissolved and logged to Dissolved Agents table`);
 }
 
@@ -618,7 +630,7 @@ function cmdManifest() {
       nextAgentToActivate: { role: 'unknown', activationPrompt: '' },
       staleness: { currentStatusAge: -1, flag: 'stale' },
     };
-    fs.writeFileSync(manifestFile, JSON.stringify(minimal, null, 2) + '\n', 'utf8');
+    writeFile(manifestFile, JSON.stringify(minimal, null, 2) + '\n');
     console.log('Warning: current-status.md not found — wrote minimal stale manifest.');
     console.log(manifestFile);
     return;
@@ -753,7 +765,7 @@ function cmdManifest() {
     },
   };
 
-  fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2) + '\n', 'utf8');
+  writeFile(manifestFile, JSON.stringify(manifest, null, 2) + '\n');
   console.log(`✓ context-manifest.json written (v${manifest.manifestVersion}, schema ${manifest.schemaVersion})`);
   console.log(manifestFile);
 }

@@ -15,6 +15,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { printNextStub } = require('./lib/next-stub');
 
 const args = process.argv.slice(2);
 
@@ -63,7 +64,7 @@ const warnings = [];
 
 if (runDiscovery) {
   if (!fs.existsSync(discoveryFile)) {
-    errors.push(`discovery-requirements.md not found in ${projectDir}\n    Has this project been bootstrapped? Run: node scripts/init.js <name>`);
+    errors.push(`discovery-requirements.md not found in ${projectDir}\n    Has this project been bootstrapped? Run: node scripts/init.js <name>\n    To clear: run sdk-init <project-name> to scaffold the project, or create discovery-requirements.md manually.`);
   } else {
     const content = fs.readFileSync(discoveryFile, 'utf8');
 
@@ -82,19 +83,19 @@ if (runDiscovery) {
     const hasPendingSec   = /- \[ \]/.test(secPending);
 
     if (!legalStatus) {
-      errors.push('CLO (Legal) gate status not found in Gate Status table.');
+      errors.push('CLO (Legal) gate status not found in Gate Status table.\n    To clear: activate CLO — "Camila, we need a regulatory map for [project]. Read discovery-requirements.md."');
     } else if (legalStatus.toLowerCase() !== 'done') {
-      errors.push(`CLO (Legal) gate is "${legalStatus}" — must be "Done" before CTO activates.`);
+      errors.push(`CLO (Legal) gate is "${legalStatus}" — must be "Done" before CTO activates.\n    To clear: activate CLO — "Camila, we need a regulatory map for [project]. Read discovery-requirements.md."`);
     }
 
     if (!secStatus) {
-      errors.push('CISO (Security) gate status not found in Gate Status table.');
+      errors.push('CISO (Security) gate status not found in Gate Status table.\n    To clear: activate CISO — "CISO, run a threat model for [project]. Read security-requirements.md."');
     } else if (secStatus.toLowerCase() !== 'done') {
-      errors.push(`CISO (Security) gate is "${secStatus}" — must be "Done" before CTO activates.`);
+      errors.push(`CISO (Security) gate is "${secStatus}" — must be "Done" before CTO activates.\n    To clear: activate CISO — "CISO, run a threat model for [project]. Read security-requirements.md."`);
     }
 
     if (!hasJurisdictions) {
-      errors.push('No jurisdictions declared in discovery-requirements.md.\n    Add a "## Jurisdictions" section listing: incorporation, employee locations, user locations, data processing locations, money handling locations.');
+      errors.push('No jurisdictions declared in discovery-requirements.md.\n    Add a "## Jurisdictions" section listing: incorporation, employee locations, user locations, data processing locations, money handling locations.\n    To clear: add a "## Jurisdictions" section to discovery-requirements.md listing incorporation location, user locations, and data handling locations.');
     }
 
     if (hasPendingLegal) warnings.push('CLO section still has pending items. Confirm all are intentionally deferred before marking Done.');
@@ -114,7 +115,7 @@ if (runDiscovery) {
 
 if (runMario) {
   if (!fs.existsSync(historyFile)) {
-    errors.push(`history.md not found in ${projectDir}\n    Mario sign-off must be logged there before Sprint 1 starts.\n    Run: sdk-doc decision history.md --decision "Mario gate" --context "..." --made-by "Mario"`);
+    errors.push(`history.md not found in ${projectDir}\n    Mario sign-off must be logged there before Sprint 1 starts.\n    Run: sdk-doc decision history.md --decision "Mario gate" --context "..." --made-by "Mario"\n    To clear: run sdk-doc decision history.md --decision "Initial" --context "Project start" --made-by Coordinator`);
   } else {
     const history = fs.readFileSync(historyFile, 'utf8');
 
@@ -125,7 +126,8 @@ if (runMario) {
       errors.push(
         'Mario gate sign-off not found in history.md.\n' +
         '    Mario (Chief Engineer) must review irreversible architectural decisions before Sprint 1.\n' +
-        '    Activate Mario with: "Hey Mario, review the irreversible decisions in engineering-requirements.md and log sign-off to history.md."'
+        '    Activate Mario with: "Hey Mario, review the irreversible decisions in engineering-requirements.md and log sign-off to history.md."\n' +
+        '    To clear: activate Mario — "Hey Mario, review the irreversible architectural decisions in engineering-requirements.md and log sign-off to history.md."'
       );
     } else {
       const marioSection = marioMatch[0];
@@ -136,7 +138,7 @@ if (runMario) {
       if (!status) {
         warnings.push('Mario Gate entry found in history.md but no Status field detected. Confirm sign-off is complete.');
       } else if (!status.toUpperCase().includes('COMPLETED') && !status.toUpperCase().includes('CLEARED')) {
-        errors.push(`Mario gate status is "${status}" — must be COMPLETED before Sprint 1 starts.`);
+        errors.push(`Mario gate status is "${status}" — must be COMPLETED before Sprint 1 starts.\n    To clear: Mario must update the gate entry in history.md with Status: COMPLETED.`);
       }
     }
   }
@@ -176,4 +178,5 @@ if (runMario && !runDiscovery) {
   console.log(`    Sprint 1 can now start.\n`);
 }
 
+printNextStub(projectDir);
 process.exit(0);

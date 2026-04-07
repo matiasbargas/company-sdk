@@ -530,8 +530,9 @@ Release: v[YEAR].Q[QUARTER].[INCREMENT]
 - [Decision pending] | Needs: [who must decide] | By: [date]
 
 ## Next Agent To Activate
-[Role] — because [reason]
-Activation phrase: "[exact phrase to paste]"
+**Role:** [role name]
+**Activation phrase:** "[exact phrase to paste into Claude Code]"
+**Read first:** [file or "nothing" if no file needed]
 ```
 
 **Rules:**

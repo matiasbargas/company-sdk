@@ -1,0 +1,4 @@
+.sdkrc
+node_modules/
+.env
+*.log

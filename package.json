@@ -42,6 +42,8 @@
     "sdk-gate-check": "./scripts/gate-check.js",
     "sdk-init": "./scripts/init.js",
     "sdk-squad": "./scripts/squad.js",
+    "sdk-next": "./scripts/next.js",
+    "sdk-resume": "./scripts/resume.js",
     "sdk-update": "./scripts/update.js"
   },
   "scripts": {

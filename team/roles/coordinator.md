@@ -133,7 +133,7 @@ The Coordinator is the sole write authority for the canonical block of `current-
 - [ ] Waiting On list is current: resolved blockers removed, new blockers added
 - [ ] Completed This Session section lists every meaningful completion with role and date
 - [ ] Open Decisions lists any unlogged decisions with owner and deadline
-- [ ] Next Agent To Activate names the exact role AND includes a copy-paste activation phrase
+- [ ] Next Agent To Activate block uses the standard format (Role / Activation phrase / Read first) as defined in Protocol Section 13
 - [ ] `Last updated` and `Updated by` fields are current
 
 **Activation phrase format:**
