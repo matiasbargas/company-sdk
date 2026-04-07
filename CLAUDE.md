@@ -7,7 +7,7 @@ An AI agent orchestration framework for product teams. 20+ role-based agents tha
 The SDK itself — not a project. It contains:
 - `team/roles/` — every agent's persona, operating loop, consultation mode, and skill ladder
 - `project-template/` — all files a new project gets on bootstrap (5 requirements files, not 18)
-- `squads/` — pre-configured team compositions (website, mvp, feature, startup)
+- `team/squads/` — pre-configured team compositions (website, mvp, feature, startup)
 - `scripts/` — CLI tools (init, bootstrap, squad, doc)
 - `protocol.md` — the shared contract: Bus format, escalation, spawning policy (v3.3)
 - `AGENTS.md` — agent manifest: activation sequence, dependency graph, consultation patterns

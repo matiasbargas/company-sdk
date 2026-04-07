@@ -58,7 +58,7 @@ if (!VALID_SQUADS.includes(squadType)) {
 
 const sdkRoot = path.resolve(__dirname, '..');
 const templateDir = path.join(sdkRoot, 'project-template');
-const squadsDir = path.join(sdkRoot, 'squads');
+const squadsDir = path.join(sdkRoot, 'team/squads');
 outputDir = outputDir
   ? path.resolve(outputDir)
   : path.resolve(process.cwd(), 'projects', projectName);

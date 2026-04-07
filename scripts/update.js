@@ -18,7 +18,7 @@
  *   scripts/          CLI scripts
  *   team/levels/           Skill ladder
  *   project-template/ Bootstrap template files
- *   squads/           Squad definitions
+ *   team/squads/           Squad definitions
  *   protocol.md       Inter-agent communication standard
  *   AGENTS.md         Agent manifest and dependency graph
  *   STRATEGY.md       Corporate strategy layer
@@ -155,10 +155,8 @@ const TOP_LEVEL_FILES = [
 ];
 
 const DIRECTORIES = [
-  'roles',
+  'team',
   'scripts',
-  'levels',
-  'squads',
   'project-template',
 ];
 

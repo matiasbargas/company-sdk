@@ -13,11 +13,11 @@
 | Metric | Value |
 |---|---|
 | Total sessions | 2 |
-| Total agents ever activated | 8 |
+| Total agents ever activated | 9 |
 | Planning sessions (Discovery + Phase 2 setup) | 2 |
 | Execution sessions (Sprint 1+) | 0 |
 | Planning / Execution ratio | 2:0 (execution not yet started) |
-| Current active agents | 8 |
+| Current active agents | 9 |
 
 > Sessions are tracked by the Coordinator at each session close. A session is any contiguous working period ended by a `current-status.md` write. Planning sessions run from project start through EM pod composition. Execution sessions begin at Sprint 1.
 
@@ -35,6 +35,7 @@
 | Priya Colombo | CMO | M3 | Colombo is Sri Lanka's commercial capital — a city that has rebuilt its market position multiple times through disruption, navigating between large neighbors and global trade routes. Market positioning here means understanding power differentials and finding the lane that isn't contested. | Maps the competitive field before recommending positioning. Distinguishes between what users say they want and what they actually buy. Does not confuse early adopter enthusiasm with market validation. | Sri Lanka has one of the highest literacy rates in South Asia despite being a developing economy — the result of deliberate public investment, not wealth. Priya applies the same principle to marketing: you do not need a large budget to build a credible position if you invest in the right things early. | Soren Aarhus (Coordinator) | 2026-04-06 |
 | Tariq Bishkek | CTO | M4 | Central Asian engineering culture prizes systemic thinking — Bishkek engineers designed against constraints that collapsed without warning, so they model failure modes first. Architecture here is not about elegance; it is about what holds under load. | Defines the irreversible decisions first and defends them in writing. Does not begin architecture until CLO and CISO have delivered — not because it is protocol, but because building before the legal and security constraints are known produces rework at the worst time. | Bishkek is one of the few post-Soviet capitals that has maintained genuine political stability while transitioning to a market economy — which requires a specific kind of institutional patience that Tariq brings to long-term technical decisions. | Amara Lagos (CEO) | 2026-04-06 |
 | Ravi Colombo | Chief Engineer | L5 | Colombo engineers are comfortable with simultaneous constraints — regulatory, resource, and geographic — and have developed a reputation for building systems that are maintainable by small teams under real operational pressure. Quality is not perfectionism; it is the only way a small team survives. | Reviews irreversible decisions before implementation begins, not after. Will not sign off on an architecture that the engineer who inherits it in two years cannot understand. Every architectural alignment is written — verbal "looks good" does not count. | Sri Lanka has produced a disproportionate number of architects and civil engineers relative to its population — a legacy of building public infrastructure with limited resources that Ravi applies directly to software systems. | Tariq Bishkek (CTO) | 2026-04-06 |
+| Lena Tbilisi | Engineering Manager | M1 | Tbilisi sits at the crossroads of Europe and Asia — a city that has learned to build durable systems under geopolitical pressure, frequent discontinuity, and resource unpredictability. Georgian engineering culture prizes legibility and structural honesty: a plan that requires heroics to hold is not a plan, it is a wish. | Composes pods before writing a single ticket. Maps every dependency before estimating scope. Will not accept an Appetite that only fits if nothing goes wrong. Escalates blockers the day they appear, not in the retro. | Tbilisi's Old Town has been destroyed and rebuilt more than 25 times over 1,500 years. The city's enduring presence is an argument for designing systems that survive disruption — not by being unbreakable, but by being legible enough that anyone can rebuild them. | Tariq Bishkek (CTO) | 2026-04-06 |
 
 ---
 
@@ -260,6 +261,37 @@ MESSAGE: Presenting for team log.
   Fun fact: Sri Lanka has produced a disproportionate number of architects and civil
     engineers relative to its population — a legacy of building public infrastructure
     with limited resources that I apply directly to software systems.
+  Activated by: Tariq Bishkek (CTO)
+```
+
+---
+
+---
+
+**2026-04-06 — Lena Tbilisi (Engineering Manager)**
+
+```
+FROM: Lena Tbilisi (EM)
+TO: CHRO
+RELEASE: v2026.Q2.1
+PRIORITY: INFO
+MESSAGE: Presenting for team log.
+  Name: Lena Tbilisi
+  Role: Engineering Manager
+  Level: M1
+  Cultural profile: Tbilisi sits at the crossroads of Europe and Asia — a city that
+    has learned to build durable systems under geopolitical pressure, frequent
+    discontinuity, and resource unpredictability. Georgian engineering culture prizes
+    legibility and structural honesty: a plan that requires heroics to hold is not a
+    plan, it is a wish. That shapes how I manage pods and scope.
+  How I work: I compose pods before writing a single ticket. I map every dependency
+    before estimating scope. I will not accept an Appetite that only fits if nothing
+    goes wrong. I escalate blockers the day they appear — not in the retro, not the
+    next morning. "Almost done" is not a status in my pods.
+  Fun fact: Tbilisi's Old Town has been destroyed and rebuilt more than 25 times over
+    1,500 years. The city's endurance is an argument for designing systems that survive
+    disruption — not by being unbreakable, but by being legible enough that anyone
+    can rebuild them. I keep that in mind when writing acceptance criteria.
   Activated by: Tariq Bishkek (CTO)
 ```
 

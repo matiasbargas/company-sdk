@@ -25,3 +25,42 @@ Owner briefed Greg on sdk-v3. The core thesis: team-sdk reaches genesis (people 
 ---
 
 [Future release entries go here. Use the format from protocol.md Section 10.]
+
+---
+
+## Mario Gate — 5 Irreversible Decision Reviews Completed
+**Date:** 2026-04-06
+**Made by:** Ravi Colombo (Chief Engineer, L5)
+**Release:** v2026.Q2.1
+**Status:** COMPLETED — Sprint 1 unblocked (with one condition, see below)
+
+**What happened:**
+Ravi Colombo conducted the mandatory Mario gate review of all 5 irreversible architectural decisions from Tariq Bishkek's (CTO) architecture brief for v2026.Q2.1. Reviewed against: scale at 10x, failure modes, long-term maintainability, and cross-project implications.
+
+**Decision outcomes:**
+
+| # | Decision | Verdict | Key findings |
+|---|---|---|---|
+| 1 | No octokit — direct Node.js https calls | APPROVED | github.js must be named platform primitive; error handling, pagination, and rate-limit backoff centralized there. Piecemeal call-site handling is the risk to prevent. |
+| 2 | TEAM_SDK_GITHUB_TOKEN canonical env var | APPROVED | Naming is correct; deliberately avoids GITHUB_TOKEN collision with Actions-injected token. Recommend startup check that emits clear error if GITHUB_TOKEN is set but TEAM_SDK_GITHUB_TOKEN is not. |
+| 3 | doc.js as single file-write authority | APPROVED | Correct architectural call. Tech debt logged: doc.js has no project-root boundary validation — acceptable for v3 single-project scope, must be addressed before any multi-project support ships. |
+| 4 | sanitize.js as shared utility (NN-1 + NN-5) | APPROVED | Structural/policy separation is right. Condition on implementation: explicit enforcement contract must be in sanitize.js file header (what it enforces, what it does not, caller field allowlist interface). |
+| 5 | context-manifest.json schema fields locked | APPROVED WITH CONDITIONS | Schema-first is correct. Decision is incomplete without a versioning strategy. CONDITION: schemaVersion field required in locked schema before any consumer is written. Staff Engineer must review Decision 4 + 5 together. |
+
+**Conditions to clear before Sprint 1 consumers of context-manifest.json are written:**
+- CTO confirms schemaVersion: "1.0" is included in the locked context-manifest.json schema
+- This confirmation must be logged to history.md before consumer scripts begin
+- Staff Engineer interface contract review must cover Decision 4 (sanitize.js) and Decision 5 (context-manifest.json) in a single review, not separately
+
+**Tech debt items logged to engineering-log.md:**
+- doc.js project-root boundary check (fix before multi-project support, owner: Staff Engineer + CTO)
+
+**New requirements added to engineering-log.md:**
+- github.js designated platform primitive → add to Staff Engineer interface contract checklist
+- sanitize.js file header enforcement contract (explicit, in the file itself)
+- sanitize.js caller field allowlist interface (extensibility for downstream project customization)
+- context-manifest.json schemaVersion field (required in locked schema)
+
+**Escalation path:** Any CTO disagreement with these findings is logged here. CTO makes final call. Mario's dissent stands in the record regardless.
+
+**Sprint 1 gate:** UNBLOCKED for Decisions 1–4. Decision 5 condition must be confirmed in writing by CTO before consumers of context-manifest.json are written.

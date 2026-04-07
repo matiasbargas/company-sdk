@@ -17,7 +17,7 @@
     ".claude/commands/",
     "team/roles/",
     "team/levels/",
-    "squads/",
+    "team/squads/",
     "project-template/",
     "scripts/",
     "AGENTS.md",
