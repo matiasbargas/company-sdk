@@ -251,7 +251,6 @@ sdk-update <sdk-source-path> --dry-run
 ```
 company-sdk/
   README.md
-  HOW_IT_WORKS.md       ← Full narrative walkthrough — start here for the full picture
   AGENTS.md             ← Activation sequence, dependency graph, peer integration map
   STRATEGY.md           ← Corporate strategy layer: 4 success themes, Betting Table rules
   protocol.md           ← Bus format, escalation, decision log standard (v3.3)

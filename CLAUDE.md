@@ -84,18 +84,18 @@ node scripts/doc.js append <file> --section "## Section" --content "..."
 
 ## Active Project — sdk-v3 (v2026.Q2.1)
 
-This repo is running its own project. All project files live in `sdk-v3/` alongside the SDK source files.
+This repo is running its own project. All project files live in `project/` alongside the SDK source files.
 
 **Resume a session:**
 ```
-node scripts/doc.js status sdk-v3/
+node scripts/doc.js status project/
 ```
 
 **Key project files:**
-- `sdk-v3/current-status.md` — read this first, every session
-- `sdk-v3/history.md` — all decisions, permanent record
-- `sdk-v3/project-map.md` — CEO validates before release seals
-- `sdk-v3/idea.md` — original brief (Section 4 already delivered to Greg)
+- `project/current-status.md` — read this first, every session
+- `project/history.md` — all decisions, permanent record
+- `project/project-map.md` — CEO validates before release seals
+- `project/idea.md` — original brief (Section 4 already delivered to Greg)
 
 **Active release:** v2026.Q2.1
 **Squad:** startup
