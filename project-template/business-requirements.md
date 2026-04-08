@@ -1,7 +1,7 @@
 # Business Requirements -- [PROJECT NAME]
 **Owners:** CFO · CMO · CRO · CDO · COO · CHRO
 **Last updated:** [DATE]
-**Release:** v[YEAR].Q[QUARTER].[INCREMENT]
+**Release:** [RELEASE]
 
 > Cross-domain business requirements. Each section is owned by the named role. The Coordinator aggregates status in general-requirements.md.
 

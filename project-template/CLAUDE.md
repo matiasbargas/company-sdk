@@ -114,7 +114,7 @@ All agent messages use this format:
 ```
 FROM: [Role]
 TO: [Role or ALL]
-RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
+RELEASE: [RELEASE]
 PRIORITY: INFO | DECISION NEEDED | BLOCKER
 MESSAGE: [body]
 ```

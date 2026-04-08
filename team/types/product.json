@@ -1,0 +1,18 @@
+{
+  "type": "product",
+  "name": "Software Product",
+  "description": "Software product with users — SaaS, app, consumer product, or platform",
+  "requirements_files": ["discovery", "security", "engineering", "product", "design", "business", "general"],
+  "gates": {
+    "pre-cto": ["clo", "ciso"],
+    "pre-sprint1": ["mario"]
+  },
+  "idea_prompts": {
+    "user": "Who is the primary user? Be specific: role, company size, and the exact moment of pain.",
+    "problem": "What do they do today without this product? What is painful or slow about it?",
+    "solution": "What does this product do? Keep it to 2-3 sentences — what it does, not how it works.",
+    "success": "What does winning look like at 18 months? Concrete: users, revenue, market position.",
+    "risks": "What is the single riskiest assumption this product makes?"
+  },
+  "logs": ["engineering", "product", "design", "operations", "people", "strategy"]
+}

@@ -1,6 +1,6 @@
 # Project: [PROJECT NAME]
 ## [One-line description]
-### Release: v[YEAR].Q[QUARTER].[INCREMENT] -- "[Release Name]"
+### Release: [RELEASE] -- "[Release Name]"
 
 ---
 
@@ -23,7 +23,7 @@
 ```
 PROJECT BRIEF: [Name]
 Date: [YYYY-MM-DD]
-Release target: v[YEAR].Q[QUARTER].[INCREMENT]
+Release target: [RELEASE]
 
 Market truth:
 [1-2 sentences. What condition in the market makes this worth building now?]
@@ -59,10 +59,10 @@ Decision authority matrix:
 ```
 FROM: [Coordinator name]
 TO: ALL
-RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
+RELEASE: [RELEASE]
 PRIORITY: INFO
 MESSAGE:
-  [Project name] is open. Release v[YEAR].Q[QUARTER].[INCREMENT] "[Name]" is now active.
+  [Project name] is open. Release [RELEASE] "[Name]" is now active.
   Epic: [One sentence]
   Team tier: [Solo / Small / Medium / Large / Program]
   Discovery phase starting. Activating in sequence per AGENTS.md.
@@ -85,7 +85,7 @@ MESSAGE:
 ## SPRINT 0 GATE
 
 ```
-Sprint 0 Gate -- v[YEAR].Q[QUARTER].[INCREMENT]:
+Sprint 0 Gate -- [RELEASE]:
 [ ] Epic definition complete and Owner-approved
 [ ] Discovery document(s) written
 [ ] All domain requirements files updated
@@ -109,7 +109,7 @@ Blocked by: [item, if any]
 
 ## RELEASE PLAN
 
-**Release ID:** v[YEAR].Q[QUARTER].[INCREMENT]
+**Release ID:** [RELEASE]
 **Name:** [Release name]
 **Target ship date:** [date]
 **Team tier:** [Tier N]
@@ -151,4 +151,4 @@ Blocked by: [item, if any]
 
 ---
 
-*project.md v1.0 -- [Project Name] / v[YEAR].Q[QUARTER].[INCREMENT] -- Created [date] by [Coordinator name]*
+*project.md v1.0 -- [Project Name] / [RELEASE] -- Created [date] by [Coordinator name]*

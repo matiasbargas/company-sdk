@@ -1,7 +1,7 @@
 # Current Status -- [Project Name]
 **Last updated:** [YYYY-MM-DD HH:MM]
 **Updated by:** [Role]
-**Release:** v[YEAR].Q[QUARTER].[INCREMENT]
+**Release:** [RELEASE]
 
 > This is the first file you read when resuming work. It tells you exactly where the team is right now and what the next action is. If this file is out of date, the team is flying blind.
 >
@@ -31,13 +31,15 @@
 
 ## Open Decisions (not yet logged to history.md)
 
-- [Decision pending] | Needs: [who must decide] | By: [YYYY-MM-DD] | Impact if not made: [what]
+None.
 
 ---
 
 ## Next Agent To Activate
 
-**[Role name]** — because [reason: what they need to do next]
+| Role | Activation phrase | Read first |
+|---|---|---|
+| [Role name] | [e.g. "Hey Greg — [paste brief from idea.md Section 4]"] | [e.g. idea.md] |
 
 ---
 

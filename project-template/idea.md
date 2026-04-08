@@ -4,19 +4,21 @@
 
 ---
 
+> **Time to complete:** Sections 1-2 take 10-15 minutes. Section 4 (the brief) is what Greg needs to start — complete it last, after iterating with Section 3 prompts.
+
 > **How to use this file:**
 > Fill in the sections below with whatever you know right now. Nothing needs to be polished. When the idea is sharp enough to run, activate Greg (CEO) with the brief in Section 4 and let the team take it from there.
 > Use the AI prompts in Section 3 to iterate on the idea before activating the full team.
 
 ---
 
-## 1. The Idea (one paragraph)
+## Section 1 — The Idea
 
 [Describe the idea in plain language. What does it do? Who is it for? What problem does it solve? Don't optimize this — just write what you know right now.]
 
 ---
 
-## 2. What I Know So Far
+## Section 2 — What I Know So Far
 
 **The person this is for:**
 [Who is the primary user? Be as specific as possible. "Startup founders" is too broad. "A solo founder building their first B2B SaaS who can't afford a sales team yet" is useful.]
@@ -35,7 +37,7 @@
 
 ---
 
-## 3. AI Iteration Prompts
+## Section 3 — AI Iteration Prompts
 
 Use these prompts in a conversation to sharpen the idea before activating the team. You don't need to use all of them — stop when the idea is clear enough to write a brief.
 
@@ -59,7 +61,8 @@ Use these prompts in a conversation to sharpen the idea before activating the te
 
 ---
 
-## 4. Brief for Greg (CEO)
+<!-- Fill in Sections 1-2 first, then use the prompts in Section 3 to sharpen your thinking before writing this brief. -->
+## Section 4 — Brief for Greg (CEO)
 
 > Fill this in when you're ready to activate the team. Copy it into a conversation with Greg to start the full process.
 
@@ -95,7 +98,7 @@ Constraints:
 
 ---
 
-## 5. Requirements Skeleton
+## Section 5 — Requirements Skeleton
 
 > This is a lightweight version of the full requirements structure. Fill in what you know. The team will flesh this out during Discovery.
 

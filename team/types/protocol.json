@@ -1,0 +1,18 @@
+{
+  "type": "protocol",
+  "name": "Blockchain Protocol",
+  "description": "Blockchain protocols, open protocols, token systems, and decentralized governance",
+  "requirements_files": ["discovery", "security", "engineering", "product", "business", "general"],
+  "gates": {
+    "pre-cto": ["clo", "ciso"],
+    "pre-sprint1": ["mario"]
+  },
+  "idea_prompts": {
+    "user": "Who are the primary participants in this protocol — validators, token holders, end users, developers building on top? What behavior are you incentivizing or coordinating?",
+    "problem": "What coordination failure, trust problem, or censorship risk does this protocol eliminate? What exists today and why is it inadequate?",
+    "solution": "Describe the protocol: consensus mechanism, token model, governance design, and upgrade path. Include how protocol immutability tradeoffs are handled.",
+    "success": "What does a healthy protocol look like — TVL, active validators, developer ecosystem size, governance participation rate, treasury runway? Name the jurisdiction strategy for token classification.",
+    "risks": "What is the highest-stakes risk: a smart contract exploit, token misclassification as a security, governance capture, key-man dependency in the multisig, or a bridge vulnerability?"
+  },
+  "logs": ["engineering", "product", "operations", "strategy"]
+}

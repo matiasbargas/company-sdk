@@ -34,7 +34,7 @@ Status:
 ```
 BETTING TABLE CYCLE: [YYYY-MM-DD]
 Run by: [CPTO/Head of Product name]
-Release: v[YEAR].Q[QUARTER].[INCREMENT]
+Release: [RELEASE]
 
 Missions selected:
 - [Mission name] | Appetite: [N weeks] | Pod: [members TBD]

@@ -1,0 +1,27 @@
+{
+  "type": "service",
+  "name": "Service Business",
+  "description": "Service businesses — agencies, consultancies, professional services, and freelance studios.",
+  "requirements_files": [
+    "discovery",
+    "business",
+    "general"
+  ],
+  "gates": {
+    "pre-cto": ["clo"],
+    "pre-sprint1": []
+  },
+  "idea_prompts": {
+    "user": "Who is the ideal client — what is their company size, budget authority, urgency signal, and what does a bad experience with a previous agency or consultant look like from their perspective?",
+    "problem": "What specific outcome is the client unable to achieve reliably on their own — not a general pain point, but the exact gap between where they are and the result they need to justify paying for outside help?",
+    "solution": "What is the service scope and delivery model — project-based, retainer, embedded, or advisory — and what is the repeatable process or proprietary method that makes your delivery more reliable or faster than a generalist?",
+    "success": "In 18 months, what does a sustainable service business look like — number of active clients, average contract value, utilization rate, or a marquee reference client that unlocks a new tier of buyer?",
+    "risks": "What is your riskiest assumption about pricing model and capacity — and what breaks first if your most critical delivery resource is unavailable, or if a key client delays, reduces, or cancels scope?"
+  },
+  "logs": [
+    "product",
+    "operations",
+    "people",
+    "strategy"
+  ]
+}

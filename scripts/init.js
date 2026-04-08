@@ -4,11 +4,12 @@
  * init.js — Create a new team-sdk project, init Claude project, and prime idea.md
  *
  * Usage:
- *   node scripts/init.js <project-name> [--output <dir>] [--squad <type>] [--idea "your idea"]
+ *   node scripts/init.js <project-name> [--output <dir>] [--squad <type>] [--type <type>] [--idea "your idea"]
  *
  * Options:
  *   --output <dir>    Output directory (default: ../projects/<project-name>)
  *   --squad <type>    website | mvp | feature | startup  (default: startup)
+ *   --type <type>     Project type config from team/types/ (default: product)
  *   --idea "..."      Drop your raw idea directly — skips the placeholder in idea.md
  *
  * What it does:
@@ -30,17 +31,19 @@ const args = process.argv.slice(2);
 if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   console.log(`
 Usage:
-  node scripts/init.js <project-name> [--output <dir>] [--squad <type>] [--idea "..."]
+  node scripts/init.js <project-name> [--output <dir>] [--squad <type>] [--type <type>] [--idea "..."]
 
 Options:
   --output <dir>    Output directory (default: ../projects/<project-name>)
   --squad <type>    website | mvp | feature | startup  (default: startup)
+  --type <type>     Project type from team/types/ (default: product)
   --idea "..."      Seed idea.md Section 1 with your raw idea text
 
 Examples:
   node scripts/init.js my-saas --squad mvp
   node scripts/init.js landing-page --squad website --output ~/projects/landing
   node scripts/init.js fintech-tool --idea "A tool that helps solo founders track burn rate in real time"
+  node scripts/init.js api-service --type api --squad mvp
 `);
   process.exit(0);
 }
@@ -48,12 +51,14 @@ Examples:
 const projectName = args[0];
 let outputDir  = null;
 let squadType  = 'startup';
+let projectType = 'product';
 let seedIdea   = null;
 
 for (let i = 1; i < args.length; i++) {
-  if      (args[i] === '--output' && args[i + 1]) outputDir = args[++i];
-  else if (args[i] === '--squad'  && args[i + 1]) squadType = args[++i];
-  else if (args[i] === '--idea'   && args[i + 1]) seedIdea  = args[++i];
+  if      (args[i] === '--output' && args[i + 1]) outputDir   = args[++i];
+  else if (args[i] === '--squad'  && args[i + 1]) squadType   = args[++i];
+  else if (args[i] === '--type'   && args[i + 1]) projectType = args[++i];
+  else if (args[i] === '--idea'   && args[i + 1]) seedIdea    = args[++i];
 }
 
 const VALID_SQUADS = ['website', 'mvp', 'feature', 'startup'];
@@ -65,6 +70,75 @@ if (!VALID_SQUADS.includes(squadType)) {
 const sdkRoot    = path.resolve(__dirname, '..');
 const templateDir = path.join(sdkRoot, 'project-template');
 const squadsDir   = path.join(sdkRoot, 'team/squads');
+const typesDir    = path.join(sdkRoot, 'team/types');
+
+// ─── Load type config ─────────────────────────────────────────────────────────
+
+function loadTypeConfig(typeName) {
+  const typePath = path.join(typesDir, `${typeName}.json`);
+  if (!fs.existsSync(typePath)) {
+    const available = fs.existsSync(typesDir)
+      ? fs.readdirSync(typesDir)
+          .filter(f => f.endsWith('.json') && !f.startsWith('_'))
+          .map(f => f.replace('.json', ''))
+      : [];
+    console.error(`Unknown project type: "${typeName}".`);
+    if (available.length > 0) {
+      console.error(`Available types: ${available.join(', ')}`);
+    } else {
+      console.error(`No type configs found in ${typesDir}`);
+    }
+    process.exit(1);
+  }
+  try {
+    return JSON.parse(fs.readFileSync(typePath, 'utf8'));
+  } catch (e) {
+    console.error(`Failed to parse type config ${typePath}: ${e.message}`);
+    process.exit(1);
+  }
+}
+
+const typeConfig = loadTypeConfig(projectType);
+
+// Requirements file name mapping
+const REQUIREMENTS_MAP = {
+  discovery:   'discovery-requirements.md',
+  security:    'security-requirements.md',
+  engineering: 'engineering-requirements.md',
+  product:     'product-requirements.md',
+  design:      'design-requirements.md',
+  business:    'business-requirements.md',
+  general:     'general-requirements.md',
+};
+
+// Log file name mapping
+const LOGS_MAP = {
+  engineering: 'engineering-log.md',
+  product:     'product-log.md',
+  design:      'design-log.md',
+  operations:  'operations-log.md',
+  people:      'people-log.md',
+  strategy:    'strategy-log.md',
+};
+
+// Always-copied files (not controlled by type config)
+const ALWAYS_COPY = new Set([
+  'idea.md', 'current-status.md', 'history.md', 'project-map.md',
+  'CLAUDE.md', 'DISCLAIMER.md', 'context-manifest.json', '.gitignore',
+  'team.md', 'project.md',
+]);
+
+const activeRequirementsFiles = new Set(
+  (typeConfig.requirements_files || Object.keys(REQUIREMENTS_MAP))
+    .map(k => REQUIREMENTS_MAP[k])
+    .filter(Boolean)
+);
+
+const activeLogFiles = new Set(
+  (typeConfig.logs || Object.keys(LOGS_MAP))
+    .map(k => LOGS_MAP[k])
+    .filter(Boolean)
+);
 
 outputDir = outputDir
   ? path.resolve(outputDir)
@@ -129,6 +203,7 @@ if (fs.existsSync(outputDir)) {
 
 console.log(`\n🚀  Initialising project: ${projectName}`);
 console.log(`    Squad:   ${squadType}`);
+console.log(`    Type:    ${typeConfig.type} (${typeConfig.name})`);
 console.log(`    Output:  ${outputDir}`);
 console.log(`    Release: ${releaseId}\n`);
 
@@ -137,14 +212,51 @@ ensureDir(outputDir);
 const templateFiles = fs.readdirSync(templateDir);
 let count = 0;
 
+// Determine all requirements and log filenames for quick lookup
+const allRequirementsFiles = new Set(Object.values(REQUIREMENTS_MAP));
+const allLogFiles          = new Set(Object.values(LOGS_MAP));
+
 for (const file of templateFiles) {
   const src  = path.join(templateDir, file);
   const dest = path.join(outputDir, file);
-  if (fs.statSync(src).isFile()) {
+  if (!fs.statSync(src).isFile()) continue;
+
+  // Always-copied files
+  if (ALWAYS_COPY.has(file)) {
     copyAndProcess(src, dest, vars);
     console.log(`    ✓  ${file}`);
     count++;
+    continue;
   }
+
+  // Requirements files — copy only if in type config
+  if (allRequirementsFiles.has(file)) {
+    if (activeRequirementsFiles.has(file)) {
+      copyAndProcess(src, dest, vars);
+      console.log(`    ✓  ${file}`);
+      count++;
+    } else {
+      console.log(`    –  ${file}  (skipped — not in type "${typeConfig.type}")`);
+    }
+    continue;
+  }
+
+  // Log files — copy only if in type config
+  if (allLogFiles.has(file)) {
+    if (activeLogFiles.has(file)) {
+      copyAndProcess(src, dest, vars);
+      console.log(`    ✓  ${file}`);
+      count++;
+    } else {
+      console.log(`    –  ${file}  (skipped — not in type "${typeConfig.type}")`);
+    }
+    continue;
+  }
+
+  // Any other template file — copy as-is
+  copyAndProcess(src, dest, vars);
+  console.log(`    ✓  ${file}`);
+  count++;
 }
 
 // Squad file
@@ -275,10 +387,10 @@ statusContent = statusContent
 fs.writeFileSync(statusPath, statusContent, 'utf8');
 console.log(`    ✓  current-status.md  ← primed for Day 0`);
 
-// Write .sdkrc — persists SDK source path for sdk-update
+// Write .sdkrc — persists SDK source path and project type
 const sdkrcPath = path.join(outputDir, '.sdkrc');
-fs.writeFileSync(sdkrcPath, JSON.stringify({ sdkPath: sdkRoot }, null, 2) + '\n', 'utf8');
-console.log(`    ✓  .sdkrc  (SDK path persisted for sdk-update)`);
+fs.writeFileSync(sdkrcPath, JSON.stringify({ sdkPath: sdkRoot, type: typeConfig.type }, null, 2) + '\n', 'utf8');
+console.log(`    ✓  .sdkrc  (SDK path + type persisted)`);
 
 // ─── Done ─────────────────────────────────────────────────────────────────────
 

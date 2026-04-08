@@ -1,6 +1,6 @@
 # General Requirements -- [PROJECT NAME]
 Last updated by: Coordinator
-Release: v[YEAR].Q[QUARTER].[INCREMENT]
+Release: [RELEASE]
 
 > Aggregate view of all domain requirements. Coordinator updates this at the end of every sprint. Domain owners update their own files.
 

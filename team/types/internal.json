@@ -1,0 +1,18 @@
+{
+  "type": "internal",
+  "name": "Internal Tool",
+  "description": "Internal tools — ops automation, data platforms, admin tools, and workflow systems built for a known org",
+  "requirements_files": ["discovery", "security", "engineering", "product", "general"],
+  "gates": {
+    "pre-cto": ["clo", "ciso"],
+    "pre-sprint1": ["mario"]
+  },
+  "idea_prompts": {
+    "user": "Who are the internal users? Name the team, role, and approximate number of people affected. Include anyone who owns the data this tool touches.",
+    "problem": "What manual process or broken system does this replace? What is the cost today — in time lost, errors made, or decisions delayed?",
+    "solution": "What does this tool do? Include: which systems it integrates with, who triggers it, and what output or action it produces.",
+    "success": "What does success look like for the org? Include: time saved per week, error rate reduction, or specific process milestone this unblocks.",
+    "risks": "What is the riskiest dependency — a system integration, data ownership question, user adoption, or what happens if this tool goes down during a critical operation?"
+  },
+  "logs": ["engineering", "product", "operations"]
+}

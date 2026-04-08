@@ -1,7 +1,7 @@
 # Security Requirements -- [PROJECT NAME]
 **Owner:** CISO (Sebastián Seoul)
 **Last updated:** [DATE]
-**Release:** v[YEAR].Q[QUARTER].[INCREMENT]
+**Release:** [RELEASE]
 
 > This file exists in every bootstrapped project — not just projects where CISO has been activated.
 > The non-negotiables below are the minimum that must be true before any user touches the product.

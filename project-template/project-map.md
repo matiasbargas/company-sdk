@@ -1,5 +1,5 @@
 # Project Map -- [Project Name]
-**Release:** v[YEAR].Q[QUARTER].[INCREMENT]
+**Release:** [RELEASE]
 **CEO Validation:** [ ] PENDING | [x] VALIDATED on [YYYY-MM-DD] by [CEO name]
 **Sealed by:** Coordinator on [YYYY-MM-DD]
 

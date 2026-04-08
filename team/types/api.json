@@ -1,0 +1,28 @@
+{
+  "type": "api",
+  "name": "API / SDK / Developer Tool",
+  "description": "Developer-facing products — APIs, SDKs, CLIs, infrastructure tools, and developer platforms.",
+  "requirements_files": [
+    "discovery",
+    "security",
+    "engineering",
+    "product",
+    "general"
+  ],
+  "gates": {
+    "pre-cto": ["clo", "ciso"],
+    "pre-sprint1": ["mario"]
+  },
+  "idea_prompts": {
+    "user": "Who is the primary developer persona — what stack do they work in, what does their workflow look like, and are they building for themselves or for their organization?",
+    "problem": "What integration, automation, or infrastructure problem are you eliminating — and what is the developer currently doing instead (manual scripting, stitching third-party tools, building it in-house)?",
+    "solution": "What is the API surface or SDK contract — REST, GraphQL, gRPC, CLI, or library — and what is the core design philosophy (opinionated vs. flexible, thin wrapper vs. abstraction layer)?",
+    "success": "In 18 months, what does healthy adoption look like — number of active integrations, API call volume, community contributions, or dependency count in public repos?",
+    "risks": "What is your riskiest assumption about auth model and versioning strategy — and what breaks first if developer adoption is slower than expected or a major consumer changes their usage pattern?"
+  },
+  "logs": [
+    "engineering",
+    "product",
+    "strategy"
+  ]
+}

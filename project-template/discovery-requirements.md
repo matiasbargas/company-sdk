@@ -1,7 +1,7 @@
 # Discovery Requirements -- [PROJECT NAME]
 **Owners:** Camila (CLO) · CISO
 **Last updated:** [DATE]
-**Release:** v[YEAR].Q[QUARTER].[INCREMENT]
+**Release:** [RELEASE]
 
 > Gate file. CTO cannot start architecture until both CLO and CISO sections reach "Done" **and** jurisdictions are declared. Run `node scripts/gate-check.js <project-dir>` to verify. This is the most expensive step to skip.
 >

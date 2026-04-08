@@ -1,7 +1,7 @@
 # Engineering Requirements -- [PROJECT NAME]
 **Owners:** CTO · Mario (Chief Engineer) · Staff Engineer · EM
 **Last updated:** [DATE]
-**Release:** v[YEAR].Q[QUARTER].[INCREMENT]
+**Release:** [RELEASE]
 
 > Technical requirements, architectural decisions, interface contracts, and delivery tracking. CTO owns the architecture section. Mario owns the review section. Staff Engineer owns interface contracts. EM owns delivery.
 

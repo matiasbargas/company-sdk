@@ -1,6 +1,6 @@
 # Team Roster
 **Project:** [PROJECT_NAME]
-**Release:** v[YEAR].Q[QUARTER].[INCREMENT]
+**Release:** [RELEASE]
 **Last updated:** YYYY-MM-DD
 **Owner:** CHRO
 

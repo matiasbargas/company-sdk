@@ -1,4 +1,4 @@
-# Product Requirements -- [PROJECT NAME] v[YEAR].Q[QUARTER].[INCREMENT]
+# Product Requirements -- [PROJECT NAME] [RELEASE]
 Domain owner: [PERSONA NAME] (PM)
 Last updated: [YYYY-MM-DD]
 

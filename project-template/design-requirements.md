@@ -1,7 +1,7 @@
 # Design Requirements -- [PROJECT NAME]
 **Domain owner:** [PERSONA NAME] (Designer)
 **Last updated:** [DATE]
-**Release:** v[YEAR].Q[QUARTER].[INCREMENT]
+**Release:** [RELEASE]
 
 > Interface requirements for all surfaces: screens, conversational flows, AI-native interactions, voice, and any other touchpoint. The Designer owns this file. The UX Researcher contributes insights. PM escalates scope changes that affect the interface.
 

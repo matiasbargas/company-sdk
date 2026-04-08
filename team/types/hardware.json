@@ -1,0 +1,18 @@
+{
+  "type": "hardware",
+  "name": "Physical Hardware Product",
+  "description": "Physical product companies — consumer hardware, IoT devices, manufacturing, and supply chain",
+  "requirements_files": ["discovery", "security", "engineering", "product", "business", "general"],
+  "gates": {
+    "pre-cto": ["clo", "ciso"],
+    "pre-sprint1": ["mario"]
+  },
+  "idea_prompts": {
+    "user": "Who is the end user of this device? Be specific: context of use, technical sophistication, and the exact physical or operational pain this device resolves.",
+    "problem": "What do they do today without this device? What is slow, expensive, dangerous, or impossible about that approach?",
+    "solution": "What does this device do? Include the physical form factor, primary sensing or actuation, and whether it has connectivity. 2-3 sentences.",
+    "success": "What does winning look like? Include: units shipped, target COGS achieved, key regulatory certifications obtained, and which distribution channel is proven.",
+    "risks": "What is the single riskiest assumption — manufacturing method, key component supplier availability, target COGS, required regulatory certification, or distribution channel access?"
+  },
+  "logs": ["engineering", "product", "operations", "strategy"]
+}

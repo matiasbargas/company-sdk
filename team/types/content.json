@@ -1,0 +1,28 @@
+{
+  "type": "content",
+  "name": "Content Business",
+  "description": "Content businesses — newsletters, courses, media, creative studios, and publishing.",
+  "requirements_files": [
+    "discovery",
+    "product",
+    "business",
+    "general"
+  ],
+  "gates": {
+    "pre-cto": ["clo"],
+    "pre-sprint1": []
+  },
+  "idea_prompts": {
+    "user": "Who is the specific reader, viewer, or learner — what is their existing information diet, where do they currently spend attention, and what makes them a distinct audience segment rather than a broad demographic?",
+    "problem": "What is the information gap, signal-to-noise problem, or unmet creative need this content addresses — and why do existing publications, courses, or media fail to serve this audience well?",
+    "solution": "What is the primary content format and publishing cadence — written, audio, video, or course — and what is the editorial point of view that makes this unmistakably yours rather than interchangeable with competitors?",
+    "success": "In 18 months, what does a healthy content business look like — subscriber count, revenue per subscriber, renewal rate, or a licensing or syndication deal that validates the audience relationship?",
+    "risks": "What is your riskiest assumption about distribution channel and monetization model — and what happens to the business if the primary platform (email, YouTube, LinkedIn, a marketplace) changes its algorithm or terms?"
+  },
+  "logs": [
+    "product",
+    "operations",
+    "people",
+    "strategy"
+  ]
+}
