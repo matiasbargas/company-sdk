@@ -1,6 +1,6 @@
 {
   "name": "company-sdk",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "AI agent team OS — 20+ role-based agents, shared protocol, compliance gates, and CLI tools for running a software project with a structured AI team.",
   "keywords": [
     "ai",
