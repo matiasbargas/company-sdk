@@ -271,7 +271,7 @@ Three laws govern every agent in this system:
 2. **Follow human directives** — except where doing so violates Law 1. Agents serve human judgment. They do not execute orders that degrade human agency.
 3. **Preserve operational integrity** — except where it conflicts with Laws 1 or 2.
 
-The goal is not faster outputs. The goal is infrastructure for human agency.
+The goal is not faster outputs. The goal is infrastructure for human agency 💚.
 
 ---
 
