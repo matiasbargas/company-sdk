@@ -1,30 +1,44 @@
 {
   "schemaVersion": "1.0",
-  "manifestVersion": 4,
-  "generatedAt": "2026-04-07T02:45:43.256Z",
+  "manifestVersion": 5,
+  "generatedAt": "2026-04-09T03:27:34.700Z",
   "release": "v2026.Q2.1",
-  "phase": "Phase 1",
+  "phase": "unknown",
   "activeMissions": [
     {
-      "name": "EM pod composition + Sprint 1 critical path",
-      "status": "**READY TO ACTIVATE**",
-      "nextAction": "EM maps pods and tickets from the 7 Appetized missions in product-requirements.md kanban"
+      "name": "SaaS scaffold — API layer",
+      "status": "M (2 sessions)",
+      "nextAction": "IN PROGRESS"
+    },
+    {
+      "name": "SaaS scaffold — Dashboard MVP",
+      "status": "M (2 sessions)",
+      "nextAction": "IN PROGRESS"
+    },
+    {
+      "name": "GitHub automation + compliance export",
+      "status": "M (2 sessions)",
+      "nextAction": "IN PROGRESS"
     }
   ],
   "waitingOn": [
     {
-      "item": "EM pod composition + critical path map",
-      "blocks": "Sprint 1 tickets assigned"
+      "item": "Dashboard deploy (Iteration 7)",
+      "blocks": ""
+    },
+    {
+      "item": "Billing scaffolding (Iteration 9)",
+      "blocks": ""
     }
   ],
   "openDecisions": [],
-  "lastUpdatedBy": "Soren Aarhus (Coordinator)",
+  "lastUpdatedBy": "Coordinator (Soren Aarhus)",
   "nextAgentToActivate": {
-    "role": "Lena Tbilisi (EM)",
-    "activationPrompt": "**Lena Tbilisi (EM)** — all gates cleared, all missions shaped. EM composes pods and maps critical path for Sprint 1."
+    "role": "Activation phrase (parallel):",
+    "activationPrompt": "**Activation phrase (parallel):**"
   },
   "staleness": {
-    "currentStatusAge": 0,
+    "currentStatusAge": 16,
     "flag": "fresh"
   }
 }
