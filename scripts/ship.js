@@ -34,6 +34,7 @@ const path = require('path');
 const { createAndPushTag, assertCleanTree } = require('./lib/git');
 const { parseHistoryForRelease }            = require('./lib/release-notes');
 const { printNextStub }                     = require('./lib/next-stub');
+const { validate }                          = require('./validate');
 
 // ─── Args ─────────────────────────────────────────────────────────────────────
 
@@ -106,6 +107,25 @@ if (releaseNotes.includes('No history.md entry found')) {
   process.exit(1);
 }
 
+// ─── Pre-flight: sdk-validate doc check ──────────────────────────────────────
+
+const { warnings: docWarnings, clean: docClean } = validate(projectDir);
+
+if (!docClean) {
+  if (dryRun) {
+    // In dry-run: show warnings but do not block
+    console.log(`\n⚠️   Documentation warnings (would block without --dry-run):\n`);
+    for (const w of docWarnings) console.warn(`    ${w}`);
+    console.log('');
+  } else {
+    console.error(`\n🔴  SHIP BLOCKED — documentation issues found\n`);
+    for (const w of docWarnings) console.error(`    ${w}`);
+    console.error(`\nFix the issues above, then re-run sdk-ship.\n`);
+    console.error(`Run \`sdk-validate ${positional[0]}\` to see full details.\n`);
+    process.exit(1);
+  }
+}
+
 // ─── Pre-flight: clean working tree ──────────────────────────────────────────
 
 if (!dryRun) {
@@ -125,6 +145,7 @@ if (dryRun) {
   console.log(`  Project:    ${projectDir}`);
   console.log(`  Release ID: ${releaseId}`);
   console.log(`  history.md: entry found ✓`);
+  console.log(`  sdk-validate: ${docClean ? 'clean ✓' : `${docWarnings.length} warning(s) — would block`}`);
   console.log(`\n─── Release notes preview ─────────────────────────────────────────────\n`);
   console.log(releaseNotes);
   console.log(`───────────────────────────────────────────────────────────────────────\n`);
