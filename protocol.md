@@ -1,5 +1,5 @@
 # Protocol -- Shared Interface Contract
-**Version:** 3.5
+**Version:** 3.6
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
 
@@ -776,4 +776,89 @@ This means consultation-style spawning is not a special mode. It is the standard
 
 ---
 
-*Protocol v3.4. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, and consultation mode. Every agent references it. No agent duplicates it.*
+## 17. Business Unit (BU) Communication Protocol
+
+Roles do not report state directly to the Coordinator. They report to their **BU lead** — the C-level who owns their domain. The BU lead aggregates domain state and forwards a single coherent message to the Coordinator. This is the only way the Coordinator can hold 20+ active roles without becoming a bottleneck.
+
+### BU membership map
+
+| Business Unit | BU Lead | Member roles |
+|---|---|---|
+| **Strategy** | Coordinator | CEO |
+| **Engineering** | CTO | Mario (Chief Engineer), Staff Engineer, EM, IC Engineers |
+| **Product** | PM | Designer, UX Researcher, Liaison |
+| **Legal & Security** | CLO | CISO |
+| **Finance & Revenue** | CFO | CRO (Revenue), CCO (Credit) |
+| **Go-to-Market** | CMO | CRO (Risk), CPO (Partnerships) |
+| **Data & AI** | CDO | CAIO, CAO |
+| **Operations & People** | COO | CHRO, CCO (Compliance), CCO (Customer) |
+
+When a C-level has no active members below them (e.g., CLO working solo), they report directly to the Coordinator in BU format — they are their own BU lead.
+
+### Role close message
+
+When a role completes its work for a phase or sprint, it sends a **Domain Close** Bus message to its BU lead (not to the Coordinator):
+
+```
+FROM: [Role Name] ([Role])
+TO: [BU Lead Role]
+RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
+PRIORITY: INFO
+MESSAGE:
+  DOMAIN CLOSE — [YYYY-MM-DD]
+  Work completed: [list of deliverables or requirements closed]
+  Requirements updated: [file] — [N] items moved to Done
+  Decisions logged: [N] entries in history.md (or "none")
+  Area log: [area]-log.md updated (or "none")
+  Open items handed off: [list, or "none — clean close"]
+  Ready to dissolve: YES | NO (if YES, state why)
+```
+
+The BU lead is the single point who decides whether to escalate the completion to the Coordinator or absorb it internally (e.g., if the completion unblocks a sibling role in the same BU).
+
+### BU self-discovery
+
+A BU lead does not wait for every subordinate to report. When activated or when a phase transition occurs, the BU lead runs a **self-discovery scan** — a structured read of current domain state from files, not from Bus messages:
+
+**Self-discovery scan sequence:**
+1. Read `[domain]-requirements.md` — count Pending / In Progress / Done items; flag anything Blocked
+2. Read `[area]-log.md` — identify the most recent status change and who made it
+3. Read `team.md` Active Agents table — identify which BU members are currently active
+4. Read `current-status.md` Active Missions — identify which active missions belong to this BU
+5. Synthesize: produce a BU status summary (see format below) from the files, not from memory
+
+This self-discovery scan produces the **BU Status Message** sent to the Coordinator.
+
+### BU → Coordinator aggregation message
+
+BU leads send this message to the Coordinator at: phase transitions, sprint close, whenever a BLOCKER in their domain is resolved or created, and when any member role closes.
+
+```
+FROM: [BU Lead Name] ([BU Lead Role])
+TO: Coordinator
+RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
+PRIORITY: INFO | DECISION NEEDED | BLOCKER
+MESSAGE:
+  BU STATUS — [BU Name] — [YYYY-MM-DD]
+  Active members: [list with current status]
+  Completed this phase: [role + what was delivered, or "none"]
+  Requirements: [N pending / N in-progress / N done] in [file]
+  Blockers: [specific blocker + who can unblock, or "none"]
+  Decisions pending cross-BU: [list + who owns the decision, or "none"]
+  Members ready to dissolve: [list, or "none"]
+  Next activation needed: [role + why, or "none"]
+```
+
+### What this changes for every role
+
+1. **Done Definition** (in `_template.md` and all role files): the completion Bus message goes to the **BU lead**, not the Coordinator. The Coordinator learns about individual role completions through the BU Status Message.
+2. **Coordinator operating loop**: the Coordinator synthesizes BU Status Messages from each BU lead, not individual role completion pings. The Coordinator sends Bus messages TO BU leads for routing into their domains — never directly to sub-roles.
+3. **BU leads are the sole routing layer** into their domain. A Coordinator message that needs engineering work goes to CTO, not to Staff Engineer directly. CTO routes it internally.
+
+### Self-discovery in the context of session resumption
+
+When a BU lead is the first role activated in a new session, they run the self-discovery scan before producing any output. This is how stale state gets caught and corrected — not by waiting for every role to re-announce itself, but by reading the live files. The self-discovery scan result is appended to Session Notes in `current-status.md` so the Coordinator can see what was found without running a separate scan.
+
+---
+
+*Protocol v3.5. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, and BU communication. Every agent references it. No agent duplicates it.*

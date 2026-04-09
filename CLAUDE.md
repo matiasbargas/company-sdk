@@ -8,8 +8,8 @@ The SDK itself — not a project. It contains:
 - `team/roles/` — every agent's persona, operating loop, consultation mode, and skill ladder
 - `project-template/` — all files a new project gets on bootstrap (7 consolidated requirements files)
 - `team/squads/` — pre-configured team compositions (website, mvp, feature, startup)
-- `scripts/` — CLI tools (init, bootstrap, squad, doc, gate-check)
-- `protocol.md` — the shared contract: Bus format, escalation, spawning policy (v3.5)
+- `scripts/` — CLI tools (init, bootstrap, squad, doc, gate-check, validate, status, version, retro, health, github, cloud, ship)
+- `protocol.md` — the shared contract: Bus format, escalation, BU communication, spawning policy (v3.6)
 - `AGENTS.md` — agent manifest: activation sequence, dependency graph, consultation patterns
 - `STRATEGY.md` — corporate strategy layer: 4 success themes, Betting Table rules
 
@@ -74,12 +74,43 @@ The Owner communicates through Greg (CEO) or Coordinator only. Never directly to
 ## CLI commands
 
 ```bash
-node scripts/init.js <name> --squad <type> --idea "..."   # Create + prime a new project
-node scripts/doc.js status <project-dir>                  # Resume from where you left off
-node scripts/doc.js log <area-log> --role X --level Y --goal "..." --status completed
-node scripts/doc.js decision history.md --decision "..." --context "..." --made-by [Role]
-node scripts/doc.js read <file> --section "## Section"
-node scripts/doc.js append <file> --section "## Section" --content "..."
+# Project setup
+sdk-init <name> --squad <type> [--type <project-type>] --idea "..."  # Create + prime
+sdk-resume <project-dir>               # start session: check + gate + next action
+sdk-status <project-dir>               # missions table, open decisions, activation phrase
+sdk-next <project-dir>                 # just the next activation phrase
+
+# Documentation
+sdk-doc status <project-dir>           # full current-status.md narrative
+sdk-doc manifest <project-dir>         # generate context-manifest.json
+sdk-doc decision history.md --decision "..." --context "..." --made-by [Role]
+sdk-doc log <area-log> --role X --level Y --goal "..." --status completed
+sdk-doc append <file> --section "## Section" --content "..."
+
+# Gates and quality
+sdk-gate-check <project-dir>           # CLO + CISO gate
+sdk-gate-check <project-dir> --mario   # Mario gate
+sdk-validate <project-dir>             # advisory doc health check (also runs in sdk-ship)
+sdk-health <project-dir>               # staleness + validate + manifest + .sdkrc check
+sdk-pre-tag <project-dir>              # full team review: coherence + cohesion + validate + health
+sdk-pre-tag <project-dir> --fix        # same + auto-fix missing files and release ID drift
+sdk-ship <project-dir> <release-id>    # validate → tag → push → release notes
+
+# Release lifecycle
+sdk-version <project-dir>              # show / bump / set release ID
+sdk-retro <project-dir>                # interactive retrospective → strategy-log.md
+
+# GitHub integration
+sdk-github link <project-dir> --repo owner/repo
+sdk-github sync-issues <project-dir>
+sdk-github release <project-dir>
+sdk-github status <project-dir>
+
+# Cloud sync (Pro — offline-first, additive)
+sdk-cloud login / logout
+sdk-cloud link <project-dir> [--org <id>]
+sdk-cloud push / pull / status <project-dir>
+sdk-cloud projects list
 ```
 
 ## Active Project — sdk-v3 (v2026.Q2.1)
@@ -88,7 +119,7 @@ This repo is running its own project. All project files live in `project/` along
 
 **Resume a session:**
 ```
-node scripts/doc.js status project/
+sdk-status project/
 ```
 
 **Key project files:**
@@ -96,10 +127,13 @@ node scripts/doc.js status project/
 - `project/history.md` — all decisions, permanent record
 - `project/project-map.md` — CEO validates before release seals
 - `project/idea.md` — original brief (Section 4 already delivered to Greg)
+- `project/LOOP.md` — 11-iteration auto-improvement plan
+- `project/SAAS.md` — SaaS architecture (Vercel + Supabase + Clerk)
+- `project/INVESTOR.md` — investor brief, traction thresholds, defensibility
 
 **Active release:** v2026.Q2.1
 **Squad:** startup
-**Phase:** Phase 2 — CTO architecture brief delivered. Mario irreversible decision review next. CLO + CISO gates cleared.
+**Phase:** Iteration 6 of 11 — parallel squads active (SPRINT6-A: API, SPRINT6-B: Dashboard, SPRINT6-C: GitHub/Compliance)
 
 **Agents:** roles are at `./team/roles/` — no copy needed. All SDK files are the project's files.
 
