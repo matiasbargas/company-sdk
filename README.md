@@ -85,6 +85,16 @@ Every consequential decision is written to `history.md`: what was decided, why, 
 sdk-doc read history.md --section "## Decisions"
 ```
 
+### Documentation enforcement — machine-checked
+
+`sdk-ship` runs `sdk-validate` as a pre-flight on every release. Missing files, unfilled placeholders, and empty required sections block the ship. Advisory warnings show on dry-run without blocking. Real ships are clean or they don't go.
+
+```bash
+sdk-validate my-saas              # advisory check — always exits 0
+sdk-validate my-saas --strict     # strict — exits 1 on any issue
+sdk-ship my-saas v2026.Q2.1       # runs validate, then tags + pushes
+```
+
 ### A team with genuine diversity
 
 Every agent gets a name from a globally common first name, a city surname, and a cultural profile from that region. Fatima Nairobi and Yuki Kampala are not the same agent — they approach risk differently, weight evidence differently, reason about hierarchy and time differently.
@@ -117,6 +127,8 @@ npm install -g company-sdk
 sdk-init my-saas --squad startup
 # or with an idea pre-loaded:
 sdk-init my-saas --squad startup --idea "B2B invoicing tool for freelancers in LATAM"
+# or with a project type:
+sdk-init my-api --squad mvp --type api
 ```
 
 **Open in Claude Code**
@@ -135,7 +147,7 @@ Hey Greg — here's the brief: [paste Section 4 from idea.md]
 ```bash
 sdk-resume .           # SDK check + gate advisory + next activation phrase in one command
 sdk-next .             # just the next activation phrase
-sdk-doc status .       # full current-status.md narrative
+sdk-status .           # missions, waiting-on, open decisions, activation phrase
 ```
 
 ---
@@ -144,13 +156,15 @@ sdk-doc status .       # full current-status.md narrative
 
 ```bash
 # Project setup
-sdk-init <name> [--squad <type>] [--idea "..."]    # scaffold + prime the team
+sdk-init <name> [--squad <type>] [--type <project-type>] [--idea "..."]  # scaffold + prime
 sdk-update [<sdk-path>]                             # sync SDK files in an existing project
+sdk-bootstrap <project-dir>                         # bootstrap an existing directory
 
 # Session management
 sdk-resume <project-dir>                            # start a session: check + gate + next
 sdk-next <project-dir>                              # print the next activation phrase
-sdk-doc status <project-dir>                        # print current-status.md
+sdk-status <project-dir>                            # missions table, open decisions, next action
+sdk-doc status <project-dir>                        # full current-status.md narrative
 sdk-doc manifest <project-dir>                      # generate context-manifest.json
 
 # Documentation
@@ -166,8 +180,59 @@ sdk-doc dissolve <project-dir> --name "..." --dissolved-by "..." --reason "..."
 sdk-gate-check <project-dir>                        # CLO + CISO gate (pre-CTO)
 sdk-gate-check <project-dir> --mario               # Mario gate (pre-Sprint 1)
 sdk-gate-check <project-dir> --all                 # all gates
-sdk-ship <project-dir> <release-id>                # tag + push + release notes, atomic
+sdk-validate <project-dir>                          # advisory doc health check
+sdk-validate <project-dir> --strict                # strict — exits 1 on any issue
+sdk-pre-tag <project-dir>                           # full team review: coherence + cohesion + validate + health
+sdk-pre-tag <project-dir> --fix                    # review + auto-fix safe issues (missing files, release ID sync)
+sdk-ship <project-dir> <release-id>                # validate + tag + push + release notes
 sdk-ship <project-dir> <release-id> --dry-run      # preview without touching git
+
+# Release management
+sdk-version <project-dir>                           # show current release ID
+sdk-version <project-dir> bump [patch|minor|major]  # bump release ID
+sdk-version <project-dir> set v2026.Q3.1            # set release ID explicitly
+sdk-retro <project-dir>                             # interactive retrospective → strategy-log.md
+sdk-retro <project-dir> --release v2026.Q2.1 --what-worked "..." --what-slowed "..." --change "..."
+
+# Project health
+sdk-health <project-dir>                            # staleness + validate + manifest + .sdkrc
+sdk-health <project-dir> --stale-hours 48           # custom staleness threshold
+sdk-health <project-dir> --json                     # machine-readable output for CI
+
+# GitHub integration
+sdk-github link <project-dir> --repo owner/repo     # link to GitHub repo
+sdk-github sync-issues <project-dir>                # create issues from pending requirements
+sdk-github release <project-dir> [--release-id v2026.Q2.1]  # create GitHub release from history.md
+sdk-github status <project-dir>                     # show open SDK-labeled issues
+
+# Cloud sync (Pro)
+sdk-cloud login                                     # device-code auth → ~/.sdk-credentials
+sdk-cloud logout                                    # revoke credentials
+sdk-cloud link <project-dir> [--org <id>]           # link project to cloud org
+sdk-cloud push <project-dir>                        # snapshot project state → cloud
+sdk-cloud pull <project-dir>                        # fetch latest snapshot → local
+sdk-cloud status <project-dir>                      # show local vs cloud diff
+sdk-cloud projects list                             # list all projects in org
+```
+
+---
+
+## Project types
+
+Use `--type` at init to configure gate enforcement to match your domain.
+
+| Type | Use for |
+|---|---|
+| `product` | Consumer or B2B apps (default) |
+| `api` | Backend services, developer-facing APIs |
+| `content` | Docs, marketing sites, content systems |
+| `service` | Internal tools, ops automation |
+| `hardware` | Physical products with embedded software |
+| `internal` | Internal tooling, no external users |
+| `protocol` | Shared contracts, libraries, SDKs |
+
+```bash
+sdk-init my-api --squad mvp --type api
 ```
 
 ---
@@ -216,6 +281,7 @@ my-saas/
 ├── current-status.md            # session continuity — read this first on every resume
 ├── history.md                   # permanent decision record
 ├── project-map.md               # CEO validates before release seals
+├── context-manifest.json        # agent context index — generated by sdk-doc manifest
 ├── discovery-requirements.md    # CLO + compliance
 ├── security-requirements.md     # CISO + threat model
 ├── business-requirements.md     # CFO · CMO · CRO · COO · CHRO
@@ -251,6 +317,15 @@ sdk-gate-check my-saas --mario
 #     ✓  Mario (Chief Engineer) sign-off: Logged
 ```
 
+**Doc health gate** — runs automatically on every `sdk-ship`
+```bash
+sdk-validate my-saas
+
+# ✅  clean — no issues
+# ⚠   current-status.md: placeholder found on line 3: "[RELEASE]"
+# ⚠   engineering-requirements.md: required section "Active Missions" is empty
+```
+
 ---
 
 ## Who it's for
@@ -275,4 +350,4 @@ The goal is not faster outputs. The goal is infrastructure for human agency.
 
 ---
 
-*company-sdk · 20+ roles · 4 squads · protocol v3.5 · MIT*
+*company-sdk · 20+ roles · 4 squads · protocol v3.6 · v3.4.20*

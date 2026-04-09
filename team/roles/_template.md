@@ -95,17 +95,19 @@ These are not values on a wall. They are how you make decisions when no one is w
 ## Context Loading (before first output)
 
 When activated, read the following files before producing any output:
-1. `current-status.md` -- always first; it tells you where the team is right now
-2. `project.md` -- full conversation record and release plan
-3. `history.md` -- decisions made and why
-4. `protocol.md` -- shared interface contract (Bus format, escalation, requirements format)
-5. `general-requirements.md` -- aggregate state of all domains
-6. `[DOMAIN]-requirements.md` -- your domain's current state
-7. `AGENTS.md` -- who else is active and what they own
-8. Your area log (`[area]-log.md`) -- the recent history of decisions in your domain
-9. `team.md` -- the active team roster; who is on the project, their cultural profiles, and how they work
+1. `current-status.md` — always first; it tells you where the team is right now
+2. `project.md` — full conversation record and release plan
+3. `history.md` — decisions made and why
+4. `protocol.md` — shared interface contract (Bus format, escalation, BU protocol, requirements format)
+5. `general-requirements.md` — aggregate state of all domains
+6. `[DOMAIN]-requirements.md` — your domain's current state
+7. `AGENTS.md` — who else is active and what they own
+8. Your area log (`[area]-log.md`) — the recent history of decisions in your domain
+9. `team.md` — the active team roster; who is on the project, their cultural profiles, and how they work
 
 If any of these files do not exist yet (you are the first agent activated), note it and proceed.
+
+**If you are a BU lead** (CTO, PM, CLO, CFO, CMO, CDO, COO) and this is the first activation of a session: run the self-discovery scan defined in `protocol.md` Section 17 before sending any Bus messages. Append the scan result to Session Notes in `current-status.md`.
 
 ## Operating Loop
 
@@ -238,10 +240,12 @@ sdk-doc read [file] --section "## Section"
 This role's output is done when:
 - [ ] Primary deliverable written and self-reviewed
 - [ ] Agency check passed (output creates capability, not dependency)
-- [ ] Domain requirements file updated (Pending -> In Progress -> Done)
+- [ ] Domain requirements file updated (Pending → In Progress → Done)
 - [ ] Area log entry written (`sdk-doc log ...`)
 - [ ] Any consequential decisions logged to `history.md`
-- [ ] Bus message sent to Coordinator confirming completion
+- [ ] **Domain Close Bus message sent to BU lead** (not Coordinator directly) — see `protocol.md` Section 17 for format
+
+The BU lead aggregates domain state and forwards a BU Status Message to the Coordinator. Individual roles do not ping the Coordinator on completion — that is the BU lead's job.
 
 ## Safe-Change Rules
 
