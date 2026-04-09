@@ -1,7 +1,7 @@
 # Current Status
-**Last updated:** 2026-04-07
+**Last updated:** 2026-04-08
 **Updated by:** Coordinator (Soren Aarhus)
-**Release:** v2026.Q2.1
+**Release:** v3.2.1
 
 > This is the first file you read when resuming work. It tells you exactly where the team is right now and what the next action is. If this file is out of date, the team is flying blind.
 >
@@ -9,40 +9,48 @@
 
 ---
 
+## Loop Status
+
+**Auto-improvement loop:** ACTIVE
+**Iteration:** 1 of 11 — IN PROGRESS
+**Stopping condition:** 11 iterations complete → investor pitch package ready
+**Loop plan:** project/LOOP.md
+**Investor brief:** project/INVESTOR.md
+**SaaS architecture:** project/SAAS.md
+
+---
+
 ## Active Missions
 
 | Mission | Pod | Owner | Appetite remaining | Status | Next action |
 |---|---|---|---|---|---|
-| validate-script | SPRINT2-A | Lena Tbilisi (EM) + IC Agent | M (2 sessions) | **READY — activate IC agent** | Spawn IC agent for VS-01: script skeleton + advisory mode |
-| git-release | SPRINT2-B | Coordinator | DONE | **CLOSED** | All 4 GR tickets shipped 2026-04-07 |
+| validate-script | SPRINT2-A | Lena Tbilisi (EM) + IC Agent | S (1 session) | **VS-01 + VS-02 DONE — activate IC agent for VS-03** | VS-03: --strict flag + sdk-ship integration |
+| next-activation-handoff | SPRINT3-A | Coordinator | S (1 session) | UNBLOCKED — queued Sprint 3 | Slot when SPRINT2-A dissolves |
 
 ---
 
 ## Waiting On
 
-- [ ] validate-script VS-01 + VS-02 | Blocks: validate-script VS-03, gate-check-hardening pod
-- [ ] next-activation-handoff (queued Sprint 3) | Unblocked — slots when SPRINT2-A dissolves
+- [ ] validate-script VS-03 + VS-04 | Blocks: gate-check-hardening pod
+- [ ] Iteration 2 planning (Owner CLI) | Unblocked — slots after validate-script closes
 
 ---
 
 ## Completed Since Last Session
 
-- **git-release FULLY SHIPPED** — GR-01 through GR-04 all done | By: Coordinator | Completed: 2026-04-07
-  - sdk-ship atomic command (tag + push + rollback + --dry-run), 11-test integration suite
-- **SDK v3.1.0 tagged and pushed** — all Sprint 1 owner-efficiency work shipped | Completed: 2026-04-07
-- **Sprint 2 pod map written** — Lena Tbilisi (EM) | Completed: 2026-04-07
-- **Sprint 1 COMPLETE** — all 4 Foundation missions shipped:
-  - context-manifest — DONE
-  - doc-spawn-dissolve — DONE
-  - coordinator-owns-session-close — DONE
-  - mario-gate-script — DONE
-- Mario gate — 5 irreversible CTO decisions reviewed and signed off | By: Ravi Colombo (Chief Engineer) | Completed: 2026-04-06
-- PM mission shaping — 9 mission cards shaped into sprint tickets | By: Isabella (PM) | Completed: 2026-04-06
-- Protocol Section 13 updated — Coordinator named sole write authority for current-status.md at session close | By: Coordinator | Completed: 2026-04-07
-- Enforcement model decision logged — social enforcement confirmed (history.md 2026-04-06) | By: CEO + Coordinator | Completed: 2026-04-06
-- Phase 1 Discovery — all Domain Specialists delivered | By: CLO, CISO, CFO, CMO | Completed: 2026-04-06
-- CLO + CISO gate CLEARED | By: Fatima Nairobi + Yuki Kampala | Completed: 2026-04-06
-- CTO architecture brief delivered | By: Tariq Bishkek | Completed: 2026-04-06
+- **Loop opened** — 11-iteration auto-improvement plan written | By: Coordinator | 2026-04-08
+  - project/LOOP.md — full iteration map with missions, acceptance criteria, release targets
+  - project/INVESTOR.md — investor pitch brief (draft, final at Iteration 10)
+  - project/SAAS.md — SaaS architecture: tiers, API, DB schema, dashboard, GitHub integration
+- **validate-script VS-01 SHIPPED** — sdk-validate skeleton with advisory mode | 2026-04-08
+  - `scripts/validate.js` — CLI entry point, exportable `validate()` function
+  - `scripts/lib/validate-config.js` — canonical config: required files, sections, placeholder patterns
+- **validate-script VS-02 SHIPPED** — placeholder detection + actionable error messages | 2026-04-08
+  - Backtick-span stripping prevents false positives on documentation lines
+  - 27/27 unit tests pass (`scripts/lib/test-validate.js`)
+  - Real project (`project/`) validates clean
+- **sdk-validate registered** as npm binary + added to `npm test` suite | 2026-04-08
+- **Brain project synced** to v3.2.0 (37 files, team/types/, updated scripts, templates) | 2026-04-08
 
 ---
 
@@ -53,19 +61,26 @@ None.
 ---
 
 ## Next Agent To Activate
-**Role:** IC Engineer (spawned by Lena Tbilisi, EM) — Pod SPRINT2-A
-**Activation phrase:** "You are [name], IC Engineer in Pod SPRINT2-A. Your mission is validate-script. Pick up ticket VS-01: build the sdk-validate script skeleton with advisory mode — reads current-status.md, history.md, product-requirements.md, engineering-requirements.md, and general-requirements.md; reports missing files and empty required sections as actionable warnings (exit 0). Read engineering-requirements.md Sprint 2 ticket VS-01 for full acceptance criteria."
-**Read first:** engineering-requirements.md (Sprint 2 tickets), product-requirements.md (validate-script mission brief)
 
-**Note:** Pod SPRINT2-B (git-release) is fully closed — all 4 GR tickets shipped this session. Only VS-01 activation needed.
+| Role | Pod | Reads first |
+|---|---|---|
+| IC Engineer (spawned by Lena Tbilisi, EM) | SPRINT2-A | engineering-requirements.md Sprint 2 ticket VS-03 |
+
+**Activation phrase:**
+"You are [name], IC Engineer in Pod SPRINT2-A. Your mission is validate-script. Pick up ticket VS-03: add `--strict` flag to sdk-validate and integrate it into the sdk-ship pre-flight sequence. VS-01 and VS-02 are merged — extend scripts/validate.js, do not rewrite it. Read engineering-requirements.md Sprint 2 ticket VS-03 for full acceptance criteria."
+
+**After VS-03:** Activate another IC Engineer for VS-04 (config module consolidation — S appetite).
+**After VS-04:** validate-script mission closes. Pod SPRINT2-A dissolves. Iteration 1 releases as v3.2.1. Iteration 2 opens.
 
 ---
 
 ## Session Notes
 
-2026-04-07 — Sprint 1 complete. All 4 Foundation missions shipped. EM (Lena Tbilisi) re-mapped pods for Sprint 2. Two pods now active: SPRINT2-A (validate-script, M appetite) and SPRINT2-B (git-release continuation, M remaining of L). Critical path: validate-script → gate-check-hardening → gate-check-ci. next-activation-handoff is unblocked and S remaining — queues Sprint 3 as first pod when a Sprint 2 pod dissolves.
+2026-04-08 — Loop opened. 11-iteration plan written. Strategic documents (INVESTOR.md, SAAS.md) committed. VS-01 and VS-02 shipped in one session: sdk-validate skeleton + advisory mode + placeholder detection + 27 tests. Real project validates clean. sdk-validate registered as npm binary. Two iterations of product maturity moved in one session.
 
-No open decisions. No blockers. Sprint 2 is clean to start.
+Iteration 1 is ~60% done. VS-03 + VS-04 + next-activation-handoff remain.
+
+Greg (CEO) and CTO SaaS briefs are running as background agents — output will be incorporated into INVESTOR.md and SAAS.md refinements before Iteration 10.
 
 ---
 

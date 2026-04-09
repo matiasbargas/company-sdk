@@ -45,14 +45,15 @@
     "sdk-next": "./scripts/next.js",
     "sdk-resume": "./scripts/resume.js",
     "sdk-ship": "./scripts/ship.js",
-    "sdk-update": "./scripts/update.js"
+    "sdk-update": "./scripts/update.js",
+    "sdk-validate": "./scripts/validate.js"
   },
   "scripts": {
     "bootstrap": "node scripts/bootstrap.js",
     "squad": "node scripts/squad.js",
     "doc": "node scripts/doc.js",
     "update": "node scripts/update.js",
-    "test": "node scripts/lib/test-ship.js"
+    "test": "node scripts/lib/test-ship.js && node scripts/lib/test-validate.js"
   },
   "engines": {
     "node": ">=18"
