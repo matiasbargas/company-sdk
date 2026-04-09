@@ -98,3 +98,15 @@ Tariq Bishkek (CTO) recommended social enforcement for the Coordinator session-c
 **Reversible:** Yes — can add technical enforcement later without breaking existing usage.
 
 **Effect:** coordinator-owns-session-close mission PM hold is lifted. Pod may now form.
+
+## Version Bump — v2026.Q2.2 → v2026.Q2.3
+Date: 2026-04-09
+Made by: Owner (sdk-version patch)
+
+patch bump. New release cycle: v2026.Q2.3.
+
+## Version Bump — v2026.Q2.3 → v2026.Q2.1
+Date: 2026-04-09
+Made by: Owner (sdk-version set)
+
+set bump. New release cycle: v2026.Q2.1.
