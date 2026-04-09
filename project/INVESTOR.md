@@ -9,13 +9,13 @@
 
 ## The Category
 
-**We are not a developer tool. We are a team operating system for the AI era.**
+**We are not a developer tool. We are the team OS for builders who can't afford to be wrong.**
 
 GitHub gives teams version control. Notion gives them docs. Linear gives them tickets. None of them give teams *protocol* — the enforced logic of how decisions get made, how roles engage, how compliance happens before architecture, and how knowledge survives beyond the conversation.
 
 company-sdk is the protocol layer. It enforces how a 3-10 person team operates, from raw idea to shipped increment — with every decision logged, every gate enforced, and every role played by an AI specialist trained to push back.
 
-Category: **AI Team OS** (distinct from "AI coding assistant" and "project management tool")
+Category: **Compliance-native AI Team OS** — distinct from "AI coding assistant," "project management tool," and "agent framework." The key differentiator: every other tool optimizes for speed of output. We optimize for quality of decision. Founders in regulated industries cannot fix a compliance gap six months after architecture is locked. We catch it before.
 
 ---
 
@@ -94,12 +94,13 @@ For regulated industries (fintech, healthtech, legaltech):
 
 **Primary TAM:** Developer tools + AI tooling — $50B+, growing 18% YoY.
 
-**Underserved segment:** Technical founders and PMs running small product teams (1-10 people) in regulated industries. Estimated 2M+ globally.
+**The specific buyer (Maya):** Technical co-founder or senior engineering lead at a 3-8 person product company in fintech, healthtech, or legaltech. She has one lawyer on retainer she can't afford to bug daily, no CISO, and a board that will ask her to explain every architectural decision at the next raise. She's currently using ChatGPT + Notion + Linear + a shared Google Doc labeled "decisions-FINAL-v3." She spends 4-6 hours per week on coordination and compliance work that should be automated. Her alternatives: hire a fractional CTO ($8K/mo), pay a compliance consultant ($300/hr), or wing it and hope due diligence doesn't surface the gaps. At $49-199/mo, she buys enforcement she can afford and audit trails she can actually show a Series A investor.
 
 **Why now:**
 - Claude Code, Cursor, Copilot have proven AI-native dev workflows. The next step is AI-native *team* workflows.
 - Compliance pressure is accelerating: SOC2, GDPR, SEC cybersecurity disclosure rules, HIPAA enforcement.
 - Technical founders are the new enterprise buyer. They want tools with opinions, not blank canvases.
+- The compliance moat window is 12-18 months. When Anthropic/OpenAI ship team tools, they will optimize for output breadth, not compliance depth. Jurisdiction-specific regulatory mapping, CLO-before-CTO gate enforcement, and GDPR-ready audit structure require domain expertise that large platform players will not prioritize at launch.
 
 ---
 
@@ -111,9 +112,12 @@ For regulated industries (fintech, healthtech, legaltech):
 |---|---|---|
 | npm downloads (total) | 10,000 | [TO FILL] |
 | GitHub stars | 500 | [TO FILL] |
-| Case studies ("this is how we work now") | 3 | [TO FILL] |
-| Design partners (paying) | 3 | [TO FILL] |
-| Pro trial signups | 50 | [TO FILL] |
+| Case studies ("this is how we work now") | 3+ | [TO FILL] |
+| Paying Pro accounts | 50+ | [TO FILL] |
+| Monthly churn (paid) | <10% | [TO FILL] |
+
+**Minimum investor-credible proof stack (CFO threshold):**
+Without 50 paid accounts + 3 public case studies, the pitch is a product demo. With them, it is a traction story. The decisive signal: one team that can say "our Series A investor cited our decision trail in their term sheet." One of those stories is worth more than 1,000 installs.
 
 **One case study structure:**
 > "[Company] adopted company-sdk in [month]. [Founder name] runs `sdk-status` every Monday. Their last two releases have full decision logs. The CLO gate caught a GDPR gap before architecture was locked. They haven't had an emergency compliance retrofit since."

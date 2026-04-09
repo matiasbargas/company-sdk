@@ -29,29 +29,35 @@
 
 ## Cloud Sync Model
 
+### Sync unit: whole project snapshot
+Not individual files — the whole consistent project state at a logical checkpoint (after a gate clears, after a release seals, after `sdk-doc decision` writes to `history.md`). This avoids partial-sync corruption and maps cleanly to the existing lifecycle events.
+
+`sdk-cloud push` reads `.sdkrc` for the project identity, computes a content hash of all tracked files, bundles them as a JSON payload, and POSTs to `/api/v1/projects/:projectId/snapshots`. The server stores the snapshot with a `snapshot_id` and `created_at`. No binary files. No `team/` role files — those are SDK source, not project data.
+
+`sdk-cloud pull` fetches `/api/v1/projects/:projectId/snapshots/latest`, and writes only files the local directory is missing or where the server version is newer. Conflict resolution is last-write-wins with a local `.sdk-conflicts/` backup of anything overwritten — no merge logic, no CRDT. The CLI outputs a diff summary for inspection.
+
 ### What syncs
-- `history.md` — decision record (always synced)
-- `current-status.md` — session state (synced on push)
-- `*.requirements.md` files — requirements state (synced on push)
-- `context-manifest.json` — project snapshot (auto-generated on push)
+- `idea.md`, `history.md`, `current-status.md`, `project-map.md`
+- All `*-requirements.md` files
+- All `*-log.md` files
+- `context-manifest.json`, `team.md`, `project.md`
 
 ### What stays local only
-- `.claude/` directory — agent configs, settings
+- `team/` roles — SDK source, not per-project state
+- `.claude/` directory — agent configs, settings, machine-specific
+- `.sdkrc` — SDK path is machine-specific; token is secret
 - Source code — never sent to the SDK cloud
-- `.sdkrc` secrets (GitHub token, etc.)
 
 ### Commands
 ```bash
-sdk-cloud link <project-dir>           # link to cloud, creates project in org
-sdk-cloud push <project-dir>           # upload local state to cloud
-sdk-cloud pull <project-dir>           # download latest from cloud to local
-sdk-cloud status <project-dir>         # show sync state (ahead/behind/diverged)
+sdk-cloud login                        # device-code auth → ~/.sdk-credentials
+sdk-cloud logout                       # revoke token
+sdk-cloud link <project-dir> --org     # associate project with org
+sdk-cloud push <project-dir>           # snapshot current state → cloud
+sdk-cloud pull <project-dir>           # fetch latest snapshot → local
+sdk-cloud status <project-dir>         # show local vs cloud diff (no write)
+sdk-cloud projects list                # list all projects in org
 ```
-
-### Conflict resolution
-- **Last-write-wins** for current-status.md (session continuity file, high churn)
-- **Append-only** for history.md (decisions are never overwritten)
-- **Manual merge prompt** for requirements files if diverged (rare — these evolve slowly)
 
 ### .sdkrc cloud config fields
 ```json
@@ -71,31 +77,33 @@ sdk-cloud status <project-dir>         # show sync state (ahead/behind/diverged)
 
 ## API Layer
 
-**Stack:** Node.js (Express or Hono), deployed on Railway or Render.
-**Rationale:** Stays on Node.js, same runtime as CLI. Hono preferred for lightweight, typed handlers.
+**Stack:** Next.js API Routes on Vercel — same deployment as dashboard. No separate API server.
+**Rationale:** Vercel handles Next.js app + API routes + GitHub webhook receiver in one deployment. Zero extra infra. Node.js throughout, no context switch.
 
 ### Auth
 **Recommendation: Clerk**
-- Fastest to ship (pre-built UI, team/org model built-in)
+- Next.js SDK is 3 lines to add protected routes and session middleware
+- Org/team model maps directly to our multi-team structure (one org = one paying team)
 - Handles invites, SSO (Enterprise tier), SCIM
-- Node.js SDK mature and actively maintained
-- Cost: free up to 10K MAU, then $25/mo — negligible at early scale
+- Device-code flow for CLI: `sdk-cloud login` opens browser → user approves → CLI polls for JWT → stores at `~/.sdk-credentials` (chmod 600). No new runtime deps — `https` is built-in Node.
+- Cost: free <10K MAU, ~$25/mo at scale
 
 ### Endpoints
 
 ```
-POST   /api/v1/auth/token                    # exchange CLI token for session
-GET    /api/v1/orgs/:orgId/projects          # list all projects in org
+POST   /api/v1/auth/device-status            # poll for CLI device-code approval
+GET    /api/v1/orgs/:orgId/projects          # project list view
 POST   /api/v1/projects                      # create project (sdk-cloud link)
-GET    /api/v1/projects/:id                  # project state
-PUT    /api/v1/projects/:id/sync             # push: upload file batch
-GET    /api/v1/projects/:id/sync             # pull: download latest file batch
-GET    /api/v1/projects/:id/history          # history.md entries as structured JSON
-GET    /api/v1/projects/:id/status           # current-status.md as structured JSON
-GET    /api/v1/projects/:id/gates            # latest gate check results
+GET    /api/v1/projects/:id/snapshots        # snapshot history (diffable)
+GET    /api/v1/projects/:id/snapshots/latest # latest snapshot for pull
+POST   /api/v1/projects/:id/snapshots        # push snapshot
+GET    /api/v1/projects/:id/history          # decisions parsed from history.md
+GET    /api/v1/projects/:id/gates            # gate status parsed from discovery-requirements.md
+GET    /api/v1/projects/:id/status           # current-status.md parsed fields
+GET    /api/v1/orgs/:orgId/members           # team member list
 POST   /api/v1/projects/:id/export/compliance # generate compliance PDF
-POST   /api/v1/webhooks/github               # GitHub webhook receiver
-GET    /api/v1/orgs/:orgId/dashboard         # aggregate org view
+POST   /api/v1/webhooks/github               # GitHub event receiver (HMAC-validated)
+GET    /api/v1/orgs/:orgId/dashboard         # aggregate org view (Business tier)
 ```
 
 ### Database: PostgreSQL via Supabase
@@ -135,15 +143,15 @@ github_events (id, project_id, event_type, payload, processed_at)
 
 ### 5 views that justify the subscription
 
-1. **Project Overview** — Active missions table, gate status lights (CLO/CISO/Mario), open decisions, next activation phrase. Replaces `sdk-status` in the browser.
+1. **Project Timeline** — All snapshots for a project plotted chronologically, diffable. Click any snapshot to see which files changed. The free CLI has no history visibility across sessions; this is the primary hook.
 
-2. **Decision Timeline** — Chronological log of all decisions from history.md, filterable by role and reversibility. The compliance audit view.
+2. **Decision Log** — All entries from `history.md` across every project in the org, filterable by role, date range, reversibility, and gate. The compliance audit view. Solves the "what did we decide and why" problem that kills institutional memory.
 
-3. **Mission Kanban** — Requirements files as a visual board: Pending → In Progress → Done. Synced from local push. Read-only in v4.0 (write via CLI); editable in v4.1.
+3. **Gate Dashboard** — Live CLO/CISO/Mario gate status across all active projects. Red/yellow/green. Links to the raw markdown section blocking each gate. Engineering managers pay for this view alone.
 
-4. **Team View** — Who's in the org, what projects they're on, last activity. Invite flow that sends CLI setup instructions.
+4. **Team Activity Feed** — Which agent roles produced output, on which projects, in what sequence. Surfaces bottlenecks: "PM has been waiting 4 days for CTO input on project X." Cross-project visibility the CLI cannot provide.
 
-5. **Org Dashboard** (Business tier) — All projects in the org: release health, gate status, last sync. For agency owners and multi-product founders.
+5. **GitHub Integration Panel** — Which PRs link to which SDK decisions, which commits closed which gate. The bridge between the AI team OS and the actual code repository. (Business tier + GitHub integration required.)
 
 ### Design system
 - Minimal, functional, no decoration
@@ -159,16 +167,19 @@ github_events (id, project_id, event_type, payload, processed_at)
 `TEAM_SDK_GITHUB_TOKEN` — Personal Access Token, already decided (history.md 2026-04-06). Stored in `.sdkrc` (local, never synced to cloud). Classic PAT with `repo` scope required.
 
 ### Webhook receiver (`POST /api/v1/webhooks/github`)
-Registered via `sdk-github link` using GitHub's Webhooks API. HMAC-validated on every request.
+Registered via `sdk-github link` using GitHub's Webhooks API. `X-Hub-Signature-256` validated using `crypto.createHmac` (Node built-in, no dep). Raw payload stored to `github_events` immediately, processed asynchronously via Vercel background function. No queue service required at MVP.
+
+**Offline-first guarantee:** No event ever auto-writes to local project files. Integration is read/link-only at MVP — dashboard reflects GitHub state, but `sdk-cloud pull` never overwrites local files based on GitHub events.
 
 **Events handled:**
 
-| GitHub event | SDK action |
-|---|---|
-| `pull_request.closed` (merged) | Move ticket from In Progress → Done in requirements file (if PR title includes ticket ID) |
-| `release.published` | Append to history.md if release matches SDK release ID format |
-| `issues.labeled` (sdk-mission) | Create pending item in product-requirements.md |
-| `push` to main | Trigger `sdk-validate` check; post result as commit status |
+| GitHub event | Trigger condition | SDK action |
+|---|---|---|
+| `pull_request.opened` | PR title contains `[sdk:decision-id]` | Link PR to decision record in dashboard |
+| `pull_request.merged` | PR linked to gate decision | Update `gate_status` record, surface in Gate Dashboard |
+| `push` to main | Commit message contains `closes gate:mario` | Flag for Mario gate re-check in Gate Dashboard |
+| `issues.opened` | Issue labeled `sdk-blocker` | Create blocker entry in Team Activity Feed |
+| `check_run.completed` | CI failure on SDK-linked PR | Surface in dashboard alongside linked decision |
 
 ### CLI commands
 ```bash
@@ -206,25 +217,29 @@ sdk-github status <project-dir>            # show sync state between SDK and Git
 
 | Component | Service | Monthly cost at launch |
 |---|---|---|
-| API | Railway (Node.js) | $5/mo (hobby) |
-| Database | Supabase (Postgres) | $0 (free tier) |
-| Dashboard | Vercel (Next.js) | $0 (hobby) |
-| Auth | Clerk | $0 (free tier < 10K MAU) |
+| App + API + webhooks | Vercel (Next.js, all routes) | $0 (hobby) → $20 (pro) |
+| Database | Supabase (Postgres + RLS) | $0 (free tier) |
+| Auth | Clerk | $0 (free < 10K MAU) |
 | File storage | Supabase Storage | $0 (1GB free) |
 | Email | Resend | $0 (free tier) |
 
-**Total infra cost at launch: ~$5/mo**
+**Total infra cost at launch: ~$0-20/mo**
 
-**At 100 paying teams (~$5K MRR):**
+No separate Railway API server. Vercel handles Next.js app + API routes + GitHub webhook receiver in one deployment. No Redis, no queue service, no container orchestration.
+
+**At 100 paying teams (~$5-10K MRR):**
+- Vercel Pro: $20/mo
 - Supabase Pro: $25/mo
-- Railway Pro: $20/mo
-- Clerk Growth: $25/mo
-- Total: ~$70/mo (1.4% of MRR)
+- Clerk Pro: ~$25/mo
+- Total: ~$70/mo — **98.6% gross margin**
 
-**At 1,000 paying teams (~$50K MRR):**
-- Move to dedicated Postgres: ~$100/mo
-- Railway: ~$50/mo
-- Total: ~$300/mo (0.6% of MRR)
+**At 1,000 paying teams (~$50-100K MRR):**
+- Supabase scales to $599/mo (compute + storage)
+- Vercel: ~$100-200/mo (function invocations)
+- Clerk: ~$100-150/mo
+- Total: ~$900-950/mo — **still above 98% gross margin**
+
+When to re-examine: at 5,000+ teams. Architecture does not change — only the Supabase plan tier.
 
 ---
 
@@ -250,6 +265,14 @@ sdk-github status <project-dir>            # show sync state between SDK and Git
 - Org Dashboard view
 - Stripe billing integration (Pro + Business tiers)
 - Seat management + invite flow
+
+---
+
+## CTO Dissent — Logged
+
+**Pricing floor:** The $49-199 band is wide. The dashboard views described here are worth $149/team/month to an engineering manager running 5+ concurrent SDK projects. Starting at $49 risks anchoring the product as a "cheap tool" to buyers who would pay $149 without hesitation. Recommend CRO evaluate a **$99 floor** before launch. The architecture supports any price point — but the positioning decision should be deliberate, not defaulted.
+
+This is a revenue call, not a technical one. Logged here so it does not get lost before Iteration 9 (billing scaffold).
 
 ---
 
