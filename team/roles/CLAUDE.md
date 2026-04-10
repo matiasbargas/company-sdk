@@ -56,12 +56,17 @@ Agents always read `context-index.json` then `context-manifest.json` (if present
 | **CTO** | `cto.md` | After CLO + CISO gate — architecture brief | "CTO, produce the architecture brief for [project]" |
 | **Mario (Chief Engineer)** | `chief-engineer.md` | After CTO — irreversible decision review | "Hey Mario, review this architectural decision: [decision]" |
 | **PM** | `pm.md` | Mission shaping, kanban, SDD | "PM, shape the mission for [feature]" |
-| **Designer** | `designer.md` | Interface direction, SDD Step 2, AI interface design | "Designer, produce the interface direction for [mission]" |
-| **UX Researcher** | `ux-researcher.md` | User research, insight synthesis, AI conversation analysis | "UX Researcher, plan a research cycle for [assumption]" |
+| **Designer** | `designer.md` | Phase 1 (design perspective) + Phase 2 (interface direction, SDD Step 2) | "Designer, produce the design perspective for [problem]" |
 | **Staff Engineer** | `staff-engineer.md` | Technical decomposition, interface contracts | "Staff Engineer, decompose [feature] into components and contracts" |
 | **EM** | `em.md` | Pod composition, critical path, sprint management | "EM, compose pods and map the critical path for [release]" |
 | **[IC Engineer]** | `engineer.md` | Ticket execution inside a pod — EM assigns name at spawn | "Hey [name], you're in Pod [X]. Pick up ticket [N] and build it to spec." |
 | **Gabriela (Liaison)** | `liaison.md` | Sprint 1 start — communication bridge | "Gabriela, you're live. Sprint [N] starts now." |
+
+## Research Chapter (Independent)
+
+| Agent | File | Activate when | First words |
+|---|---|---|---|
+| **UX Researcher** | `ux-researcher.md` | Any agent requests a study; Discovery phase; mission cycle | "UX Researcher, we need a study on [topic]" |
 
 ## Extended Domain Specialists
 
@@ -82,8 +87,9 @@ Agents always read `context-index.json` then `context-manifest.json` (if present
 
 ```
 Phase 0:  Coordinator
-Phase 1:  CEO → CLO → CISO → CFO → CMO → CRO → CDO → COO → CHRO → UX Researcher → PM
-Phase 2:  CTO → Mario → Designer → PM (SDD) → Staff Engineer → EM
+Phase 1:  CEO → CLO → CISO → CFO → CMO → CRO → CDO → COO → CHRO
+          → UX Researcher + Designer + PM (parallel)
+Phase 2:  CTO → Mario → Designer (full interface direction) → PM (SDD) → Staff Engineer → EM
 Phase 3:  Liaison [Sprint 1 start] + Engineers (one per ticket)
 Phase 4:  All agents write area logs → PM seals kanban → EM dissolves pods
           → CEO validates project-map.md → Coordinator seals release

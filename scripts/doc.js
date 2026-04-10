@@ -40,7 +40,7 @@ const command = args[0];
 const filePath = args[1];
 
 // spawn, dissolve, manifest, and index take a project-dir as second arg — no file-path requirement for other checks
-const spawnDissolveCommands = ['spawn', 'dissolve', 'manifest', 'index'];
+const spawnDissolveCommands = ['spawn', 'dissolve', 'manifest', 'index', 'study'];
 
 if (!command || (!filePath && !spawnDissolveCommands.includes(command)) || command === '--help' || command === '-h') {
   printHelp();
@@ -69,6 +69,10 @@ Commands:
                      --status <status> --next <action>
   manifest    <project-dir>                                 Generate context-manifest.json from current-status.md
   index       <project-dir>                                 Generate context-index.json — file map, domain routing, query map
+  study       <project-dir> create --title <text>            Create a new study file in research/studies/
+                     [--team <text>] [--requested-by <role>]   with scientific format frontmatter
+                     [--method <text>] [--tags <csv>]
+  study       <project-dir> list                             List all studies with title, date, status, confidence
   list        <file>                                        List all headings in the file
   spawn       <project-dir> --name <name> --role <role>     Add an agent to team.md Active Agents table,
                      --level <level>                         append onboarding log entry, and increment
@@ -854,6 +858,10 @@ function cmdIndex() {
     { path: 'operations-log.md',           domain: 'business',     owner: 'COO',            purpose: 'COO, CLO, CISO, CFO — operations and compliance state changes',                   load_when: ['operations-domain', 'vendor-review'] },
     { path: 'people-log.md',               domain: 'people',       owner: 'CHRO',           purpose: 'CHRO and EM — team changes, pod formation, onboarding entries',                   load_when: ['people-domain', 'pod-management', 'hiring'] },
     // Generated files
+    // Research Chapter files
+    { path: 'research-requirements.md',    domain: 'research',     owner: 'UX Researcher',  purpose: 'Research backlog — study requests, triage, completion tracking',                   load_when: ['research-request', 'study-planning'] },
+    { path: 'research-log.md',             domain: 'research',     owner: 'UX Researcher',  purpose: 'Research area log — study publications, backlog triage, insights',                 load_when: ['research-domain', 'study-review'] },
+    // Generated files
     { path: 'context-manifest.json',       domain: 'strategy',     owner: 'Coordinator',    purpose: 'Generated project snapshot — current phase, missions, next agent to activate',    load_when: ['session-start'] },
     { path: 'context-index.json',          domain: 'strategy',     owner: 'Coordinator',    purpose: 'Generated file map — domain routing, query map, agent capabilities',               load_when: ['session-start'] },
   ];
@@ -873,16 +881,46 @@ function cmdIndex() {
     return { ...entry, exists, ageHours, stale };
   }).filter(f => f.exists); // only include files that exist in this project
 
+  // ── Dynamic study scanning ─────────────────────────────────────────────────
+  const studiesDir = path.join(projectDir, 'research', 'studies');
+  if (fs.existsSync(studiesDir)) {
+    const studyFiles = fs.readdirSync(studiesDir).filter(f => f.endsWith('.md'));
+    for (const sf of studyFiles) {
+      const fullPath = path.join(studiesDir, sf);
+      const mtime = fs.statSync(fullPath).mtime;
+      const ageHours = Math.round((now - mtime.getTime()) / 1000 / 60 / 60);
+      // Parse frontmatter for richer metadata
+      const content = fs.readFileSync(fullPath, 'utf8');
+      const fm = content.match(/^---\n([\s\S]*?)\n---/);
+      let title = sf.replace(/\.md$/, '');
+      if (fm) {
+        const titleMatch = fm[1].match(/title:\s*"([^"]*)"/);
+        if (titleMatch) title = titleMatch[1];
+      }
+      files.push({
+        path: `research/studies/${sf}`,
+        domain: 'research',
+        owner: 'UX Researcher',
+        purpose: `Study: ${title}`,
+        load_when: ['study-review', 'research-domain'],
+        exists: true,
+        ageHours,
+        stale: ageHours > 168 // studies stale after 7 days (informational only)
+      });
+    }
+  }
+
   // ── Domain routing table ──────────────────────────────────────────────────
   const domains = {
-    strategy:    { lead: 'Coordinator', consult: 'CEO',        files: ['current-status.md', 'project.md', 'history.md', 'project-map.md', 'strategy-log.md', 'general-requirements.md'] },
-    engineering: { lead: 'CTO',         consult: 'CTO',        files: ['engineering-requirements.md', 'engineering-log.md'] },
-    legal:       { lead: 'CLO',         consult: 'CLO',        files: ['discovery-requirements.md'] },
-    security:    { lead: 'CISO',        consult: 'CISO',       files: ['security-requirements.md'] },
-    product:     { lead: 'PM',          consult: 'PM',         files: ['product-requirements.md', 'product-log.md'] },
-    design:      { lead: 'Designer',    consult: 'Designer',   files: ['design-requirements.md', 'design-log.md'] },
-    business:    { lead: 'CFO',         consult: 'CFO',        files: ['business-requirements.md', 'operations-log.md'] },
-    people:      { lead: 'CHRO',        consult: 'CHRO',       files: ['people-log.md', 'team.md'] },
+    strategy:    { lead: 'Coordinator', consult: 'CEO',           files: ['current-status.md', 'project.md', 'history.md', 'project-map.md', 'strategy-log.md', 'general-requirements.md'] },
+    engineering: { lead: 'CTO',         consult: 'CTO',           files: ['engineering-requirements.md', 'engineering-log.md'] },
+    legal:       { lead: 'CLO',         consult: 'CLO',           files: ['discovery-requirements.md'] },
+    security:    { lead: 'CISO',        consult: 'CISO',          files: ['security-requirements.md'] },
+    product:     { lead: 'PM',          consult: 'PM',            files: ['product-requirements.md', 'product-log.md'] },
+    design:      { lead: 'Designer',    consult: 'Designer',      files: ['design-requirements.md', 'design-log.md'] },
+    business:    { lead: 'CFO',         consult: 'CFO',           files: ['business-requirements.md', 'operations-log.md'] },
+    people:      { lead: 'CHRO',        consult: 'CHRO',          files: ['people-log.md', 'team.md'] },
+    research:    { lead: 'UX Researcher', consult: 'UX Researcher', files: ['research-requirements.md', 'research-log.md'] },
   };
 
   // ── Query map — topic → files to read + agent to consult ─────────────────
@@ -912,8 +950,11 @@ function cmdIndex() {
     'friction-log':         { read: ['product-requirements.md'],                               consult: 'PM' },
     'interface-design':     { read: ['design-requirements.md'],                                consult: 'Designer' },
     'ux-patterns':          { read: ['design-requirements.md'],                                consult: 'Designer' },
-    'user-research':        { read: ['design-requirements.md', 'design-log.md'],              consult: 'UX Researcher' },
-    'assumption-validation':{ read: ['design-requirements.md', 'product-requirements.md'],    consult: 'UX Researcher' },
+    'user-research':        { read: ['research-requirements.md', 'research-log.md'],           consult: 'UX Researcher' },
+    'assumption-validation':{ read: ['research-requirements.md', 'product-requirements.md'],  consult: 'UX Researcher' },
+    'study':                { read: ['research-requirements.md'],                              consult: 'UX Researcher' },
+    'research-backlog':     { read: ['research-requirements.md'],                              consult: 'UX Researcher' },
+    'user-evidence':        { read: ['research-requirements.md', 'research-log.md'],           consult: 'UX Researcher' },
     'budget':               { read: ['business-requirements.md'],                              consult: 'CFO' },
     'unit-economics':       { read: ['business-requirements.md'],                              consult: 'CFO' },
     'runway':               { read: ['business-requirements.md'],                              consult: 'CFO' },
@@ -959,6 +1000,179 @@ function cmdIndex() {
   console.log(indexFile);
 }
 
+// ─── Study: research/studies/ ─────────────────────────────────────────────────
+
+/**
+ * cmdStudy — Create or list scientific study files in research/studies/.
+ *
+ * Subcommands:
+ *   create  — generate a new study file with YAML frontmatter + scientific body
+ *   list    — list all studies with title, date, status, confidence
+ */
+function cmdStudy() {
+  const projectDir = filePath ? path.resolve(filePath) : process.cwd();
+  const studiesDir = path.join(projectDir, 'research', 'studies');
+  const subcommand = args[2]; // create | list
+
+  if (!subcommand || !['create', 'list'].includes(subcommand)) {
+    console.error('Usage: sdk-doc study <project-dir> create --title "..." | list');
+    process.exit(1);
+  }
+
+  if (subcommand === 'list') {
+    if (!fs.existsSync(studiesDir)) {
+      console.log('No studies directory found. Run `sdk-doc study <project-dir> create` to create the first study.');
+      return;
+    }
+    const files = fs.readdirSync(studiesDir).filter(f => f.endsWith('.md')).sort();
+    if (files.length === 0) {
+      console.log('No studies found.');
+      return;
+    }
+    console.log(`\n  Studies in ${path.relative(process.cwd(), studiesDir)}/\n`);
+    console.log('  ' + 'Date'.padEnd(12) + 'Confidence'.padEnd(12) + 'Status'.padEnd(12) + 'Title');
+    console.log('  ' + '─'.repeat(60));
+    for (const file of files) {
+      const content = fs.readFileSync(path.join(studiesDir, file), 'utf8');
+      const fm = parseFrontmatter(content);
+      const date = fm.date || file.slice(0, 10);
+      const confidence = fm.confidence || '—';
+      const status = fm.status || '—';
+      const title = fm.title || file.replace(/\.md$/, '');
+      console.log('  ' + date.padEnd(12) + confidence.padEnd(12) + status.padEnd(12) + title);
+    }
+    console.log();
+    return;
+  }
+
+  // create — re-parse options starting from args[3] since args[2] is 'create'
+  const studyOpts = {};
+  for (let i = 3; i < args.length; i++) {
+    if (args[i].startsWith('--') && args[i + 1]) {
+      studyOpts[args[i].slice(2)] = args[++i];
+    }
+  }
+  const title = studyOpts.title;
+  if (!title) {
+    console.error('--title is required for study create');
+    process.exit(1);
+  }
+  const team = studyOpts.team || 'Research Chapter';
+  const requestedBy = studyOpts['requested-by'] || 'unspecified';
+  const method = studyOpts.method || 'TBD';
+  const tagsRaw = studyOpts.tags || '';
+  const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()) : [];
+
+  const today = new Date().toISOString().slice(0, 10);
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+  const filename = `${today}-${slug}.md`;
+
+  // Ensure directories exist
+  fs.mkdirSync(studiesDir, { recursive: true });
+
+  const tagsYaml = tags.length > 0 ? `[${tags.map(t => `"${t}"`).join(', ')}]` : '[]';
+
+  const body = `---
+title: "${title}"
+date: "${today}"
+team: "${team}"
+requested_by: "${requestedBy}"
+method: "${method}"
+confidence: "TBD"
+tags: ${tagsYaml}
+status: "draft"
+---
+
+# ${title}
+
+**Date:** ${today}
+**Researcher:** [PERSONA_NAME]
+**Release:** [RELEASE]
+**Requested by:** ${requestedBy}
+
+---
+
+## Hypothesis
+
+[What the team believed before this study. State it as a falsifiable claim.]
+
+## Method
+
+[What was done. Sample size, participant criteria, duration, tools used.]
+
+## Data
+
+[Raw observations. What happened, not what it means.]
+
+### Key observations
+
+1. [Observation — behavioral, not interpretive]
+2. [Observation]
+3. [Observation]
+
+### Patterns (appeared in 3+ sessions)
+
+- [Pattern + frequency]
+
+## Findings
+
+[What the data means. First-principles analysis. Connect observations to causes.]
+
+### Confirmed
+
+- [Hypothesis element confirmed — evidence]
+
+### Refuted
+
+- [Hypothesis element refuted — evidence]
+
+### Edge insights
+
+- [Unexpected finding that no one asked about but matters]
+
+## Implications
+
+| Domain | Implication | Recommended action |
+|---|---|---|
+| [PM / Designer / CTO / etc.] | [What this means for their domain] | [Specific next step] |
+
+## Confidence Assessment
+
+**Level:** TBD
+**Why:** [Sample size, method limitations, representativeness, replicability]
+
+## Open Questions
+
+- [What this study raised but did not answer]
+
+---
+
+*Study format: scientific, first-principles. Edge insights are the most valuable section.*
+`;
+
+  const outPath = path.join(studiesDir, filename);
+  writeFile(outPath, body);
+  console.log(`✓ Study created: ${path.relative(process.cwd(), outPath)}`);
+  console.log(`  Title: ${title}`);
+  console.log(`  Requested by: ${requestedBy}`);
+  console.log(`  Next: fill in Hypothesis and Method, then execute the study.`);
+}
+
+/**
+ * Parse simple YAML frontmatter from a markdown file.
+ * Returns an object with key-value pairs from the frontmatter block.
+ */
+function parseFrontmatter(content) {
+  const m = content.match(/^---\n([\s\S]*?)\n---/);
+  if (!m) return {};
+  const result = {};
+  for (const line of m[1].split('\n')) {
+    const kv = line.match(/^(\w+)\s*:\s*"?([^"]*)"?\s*$/);
+    if (kv) result[kv[1]] = kv[2];
+  }
+  return result;
+}
+
 // ─── Dispatch ────────────────────────────────────────────────────────────────
 
 switch (command) {
@@ -975,6 +1189,7 @@ switch (command) {
   case 'dissolve': cmdDissolve(); break;
   case 'manifest': cmdManifest(); break;
   case 'index':    cmdIndex();    break;
+  case 'study':    cmdStudy();    break;
   default:
     console.error(`Unknown command: "${command}"`);
     printHelp();

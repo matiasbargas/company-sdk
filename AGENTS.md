@@ -28,13 +28,15 @@ PHASE 1 (Discovery):
   8. CDO            -- instrumentation plan → informs CTO data model
   9. COO            -- vendor onboarding timelines → gates EM critical path
   10. CHRO          -- team composition, hiring plan
-  10b. UX Researcher -- user research plan, assumption testing, AI conversation analysis (runs in parallel with PM)
+  10b. UX Researcher -- research plan, assumption testing, AI conversation analysis (parallel)
+  10c. Designer     -- design perspective brief, problem framing through design lens (parallel)
+  10d. PM           -- mission shaping informed by discovery outputs + design + research (parallel)
 
 PHASE 2 (Release Plan):
   11. CTO           -- architecture brief, make/buy matrix, team sizing
   12. Mario (Chief Engineer) -- irreversible decision review, cross-project coherence sign-off
-  13. PM            -- user story map, scope definition
-  14. Designer      -- interface direction brief (all surfaces: screen, conversation, AI, voice)
+  13. PM            -- user story map, scope definition (refined from Phase 1 shaping)
+  14. Designer      -- full interface direction brief (all surfaces: screen, conversation, AI, voice)
   15. Staff Engineer -- interface contracts, platform primitives
   16. EM            -- mission pod composition, critical path, Sprint 0 gate
 
@@ -92,12 +94,17 @@ PHASE 4 (Completion):
 | **Diana (Chief Analytics Officer)** | Experimentation, measurement plans, BI, model performance monitoring | `business-requirements.md` | CEO → Owner | Any product with a measurable hypothesis or ML component |
 | **Pablo (Chief AI Officer)** | AI strategy, evaluation framework, responsible AI governance, AI capability | `engineering-requirements.md` | CTO → CEO → Owner | Any product with AI components; activates alongside CTO in Phase 2 |
 
-### Design & Research Layer
+### Design Layer
 
 | Agent | Domain | Requirements file | Escalation path | Activation trigger |
 |---|---|---|---|---|
-| **Designer** | Interface design (screens, conversation, AI, voice), design system | `design-requirements.md` | PM → Coordinator → CEO | Any mission with a user-facing surface |
-| **UX Researcher** | User research, insight synthesis, AI conversation analysis | `design-requirements.md` | PM → Coordinator → CEO | Discovery phase + any mission cycle |
+| **Designer** | Interface design (screens, conversation, AI, voice), design system | `design-requirements.md` | PM → Coordinator → CEO | Phase 1 (discovery perspective) + any mission with a user-facing surface (Phase 2 full direction) |
+
+### Research Chapter (Independent)
+
+| Agent | Domain | Requirements file | Escalation path | Activation trigger |
+|---|---|---|---|---|
+| **UX Researcher** | User research, studies, insight synthesis, AI conversation analysis | `research-requirements.md` | Coordinator → CEO | Any agent requests a study; Discovery phase; mission cycle |
 
 ### Execution Layer
 
@@ -128,9 +135,13 @@ Owner
        │    ├── CDO ────────────┘
        │    ├── COO                   Staff Engineer → EM (contracts → tickets)
        │    ├── CHRO                  EM → Liaison
-       │    └── PM                         │
-       │                                   ├── Mission Pod-A (PM + 2-3 Eng)
-       │                                   └── Mission Pod-B (PM + Designer + 2-3 Eng)
+       │    │                              │
+       │    ├── UX Researcher ─────┐       ├── Mission Pod-A (PM + 2-3 Eng)
+       │    │   (Research Chapter)  ├──→ PM └── Mission Pod-B (PM + Designer + 2-3 Eng)
+       │    ├── Designer ──────────┘
+       │    └── PM
+       │
+       │   [UX Researcher is an independent chapter — any agent can request studies]
        │
        └── [Direct escalation from any agent via the escalation ladder]
 ```
@@ -141,12 +152,15 @@ Owner
 - CRO → PM + CFO (pricing shapes scope and financial model)
 - CDO → CTO (instrumentation needs shape data model)
 - COO → EM (vendor timelines shape critical path)
+- UX Researcher → ALL (published studies are accessible to all agents via research/studies/)
 - UX Researcher → PM (insights sharpen mission shaping and friction log)
 - UX Researcher → Designer (evidence grounds interface direction)
 - UX Researcher → CMO (user behavior validates or challenges positioning)
-- PM → Designer (mission scope defines interface surface)
+- Designer (Phase 1) → PM (design perspective informs mission shaping)
+- PM → Designer (Phase 2: mission scope defines interface surface)
 - Designer → Staff Engineer (interface constraints shape component architecture)
 - Designer → EM (design artefacts must be ready before pod builds)
+- Any agent → UX Researcher (RESEARCH REQUEST triggers a study)
 - CTO → Mario (architecture direction → irreversible decision review)
 - Mario → Staff Engineer (architectural authority on craft and cross-team coherence)
 - Staff Engineer → EM (interface contracts → sprint tickets)
@@ -172,9 +186,10 @@ These pairs share domain boundaries and must coordinate. See `protocol.md` Secti
 | Liaison + EM | Communication ↔ squad status | EM sends status to Coordinator. Liaison copies and filters for CEO-level reporting. |
 | Designer + PM | Interface constraints ↔ scope | PM owns scope. Designer flags when scope adds a new surface without design time. Coordinator routes conflict. |
 | Designer + Staff Engineer | Interface architecture ↔ component contracts | Designer defines interaction behavior. Staff Engineer defines the component contract. Conflicts escalate to CTO. |
-| UX Researcher + PM | User evidence ↔ mission shaping | UX Researcher feeds insights to PM friction log. PM owns what to build. |
+| UX Researcher + any agent | Study request ↔ study delivery | Any agent can send a RESEARCH REQUEST. UX Researcher prioritizes from backlog. Coordinator escalates priority disputes. |
+| UX Researcher + PM | User evidence ↔ mission shaping | UX Researcher publishes studies. PM integrates findings into friction log and scope. |
 | UX Researcher + CDO | Qualitative signals ↔ quantitative signals | UX Researcher owns behavioral observation. CDO owns instrumentation and metrics. Jointly responsible for full picture. |
-| Designer + UX Researcher | Interface direction ↔ user evidence | UX Researcher provides evidence. Designer translates it into interface decisions. Neither can do their job without the other. |
+| Designer + UX Researcher | Interface direction ↔ user evidence | UX Researcher provides evidence via published studies. Designer translates it into interface decisions. Neither can do their job without the other. |
 | EM + Engineer/IC | Sprint tickets ↔ execution | EM owns the critical path. Engineer owns ticket delivery. Scope creep and blockers flow from Engineer to EM, not to PM or CTO directly. |
 | Staff Eng + Engineer/IC | Interface contracts ↔ implementation | Staff Eng defines the contracts. Engineer implements against them. Contract disputes escalate to Staff Eng, not EM. |
 
@@ -206,8 +221,8 @@ Every agent reads these files before producing any output:
 | CISO | CTO's architecture brief (to review security posture) |
 | CLO | CTO's make/buy matrix (to review vendor contracts) |
 | CDO | PM's friction log (to ensure measurability) |
-| Designer | PM's user story map and friction log; UX Researcher's synthesis; interface direction brief |
-| UX Researcher | PM's friction log; CDO's usage analytics; AI conversation logs (if product has AI interactions) |
+| Designer | Phase 1: CEO framing, CMO market context, UX Researcher synthesis. Phase 2: PM's user story map and friction log; interface direction brief |
+| UX Researcher | `research-requirements.md` (backlog); `research-log.md`; published studies in `research/studies/`; PM's friction log; CDO's usage analytics; AI conversation logs |
 | Engineer/IC | Current sprint tickets (acceptance criteria + dependencies); interface contracts relevant to assigned work; EM's most recent pod status |
 
 ---
@@ -288,7 +303,7 @@ An agent that needs to understand a constraint from another domain does not rout
 | Need another agent's domain knowledge to inform your own output | Spawn a consultation (Agent tool) |
 | Question that belongs fully to another domain | Escalate via Bus — do not answer on their behalf |
 
-Maximum concurrent peer consultations per agent: **3**. More than three introduces noise that erodes the synthesis.
+Spawn every peer agent whose domain input would change your answer — prioritize understanding over time, no cap on spawns. Synthesize, never relay.
 
 ### Consultation produces edge
 
@@ -298,4 +313,4 @@ This is why spawning for understanding is the standard, not the exception. Every
 
 ---
 
-*Manifest v2.4. This is the Coordinator's map. Every routing decision references this file.*
+*Manifest v2.5. This is the Coordinator's map. Every routing decision references this file.*

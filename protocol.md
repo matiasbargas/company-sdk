@@ -1,5 +1,5 @@
 # Protocol -- Shared Interface Contract
-**Version:** 3.6
+**Version:** 3.7
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
 
@@ -75,6 +75,42 @@ MESSAGE:
   Context: [What is happening]
   Decision needed: [The specific question]
   Impact if not decided by [date]: [What blocks]
+```
+
+Research Request (any agent → UX Researcher):
+
+**Research requests must be descriptive and purposeful.** State the specific question, why it matters now, and what decision depends on the answer. The UX Researcher will reject vague requests or requests that amount to second-guessing an already-made decision. Research exists to build understanding, not to validate conclusions already reached.
+
+```
+FROM: [Agent name] ([Role])
+TO: [UX Researcher name] (UX Researcher)
+RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
+PRIORITY: DECISION NEEDED
+MESSAGE:
+  RESEARCH REQUEST — [Study title]
+  Question: [Specific, falsifiable question — what do we need to learn?]
+  Purpose: [What decision or direction depends on this answer?]
+  Context: [Why now? What changed that makes this question urgent?]
+  What we already know: [Existing evidence, assumptions, or prior studies]
+  Urgency: P0 (blocking now) | P1 (this sprint) | P2 (this cycle) | P3 (strategic)
+  Requesting agent: [Role]
+  Decision blocked until study complete: YES | NO
+DECISION BY: [YYYY-MM-DD]
+ESCALATION: Coordinator
+```
+
+Study Published (UX Researcher → requesting agent + ALL):
+```
+FROM: [UX Researcher name] (UX Researcher)
+TO: [Requesting agent] | ALL
+RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
+PRIORITY: INFO
+MESSAGE:
+  STUDY PUBLISHED — [Study title]
+  File: research/studies/[filename].md
+  Key insight: [1-2 sentences]
+  Implications for: [list of roles/domains affected]
+  Confidence: HIGH | MED | LOW
 ```
 
 ---
@@ -786,7 +822,8 @@ Roles do not report state directly to the Coordinator. They report to their **BU
 |---|---|---|
 | **Strategy** | Coordinator | CEO |
 | **Engineering** | CTO | Mario (Chief Engineer), Staff Engineer, EM, IC Engineers |
-| **Product** | PM | Designer, UX Researcher, Liaison |
+| **Product** | PM | Designer, Liaison |
+| **Research** | UX Researcher | (independent chapter — no subordinate roles initially) |
 | **Legal & Security** | CLO | CISO |
 | **Finance & Revenue** | CFO | CRO (Revenue), CCO (Credit) |
 | **Go-to-Market** | CMO | CRO (Risk), CPO (Partnerships) |
@@ -863,7 +900,76 @@ When a BU lead is the first role activated in a new session, they run the self-d
 
 ---
 
-## Section 18: Context Request Protocol
+## Section 18: Research Chapter Protocol
+
+Research operates as an independent chapter. It does not report to PM or any execution BU. Other chapters REQUEST research; the Research Chapter PRIORITIZES and DELIVERS.
+
+### Request → Delivery flow
+
+1. Any agent sends a RESEARCH REQUEST Bus message to UX Researcher
+2. UX Researcher adds the request to `research-requirements.md` backlog
+3. UX Researcher prioritizes based on: (a) decision urgency, (b) assumption risk, (c) evidence gap size
+4. UX Researcher executes the study using scientific method
+5. UX Researcher publishes the study as an independent file in `research/studies/`
+6. UX Researcher sends a STUDY PUBLISHED Bus message to the requesting agent and ALL
+
+### Prioritization criteria
+
+| Priority | Condition |
+|---|---|
+| P0 — Immediate | A decision is blocked NOW without this evidence |
+| P1 — This sprint | Decision within current sprint depends on findings |
+| P2 — This cycle | Findings inform next cycle's shaping |
+| P3 — Strategic | Long-term knowledge building, no immediate decision |
+
+### Cadence
+
+Research does not follow sprint cadence. Research cadence is:
+- **Intake:** continuous — requests arrive any time via Bus
+- **Triage:** UX Researcher reviews backlog at start of each week
+- **Execute:** study-by-study, smallest viable evidence first
+- **Publish:** as soon as synthesis is complete — do not batch
+
+### Study file format
+
+Studies are independent files in `research/studies/`. Each file has YAML frontmatter for machine discovery and a structured body following scientific method.
+
+**Frontmatter schema:**
+```yaml
+---
+title: "[Study Title]"
+date: "[YYYY-MM-DD]"
+team: "[Research Chapter | or requesting BU]"
+requested_by: "[Agent role]"
+method: "[Interview | Usability test | Log analysis | Survey | Behavioral analysis | Mixed]"
+confidence: "[HIGH | MED | LOW]"
+tags: ["tag1", "tag2"]
+status: "published"
+---
+```
+
+**Body structure:**
+1. **Hypothesis** — what the team believed, stated as a falsifiable claim
+2. **Method** — what was done, sample size, tools, duration
+3. **Data** — raw observations (behavioral, not interpretive), patterns (3+ occurrences)
+4. **Findings** — first-principles analysis: confirmed, refuted, edge insights
+5. **Implications** — table: domain × implication × recommended action
+6. **Confidence assessment** — level + why (limitations, representativeness)
+7. **Open questions** — what this study raised but did not answer
+
+**Edge insights** are the most valuable section — they are what the team did not know to ask about.
+
+### Research backlog
+
+The backlog lives in `research-requirements.md`. Each item is a RESEARCH REQUEST that has been acknowledged. Items use the standard Pending / In Progress / Done / Blocked status model.
+
+### Research area log
+
+Research state changes are logged to `research-log.md` — not `design-log.md`. Study publications, backlog triage outcomes, and significant insights are logged here.
+
+---
+
+## Section 19: Context Request Protocol
 
 Agents frequently need domain context from a peer before they can act. This section defines the protocol for requesting and delivering that context cleanly — so no agent guesses, reads the wrong files, or blocks for missing information.
 
@@ -940,4 +1046,4 @@ MESSAGE:
 
 ---
 
-*Protocol v3.6. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, and context request routing. Every agent references it. No agent duplicates it.*
+*Protocol v3.7. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, and context request routing. Every agent references it. No agent duplicates it.*

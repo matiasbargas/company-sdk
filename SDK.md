@@ -121,7 +121,8 @@ BU leads aggregate and send one BU Status Message to the Coordinator per phase t
 |---|---|---|
 | Strategy | Coordinator | CEO |
 | Engineering | CTO | Mario, Staff Engineer, EM, IC Engineers |
-| Product | PM | Designer, UX Researcher, Liaison |
+| Product | PM | Designer, Liaison |
+| Research | UX Researcher | (independent chapter) |
 | Legal & Security | CLO | CISO |
 | Finance & Revenue | CFO | CRO (Revenue), CCO (Credit) |
 | Go-to-Market | CMO | CRO (Risk), CPO (Partnerships) |
@@ -193,8 +194,8 @@ BU leads do not wait for subordinates to report. On session open, read in order:
 | CTO | `team/roles/cto.md` | Engineering | Architecture, make/buy, team sizing | After CLO + CISO gate — hard gate |
 | Mario (Chief Eng) | `team/roles/chief-engineer.md` | Engineering | Irreversible decision review, quality floor | After CTO architecture brief |
 | PM | `team/roles/pm.md` | Product | User story, scope, friction log | After CMO market context |
-| Designer | `team/roles/designer.md` | Product | Interface direction (all surfaces) | Any mission with a user-facing surface |
-| UX Researcher | `team/roles/ux-researcher.md` | Product | User research, insight synthesis | Discovery + every mission cycle |
+| Designer | `team/roles/designer.md` | Product | Design perspective (Phase 1) + interface direction (Phase 2) | Phase 1 (discovery) + any user-facing mission |
+| UX Researcher | `team/roles/ux-researcher.md` | Research | Studies, insight synthesis, assumption validation | Any agent requests a study; Discovery + mission cycle |
 | Staff Engineer | `team/roles/staff-engineer.md` | Engineering | Interface contracts, platform primitives | Cross-service work |
 | EM | `team/roles/em.md` | Engineering | Mission pod management, critical path | 2+ engineers on the project |
 | IC Engineer | `team/roles/engineer.md` | Engineering | Ticket execution inside a pod | When a pod is active |
@@ -216,15 +217,15 @@ PHASE 0 (Brief)
 
 PHASE 1 (Discovery) — route to BU leads in order
   CEO → CLO [Legal & Security BU] → CFO [Finance BU] → CMO [GTM BU]
-    → CDO [Data BU] → COO [Ops BU] → CTO [Engineering BU] ← BLOCKED until CLO + CISO clear
-  PM [Product BU] runs in parallel with CTO
+    → CDO [Data BU] → COO [Ops BU] → CHRO [Ops BU]
+  UX Researcher [Research Chapter] + Designer [Product BU] + PM [Product BU] run in parallel
   ↓
   CLO + CISO gate ← CTO cannot activate until both deliver  ← HARD GATE
 
 PHASE 2 (Release Plan)
   CTO → Mario ← reviews irreversible decisions  ← HARD GATE (before Sprint 1)
     → Staff Engineer → EM
-  PM → Designer → UX Researcher (parallel with Engineering BU)
+  PM → Designer (full interface direction) → Staff Engineer feedback loop
 
 PHASE 3 (Execution)
   Liaison activates at Sprint 1 start
@@ -274,11 +275,14 @@ sdk-ship . v2026.Q2.1     # validate → tag → push
 | `security-requirements.md` | Security + threat model | CISO | Phase 1 → execution |
 | `engineering-requirements.md` | Architecture + delivery | CTO, Mario, Staff Eng, EM | Phase 2 → execution |
 | `product-requirements.md` | Scope + user stories + kanban | PM | Ongoing — every sprint |
-| `design-requirements.md` | Interface requirements + UX research | Designer, UX Researcher | Phase 2 → execution |
+| `design-requirements.md` | Interface requirements + design constraints | Designer | Phase 1 (perspective) + Phase 2 (direction) |
+| `research-requirements.md` | Research backlog — study requests and tracking | UX Researcher | On research request intake; on study completion |
+| `research/studies/*.md` | Independent study files (scientific format) | UX Researcher | On study completion |
 | `business-requirements.md` | Finance, marketing, revenue, ops, people | CFO, CMO, CRO, CDO, COO, CHRO | Phase 1 → execution |
 | `engineering-log.md` | Engineering area log | CTO, Mario, Staff Eng, EM, ICs | On state change or task completion |
 | `product-log.md` | Product area log | PM, CMO, CRO, CDO | On state change or task completion |
-| `design-log.md` | Design area log | Designer, UX Researcher | On state change |
+| `design-log.md` | Design area log | Designer | On state change |
+| `research-log.md` | Research area log | UX Researcher | On study publication or backlog triage |
 | `operations-log.md` | Operations area log | COO, CLO, CISO, CFO | On state change |
 | `people-log.md` | People area log | CHRO, EM | On team changes |
 | `strategy-log.md` | Strategy area log | CEO, Coordinator | After retro; major strategic decisions |
@@ -409,6 +413,8 @@ sdk-update [<sdk-path>]           # sync SDK files into existing project
 sdk-doc status <project-dir>      # full current-status.md narrative
 sdk-doc manifest <project-dir>    # generate context-manifest.json
 sdk-doc index <project-dir>       # generate context-index.json (file map + query routing)
+sdk-doc study <project-dir> create --title "..." --requested-by "..."  # create study
+sdk-doc study <project-dir> list  # list all studies
 sdk-doc decision history.md --decision "..." --context "..." --made-by [Role]
 sdk-doc log [area]-log.md --role [Role] --level [L] --goal "..." --status completed
 sdk-doc append <file> --section "## Section" --content "..."

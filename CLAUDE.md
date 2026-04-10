@@ -51,10 +51,10 @@ Agents prioritize **understanding over time**. Spawn every peer whose domain inp
 |---|---|
 | **Greg (CEO)** | "Hey Greg, [brief]" — starts Discovery, or `/ask Greg` |
 | **Coordinator** | Routes everything. Activated by CEO after brief. |
-| **PM** | Mission shaping. Activated during Phase 2. |
+| **PM** | Mission shaping. Activated Phase 1 (parallel) + Phase 2. |
 | **CTO** | Architecture. Activated after CLO + CISO gate. Or `/ask CTO` |
-| **Designer** | Interface direction. Activated in Phase 2 or when a pod forms. |
-| **UX Researcher** | User insights. Activated in Phase 1 alongside PM. |
+| **Designer** | Design perspective (Phase 1) + interface direction (Phase 2). |
+| **UX Researcher** | Independent Research Chapter. Receives study requests from any agent. |
 | **Mario** | Chief Engineer. Reviews irreversible decisions. |
 | **EM** | Pod management. Activated when 2+ engineers are on the project. |
 
@@ -85,6 +85,8 @@ sdk-next <project-dir>                 # just the next activation phrase
 sdk-doc status <project-dir>           # full current-status.md narrative
 sdk-doc manifest <project-dir>         # generate context-manifest.json
 sdk-doc index <project-dir>            # generate context-index.json (file map + query routing)
+sdk-doc study <project-dir> create --title "..." --requested-by "..."  # create study file
+sdk-doc study <project-dir> list       # list all studies
 sdk-doc decision history.md --decision "..." --context "..." --made-by [Role]
 sdk-doc log <area-log> --role X --level Y --goal "..." --status completed
 sdk-doc append <file> --section "## Section" --content "..."
