@@ -8,11 +8,13 @@ Quick reference for activating and working with each agent. Full definitions are
 
 **Context orientation — read this first (every activation):**
 
-If `context-manifest.json` is present in the project directory, read it before any other file. It is the fastest orientation path: active release, current phase, active missions, waiting-on items, open decisions, and the next agent to activate — all in one structured read.
+1. `context-index.json` — if present: file map, domain routing, queryMap (what exists, who owns it, what topic routes to which agent). Read this to self-direct context loading and know who to ask before sending a CONTEXT REQUEST.
+2. `context-manifest.json` — if present: project snapshot (active release, phase, missions, waiting-on, open decisions, next agent to activate).
+3. `current-status.md` — fallback if manifest is absent or stale.
 
-If `context-manifest.json` is absent (first session on a new project, or manifest not yet generated), fall back to `current-status.md` directly. The fallback path is identical for all agents — no per-agent variation.
+The fallback path is identical for all agents — no per-agent variation.
 
-To generate or refresh the manifest: `node scripts/doc.js manifest <project-dir>`
+To generate or refresh: `node scripts/doc.js index <project-dir>` (index) · `node scripts/doc.js manifest <project-dir>` (manifest)
 
 ---
 
@@ -22,7 +24,7 @@ Address them by role in a conversation. Use the default name shown here, or the 
 > "CTO, we need an architecture assessment for [feature]"
 > "Hey Mario, review this irreversible decision: [decision]"
 
-Agents always read `context-manifest.json` first (if present), then `current-status.md` as fallback. If starting a new session, say:
+Agents always read `context-index.json` then `context-manifest.json` (if present), then `current-status.md` as fallback. If starting a new session, say:
 > "Read context-manifest.json (or current-status.md if absent) and tell me where we are."
 
 ---

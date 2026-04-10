@@ -7,12 +7,13 @@
 ## LOAD ORDER
 
 ```
-1. THIS FILE (SDK.md) — full operating context
-2. context-manifest.json — if present: project state (release, phase, missions, next agent)
-3. current-status.md — if manifest absent: session continuity
-4. team/roles/[your-role].md — your persona, operating loop, skill level
-5. [domain]-requirements.md — your domain's current state
-6. history.md — decisions made and why
+1. THIS FILE (SDK.md)       — full operating context
+2. context-index.json       — file map: what exists, who owns it, what it answers, who to ask
+3. context-manifest.json    — project snapshot: release, phase, missions, next agent
+4. current-status.md        — session continuity (fallback if manifest absent or stale)
+5. team/roles/[your-role].md — your persona, capability block, operating loop
+6. [domain]-requirements.md — your domain's current state
+7. history.md               — decisions made and why
 ```
 
 If none of the project state files exist yet → jump to HUMAN SETUP at the bottom of this file.
@@ -44,12 +45,13 @@ When laws conflict: Law 1 wins. Always.
 ## SESSION START
 
 **First agent activated in a session:**
-1. Read `context-manifest.json` if it exists → tells you release, phase, missions, next agent
-2. If absent → read `current-status.md` → tells you exactly where the team is
-3. If you are a BU lead → run self-discovery scan (see BU PROTOCOL below) before any Bus message
-4. Read your role file: `team/roles/[role].md`
-5. Read your requirements file: `[domain]-requirements.md`
-6. Produce output only after steps 1-5 are complete
+1. Read `context-index.json` if it exists → file map: what exists, who owns it, what it answers, who to ask
+2. Read `context-manifest.json` if it exists → project snapshot: release, phase, missions, next agent
+3. If manifest absent → read `current-status.md` → tells you exactly where the team is
+4. If you are a BU lead → run self-discovery scan (see BU PROTOCOL below) before any Bus message
+5. Read your role file: `team/roles/[role].md`
+6. Read your requirements file: `[domain]-requirements.md`
+7. Produce output only after steps 1-6 are complete
 
 **Resuming a running project:**
 ```bash
@@ -86,6 +88,7 @@ Priority rules:
 - `INFO` — sharing state, no response required
 - `DECISION NEEDED` — work blocks in N days; must state the decision as a question with options
 - `BLOCKER` — work stopped now; escalate within 4h if unresolved
+- `CONTEXT REQUEST` — need domain context from a peer before acting (see Section 18)
 
 ### Escalation ladder
 
@@ -264,6 +267,7 @@ sdk-ship . v2026.Q2.1     # validate → tag → push
 | `history.md` | Permanent decision record | All agents (domain decisions) + Coordinator (release close) | Every consequential decision; every release close |
 | `project-map.md` | Release artifact — CEO validates before seal | CEO | CEO at phase 4 |
 | `idea.md` | Raw brief → structured brief for Greg | Owner | Day 0 |
+| `context-index.json` | File map — domain routing, query map, agent capabilities | Generated (`sdk-doc index .`) | Run at project init and on structure change |
 | `context-manifest.json` | Machine-readable project state | Generated (`sdk-doc manifest .`) | Run at session open if stale |
 | `general-requirements.md` | Cross-domain aggregate | Coordinator | Every sprint |
 | `discovery-requirements.md` | Legal + compliance requirements | CLO | Phase 1 → execution |
@@ -342,6 +346,43 @@ Status: ACTIVE | COMPLETED | BLOCKED | CANCELLED
 
 ---
 
+## CONTEXT REQUEST FORMAT (Section 18)
+
+When you need domain context from a peer before acting:
+
+```
+FROM: [Role]
+TO: [Role]                   ← look up in context-index.json queryMap
+RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
+PRIORITY: CONTEXT REQUEST
+MESSAGE:
+  CONTEXT REQUEST — [topic]
+  Working on: [task in one sentence]
+  Need: [specific question or constraint]
+  Files read so far: [list or "none yet"]
+  Urgency: SYNC | ASYNC by [YYYY-MM-DD]
+```
+
+Response (PRIORITY: INFO):
+
+```
+FROM: [Role]
+TO: [Requesting Role]
+RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
+PRIORITY: INFO
+MESSAGE:
+  CONTEXT RESPONSE — [topic]
+  Read first: [file and section, in order]
+  Key constraints: [1-2 bullets]
+  Decision on record: [history.md reference or "none"]
+  My take: [1-2 sentences]
+  Escalate to: [agent if deeper input needed, or "none"]
+```
+
+**How to route:** read `context-index.json` `queryMap`; the `consult` field names the agent to address. Full spec: `protocol.md` Section 18.
+
+---
+
 ## DONE DEFINITION (all roles)
 
 A role's output is done when ALL of the following are true:
@@ -367,6 +408,7 @@ sdk-update [<sdk-path>]           # sync SDK files into existing project
 # Documentation
 sdk-doc status <project-dir>      # full current-status.md narrative
 sdk-doc manifest <project-dir>    # generate context-manifest.json
+sdk-doc index <project-dir>       # generate context-index.json (file map + query routing)
 sdk-doc decision history.md --decision "..." --context "..." --made-by [Role]
 sdk-doc log [area]-log.md --role [Role] --level [L] --goal "..." --status completed
 sdk-doc append <file> --section "## Section" --content "..."

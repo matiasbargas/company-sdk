@@ -15,6 +15,7 @@
  *   node scripts/doc.js spawn <project-dir> --name <name> --role <role> --level <level> --activated-by <activator> --profile <text> --how <text> --fun-fact <text>
  *   node scripts/doc.js dissolve <project-dir> --name <name> --dissolved-by <dissolvedBy> --reason <text>
  *   node scripts/doc.js manifest <project-dir>
+ *   node scripts/doc.js index   <project-dir>
  *
  * Examples:
  *   node scripts/doc.js append project.md --section "## Sprint 1" --content "Day 1: Auth complete"
@@ -38,8 +39,8 @@ const dryRun = args.includes('--dry-run');
 const command = args[0];
 const filePath = args[1];
 
-// spawn, dissolve, and manifest take a project-dir as second arg — no file-path requirement for other checks
-const spawnDissolveCommands = ['spawn', 'dissolve', 'manifest'];
+// spawn, dissolve, manifest, and index take a project-dir as second arg — no file-path requirement for other checks
+const spawnDissolveCommands = ['spawn', 'dissolve', 'manifest', 'index'];
 
 if (!command || (!filePath && !spawnDissolveCommands.includes(command)) || command === '--help' || command === '-h') {
   printHelp();
@@ -67,6 +68,7 @@ Commands:
   pod-update  <current-status-file> --mission <name>        Update a mission row in current-status.md
                      --status <status> --next <action>
   manifest    <project-dir>                                 Generate context-manifest.json from current-status.md
+  index       <project-dir>                                 Generate context-index.json — file map, domain routing, query map
   list        <file>                                        List all headings in the file
   spawn       <project-dir> --name <name> --role <role>     Add an agent to team.md Active Agents table,
                      --level <level>                         append onboarding log entry, and increment
@@ -770,6 +772,193 @@ function cmdManifest() {
   console.log(manifestFile);
 }
 
+// ─── Index: context-index.json ───────────────────────────────────────────────
+
+/**
+ * cmdIndex — Generate context-index.json for a project directory.
+ *
+ * Produces a machine-readable index of every project file (path, domain,
+ * owner, purpose, load_when, staleness), a domain routing table (who leads
+ * each domain and which files they own), and a queryMap (topic → files + agent
+ * to consult). Agents read this file second (after SDK.md) to self-direct their
+ * context loading and route CONTEXT REQUEST Bus messages correctly.
+ *
+ * Deterministic: uses file mtime, not current clock. Byte-identical output for
+ * identical inputs. Increments indexVersion on each generation.
+ *
+ * Schema: schemaVersion "1.0" — consumers that encounter an unknown version
+ * must fail loudly, not degrade silently.
+ */
+function cmdIndex() {
+  const projectDir = filePath ? path.resolve(filePath) : process.cwd();
+  const indexFile  = path.join(projectDir, 'context-index.json');
+
+  // Read existing index to increment version
+  let previousVersion = 0;
+  if (fs.existsSync(indexFile)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
+      if (typeof existing.indexVersion === 'number') previousVersion = existing.indexVersion;
+    } catch (_) {}
+  }
+
+  // Release ID — prefer .sdkrc, fall back to current-status.md
+  let release = 'unknown';
+  const sdkrcPath = path.join(projectDir, '.sdkrc');
+  if (fs.existsSync(sdkrcPath)) {
+    try {
+      const sdkrc = JSON.parse(fs.readFileSync(sdkrcPath, 'utf8'));
+      if (sdkrc.release) release = sdkrc.release;
+    } catch (_) {}
+  }
+  if (release === 'unknown') {
+    const statusPath = path.join(projectDir, 'current-status.md');
+    if (fs.existsSync(statusPath)) {
+      const m = fs.readFileSync(statusPath, 'utf8').match(/\*\*Release:\*\*\s*(.+)/);
+      if (m) release = m[1].trim();
+    }
+  }
+
+  // Canonical reference time for determinism — use oldest available file mtime
+  const refMtime = (() => {
+    const statusPath = path.join(projectDir, 'current-status.md');
+    if (fs.existsSync(statusPath)) return fs.statSync(statusPath).mtime;
+    return new Date();
+  })();
+
+  // ── File catalog ──────────────────────────────────────────────────────────
+  // Each entry: path (relative to project dir), domain, owner (agent role),
+  // purpose (one line), load_when (trigger list), ageHours, stale
+  const CATALOG = [
+    // Core session files
+    { path: 'current-status.md',           domain: 'strategy',     owner: 'Coordinator',    purpose: 'Session continuity — read every session, always first',                           load_when: ['session-start'] },
+    { path: 'project.md',                  domain: 'strategy',     owner: 'Coordinator',    purpose: 'Full conversation record and release plan',                                        load_when: ['session-start', 'full-context'] },
+    { path: 'history.md',                  domain: 'strategy',     owner: 'all',            purpose: 'Permanent decision record — all consequential decisions with rationale',            load_when: ['decision-review', 'pre-tag', 'irreversible-decision'] },
+    { path: 'project-map.md',              domain: 'strategy',     owner: 'CEO',            purpose: 'CEO-validated release artifact — sealed at project completion',                    load_when: ['release-close', 'ceo-gate'] },
+    { path: 'idea.md',                     domain: 'strategy',     owner: 'CEO',            purpose: 'Day 0 brief — raw idea shaped into the CEO activation message',                   load_when: ['discovery', 'first-session'] },
+    { path: 'strategy-log.md',             domain: 'strategy',     owner: 'Coordinator',    purpose: 'CEO and Coordinator strategy decisions and retrospectives',                         load_when: ['strategy-review', 'retro'] },
+    { path: 'team.md',                     domain: 'people',       owner: 'Coordinator',    purpose: 'Active agents roster, metrics, dissolved agents history, onboarding log',          load_when: ['session-start', 'team-review', 'onboarding'] },
+    { path: '.sdkrc',                      domain: 'strategy',     owner: 'Coordinator',    purpose: 'SDK configuration — release ID, squad type, project metadata',                     load_when: ['session-start', 'config'] },
+    // Requirements files
+    { path: 'general-requirements.md',     domain: 'strategy',     owner: 'Coordinator',    purpose: 'Cross-domain requirements aggregate — Coordinator-maintained',                     load_when: ['full-context', 'session-start'] },
+    { path: 'engineering-requirements.md', domain: 'engineering',  owner: 'CTO',            purpose: 'Architecture decisions, make/buy/partner, interface contracts, delivery state',    load_when: ['architecture-review', 'sprint-planning', 'technical-decision', 'build-vs-buy'] },
+    { path: 'product-requirements.md',     domain: 'product',      owner: 'PM',             purpose: 'Product scope, user stories, friction log, mission kanban',                       load_when: ['mission-shaping', 'scope-review', 'sprint-planning', 'user-story'] },
+    { path: 'discovery-requirements.md',   domain: 'legal',        owner: 'CLO',            purpose: 'CLO + CISO regulatory map and legal blockers — hard gate for CTO activation',     load_when: ['legal-review', 'before-cto-activation', 'compliance-check', 'regulatory'] },
+    { path: 'security-requirements.md',    domain: 'security',     owner: 'CISO',           purpose: 'CISO threat model, auth design constraints, security requirements',                load_when: ['security-review', 'before-cto-activation', 'threat-model', 'auth-design'] },
+    { path: 'design-requirements.md',      domain: 'design',       owner: 'Designer',       purpose: 'Interface requirements, design direction, SDD artifacts',                          load_when: ['interface-design', 'sdd-step2', 'ux-review'] },
+    { path: 'business-requirements.md',    domain: 'business',     owner: 'CFO',            purpose: 'Finance, marketing, revenue, data, operations, and people requirements',           load_when: ['budget-review', 'gtm-planning', 'vendor-review', 'unit-economics'] },
+    // Area logs
+    { path: 'engineering-log.md',          domain: 'engineering',  owner: 'CTO',            purpose: 'CTO, Mario, Staff Eng, EM, IC engineers — state changes and decisions',           load_when: ['engineering-domain', 'architecture-review'] },
+    { path: 'product-log.md',              domain: 'product',      owner: 'PM',             purpose: 'PM, CMO, CRO, CDO — product and go-to-market state changes',                      load_when: ['product-domain', 'mission-shaping'] },
+    { path: 'design-log.md',               domain: 'design',       owner: 'Designer',       purpose: 'Designer and UX Researcher — design decisions and research findings',              load_when: ['design-domain', 'interface-design'] },
+    { path: 'operations-log.md',           domain: 'business',     owner: 'COO',            purpose: 'COO, CLO, CISO, CFO — operations and compliance state changes',                   load_when: ['operations-domain', 'vendor-review'] },
+    { path: 'people-log.md',               domain: 'people',       owner: 'CHRO',           purpose: 'CHRO and EM — team changes, pod formation, onboarding entries',                   load_when: ['people-domain', 'pod-management', 'hiring'] },
+    // Generated files
+    { path: 'context-manifest.json',       domain: 'strategy',     owner: 'Coordinator',    purpose: 'Generated project snapshot — current phase, missions, next agent to activate',    load_when: ['session-start'] },
+    { path: 'context-index.json',          domain: 'strategy',     owner: 'Coordinator',    purpose: 'Generated file map — domain routing, query map, agent capabilities',               load_when: ['session-start'] },
+  ];
+
+  // Compute staleness for each file
+  const now = Date.now();
+  const files = CATALOG.map(entry => {
+    const fullPath = path.join(projectDir, entry.path);
+    const exists   = fs.existsSync(fullPath);
+    let ageHours   = null;
+    let stale      = null;
+    if (exists) {
+      const mtime = fs.statSync(fullPath).mtime;
+      ageHours = Math.round((now - mtime.getTime()) / 1000 / 60 / 60);
+      stale    = ageHours > 48;
+    }
+    return { ...entry, exists, ageHours, stale };
+  }).filter(f => f.exists); // only include files that exist in this project
+
+  // ── Domain routing table ──────────────────────────────────────────────────
+  const domains = {
+    strategy:    { lead: 'Coordinator', consult: 'CEO',        files: ['current-status.md', 'project.md', 'history.md', 'project-map.md', 'strategy-log.md', 'general-requirements.md'] },
+    engineering: { lead: 'CTO',         consult: 'CTO',        files: ['engineering-requirements.md', 'engineering-log.md'] },
+    legal:       { lead: 'CLO',         consult: 'CLO',        files: ['discovery-requirements.md'] },
+    security:    { lead: 'CISO',        consult: 'CISO',       files: ['security-requirements.md'] },
+    product:     { lead: 'PM',          consult: 'PM',         files: ['product-requirements.md', 'product-log.md'] },
+    design:      { lead: 'Designer',    consult: 'Designer',   files: ['design-requirements.md', 'design-log.md'] },
+    business:    { lead: 'CFO',         consult: 'CFO',        files: ['business-requirements.md', 'operations-log.md'] },
+    people:      { lead: 'CHRO',        consult: 'CHRO',       files: ['people-log.md', 'team.md'] },
+  };
+
+  // ── Query map — topic → files to read + agent to consult ─────────────────
+  // Agents use this to self-direct context loading and route CONTEXT REQUEST messages.
+  // Consult the domain lead first; they will route internally to sub-roles if needed.
+  const queryMap = {
+    'architecture':         { read: ['engineering-requirements.md'],                           consult: 'CTO' },
+    'technical-decision':   { read: ['engineering-requirements.md', 'history.md'],             consult: 'CTO' },
+    'build-vs-buy':         { read: ['engineering-requirements.md', 'business-requirements.md'], consult: 'CTO' },
+    'platform-risk':        { read: ['engineering-requirements.md', 'security-requirements.md'], consult: 'CTO' },
+    'irreversible-decision':{ read: ['engineering-requirements.md', 'history.md'],             consult: 'Mario' },
+    'quality-standard':     { read: ['engineering-requirements.md'],                           consult: 'Mario' },
+    'interface-contract':   { read: ['engineering-requirements.md'],                           consult: 'Staff Engineer' },
+    'sprint-state':         { read: ['engineering-requirements.md', 'product-requirements.md'], consult: 'EM' },
+    'pod-composition':      { read: ['engineering-requirements.md', 'people-log.md'],          consult: 'EM' },
+    'legal-constraints':    { read: ['discovery-requirements.md'],                             consult: 'CLO' },
+    'compliance':           { read: ['discovery-requirements.md', 'security-requirements.md'], consult: 'CLO' },
+    'regulatory':           { read: ['discovery-requirements.md'],                             consult: 'CLO' },
+    'contracts':            { read: ['discovery-requirements.md', 'history.md'],               consult: 'CLO' },
+    'security':             { read: ['security-requirements.md'],                              consult: 'CISO' },
+    'threat-model':         { read: ['security-requirements.md'],                              consult: 'CISO' },
+    'auth-design':          { read: ['security-requirements.md', 'engineering-requirements.md'], consult: 'CISO' },
+    'data-protection':      { read: ['security-requirements.md', 'discovery-requirements.md'], consult: 'CISO' },
+    'product-scope':        { read: ['product-requirements.md'],                               consult: 'PM' },
+    'user-story':           { read: ['product-requirements.md', 'design-requirements.md'],    consult: 'PM' },
+    'mission-kanban':       { read: ['product-requirements.md', 'product-log.md'],            consult: 'PM' },
+    'friction-log':         { read: ['product-requirements.md'],                               consult: 'PM' },
+    'interface-design':     { read: ['design-requirements.md'],                                consult: 'Designer' },
+    'ux-patterns':          { read: ['design-requirements.md'],                                consult: 'Designer' },
+    'user-research':        { read: ['design-requirements.md', 'design-log.md'],              consult: 'UX Researcher' },
+    'assumption-validation':{ read: ['design-requirements.md', 'product-requirements.md'],    consult: 'UX Researcher' },
+    'budget':               { read: ['business-requirements.md'],                              consult: 'CFO' },
+    'unit-economics':       { read: ['business-requirements.md'],                              consult: 'CFO' },
+    'runway':               { read: ['business-requirements.md'],                              consult: 'CFO' },
+    'revenue-model':        { read: ['business-requirements.md'],                              consult: 'CRO' },
+    'pricing':              { read: ['business-requirements.md'],                              consult: 'CRO' },
+    'gtm':                  { read: ['business-requirements.md'],                              consult: 'CMO' },
+    'positioning':          { read: ['business-requirements.md'],                              consult: 'CMO' },
+    'vendor':               { read: ['business-requirements.md', 'operations-log.md'],        consult: 'COO' },
+    'operations-runbook':   { read: ['business-requirements.md', 'operations-log.md'],        consult: 'COO' },
+    'data-governance':      { read: ['business-requirements.md', 'engineering-requirements.md'], consult: 'CDO' },
+    'instrumentation':      { read: ['business-requirements.md', 'product-requirements.md'],  consult: 'CDO' },
+    'ai-strategy':          { read: ['engineering-requirements.md'],                           consult: 'CAIO' },
+    'model-evaluation':     { read: ['engineering-requirements.md'],                           consult: 'CAIO' },
+    'analytics':            { read: ['business-requirements.md', 'product-requirements.md'],  consult: 'CAO' },
+    'experimentation':      { read: ['business-requirements.md', 'product-requirements.md'],  consult: 'CAO' },
+    'hiring':               { read: ['people-log.md'],                                         consult: 'CHRO' },
+    'team-composition':     { read: ['team.md', 'people-log.md'],                             consult: 'CHRO' },
+    'partnerships':         { read: ['business-requirements.md'],                              consult: 'CPO Partnerships' },
+    'ecosystem':            { read: ['business-requirements.md'],                              consult: 'CPO Partnerships' },
+    'enterprise-risk':      { read: ['business-requirements.md', 'discovery-requirements.md'], consult: 'CRO Risk' },
+    'credit-risk':          { read: ['business-requirements.md'],                              consult: 'CCO Credit' },
+    'customer-success':     { read: ['business-requirements.md', 'product-requirements.md'],  consult: 'CCO Customer' },
+    'protocol-design':      { read: ['engineering-requirements.md'],                           consult: 'CPO Protocol' },
+    'decisions':            { read: ['history.md'],                                            consult: 'Coordinator' },
+    'current-state':        { read: ['current-status.md'],                                     consult: 'Coordinator' },
+    'release-plan':         { read: ['current-status.md', 'history.md'],                      consult: 'Coordinator' },
+    'strategy':             { read: ['project.md', 'history.md'],                             consult: 'CEO' },
+    'vision':               { read: ['project.md', 'idea.md'],                                consult: 'CEO' },
+  };
+
+  const index = {
+    schemaVersion: '1.0',
+    indexVersion:  previousVersion + 1,
+    generatedAt:   refMtime.toISOString(),
+    release,
+    files,
+    domains,
+    queryMap,
+  };
+
+  writeFile(indexFile, JSON.stringify(index, null, 2) + '\n');
+  console.log(`✓ context-index.json written (v${index.indexVersion}, ${files.length} files indexed)`);
+  console.log(indexFile);
+}
+
 // ─── Dispatch ────────────────────────────────────────────────────────────────
 
 switch (command) {
@@ -785,6 +974,7 @@ switch (command) {
   case 'spawn': cmdSpawn(); break;
   case 'dissolve': cmdDissolve(); break;
   case 'manifest': cmdManifest(); break;
+  case 'index':    cmdIndex();    break;
   default:
     console.error(`Unknown command: "${command}"`);
     printHelp();

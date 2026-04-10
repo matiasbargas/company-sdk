@@ -43,7 +43,7 @@ Then open `<project-name>/idea.md`, complete Section 4, and say:
 `/ask [role] [question]` — routes directly to that agent, who may spawn peers for depth.
 `/ask [question]` — Coordinator routes to the best agent and synthesizes.
 
-Agents prioritize **understanding over speed** and may spawn 1–3 peer consultations to enrich the answer. See `team/roles/CONSULT.md`.
+Agents prioritize **understanding over time**. Spawn every peer whose domain input would change the answer — no cap. See `team/roles/CONSULT.md`.
 
 ## Key agents
 
@@ -84,6 +84,7 @@ sdk-next <project-dir>                 # just the next activation phrase
 # Documentation
 sdk-doc status <project-dir>           # full current-status.md narrative
 sdk-doc manifest <project-dir>         # generate context-manifest.json
+sdk-doc index <project-dir>            # generate context-index.json (file map + query routing)
 sdk-doc decision history.md --decision "..." --context "..." --made-by [Role]
 sdk-doc log <area-log> --role X --level Y --goal "..." --status completed
 sdk-doc append <file> --section "## Section" --content "..."

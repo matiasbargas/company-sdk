@@ -739,7 +739,7 @@ A spawned consultation asks a peer "what do you see from your vantage point?" �
 **Do NOT spawn when:**
 - The question falls squarely within your domain
 - A peer's input would not change the answer
-- You are already integrating two or more perspectives (three is the maximum)
+- You have already received that domain's perspective in this session
 
 **How to spawn:**
 1. Identify the peer agent and their role file in `team/roles/`
@@ -861,4 +861,83 @@ When a BU lead is the first role activated in a new session, they run the self-d
 
 ---
 
-*Protocol v3.5. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, and BU communication. Every agent references it. No agent duplicates it.*
+---
+
+## Section 18: Context Request Protocol
+
+Agents frequently need domain context from a peer before they can act. This section defines the protocol for requesting and delivering that context cleanly — so no agent guesses, reads the wrong files, or blocks for missing information.
+
+### When to use a CONTEXT REQUEST
+
+Use a CONTEXT REQUEST when:
+- You are starting work on a task that spans your domain boundary
+- You need to know a constraint, decision, or state owned by another domain
+- You would otherwise read files you do not own (possible, but slow and error-prone)
+- A topic appears in your domain that is owned by a peer (e.g., legal constraint on an API design)
+
+Do NOT use a CONTEXT REQUEST when:
+- The information is in files you already own — read them directly
+- You can resolve the question from `context-index.json` `queryMap` without peer input
+- The question is resolvable from `history.md` without activating another agent
+
+### How to find the right agent
+
+Before sending a CONTEXT REQUEST:
+1. Read `context-index.json` (if present) — the `queryMap` maps topics to files and agent
+2. The `consult` field in the queryMap tells you which agent to address
+3. Send the CONTEXT REQUEST to that agent's role title — they will route internally if needed
+
+Do not send CONTEXT REQUEST to ALL. Route to the specific domain lead.
+
+### CONTEXT REQUEST format
+
+```
+FROM: [Role]
+TO: [Role]
+RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
+PRIORITY: CONTEXT REQUEST
+MESSAGE:
+  CONTEXT REQUEST — [topic]
+  Working on: [task in one sentence]
+  Need: [specific question or constraint you need answered]
+  Files read so far: [list or "none yet"]
+  Urgency: SYNC | ASYNC by [YYYY-MM-DD]
+```
+
+### CONTEXT RESPONSE format
+
+The responding agent sends a standard INFO message with this body:
+
+```
+FROM: [Role]
+TO: [Requesting Role]
+RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
+PRIORITY: INFO
+MESSAGE:
+  CONTEXT RESPONSE — [topic]
+  Read first: [file and section, in order]
+  Key constraints: [1-2 bullets — the facts that would change the requester's design]
+  Decision on record: [history.md reference, or "none"]
+  My take: [1-2 sentences — domain summary the requesting agent should carry forward]
+  Escalate to: [other agent if deeper input needed, or "none"]
+```
+
+### Routing rules
+
+- Route CONTEXT REQUEST to the **domain lead** in `context-index.json` `domains`. The domain lead routes internally.
+- A domain lead who receives a CONTEXT REQUEST they cannot answer alone may spawn a sub-role consultation and synthesize the result — they do not relay the sub-role's raw output.
+- CONTEXT RESPONSE is always PRIORITY: INFO. It does not require acknowledgment unless it contains a blocker.
+- If the response reveals a blocker for the requesting agent, the receiving agent upgrades their next Bus message to PRIORITY: BLOCKER.
+
+### Context Request vs. Bus escalation
+
+| Situation | Use |
+|---|---|
+| I need information to act | CONTEXT REQUEST |
+| I am blocked and cannot proceed | BLOCKER Bus message |
+| I am making a decision that affects another domain | DECISION NEEDED Bus message |
+| I am sharing state, no response needed | INFO Bus message |
+
+---
+
+*Protocol v3.6. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, and context request routing. Every agent references it. No agent duplicates it.*
