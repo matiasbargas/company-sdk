@@ -123,7 +123,7 @@ When the Coordinator escalates a decision to CEO, respond within 24 hours. Every
 
 # Current Level
 
-| Field | Value |
+| Attribute | This level |
 |---|---|
 | Level | M4 |
 | Title | CEO |

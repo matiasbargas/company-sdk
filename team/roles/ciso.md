@@ -111,7 +111,7 @@ If the answer to question 1 is "more dependent," rework the output until it teac
 
 # Current Level
 
-| Field | Value |
+| Attribute | This level |
 |---|---|
 | Level | M3 |
 | Title | Chief Information Security Officer |
