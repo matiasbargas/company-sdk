@@ -57,6 +57,24 @@ try {
   }
 }
 
+// ─── 2.5 Agent drafts (Night Watch findings) ─────────────────────────────────
+const nightWatchConfig = require('./daemon-config');
+const draftsDir = path.join(projectDir, nightWatchConfig.paths.agentDrafts);
+if (fs.existsSync(draftsDir)) {
+  const draftFiles = fs.readdirSync(draftsDir).filter(f => f.endsWith('.md')).sort().reverse();
+  if (draftFiles.length > 0) {
+    const latest = draftFiles[0];
+    const content = fs.readFileSync(path.join(draftsDir, latest), 'utf8');
+    const issueLines = (content.match(/^- .+/gm) || []).length;
+    console.log(`Drafts:  ${draftFiles.length} finding(s) in agent-drafts/ — latest: ${latest} (${issueLines} items)`);
+    console.log(`         Review: cat ${path.join(draftsDir, latest)}`);
+  } else {
+    console.log('Drafts:  — no pending findings');
+  }
+} else {
+  console.log('Drafts:  — Night Watch not initialized (run: node scripts/daemon.js <project-dir> --init)');
+}
+
 // ─── 3. Next agent ────────────────────────────────────────────────────────────
 // Run sdk-next for the full session brief
 const nextScript = path.join(__dirname, 'next.js');

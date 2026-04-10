@@ -54,7 +54,9 @@
     "sdk-update": "./scripts/update.js",
     "sdk-validate": "./scripts/validate.js",
     "sdk-pre-tag": "./scripts/pre-tag.js",
-    "sdk-version": "./scripts/version.js"
+    "sdk-version": "./scripts/version.js",
+    "sdk-daemon": "./scripts/daemon.js",
+    "sdk-ops": "./scripts/ops.js"
   },
   "scripts": {
     "bootstrap": "node scripts/bootstrap.js",
