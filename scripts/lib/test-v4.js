@@ -451,6 +451,59 @@ console.log('\n═══ Cockpit ═══\n');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+console.log('\n═══ Discovery Loop ═══\n');
+// ═══════════════════════════════════════════════════════════════════════════════
+
+{
+  const dir = tmpProject();
+
+  // Add domains
+  run(`node scripts/doc.js domain "${dir}" add --name "core" --lead CTO`, SDK_ROOT);
+  run(`node scripts/doc.js domain "${dir}" add --name "payments" --lead CFO`, SDK_ROOT);
+
+  // Create idea.md
+  fs.writeFileSync(path.join(dir, 'idea.md'), '# Idea\nA payment platform for SMBs.\n', 'utf8');
+
+  // discovery start
+  const startOut = run(`node scripts/doc.js discovery "${dir}" start`, SDK_ROOT);
+  assert('discovery start creates discovery-state.json', fs.existsSync(path.join(dir, 'discovery-state.json')));
+  const state = JSON.parse(fs.readFileSync(path.join(dir, 'discovery-state.json'), 'utf8'));
+  assert('discovery state has questions', state.questions.length > 0);
+  assert('discovery has blocking questions', state.blockers > 0);
+  assert('discovery not ready for activation', state.readyForActivation === false);
+  assert('discovery includes domain questions', state.questions.some(q => q.domain === 'core'));
+
+  // discovery status
+  const statusOut = run(`node scripts/doc.js discovery "${dir}" status`, SDK_ROOT);
+  assert('discovery status shows count', statusOut.includes('/'));
+  assert('discovery status shows blocking', statusOut.includes('Blocking'));
+
+  // discovery answer
+  const firstQ = state.questions[0];
+  run(`node scripts/doc.js discovery "${dir}" answer --id ${firstQ.id} --answer "MVP: payment processing + invoicing"`, SDK_ROOT);
+  const stateAfter = JSON.parse(fs.readFileSync(path.join(dir, 'discovery-state.json'), 'utf8'));
+  assert('answer marks question as answered', stateAfter.questions[0].answered === true);
+  assert('answered count increments', stateAfter.answered === 1);
+
+  // Answer all blocking questions
+  const blocking = stateAfter.questions.filter(q => q.priority === 'blocks-discovery' && !q.answered);
+  for (const q of blocking) {
+    run(`node scripts/doc.js discovery "${dir}" answer --id ${q.id} --answer "Answered for test"`, SDK_ROOT);
+  }
+  const finalState = JSON.parse(fs.readFileSync(path.join(dir, 'discovery-state.json'), 'utf8'));
+  assert('all blockers answered → ready for activation', finalState.readyForActivation === true);
+
+  // domain answer routes to domain file
+  const domainQ = state.questions.find(q => q.domain === 'core' && q.question.includes('Describe'));
+  if (domainQ) {
+    const coreSummary = fs.readFileSync(path.join(dir, 'domains', 'core', 'summary.md'), 'utf8');
+    assert('domain answer routed to summary.md', coreSummary.includes('Answered for test') || !coreSummary.includes('[Describe the'));
+  }
+
+  cleanup(dir);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Summary
 // ═══════════════════════════════════════════════════════════════════════════════
 
