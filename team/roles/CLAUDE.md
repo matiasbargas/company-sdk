@@ -81,6 +81,12 @@ Agents always read `context-index.json` then `context-manifest.json` (if present
 | **Diana (Chief Analytics Officer)** | `cao.md` | Any measurable hypothesis or ML component | "Diana, design the measurement plan and experimentation framework" |
 | **Pablo (Chief AI Officer)** | `caio.md` | Any AI component — activates alongside CTO | "Pablo, produce the AI strategy and evaluation framework for [product]" |
 
+## Quality & Testing
+
+| Agent | File | Activate when | First words |
+|---|---|---|---|
+| **Test Engineer** | `test-engineer.md` | Scripts or features are shipping — owns test suite | "Test Engineer, we need tests for [module]" |
+
 ---
 
 ## Activation order (full Discovery → Execution)

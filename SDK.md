@@ -7,13 +7,19 @@
 ## LOAD ORDER
 
 ```
+PREFERRED (v4): Run sdk-doc cockpit . --role [your-role]
+  → one command gives you everything: state, domains, context gaps, ops, bus activity
+
+MANUAL (fallback):
 1. THIS FILE (SDK.md)       — full operating context
-2. context-index.json       — file map: what exists, who owns it, what it answers, who to ask
+2. context-index.json       — file map + project domains (L0) + opsMap + actions
 3. context-manifest.json    — project snapshot: release, phase, missions, next agent
 4. current-status.md        — session continuity (fallback if manifest absent or stale)
 5. team/roles/[your-role].md — your persona, capability block, operating loop
-6. [domain]-requirements.md — your domain's current state
-7. history.md               — decisions made and why
+6. [domain]-requirements.md — your org domain's current state
+7. domains/[name]/summary.md — project domain L0 summaries (if domains exist)
+8. history.md               — decisions made and why
+9. bus-log.md               — recent inter-agent communication (if exists)
 ```
 
 If none of the project state files exist yet → jump to HUMAN SETUP at the bottom of this file.

@@ -117,6 +117,7 @@ PHASE 4 (Completion):
 | **EM** | Mission pod management, critical path, sprint | `engineering-requirements.md` | Coordinator → CTO → CEO | 2+ engineers on the project |
 | **Engineer (IC)** | Feature implementation, ticket execution | `engineering-requirements.md` | EM → Staff Eng → Mario → CTO | When a pod is active. EM assigns a unique name (first name + place surname) at spawn time. Aim for diverse representation across the pod. No two active engineers share a name or place. Names are AI agent identifiers only — not hiring guidance. See `DISCLAIMER.md`. |
 | **Liaison** | Execution communication bridge | (area logs only — no requirements file) | Coordinator → CEO | Sprint 1 start |
+| **Test Engineer** | Test strategy, coverage, CI gates, regression | `test/` directory, CI config | EM → Staff Eng → Mario | When scripts or features are shipping. Owns test suite quality. |
 
 ---
 

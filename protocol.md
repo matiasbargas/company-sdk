@@ -1046,4 +1046,140 @@ MESSAGE:
 
 ---
 
-*Protocol v3.7. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, and context request routing. Every agent references it. No agent duplicates it.*
+## Section 20: Project Domain Architecture
+
+Projects define **business domains** alongside the organizational domains (engineering, legal, product, etc.). Organizational domains are fixed — they represent how the team operates. Project domains are project-specific — they represent what the project IS.
+
+### Domain Hierarchy
+
+Each project domain has two levels of context:
+
+- **L0 (summary):** ~200 tokens. Inline in `context-index.json`. Every agent reads this at session start via the cockpit. Stored in `domains/<name>/summary.md` with YAML frontmatter (lead, spawn_when, context_provides).
+- **L1 (detail):** Full domain context files in `domains/<name>/<topic>.md`. Loaded on demand when an agent goes deep into that domain.
+
+### Domain Files
+
+```
+domains/
+  <domain-name>/
+    summary.md         ← L0: YAML frontmatter + 2-3 sentence summary
+    <topic-1>.md       ← L1: detailed context file
+    <topic-2>.md       ← L1: detailed context file
+```
+
+Summary frontmatter:
+```yaml
+---
+lead: "CTO"
+spawn_when: "scoring mechanism, ZK proof implementation"
+context_provides: "score calculation, attestation flow, privacy model"
+---
+```
+
+### Context Loading with Domains
+
+When an agent activates, the cockpit (`sdk-doc cockpit . --role <role>`) provides:
+
+1. All L0 summaries (every domain, compressed)
+2. Context gap analysis: which L1 files the agent needs for their current task
+3. Spawn recommendations: which topics require the domain lead's authority (from `spawn_when`)
+
+Three resolution paths when a task touches a domain:
+
+1. **Self-load** — Agent is the domain lead. Load L1 directly.
+2. **Cross-load** — Domain is `cross_loadable: true`. Any agent can read L1 files for context. No spawn needed.
+3. **Spawn** — Task requires domain authority (a decision, not just context). Spawn the domain lead.
+
+### Domain Lifecycle
+
+- Domains are created at project init (`sdk-init --domains`) or during execution (`sdk-doc domain . add`)
+- L1 files are added as domain understanding deepens
+- `context-index.json` regeneration (`sdk-doc index .`) picks up new domains and files automatically
+- Domains are not frozen — they grow with the project
+
+---
+
+## Section 21: Operations Map
+
+The `context-index.json` (schema 2.0) includes an **opsMap** — a machine-readable catalog of operations agents can perform. This replaces agents needing to remember CLI command syntax.
+
+### opsMap Format
+
+```json
+{
+  "record-decision": {
+    "fields": ["decision", "rationale", "reversibility", "affects"],
+    "required": ["decision", "rationale"],
+    "action": "doc.decision",
+    "writes": true,
+    "description": "Log a consequential decision to history.md"
+  }
+}
+```
+
+Agents read the opsMap at session start (via cockpit) and know what operations are available, what fields each needs, and whether it writes.
+
+### Action Registry
+
+Every SDK script is registered in `scripts/lib/action-registry.js` with:
+- `script` — which script file implements it
+- `requires` — required parameters
+- `writes` — whether it modifies files (enforces write guards for consultation spawns)
+- `description` — human-readable purpose
+
+### Write Guard
+
+Consultation-spawned agents (spawned via CONSULT.md without full project activation) can only invoke actions where `writes: false`. This is enforced at the executor level.
+
+---
+
+## Section 22: Bus Log
+
+All inter-agent Bus messages are logged to `bus-log.md` — an append-only record with timestamps.
+
+### Writing to the Bus Log
+
+Use `sdk-doc bus . --from <role> --to <role> --priority <priority> --message "..."` to:
+1. Append the message to `bus-log.md` with timestamp
+2. Run the intent resolver (pattern match against known Bus patterns)
+3. Report what action would fire (advisory, not auto-execute)
+
+### Intent Resolution
+
+The intent resolver (`scripts/lib/intent-resolver.js`) matches Bus message patterns:
+
+| Pattern | Action |
+|---|---|
+| `PRIORITY: BLOCKER` | `doc.pod-update` (status → Blocked) + area log entry |
+| `MESSAGE: DOMAIN CLOSE` | `doc.log` (completed entry in area log) |
+| `PRIORITY: CONTEXT REQUEST` | queryMap lookup (routing, no script) |
+| `PRIORITY: DECISION NEEDED` | `doc.log` (blocked entry in area log) |
+| `PRIORITY: INFO` | No action (pure communication) |
+
+Resolution is conservative — most messages return null. The Bus format does not change. Agents write messages exactly as before. The system reads them post-hoc.
+
+---
+
+## Section 23: Session Memory
+
+Sessions capture context that would otherwise be lost when a conversation ends.
+
+### Lifecycle
+
+1. **Save:** `sdk-doc session . save --title "..." [--domains, --tags]` → creates `sessions/temp/<date>-<slug>.md`
+2. **Review:** At session start, `sdk-resume` shows pending temp sessions
+3. **Promote:** `sdk-doc session . promote <filename>` → moves to `sessions/permanent/`, becomes indexed
+4. **Clean:** `sdk-doc session . clean --confirm` → deletes all temp sessions
+
+### Indexing
+
+Permanent sessions appear in `context-index.json`:
+- In the `files` array (with domain routing and staleness — stale after 30 days)
+- In the `sessions` array (with title, date, domains, tags, participants)
+- In the `queryMap` under `prior-session` and `session-context`
+
+Temp sessions are gitignored. Permanent sessions are committed.
+
+---
+
+*Protocol v4.0. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, and session memory. Every agent references it. No agent duplicates it.*

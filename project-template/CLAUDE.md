@@ -107,8 +107,14 @@ Full agent index with activation instructions: `team/roles/CLAUDE.md`
 ## CLI commands
 
 ```bash
-sdk-doc manifest .                                  # Generate context-manifest.json (run first, every session)
+sdk-doc cockpit . --role [your-role]                 # Session briefing: state + domains + context gaps + ops
+sdk-doc manifest .                                  # Generate context-manifest.json
+sdk-doc index .                                     # Generate context-index.json (file catalog + routing)
 sdk-doc status .                                    # Print current-status.md (fallback / full narrative)
+sdk-doc bus . --from X --to Y --priority Z --message "..."  # Send Bus message (logged + intent resolved)
+sdk-doc domain . add --name X --lead Y              # Create a project domain
+sdk-doc domain . list                               # List all project domains
+sdk-resume .                                        # Full session start: health + gates + sessions + cockpit
 sdk-doc log [area]-log.md --role X --level Y --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by [Role]
 sdk-doc pod-update current-status.md --mission "..." --status "..." --next "..."
