@@ -12,6 +12,7 @@
  *   --type <type>     Project type config from team/types/ (default: product)
  *   --idea "..."      Drop your raw idea directly — skips the placeholder in idea.md
  *   --source <file>   Path to a vision doc (PDF, markdown, text) — copied into project as source material
+ *   --domains "..."   Project domains with leads: "platform:CTO, ncs:CTO, lending:CFO"
  *   --no-git          Skip git init + initial commit
  *
  * What it does:
@@ -56,20 +57,22 @@ Examples:
 }
 
 const projectName = args[0];
-let outputDir   = null;
-let squadType   = 'startup';
-let projectType = 'product';
-let seedIdea    = null;
-let sourceFile  = null;
-let skipGit     = false;
+let outputDir    = null;
+let squadType    = 'startup';
+let projectType  = 'product';
+let seedIdea     = null;
+let sourceFile   = null;
+let skipGit      = false;
+let domainsRaw   = null;
 
 for (let i = 1; i < args.length; i++) {
-  if      (args[i] === '--output'  && args[i + 1]) outputDir   = args[++i];
-  else if (args[i] === '--squad'   && args[i + 1]) squadType   = args[++i];
-  else if (args[i] === '--type'    && args[i + 1]) projectType = args[++i];
-  else if (args[i] === '--idea'    && args[i + 1]) seedIdea    = args[++i];
-  else if (args[i] === '--source'  && args[i + 1]) sourceFile  = args[++i];
-  else if (args[i] === '--no-git')                 skipGit     = true;
+  if      (args[i] === '--output'  && args[i + 1]) outputDir    = args[++i];
+  else if (args[i] === '--squad'   && args[i + 1]) squadType    = args[++i];
+  else if (args[i] === '--type'    && args[i + 1]) projectType  = args[++i];
+  else if (args[i] === '--idea'    && args[i + 1]) seedIdea     = args[++i];
+  else if (args[i] === '--source'  && args[i + 1]) sourceFile   = args[++i];
+  else if (args[i] === '--domains' && args[i + 1]) domainsRaw   = args[++i];
+  else if (args[i] === '--no-git')                 skipGit      = true;
 }
 
 const VALID_SQUADS = ['website', 'mvp', 'feature', 'startup'];
@@ -243,6 +246,28 @@ console.log(`    Release: ${releaseId}\n`);
 ensureDir(outputDir);
 ensureDir(path.join(outputDir, 'sessions', 'temp'));
 ensureDir(path.join(outputDir, 'sessions', 'permanent'));
+
+// Parse --domains "platform:CTO, ncs:CTO, lending:CFO"
+const parsedDomains = [];
+if (domainsRaw) {
+  for (const entry of domainsRaw.split(',')) {
+    const parts = entry.trim().split(':');
+    const name = parts[0].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const lead = parts[1] ? parts[1].trim() : 'Coordinator';
+    if (name) parsedDomains.push({ name, lead });
+  }
+}
+
+// Create domain directories with summary.md
+if (parsedDomains.length > 0) {
+  for (const { name, lead } of parsedDomains) {
+    const domainDir = path.join(outputDir, 'domains', name);
+    ensureDir(domainDir);
+    const summaryContent = `---\nlead: "${lead}"\nspawn_when: ""\ncontext_provides: ""\n---\n\n[Describe the ${name} domain in 2-3 sentences. What does it cover? What are the key components?]\n`;
+    fs.writeFileSync(path.join(domainDir, 'summary.md'), summaryContent, 'utf8');
+  }
+  console.log(`    ✓  domains/  (${parsedDomains.map(d => d.name).join(', ')})`);
+}
 
 const templateFiles = fs.readdirSync(templateDir);
 let count = 0;

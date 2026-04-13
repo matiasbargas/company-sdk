@@ -63,7 +63,7 @@
     "squad": "node scripts/squad.js",
     "doc": "node scripts/doc.js",
     "update": "node scripts/update.js",
-    "test": "node scripts/lib/test-ship.js && node scripts/lib/test-validate.js"
+    "test": "node scripts/lib/test-ship.js && node scripts/lib/test-validate.js && node scripts/lib/test-v4.js"
   },
   "engines": {
     "node": ">=18"
