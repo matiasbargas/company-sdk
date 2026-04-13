@@ -55,6 +55,57 @@ Agents pull context before acting. The cockpit shows:
 | 4 | Cockpit + context gap analysis + context gathering | M |
 | 5 | Resume integration (processes accumulated signals) | S |
 | 6 | Protocol update (formalize in protocol.md, SDK.md, AGENTS.md) | S |
+| 7 | Greg Discovery Loop — structured requirements gathering + owner follow-up | M |
+
+## Phase 7: Greg Discovery Loop — Requirements Gathering
+
+After the protocol is formalized, the SDK needs a structured way for Greg to **drive Discovery with the owner**. Today, the owner pastes a brief and Greg reacts. But real Discovery is iterative — Greg should be able to:
+
+1. **Receive the initial brief** (idea.md Section 4 or a source doc)
+2. **Generate a requirements questionnaire** based on what's missing — tailored to the project type and domains
+3. **Present questions to the owner** in priority order (what blocks Discovery vs what can wait)
+4. **Capture answers** as structured context that flows into domain summaries, requirements files, and history.md
+5. **Loop** until Greg has enough to activate the Coordinator and start the team
+
+### The Requirements Questionnaire
+
+Greg reads idea.md + source doc + project domains and generates questions across:
+
+- **Scope boundaries** — What's IN v1? What's explicitly OUT? What's the appetite (weeks)?
+- **User specifics** — Who exactly is the user? What do they do today? What's the moment of value?
+- **Domain gaps** — For each project domain, what does Greg not know yet? What assumptions need confirmation?
+- **Non-negotiables** — What cannot be wrong? (security, compliance, data handling, UX invariants)
+- **Constraints** — Budget, timeline, team, tech stack, regulatory, dependencies
+- **Risk** — What's the riskiest assumption? What would kill the project if wrong?
+
+### The Follow-Up Flow
+
+```
+Greg: "I've read the brief. Before I activate the team, I need to understand 3 things..."
+Owner: [answers]
+Greg: "Got it. Based on that, here's what I'm still unclear on..."
+Owner: [answers]
+Greg: "Clear enough to start. Here's my strategic framing. Activating Coordinator."
+```
+
+Each answer gets:
+- Logged to `history.md` as a Discovery decision (with Owner attribution)
+- Routed to the relevant domain summary (populates L0/L1 context)
+- Fed into the requirements files the team will work from
+
+### Implementation
+
+- `sdk-doc discovery . start` — Greg generates the initial questionnaire from idea.md + domains
+- `sdk-doc discovery . answer --question <id> --answer "..."` — captures and routes the answer
+- `sdk-doc discovery . status` — shows what's answered, what's pending, what blocks team activation
+- Discovery state tracked in `discovery-state.json` (generated, not hand-maintained)
+- Greg's role file updated with the Discovery Loop as an operating mode
+
+### Why This Matters
+
+Without this, Discovery is ad-hoc — Greg asks whatever comes to mind, answers get buried in conversation, and the team starts with gaps. With this, Discovery is structured, captured, and routable. The owner sees exactly what's needed. Greg sees exactly what's still missing. The team starts with complete context.
+
+---
 
 ## What Does NOT Change
 
