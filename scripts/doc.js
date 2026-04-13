@@ -79,6 +79,8 @@ Commands:
   session     <project-dir> list [--status temp|permanent|all]  List saved sessions
   session     <project-dir> promote <filename>               Move session from temp to permanent (indexed)
   session     <project-dir> clean [--confirm]                Delete all temp sessions
+  bus         <project-dir> --from <role> --to <role>         Send a Bus message: logs to bus-log.md + intent resolution
+                     --message "..." [--priority INFO|BLOCKER|DECISION NEEDED|CONTEXT REQUEST]
   domain      <project-dir> add --name <name> --lead <role>  Create a new project domain
                      [--summary "..."] [--spawn-when "..."]
                      [--context-provides "..."]
@@ -1503,6 +1505,90 @@ tags: "${tags}"
   }
 }
 
+// ─── Bus: bus-log.md + intent resolution ──────────────────────────────────────
+
+/**
+ * cmdBus — Send a Bus message: logs to bus-log.md + runs intent resolver.
+ *
+ * Usage:
+ *   sdk-doc bus <project-dir> --from CTO --to CLO --priority "DECISION NEEDED" --message "..."
+ */
+function cmdBus() {
+  const projectDir = filePath ? path.resolve(filePath) : process.cwd();
+  const busOpts = {};
+  for (let i = 2; i < args.length; i++) {
+    if (args[i].startsWith('--') && args[i + 1]) {
+      busOpts[args[i].slice(2)] = args[++i];
+    }
+  }
+
+  const from     = busOpts.from;
+  const to       = busOpts.to;
+  const priority = busOpts.priority || 'INFO';
+  const message  = busOpts.message;
+
+  if (!from || !to || !message) {
+    console.error('Usage: sdk-doc bus <project-dir> --from <role> --to <role> --message "..." [--priority INFO|DECISION NEEDED|BLOCKER|CONTEXT REQUEST]');
+    process.exit(1);
+  }
+
+  // Read release from .sdkrc
+  let release = 'unknown';
+  const sdkrcPath = path.join(projectDir, '.sdkrc');
+  if (fs.existsSync(sdkrcPath)) {
+    try {
+      const sdkrc = JSON.parse(fs.readFileSync(sdkrcPath, 'utf8'));
+      if (sdkrc.releaseId) release = sdkrc.releaseId;
+    } catch (_) {}
+  }
+
+  // Format the Bus message
+  const now = new Date();
+  const timestamp = now.toISOString().replace('T', ' ').slice(0, 16);
+  const formatted = `FROM: ${from}\nTO: ${to}\nRELEASE: ${release}\nPRIORITY: ${priority}\nMESSAGE: ${message}`;
+
+  // Append to bus-log.md
+  const logPath = path.join(projectDir, 'bus-log.md');
+  const logEntry = `\n---\n[${timestamp}] FROM: ${from} → TO: ${to} | PRIORITY: ${priority} | RELEASE: ${release}\n${message}\n`;
+
+  if (!fs.existsSync(logPath)) {
+    fs.writeFileSync(logPath, `# Bus Log\n\n> Append-only record of all inter-agent communication. Do not edit — only append.\n${logEntry}`, 'utf8');
+  } else {
+    fs.appendFileSync(logPath, logEntry, 'utf8');
+  }
+
+  console.log(`✓ Bus message logged to bus-log.md`);
+  console.log(`  ${from} → ${to} [${priority}]`);
+
+  // Run intent resolver
+  const { resolve: resolveIntent } = require('./lib/intent-resolver');
+  const resolution = resolveIntent(formatted);
+
+  if (resolution && resolution.action) {
+    console.log(`  Intent resolved: ${resolution.action}`);
+    // Don't auto-execute — report what WOULD happen. Agent or Coordinator decides.
+    const def = resolution.definition;
+    if (def) {
+      console.log(`    Would run: ${def.script} (writes: ${def.writes})`);
+      console.log(`    Params: ${JSON.stringify(resolution.params)}`);
+    }
+    if (resolution.side_effects) {
+      for (const se of resolution.side_effects) {
+        console.log(`    Side effect: ${se.action}`);
+      }
+    }
+  } else if (resolution && resolution.routing) {
+    console.log(`  Routing: topic="${resolution.routing.topic}" → consult ${resolution.routing.consult}`);
+  } else {
+    console.log(`  No action implied — pure communication`);
+  }
+
+  // Output the formatted message for the agent to paste
+  console.log(`\n--- Bus Message ---`);
+  console.log(formatted);
+  console.log(`---`);
+}
+
 // ─── Domain: domains/*/summary.md ─────────────────────────────────────────────
 
 /**
@@ -1672,6 +1758,7 @@ switch (command) {
   case 'study':    cmdStudy();    break;
   case 'session':  cmdSession();  break;
   case 'domain':   cmdDomain();   break;
+  case 'bus':      cmdBus();      break;
   default:
     console.error(`Unknown command: "${command}"`);
     printHelp();

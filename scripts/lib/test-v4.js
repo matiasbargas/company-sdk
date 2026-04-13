@@ -298,6 +298,116 @@ console.log('\n═══ Manifest Generation ═══\n');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+console.log('\n═══ Intent Resolver ═══\n');
+// ═══════════════════════════════════════════════════════════════════════════════
+
+{
+  const { resolve, parseBusMessage, inferLogFile } = require('./intent-resolver');
+
+  // parseBusMessage
+  const parsed = parseBusMessage('FROM: CTO\nTO: CLO\nRELEASE: v2026.Q2.1\nPRIORITY: BLOCKER\nMESSAGE: Need data residency constraints.');
+  assert('parseBusMessage extracts from', parsed.from === 'CTO');
+  assert('parseBusMessage extracts to', parsed.to === 'CLO');
+  assert('parseBusMessage extracts priority', parsed.priority === 'BLOCKER');
+  assert('parseBusMessage extracts message', parsed.message.includes('data residency'));
+
+  // BLOCKER resolves to pod-update
+  const blockerRes = resolve('FROM: CTO\nTO: CLO\nRELEASE: v2026.Q2.1\nPRIORITY: BLOCKER\nMESSAGE: Auth blocked on compliance.');
+  assert('BLOCKER resolves to action', blockerRes !== null && blockerRes.action === 'doc.pod-update');
+  assert('BLOCKER has side_effects', Array.isArray(blockerRes.side_effects) && blockerRes.side_effects.length > 0);
+
+  // DOMAIN CLOSE resolves to log
+  const closeRes = resolve('FROM: CFO\nTO: Coordinator\nRELEASE: v2026.Q2.1\nPRIORITY: INFO\nMESSAGE: DOMAIN CLOSE — finance requirements delivered.');
+  assert('DOMAIN CLOSE resolves to doc.log', closeRes !== null && closeRes.action === 'doc.log');
+  assert('DOMAIN CLOSE log is completed', closeRes.params.status === 'completed');
+
+  // CONTEXT REQUEST resolves to routing only (no action)
+  const ctxRes = resolve('FROM: PM\nTO: CTO\nRELEASE: v2026.Q2.1\nPRIORITY: CONTEXT REQUEST\nMESSAGE: CONTEXT REQUEST — API rate limiting');
+  assert('CONTEXT REQUEST resolves to routing', ctxRes !== null && ctxRes.action === null);
+  assert('CONTEXT REQUEST has routing.topic', ctxRes.routing && ctxRes.routing.topic.includes('api rate limiting'));
+
+  // DECISION NEEDED resolves to log
+  const decRes = resolve('FROM: CLO\nTO: CEO\nRELEASE: v2026.Q2.1\nPRIORITY: DECISION NEEDED\nMESSAGE: GDPR requires explicit consent mechanism.');
+  assert('DECISION NEEDED resolves to doc.log', decRes !== null && decRes.action === 'doc.log');
+
+  // Pure INFO does not resolve
+  const infoRes = resolve('FROM: Liaison\nTO: ALL\nRELEASE: v2026.Q2.1\nPRIORITY: INFO\nMESSAGE: Sprint health is green.');
+  assert('INFO message returns null (pure communication)', infoRes === null);
+
+  // inferLogFile
+  assert('inferLogFile CTO → engineering-log.md', inferLogFile('CTO') === 'engineering-log.md');
+  assert('inferLogFile CLO → operations-log.md', inferLogFile('CLO') === 'operations-log.md');
+  assert('inferLogFile PM → product-log.md', inferLogFile('PM') === 'product-log.md');
+  assert('inferLogFile CEO → strategy-log.md', inferLogFile('CEO') === 'strategy-log.md');
+  assert('inferLogFile CHRO → people-log.md', inferLogFile('CHRO') === 'people-log.md');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+console.log('\n═══ Executor ═══\n');
+// ═══════════════════════════════════════════════════════════════════════════════
+
+{
+  const { execute } = require('./executor');
+
+  // Dry run
+  const dryResult = execute(
+    { action: 'doc.log', definition: actions['doc.log'], params: { file: 'engineering-log.md', role: 'CTO', level: 'L4', goal: 'Test', status: 'completed' } },
+    '/tmp',
+    { dryRun: true }
+  );
+  assert('dry run does not execute', dryResult.executed === false && dryResult.reason === 'dry-run');
+  assert('dry run reports action', dryResult.action === 'doc.log');
+
+  // Write guard for consultation spawns
+  const guardResult = execute(
+    { action: 'doc.decision', definition: actions['doc.decision'], params: {} },
+    '/tmp',
+    { spawnType: 'consultation' }
+  );
+  assert('consultation spawn blocked from write action', guardResult.executed === false && guardResult.reason === 'write-denied-consultation-spawn');
+
+  // Read-only action allowed for consultation spawns
+  const readResult = execute(
+    { action: 'doc.status', definition: actions['doc.status'], params: { 'project-dir': '/tmp' } },
+    '/tmp',
+    { spawnType: 'consultation', dryRun: true }
+  );
+  assert('consultation spawn allowed for read action (dry run)', readResult.reason === 'dry-run');
+
+  // No action returns no-action
+  const noAction = execute(null, '/tmp');
+  assert('null resolution returns no-action', noAction.executed === false && noAction.reason === 'no-action');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+console.log('\n═══ Bus Command ═══\n');
+// ═══════════════════════════════════════════════════════════════════════════════
+
+{
+  const dir = tmpProject();
+
+  // Send a Bus message
+  const busOut = run(`node scripts/doc.js bus "${dir}" --from CTO --to CLO --priority BLOCKER --message "Need compliance review before architecture."`, SDK_ROOT);
+  assert('bus command logs to bus-log.md', fs.existsSync(path.join(dir, 'bus-log.md')));
+  const busLog = fs.readFileSync(path.join(dir, 'bus-log.md'), 'utf8');
+  assert('bus-log.md contains the message', busLog.includes('Need compliance review'));
+  assert('bus-log.md has timestamp', /\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}\]/.test(busLog));
+  assert('bus-log.md has from/to', busLog.includes('CTO → TO: CLO'));
+  assert('bus command reports intent resolution', busOut.includes('Intent resolved') || busOut.includes('No action'));
+
+  // Send a second message
+  run(`node scripts/doc.js bus "${dir}" --from Liaison --to ALL --priority INFO --message "Sprint health green."`, SDK_ROOT);
+  const busLog2 = fs.readFileSync(path.join(dir, 'bus-log.md'), 'utf8');
+  assert('bus-log.md is append-only (2 entries)', busLog2.includes('Sprint health green') && busLog2.includes('Need compliance review'));
+
+  // Send CONTEXT REQUEST
+  const ctxOut = run(`node scripts/doc.js bus "${dir}" --from PM --to CTO --priority "CONTEXT REQUEST" --message "CONTEXT REQUEST — API rate limiting"`, SDK_ROOT);
+  assert('CONTEXT REQUEST shows routing', ctxOut.includes('Routing') || ctxOut.includes('routing'));
+
+  cleanup(dir);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Summary
 // ═══════════════════════════════════════════════════════════════════════════════
 
