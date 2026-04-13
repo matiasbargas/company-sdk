@@ -73,6 +73,12 @@ Commands:
                      [--team <text>] [--requested-by <role>]   with scientific format frontmatter
                      [--method <text>] [--tags <csv>]
   study       <project-dir> list                             List all studies with title, date, status, confidence
+  session     <project-dir> save --title <text>              Save a session summary to sessions/temp/
+                     [--participants <csv>] [--domains <csv>]
+                     [--tags <csv>] [--saved-by <role>]
+  session     <project-dir> list [--status temp|permanent|all]  List saved sessions
+  session     <project-dir> promote <filename>               Move session from temp to permanent (indexed)
+  session     <project-dir> clean [--confirm]                Delete all temp sessions
   list        <file>                                        List all headings in the file
   spawn       <project-dir> --name <name> --role <role>     Add an agent to team.md Active Agents table,
                      --level <level>                         append onboarding log entry, and increment
@@ -910,6 +916,45 @@ function cmdIndex() {
     }
   }
 
+  // ── Dynamic session scanning (permanent only — temp sessions are not indexed)
+  const permSessionsDir = path.join(projectDir, 'sessions', 'permanent');
+  const sessionEntries = [];
+  if (fs.existsSync(permSessionsDir)) {
+    const sessionFiles = fs.readdirSync(permSessionsDir).filter(f => f.endsWith('.md'));
+    for (const sf of sessionFiles) {
+      const fullPath = path.join(permSessionsDir, sf);
+      const mtime = fs.statSync(fullPath).mtime;
+      const ageHours = Math.round((now - mtime.getTime()) / 1000 / 60 / 60);
+      const content = fs.readFileSync(fullPath, 'utf8');
+      const fm = parseFrontmatter(content);
+      const title = fm.title || sf.replace(/\.md$/, '');
+      const sessionDomains = fm.domains ? fm.domains.split(',').map(d => d.trim()).filter(Boolean) : ['strategy'];
+      const sessionTags = fm.tags ? fm.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+      files.push({
+        path: `sessions/permanent/${sf}`,
+        domain: sessionDomains[0] || 'strategy',
+        owner: 'Coordinator',
+        purpose: `Session: ${title}`,
+        load_when: ['session-context', 'prior-discussion'],
+        exists: true,
+        ageHours,
+        stale: ageHours > 720 // sessions stale after 30 days
+      });
+
+      sessionEntries.push({
+        path: `sessions/permanent/${sf}`,
+        title,
+        date: fm.date || sf.slice(0, 10),
+        domains: sessionDomains,
+        tags: sessionTags,
+        participants: fm.participants ? fm.participants.split(',').map(p => p.trim()).filter(Boolean) : [],
+        ageHours,
+        stale: ageHours > 720
+      });
+    }
+  }
+
   // ── Domain routing table ──────────────────────────────────────────────────
   const domains = {
     strategy:    { lead: 'Coordinator', consult: 'CEO',           files: ['current-status.md', 'project.md', 'history.md', 'project-map.md', 'strategy-log.md', 'general-requirements.md'] },
@@ -983,6 +1028,8 @@ function cmdIndex() {
     'release-plan':         { read: ['current-status.md', 'history.md'],                      consult: 'Coordinator' },
     'strategy':             { read: ['project.md', 'history.md'],                             consult: 'CEO' },
     'vision':               { read: ['project.md', 'idea.md'],                                consult: 'CEO' },
+    'prior-session':        { read: sessionEntries.map(s => s.path),                           consult: 'Coordinator' },
+    'session-context':      { read: sessionEntries.map(s => s.path),                           consult: 'Coordinator' },
   };
 
   const index = {
@@ -993,6 +1040,7 @@ function cmdIndex() {
     files,
     domains,
     queryMap,
+    sessions: sessionEntries,
   };
 
   writeFile(indexFile, JSON.stringify(index, null, 2) + '\n');
@@ -1158,19 +1206,209 @@ status: "draft"
   console.log(`  Next: fill in Hypothesis and Method, then execute the study.`);
 }
 
+const { parseFrontmatter } = require('./lib/frontmatter');
+
+// ─── Session: sessions/temp/ and sessions/permanent/ ─────────────────────────
+
 /**
- * Parse simple YAML frontmatter from a markdown file.
- * Returns an object with key-value pairs from the frontmatter block.
+ * cmdSession — Save, list, promote, or clean session memory files.
+ *
+ * Subcommands:
+ *   save     — create a session file in sessions/temp/
+ *   list     — list sessions (filter by --status temp|permanent|all)
+ *   promote  — move a session from temp/ to permanent/ (becomes indexed)
+ *   clean    — delete all temp sessions (requires --confirm)
  */
-function parseFrontmatter(content) {
-  const m = content.match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return {};
-  const result = {};
-  for (const line of m[1].split('\n')) {
-    const kv = line.match(/^(\w+)\s*:\s*"?([^"]*)"?\s*$/);
-    if (kv) result[kv[1]] = kv[2];
+function cmdSession() {
+  const projectDir = filePath ? path.resolve(filePath) : process.cwd();
+  const tempDir = path.join(projectDir, 'sessions', 'temp');
+  const permDir = path.join(projectDir, 'sessions', 'permanent');
+  const subcommand = args[2]; // save | list | promote | clean
+
+  if (!subcommand || !['save', 'list', 'promote', 'clean'].includes(subcommand)) {
+    console.error('Usage: sdk-doc session <project-dir> save --title "..." | list | promote <file> | clean --confirm');
+    process.exit(1);
   }
-  return result;
+
+  // ── save ──────────────────────────────────────────────────────────────────
+  if (subcommand === 'save') {
+    const sessionOpts = {};
+    for (let i = 3; i < args.length; i++) {
+      if (args[i].startsWith('--') && args[i + 1]) {
+        sessionOpts[args[i].slice(2)] = args[++i];
+      }
+    }
+    const title = sessionOpts.title;
+    if (!title) {
+      console.error('--title is required for session save');
+      process.exit(1);
+    }
+    const participants = sessionOpts.participants || '';
+    const sessionDomains = sessionOpts.domains || '';
+    const tags = sessionOpts.tags || '';
+    const savedBy = sessionOpts['saved-by'] || 'unspecified';
+
+    // Read release from .sdkrc or current-status.md
+    let release = '';
+    const sdkrcPath = path.join(projectDir, '.sdkrc');
+    if (fs.existsSync(sdkrcPath)) {
+      try {
+        const sdkrc = JSON.parse(fs.readFileSync(sdkrcPath, 'utf8'));
+        if (sdkrc.releaseId) release = sdkrc.releaseId;
+      } catch (_) {}
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+    const filename = `${today}-${slug}.md`;
+
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+
+    const body = `---
+title: "${title}"
+date: "${today}"
+participants: "${participants}"
+domains: "${sessionDomains}"
+release: "${release}"
+saved_by: "${savedBy}"
+status: "temp"
+tags: "${tags}"
+---
+
+# ${title}
+
+**Date:** ${today}
+**Release:** ${release}
+**Participants:** ${participants || 'unspecified'}
+
+---
+
+## Summary
+
+[1-3 sentence overview of what this session accomplished]
+
+## Decisions Explored
+
+- [Decision or option discussed — not necessarily committed to history.md]
+
+## Context Surfaced
+
+- [Important context that came up — links to files, external references, domain knowledge]
+
+## Key Takeaways
+
+1. [Actionable insight or conclusion]
+
+## Open Threads
+
+- [Anything left unresolved that a future session should pick up]
+
+---
+
+*Session saved by ${savedBy} on ${today}. Status: temp*
+`;
+
+    const outPath = path.join(tempDir, filename);
+    writeFile(outPath, body);
+    console.log(`✓ Session saved: ${path.relative(process.cwd(), outPath)}`);
+    console.log(`  Title: ${title}`);
+    console.log(`  Status: temp — promote with: sdk-doc session ${path.relative(process.cwd(), projectDir)} promote ${filename}`);
+    return;
+  }
+
+  // ── list ──────────────────────────────────────────────────────────────────
+  if (subcommand === 'list') {
+    const statusFilter = args.find(a => a === '--status') ? args[args.indexOf('--status') + 1] : 'all';
+    const dirs = [];
+    if (statusFilter === 'all' || statusFilter === 'temp') dirs.push({ dir: tempDir, status: 'temp' });
+    if (statusFilter === 'all' || statusFilter === 'permanent') dirs.push({ dir: permDir, status: 'permanent' });
+
+    let total = 0;
+    console.log(`\n  Sessions (${statusFilter})\n`);
+    console.log('  ' + 'Date'.padEnd(12) + 'Status'.padEnd(12) + 'Domains'.padEnd(24) + 'Title');
+    console.log('  ' + '─'.repeat(72));
+
+    for (const { dir, status } of dirs) {
+      if (!fs.existsSync(dir)) continue;
+      const files = fs.readdirSync(dir).filter(f => f.endsWith('.md')).sort().reverse();
+      for (const file of files) {
+        const content = fs.readFileSync(path.join(dir, file), 'utf8');
+        const fm = parseFrontmatter(content);
+        const date = fm.date || file.slice(0, 10);
+        const domains = fm.domains || '—';
+        const title = fm.title || file.replace(/\.md$/, '');
+        console.log('  ' + date.padEnd(12) + status.padEnd(12) + domains.slice(0, 22).padEnd(24) + title);
+        total++;
+      }
+    }
+
+    if (total === 0) console.log('  (none)');
+    console.log();
+    return;
+  }
+
+  // ── promote ───────────────────────────────────────────────────────────────
+  if (subcommand === 'promote') {
+    const filename = args[3];
+    if (!filename) {
+      console.error('Usage: sdk-doc session <project-dir> promote <filename>');
+      process.exit(1);
+    }
+    const src = path.join(tempDir, filename);
+    if (!fs.existsSync(src)) {
+      console.error(`Session not found: ${src}`);
+      console.error(`Available temp sessions:`);
+      if (fs.existsSync(tempDir)) {
+        fs.readdirSync(tempDir).filter(f => f.endsWith('.md')).forEach(f => console.error(`  ${f}`));
+      }
+      process.exit(1);
+    }
+
+    if (!fs.existsSync(permDir)) fs.mkdirSync(permDir, { recursive: true });
+
+    let content = fs.readFileSync(src, 'utf8');
+    content = content.replace(/status:\s*"temp"/, 'status: "permanent"');
+    content = content.replace(/Status: temp/, 'Status: permanent');
+
+    const dest = path.join(permDir, filename);
+    fs.writeFileSync(dest, content, 'utf8');
+    fs.unlinkSync(src);
+    console.log(`✓ Session promoted: ${filename}`);
+    console.log(`  Moved: sessions/temp/ → sessions/permanent/`);
+    console.log(`  Now indexed in context-index.json (run: sdk-doc index ${path.relative(process.cwd(), projectDir)})`);
+    return;
+  }
+
+  // ── clean ─────────────────────────────────────────────────────────────────
+  if (subcommand === 'clean') {
+    const confirm = args.includes('--confirm');
+    if (!fs.existsSync(tempDir)) {
+      console.log('No temp sessions directory found.');
+      return;
+    }
+    const files = fs.readdirSync(tempDir).filter(f => f.endsWith('.md'));
+    if (files.length === 0) {
+      console.log('No temp sessions to clean.');
+      return;
+    }
+
+    console.log(`Temp sessions (${files.length}):`);
+    for (const f of files) {
+      const content = fs.readFileSync(path.join(tempDir, f), 'utf8');
+      const fm = parseFrontmatter(content);
+      console.log(`  ${f}: "${fm.title || f.replace(/\.md$/, '')}"`);
+    }
+
+    if (!confirm) {
+      console.log(`\nRe-run with --confirm to delete all ${files.length} temp session(s).`);
+      return;
+    }
+
+    for (const f of files) {
+      fs.unlinkSync(path.join(tempDir, f));
+    }
+    console.log(`\n✓ Deleted ${files.length} temp session(s).`);
+  }
 }
 
 // ─── Dispatch ────────────────────────────────────────────────────────────────
@@ -1190,6 +1428,7 @@ switch (command) {
   case 'manifest': cmdManifest(); break;
   case 'index':    cmdIndex();    break;
   case 'study':    cmdStudy();    break;
+  case 'session':  cmdSession();  break;
   default:
     console.error(`Unknown command: "${command}"`);
     printHelp();

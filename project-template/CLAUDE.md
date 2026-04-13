@@ -114,6 +114,10 @@ sdk-doc decision history.md --decision "..." --context "..." --made-by [Role]
 sdk-doc pod-update current-status.md --mission "..." --status "..." --next "..."
 sdk-doc read [file] --section "## Section"
 sdk-doc append [file] --section "## Section" --content "..."
+sdk-doc session . save --title "..." [--domains "..."] [--tags "..."]   # Save session context (temp)
+sdk-doc session . list [--status temp|permanent|all]                    # List saved sessions
+sdk-doc session . promote <filename>                                    # Make session permanent (indexed)
+sdk-doc session . clean --confirm                                       # Delete all temp sessions
 ```
 
 ## Communication protocol

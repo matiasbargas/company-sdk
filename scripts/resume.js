@@ -75,6 +75,29 @@ if (fs.existsSync(draftsDir)) {
   console.log('Drafts:  — Night Watch not initialized (run: node scripts/daemon.js <project-dir> --init)');
 }
 
+// ─── 2.7 Temp session review ──────────────────────────────────────────────
+const tempSessionsDir = path.join(projectDir, 'sessions', 'temp');
+if (fs.existsSync(tempSessionsDir)) {
+  const { parseFrontmatter } = require('./lib/frontmatter');
+  const tempFiles = fs.readdirSync(tempSessionsDir).filter(f => f.endsWith('.md')).sort().reverse();
+  if (tempFiles.length > 0) {
+    console.log(`Sessions: ${tempFiles.length} temp session(s) pending review`);
+    for (const tf of tempFiles.slice(0, 5)) {
+      const content = fs.readFileSync(path.join(tempSessionsDir, tf), 'utf8');
+      const fm = parseFrontmatter(content);
+      const title = fm.title || tf.replace(/\.md$/, '');
+      console.log(`         - ${tf}: "${title}"`);
+    }
+    if (tempFiles.length > 5) console.log(`         ... and ${tempFiles.length - 5} more`);
+    console.log(`         Promote: sdk-doc session ${projectDir} promote <filename>`);
+    console.log(`         Clean:   sdk-doc session ${projectDir} clean --confirm`);
+  } else {
+    console.log('Sessions: — no pending sessions');
+  }
+} else {
+  console.log('Sessions: — no sessions directory');
+}
+
 // ─── 3. Next agent ────────────────────────────────────────────────────────────
 // Run sdk-next for the full session brief
 const nextScript = path.join(__dirname, 'next.js');

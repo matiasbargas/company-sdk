@@ -241,6 +241,8 @@ console.log(`    Output:  ${outputDir}`);
 console.log(`    Release: ${releaseId}\n`);
 
 ensureDir(outputDir);
+ensureDir(path.join(outputDir, 'sessions', 'temp'));
+ensureDir(path.join(outputDir, 'sessions', 'permanent'));
 
 const templateFiles = fs.readdirSync(templateDir);
 let count = 0;
