@@ -408,6 +408,49 @@ console.log('\n═══ Bus Command ═══\n');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+console.log('\n═══ Cockpit ═══\n');
+// ═══════════════════════════════════════════════════════════════════════════════
+
+{
+  const dir = tmpProject();
+
+  // Add domains
+  run(`node scripts/doc.js domain "${dir}" add --name "core" --lead CTO --summary "Core platform. Auth, data, API."`, SDK_ROOT);
+  run(`node scripts/doc.js domain "${dir}" add --name "payments" --lead CFO --summary "Payment processing. Stripe."`, SDK_ROOT);
+
+  // Generate manifest + index
+  run(`node scripts/doc.js manifest "${dir}"`, SDK_ROOT);
+  run(`node scripts/doc.js index "${dir}"`, SDK_ROOT);
+
+  // Add a bus message
+  run(`node scripts/doc.js bus "${dir}" --from CTO --to CLO --priority BLOCKER --message "Need compliance review."`, SDK_ROOT);
+
+  // Run cockpit for CTO
+  const cockpitCTO = run(`node scripts/doc.js cockpit "${dir}" --role CTO`, SDK_ROOT);
+  assert('cockpit shows role', cockpitCTO.includes('COCKPIT: CTO'));
+  assert('cockpit shows project name', cockpitCTO.includes('test-project'));
+  assert('cockpit shows release', cockpitCTO.includes('v2026.Q2.1'));
+  assert('cockpit shows STATE', cockpitCTO.includes('STATE:'));
+  assert('cockpit shows PROJECT DOMAINS', cockpitCTO.includes('PROJECT DOMAINS'));
+  assert('cockpit shows core domain summary', cockpitCTO.includes('core') && cockpitCTO.includes('CTO'));
+  assert('cockpit shows payments domain', cockpitCTO.includes('payments'));
+  assert('cockpit shows ACTIVE MISSIONS', cockpitCTO.includes('ACTIVE MISSIONS') || cockpitCTO.includes('Discovery'));
+  assert('cockpit shows AVAILABLE OPERATIONS', cockpitCTO.includes('AVAILABLE OPERATIONS'));
+  assert('cockpit shows opsMap entries', cockpitCTO.includes('record-decision'));
+
+  // Run cockpit for CLO (should see bus message addressed to them)
+  const cockpitCLO = run(`node scripts/doc.js cockpit "${dir}" --role CLO`, SDK_ROOT);
+  assert('CLO cockpit shows bus message', cockpitCLO.includes('RECENT BUS MESSAGES') || cockpitCLO.includes('Need compliance'));
+
+  // Cockpit without manifest still works
+  fs.unlinkSync(path.join(dir, 'context-manifest.json'));
+  const cockpitNoManifest = run(`node scripts/doc.js cockpit "${dir}" --role PM`, SDK_ROOT);
+  assert('cockpit works without manifest', cockpitNoManifest.includes('COCKPIT: PM'));
+
+  cleanup(dir);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Summary
 // ═══════════════════════════════════════════════════════════════════════════════
 
