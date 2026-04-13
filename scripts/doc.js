@@ -1032,15 +1032,101 @@ function cmdIndex() {
     'session-context':      { read: sessionEntries.map(s => s.path),                           consult: 'Coordinator' },
   };
 
+  // ── Project metadata ─────────────────────────────────────────────────────
+  const { actions: actionsRegistry, opsMap } = require('./lib/action-registry');
+
+  // Read project metadata from .sdkrc
+  let projectMeta = { name: path.basename(projectDir), type: 'product', squad: 'startup', summary: '' };
+  if (fs.existsSync(sdkrcPath)) {
+    try {
+      const sdkrc = JSON.parse(fs.readFileSync(sdkrcPath, 'utf8'));
+      if (sdkrc.projectName) projectMeta.name = sdkrc.projectName;
+      if (sdkrc.type) projectMeta.type = sdkrc.type;
+      if (sdkrc.squad) projectMeta.squad = sdkrc.squad;
+    } catch (_) {}
+  }
+
+  // ── Dynamic project domain scanning ────────────────────────────────────
+  const domainsDir = path.join(projectDir, 'domains');
+  const projectDomains = {};
+  if (fs.existsSync(domainsDir)) {
+    const domainDirs = fs.readdirSync(domainsDir).filter(d => {
+      return fs.statSync(path.join(domainsDir, d)).isDirectory();
+    });
+    for (const dd of domainDirs) {
+      const domainPath = path.join(domainsDir, dd);
+      const summaryPath = path.join(domainPath, 'summary.md');
+      let summary = '';
+      let lead = 'Coordinator';
+      let spawnWhen = [];
+      let contextProvides = [];
+
+      if (fs.existsSync(summaryPath)) {
+        const content = fs.readFileSync(summaryPath, 'utf8');
+        const fm = parseFrontmatter(content);
+        if (fm.lead) lead = fm.lead;
+        if (fm.spawn_when) spawnWhen = fm.spawn_when.split(',').map(s => s.trim()).filter(Boolean);
+        if (fm.context_provides) contextProvides = fm.context_provides.split(',').map(s => s.trim()).filter(Boolean);
+        // Extract first paragraph after frontmatter as summary
+        const bodyMatch = content.match(/^---[\s\S]*?---\s*\n([\s\S]*)/);
+        const body = bodyMatch ? bodyMatch[1].trim() : content.replace(/^---[\s\S]*?---/, '').trim();
+        const firstPara = body.split('\n\n')[0] || body.split('\n')[0] || '';
+        summary = firstPara.replace(/^#+\s*.*\n/, '').trim().slice(0, 500);
+      }
+
+      // Discover L1 files
+      const allFiles = fs.readdirSync(domainPath).filter(f => f.endsWith('.md'));
+      const l0Files = allFiles.filter(f => f === 'summary.md').map(f => `domains/${dd}/${f}`);
+      const l1Files = allFiles.filter(f => f !== 'summary.md').map(f => `domains/${dd}/${f}`);
+
+      projectDomains[dd] = {
+        summary,
+        lead,
+        cross_loadable: true,
+        files: { L0: l0Files, L1: l1Files },
+        spawn_when: spawnWhen,
+        context_provides: contextProvides,
+      };
+
+      // Add domain files to the main files catalog
+      for (const df of allFiles) {
+        const fullPath = path.join(domainPath, df);
+        const mtime = fs.statSync(fullPath).mtime;
+        const ageHours = Math.round((now - mtime.getTime()) / 1000 / 60 / 60);
+        files.push({
+          path: `domains/${dd}/${df}`,
+          domain: dd,
+          owner: lead,
+          purpose: df === 'summary.md' ? `Domain summary: ${dd}` : `Domain detail: ${dd}/${df.replace('.md', '')}`,
+          load_when: df === 'summary.md' ? ['session-start', 'cockpit'] : ['domain-deep-dive', dd],
+          exists: true,
+          ageHours,
+          stale: ageHours > 168
+        });
+      }
+    }
+  }
+
+  // ── Serialize actions for agent consumption ────────────────────────────
+  // Strip the registry down to what agents need (no script paths, just capabilities)
+  const actionsForIndex = {};
+  for (const [id, def] of Object.entries(actionsRegistry)) {
+    actionsForIndex[id] = { writes: def.writes, requires: def.requires, description: def.description };
+  }
+
   const index = {
-    schemaVersion: '1.0',
+    schemaVersion: '2.0',
     indexVersion:  previousVersion + 1,
     generatedAt:   refMtime.toISOString(),
     release,
-    files,
-    domains,
+    project: projectMeta,
+    projectDomains,
+    orgDomains: domains,
     queryMap,
+    opsMap,
+    actions: actionsForIndex,
     sessions: sessionEntries,
+    files,
   };
 
   writeFile(indexFile, JSON.stringify(index, null, 2) + '\n');
