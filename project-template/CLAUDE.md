@@ -2,6 +2,14 @@
 
 Built with team-sdk. This project uses a structured set of AI agents coordinated by a shared protocol.
 
+---
+
+## Project Context
+
+{{DOMAIN_CONTEXT}}
+
+---
+
 ## Start here — every session
 
 **Step 1 — Generate the context manifest (preferred first command):**

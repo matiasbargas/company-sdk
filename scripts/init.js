@@ -4,20 +4,26 @@
  * init.js — Create a new team-sdk project, init Claude project, and prime idea.md
  *
  * Usage:
- *   node scripts/init.js <project-name> [--output <dir>] [--squad <type>] [--type <type>] [--idea "your idea"]
+ *   node scripts/init.js <project-name> [--output <dir>] [--squad <type>] [--type <type>] [--idea "your idea"] [--source <file>]
  *
  * Options:
  *   --output <dir>    Output directory (default: ../projects/<project-name>)
  *   --squad <type>    website | mvp | feature | startup  (default: startup)
  *   --type <type>     Project type config from team/types/ (default: product)
  *   --idea "..."      Drop your raw idea directly — skips the placeholder in idea.md
+ *   --source <file>   Path to a vision doc (PDF, markdown, text) — copied into project as source material
+ *   --no-git          Skip git init + initial commit
  *
  * What it does:
  *   1. Scaffolds project from project-template/ with all team folders and docs
  *   2. Creates .claude/settings.json to register it as a Claude Code project
  *   3. Pre-fills current-status.md with Day 0 state (ready for Greg)
  *   4. If --idea is given, writes it into idea.md Section 1 immediately
- *   5. Prints the exact prompt to paste to Greg when you're ready
+ *   5. If --source is given, copies the file into the project root as reference material
+ *   6. Seeds history.md with Project Start entry
+ *   7. Generates context-manifest.json and context-index.json
+ *   8. Initializes git repo with initial commit (unless --no-git)
+ *   9. Prints the exact prompt to paste to Greg when you're ready
  */
 
 const fs   = require('fs');
@@ -44,27 +50,41 @@ Examples:
   node scripts/init.js landing-page --squad website --output ~/projects/landing
   node scripts/init.js fintech-tool --idea "A tool that helps solo founders track burn rate in real time"
   node scripts/init.js api-service --type api --squad mvp
+  node scripts/init.js nu-chain --squad startup --source ~/Downloads/vision.pdf
 `);
   process.exit(0);
 }
 
 const projectName = args[0];
-let outputDir  = null;
-let squadType  = 'startup';
+let outputDir   = null;
+let squadType   = 'startup';
 let projectType = 'product';
-let seedIdea   = null;
+let seedIdea    = null;
+let sourceFile  = null;
+let skipGit     = false;
 
 for (let i = 1; i < args.length; i++) {
-  if      (args[i] === '--output' && args[i + 1]) outputDir   = args[++i];
-  else if (args[i] === '--squad'  && args[i + 1]) squadType   = args[++i];
-  else if (args[i] === '--type'   && args[i + 1]) projectType = args[++i];
-  else if (args[i] === '--idea'   && args[i + 1]) seedIdea    = args[++i];
+  if      (args[i] === '--output'  && args[i + 1]) outputDir   = args[++i];
+  else if (args[i] === '--squad'   && args[i + 1]) squadType   = args[++i];
+  else if (args[i] === '--type'    && args[i + 1]) projectType = args[++i];
+  else if (args[i] === '--idea'    && args[i + 1]) seedIdea    = args[++i];
+  else if (args[i] === '--source'  && args[i + 1]) sourceFile  = args[++i];
+  else if (args[i] === '--no-git')                 skipGit     = true;
 }
 
 const VALID_SQUADS = ['website', 'mvp', 'feature', 'startup'];
 if (!VALID_SQUADS.includes(squadType)) {
   console.error(`Invalid squad type: "${squadType}". Valid: ${VALID_SQUADS.join(', ')}`);
   process.exit(1);
+}
+
+// Validate --source file exists
+if (sourceFile) {
+  sourceFile = path.resolve(sourceFile);
+  if (!fs.existsSync(sourceFile)) {
+    console.error(`Source file not found: ${sourceFile}`);
+    process.exit(1);
+  }
 }
 
 const sdkRoot    = path.resolve(__dirname, '..');
@@ -174,6 +194,18 @@ const releaseId = `v${year}.Q${quarter}.1`;
 const dateStr   = now.toISOString().split('T')[0];
 const timeStr   = now.toISOString().replace('T', ' ').slice(0, 16);
 
+// Build domain context block for CLAUDE.md
+let domainContext = `*No source document provided. Fill this section with project-specific context after Discovery.*\n\n*To populate automatically, re-run init with --source <vision-doc>.*`;
+
+if (sourceFile) {
+  const sourceBasename = path.basename(sourceFile);
+  domainContext = `**Source document:** \`${sourceBasename}\` — read this for full project context.\n\nThis project was initialized from a vision document. The source file is included in the project root. During Discovery, Greg and the team will extract domain-specific operating rules, non-negotiables, and technical constraints from it into this section.`;
+}
+
+if (seedIdea) {
+  domainContext = `**Idea:** ${seedIdea}\n\nThis project was initialized with a seed idea. During Discovery, Greg and the team will expand this into domain-specific operating rules, non-negotiables, and technical constraints.`;
+}
+
 const vars = {
   'PROJECT NAME': projectName,
   PROJECT_NAME:   projectName,
@@ -184,6 +216,7 @@ const vars = {
   YEAR:           String(year),
   SQUAD:          squadType,
   COMPANY:        projectName,
+  DOMAIN_CONTEXT: domainContext,
 };
 
 // ─── Pre-flight ───────────────────────────────────────────────────────────────
@@ -387,10 +420,109 @@ statusContent = statusContent
 fs.writeFileSync(statusPath, statusContent, 'utf8');
 console.log(`    ✓  current-status.md  ← primed for Day 0`);
 
-// Write .sdkrc — persists SDK source path and project type
+// Write .sdkrc — persists SDK source path, project type, and release
 const sdkrcPath = path.join(outputDir, '.sdkrc');
-fs.writeFileSync(sdkrcPath, JSON.stringify({ sdkPath: sdkRoot, type: typeConfig.type }, null, 2) + '\n', 'utf8');
-console.log(`    ✓  .sdkrc  (SDK path + type persisted)`);
+fs.writeFileSync(sdkrcPath, JSON.stringify({
+  releaseId,
+  squad: squadType,
+  projectName,
+  sdkPath: sdkRoot,
+  type: typeConfig.type
+}, null, 2) + '\n', 'utf8');
+console.log(`    ✓  .sdkrc  (release + squad + SDK path persisted)`);
+
+// ─── 5. Copy --source file ──────────────────────────────────────────────────
+
+if (sourceFile) {
+  const sourceBasename = path.basename(sourceFile);
+  const sourceDest     = path.join(outputDir, sourceBasename);
+  fs.copyFileSync(sourceFile, sourceDest);
+  console.log(`    ✓  ${sourceBasename}  ← source document copied`);
+}
+
+// ─── 6. Seed history.md with Project Start ──────────────────────────────────
+
+const historyPath = path.join(outputDir, 'history.md');
+if (fs.existsSync(historyPath)) {
+  let historyContent = fs.readFileSync(historyPath, 'utf8');
+
+  const ideaLabel = seedIdea
+    ? seedIdea.slice(0, 120) + (seedIdea.length > 120 ? '...' : '')
+    : sourceFile
+      ? `Vision document provided: ${path.basename(sourceFile)}`
+      : 'Project scaffolded. Idea to be shaped during Discovery.';
+
+  const projectStartEntry = `## Project Start
+**Date:** ${dateStr}
+**Status:** Initiated
+
+**What happened:**
+Owner initiated ${projectName}. ${ideaLabel}
+Squad: ${squadType}. Release target: ${releaseId}.
+
+**Capital / constraints:**
+[To be filled during Discovery]
+
+**Key decisions:**
+- Squad type: ${squadType}
+- Project type: ${typeConfig.type} (${typeConfig.name})
+- Release: ${releaseId}`;
+
+  historyContent = historyContent.replace(
+    `## [Project Start]
+**Date:** [YYYY-MM-DD]
+**Status:** Initiated
+
+**What happened:**
+[1-2 sentences: who briefed whom, what the strategic direction is.]
+
+**Capital / constraints:**
+[Budget, runway, team size, hard deadlines.]
+
+**Key decisions:**
+[Decisions made at project start.]`,
+    projectStartEntry
+  );
+
+  fs.writeFileSync(historyPath, historyContent, 'utf8');
+  console.log(`    ✓  history.md  ← Project Start entry seeded`);
+}
+
+// ─── 7. Generate context-manifest.json and context-index.json ───────────────
+
+const docScript = path.join(sdkRoot, 'scripts', 'doc.js');
+if (fs.existsSync(docScript)) {
+  try {
+    const { execSync } = require('child_process');
+    execSync(`node "${docScript}" manifest "${outputDir}"`, { stdio: 'pipe' });
+    console.log(`    ✓  context-manifest.json  ← generated`);
+  } catch (_) {
+    console.log(`    ⚠  context-manifest.json  ← generation failed (non-blocking)`);
+  }
+  try {
+    const { execSync } = require('child_process');
+    execSync(`node "${docScript}" index "${outputDir}"`, { stdio: 'pipe' });
+    console.log(`    ✓  context-index.json  ← generated`);
+  } catch (_) {
+    console.log(`    ⚠  context-index.json  ← generation failed (non-blocking)`);
+  }
+}
+
+// ─── 8. Git init + initial commit ────────────────────────────────────────────
+
+if (!skipGit) {
+  try {
+    const { execSync } = require('child_process');
+    execSync('git init', { cwd: outputDir, stdio: 'pipe' });
+    execSync('git branch -m main', { cwd: outputDir, stdio: 'pipe' });
+    execSync('git add -A', { cwd: outputDir, stdio: 'pipe' });
+    const commitMsg = `feat: initialize ${projectName} with team-sdk\n\nSquad: ${squadType} | Type: ${typeConfig.type} | Release: ${releaseId}${sourceFile ? '\nSource: ' + path.basename(sourceFile) : ''}`;
+    execSync(`git commit -m "${commitMsg}"`, { cwd: outputDir, stdio: 'pipe' });
+    console.log(`    ✓  git  ← initialized with initial commit (main branch)`);
+  } catch (e) {
+    console.log(`    ⚠  git  ← init failed: ${e.message.split('\n')[0]} (non-blocking)`);
+  }
+}
 
 // ─── Done ─────────────────────────────────────────────────────────────────────
 
@@ -398,11 +530,16 @@ const ideaFile    = path.join(outputDir, 'idea.md');
 const claudeMdFile = path.join(outputDir, 'CLAUDE.md');
 
 printNextStub(outputDir);
+
+const gitStatus = skipGit ? '' : '    Git: initialized (main branch, initial commit)\n';
+const sourceStatus = sourceFile ? `    Source: ${path.basename(sourceFile)}\n` : '';
+
 console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅  ${projectName}  ready  (${count + 2} files)
+  ${projectName}  ready
     ${outputDir}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    Squad: ${squadType} | Type: ${typeConfig.type} | Release: ${releaseId}
+${gitStatus}${sourceStatus}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 NEXT STEPS
 ──────────
@@ -410,49 +547,18 @@ NEXT STEPS
 
       claude ${outputDir}
 
-    (Claude will load CLAUDE.md automatically — every agent
-     instruction and key file reference is already wired in.)
+2.  ${seedIdea || sourceFile ? 'Review idea.md — it has been seeded. Complete Section 4 if needed.' : 'Fill in idea.md — complete all five sections. Section 4 is the Greg brief.'}
 
-2.  Fill in your idea:
-
-      open ${ideaFile}
-
-    Complete all five sections. When Section 4 (the brief) is
-    ready, move on.
-
-3.  Activate Greg to start Discovery — paste this into Claude:
+3.  Activate Greg to start Discovery:
 
       Hey Greg — here's a new project brief.
-
-      Idea: ${projectName}
-
-      The problem:
       [paste from idea.md Section 4]
 
-      The user:
-      [paste from idea.md Section 4]
-
-      What we're building:
-      [paste from idea.md Section 4]
-
-      What winning looks like at 18 months:
-      [paste from idea.md Section 4]
-
-      What I'm NOT doing:
-      [paste from idea.md Section 4]
-
-      Biggest risk:
-      [paste from idea.md Section 4]
-
-      Constraints:
-      [paste from idea.md Section 4]
-
-    Greg will kick off Discovery and activate the Coordinator,
-    who routes the rest of the team in the order defined in SQUAD.md.
+    Greg kicks off Discovery and activates the team per SQUAD.md.
 
 4.  Resume any session with:
 
-      sdk-doc status ${outputDir}
+      sdk-resume ${outputDir}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `);
