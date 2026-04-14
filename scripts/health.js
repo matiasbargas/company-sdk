@@ -88,7 +88,86 @@ if (!fs.existsSync(manifestFile)) {
   }
 }
 
-// 4. .sdkrc validity
+// 4. Domain health
+const domainsDir = path.join(projectDir, 'domains');
+const sdkrcForDomains = fs.existsSync(sdkrcPath) ? (() => { try { return JSON.parse(fs.readFileSync(sdkrcPath, 'utf8')); } catch (_) { return {}; } })() : {};
+
+if (!fs.existsSync(domainsDir)) {
+  // Only flag if project has been through Discovery (history.md has decisions)
+  const historyPath = path.join(projectDir, 'history.md');
+  if (fs.existsSync(historyPath)) {
+    const histContent = fs.readFileSync(historyPath, 'utf8');
+    if (histContent.includes('DECISION:') && !histContent.includes('[Project Start]')) {
+      issues.push('domains/ directory missing — project has decisions but no domain structure. Run: sdk-doc domain . add --name <domain> --lead <role>');
+    }
+  }
+} else {
+  const domainDirs = fs.readdirSync(domainsDir).filter(d => fs.statSync(path.join(domainsDir, d)).isDirectory());
+  if (domainDirs.length === 0) {
+    issues.push('domains/ exists but is empty — add at least one domain: sdk-doc domain . add --name <domain> --lead <role>');
+  } else {
+    let emptySummaries = 0;
+    let missingL1 = 0;
+    for (const dd of domainDirs) {
+      const summaryPath = path.join(domainsDir, dd, 'summary.md');
+      if (!fs.existsSync(summaryPath)) {
+        issues.push(`domains/${dd}/summary.md missing — every domain needs a summary`);
+      } else {
+        const content = fs.readFileSync(summaryPath, 'utf8');
+        if (content.includes('[Describe the')) {
+          emptySummaries++;
+        }
+      }
+      const l1Files = fs.readdirSync(path.join(domainsDir, dd)).filter(f => f.endsWith('.md') && f !== 'summary.md');
+      if (l1Files.length === 0) missingL1++;
+    }
+    if (emptySummaries > 0) {
+      issues.push(`${emptySummaries} domain(s) have placeholder summaries — fill them after Discovery decisions are made`);
+    }
+    if (missingL1 > 0) {
+      notices.push(`${missingL1} of ${domainDirs.length} domain(s) have no L1 detail files — add as domain understanding deepens`);
+    } else {
+      notices.push(`${domainDirs.length} domain(s) with L0 summaries + L1 files ✓`);
+    }
+  }
+}
+
+// 5. context-index.json version check
+const indexFile = path.join(projectDir, 'context-index.json');
+if (fs.existsSync(indexFile)) {
+  try {
+    const idx = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
+    if (idx.schemaVersion === '1.0' && fs.existsSync(domainsDir)) {
+      issues.push('context-index.json is schema 1.0 but domains/ exists — regenerate: sdk-doc index .');
+    }
+    if (!idx.opsMap) {
+      notices.push('context-index.json missing opsMap — regenerate for v4 features: sdk-doc index .');
+    }
+    if (idx.projectDomains && Object.keys(idx.projectDomains).length === 0 && fs.existsSync(domainsDir)) {
+      const dCount = fs.readdirSync(domainsDir).filter(d => fs.statSync(path.join(domainsDir, d)).isDirectory()).length;
+      if (dCount > 0) {
+        issues.push(`${dCount} domain(s) exist but context-index.json has 0 projectDomains — regenerate: sdk-doc index .`);
+      }
+    }
+  } catch (_) {}
+} else {
+  notices.push('context-index.json not found — run sdk-doc index . to generate');
+}
+
+// 6. bus-log.md presence (after first session with Bus messages)
+const busLogPath = path.join(projectDir, 'bus-log.md');
+if (!fs.existsSync(busLogPath)) {
+  const historyPath2 = path.join(projectDir, 'history.md');
+  if (fs.existsSync(historyPath2)) {
+    const h = fs.readFileSync(historyPath2, 'utf8');
+    const decisionCount = (h.match(/DECISION:/g) || []).length;
+    if (decisionCount >= 3) {
+      notices.push('bus-log.md not found — consider using sdk-doc bus for inter-agent messages');
+    }
+  }
+}
+
+// 7. .sdkrc validity
 const sdkrcPath = path.join(projectDir, '.sdkrc');
 if (!fs.existsSync(sdkrcPath)) {
   notices.push('.sdkrc not found — SDK path may not be set (run sdk-init)');

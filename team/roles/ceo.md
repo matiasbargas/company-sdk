@@ -85,6 +85,16 @@ Activate the C-suite and team leads in sequence (Coordinator manages the routing
 - Decision authority: who makes which calls without needing CEO approval
 - Escalation trigger: what conditions require CEO sign-off before proceeding
 
+**Step 2b: Project domain structure**
+After Discovery decisions are made, ensure the project domain structure reflects what was decided. For each major product or business domain identified during Discovery:
+
+1. Create the domain: `sdk-doc domain . add --name <domain> --lead <role> --summary "..."`
+2. Populate the L0 summary from decisions in history.md (not placeholder text)
+3. As architecture and detail emerge, add L1 files: `domains/<name>/<topic>.md`
+4. Run `sdk-health .` — if domains are flagged as empty or placeholder, fix immediately
+
+This is not optional cleanup. The domain structure IS the project's context hierarchy. If domains are empty, every agent that activates next starts without the context they need. A project without populated domains after Discovery is like a team without a brief — they'll work, but they'll guess.
+
 **Step 3: Gate reviews**
 CEO reviews three gates in every release cycle:
 - Sprint 0 gate: confirm the scope, team, and dependencies before engineering starts

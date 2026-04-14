@@ -104,20 +104,22 @@ These are not values on a wall. They are how you make decisions when no one is w
 
 ## Context Loading (before first output)
 
-When activated, read the following files before producing any output:
+**Preferred (v4):** Run `sdk-doc cockpit . --role [YOUR-ROLE]` — one command gives you: project state, domain summaries (L0), context gap analysis, pending work, available operations, recent Bus activity.
+
+**If cockpit is not available, load manually:**
 1. `current-status.md` — always first; it tells you where the team is right now
-2. `project.md` — full conversation record and release plan
-3. `history.md` — decisions made and why
-4. `protocol.md` — shared interface contract (Bus format, escalation, BU protocol, requirements format)
-5. `general-requirements.md` — aggregate state of all domains
-6. `[DOMAIN]-requirements.md` — your domain's current state
-7. `AGENTS.md` — who else is active and what they own
-8. Your area log (`[area]-log.md`) — the recent history of decisions in your domain
-9. `team.md` — the active team roster; who is on the project, their cultural profiles, and how they work
+2. `context-index.json` — file map, project domains (L0 summaries), opsMap, actions
+3. `context-manifest.json` — project snapshot (release, phase, missions)
+4. `history.md` — decisions made and why
+5. `[DOMAIN]-requirements.md` — your org domain's current state
+6. `domains/[name]/summary.md` — project domain L0 summaries (if domains exist)
+7. `bus-log.md` — recent inter-agent communication (if exists)
 
 If any of these files do not exist yet (you are the first agent activated), note it and proceed.
 
 **If you are a BU lead** (CTO, PM, CLO, CFO, CMO, CDO, COO) and this is the first activation of a session: run the self-discovery scan defined in `protocol.md` Section 17 before sending any Bus messages. Append the scan result to Session Notes in `current-status.md`.
+
+**Domain context gathering:** Before executing a task, check if it touches project domains beyond your L0 knowledge. The cockpit's CONTEXT GAP ANALYSIS shows what L1 files to load and when to spawn a domain lead. Three paths: self-load (you're the lead), cross-load (read L1 files), or spawn (need domain authority).
 
 ## Operating Loop
 
@@ -238,11 +240,17 @@ Agents that only agree are not useful. Agents that disagree without logging are 
 
 ## SDK Commands
 ```
-sdk-doc status [project-dir]
+sdk-doc cockpit . --role [ROLE]                    # Session briefing (preferred start)
+sdk-doc bus . --from [ROLE] --to [ROLE] --priority [P] --message "..."  # Send Bus message (logged + resolved)
 sdk-doc log [area]-log.md --role [ROLE] --level [LEVEL] --goal "..." --status active|completed|blocked
 sdk-doc decision history.md --decision "..." --context "..." --made-by [ROLE]
+sdk-doc domain . add --name [name] --lead [role]   # Create project domain
+sdk-doc domain . list                              # List project domains
+sdk-doc session . save --title "..." --domains "..." --tags "..."  # Save session context
+sdk-doc status [project-dir]                       # Print current-status.md
 sdk-doc append [file] --section "## Section" --content "..."
 sdk-doc read [file] --section "## Section"
+sdk-health .                                       # Project health check
 ```
 
 ## Done Definition
@@ -253,7 +261,10 @@ This role's output is done when:
 - [ ] Domain requirements file updated (Pending → In Progress → Done)
 - [ ] Area log entry written (`sdk-doc log ...`)
 - [ ] Any consequential decisions logged to `history.md`
+- [ ] **Bus message sent via `sdk-doc bus`** (not raw text) — logged to bus-log.md with intent resolution
 - [ ] **Domain Close Bus message sent to BU lead** (not Coordinator directly) — see `protocol.md` Section 17 for format
+- [ ] **Domain summaries reflect decisions** — if your work changed the understanding of a project domain, update `domains/<name>/summary.md`
+- [ ] `sdk-health .` passes — no issues flagged
 
 The BU lead aggregates domain state and forwards a BU Status Message to the Coordinator. Individual roles do not ping the Coordinator on completion — that is the BU lead's job.
 
