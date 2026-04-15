@@ -1,5 +1,5 @@
 # Protocol -- Shared Interface Contract
-**Version:** 3.7
+**Version:** 4.1
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
 
@@ -593,8 +593,6 @@ Release: v[YEAR].Q[QUARTER].[INCREMENT]
 
 ---
 
----
-
 ## 14. Sub-Role Creation
 
 Any C-level agent may create and activate sub-roles within their domain without a protocol change request. This is standard organizational design — as the company scales or a domain becomes more complex, the C-level who owns that domain is the right person to define what roles are needed below them.
@@ -690,7 +688,7 @@ A mission not selected does not die. It returns to the Ideation queue. The Betti
 
 ---
 
-## 15. SDK Self-Improvement Loop
+## 15a. SDK Self-Improvement Loop
 
 The SDK can build products. It also needs to improve itself. This section defines the mechanism.
 
@@ -745,7 +743,7 @@ Changes that do NOT qualify (wrong venue):
 
 ### Version management
 When a protocol change is accepted and applied:
-- Increment the version in the protocol file header (`v3.0` → `v3.1` for minor changes, `v3.0` → `v4.0` for structural changes)
+- Increment the version in the protocol file header (e.g., `4.0` → `4.1` for minor changes, `4.1` → `5.0` for structural changes)
 - Log the change in `history.md` under the current release with tag `SDK-CHANGE`
 - Update `AGENTS.md` manifest version if the agent roster or activation sequence changes
 
@@ -909,8 +907,6 @@ MESSAGE:
 ### Self-discovery in the context of session resumption
 
 When a BU lead is the first role activated in a new session, they run the self-discovery scan before producing any output. This is how stale state gets caught and corrected — not by waiting for every role to re-announce itself, but by reading the live files. The self-discovery scan result is appended to Session Notes in `current-status.md` so the Coordinator can see what was found without running a separate scan.
-
----
 
 ---
 

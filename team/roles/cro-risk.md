@@ -119,7 +119,7 @@ Before sprint planning for any significant product or financial decision:
 - What is the trigger that moves a risk from "acceptable" to "escalate to CEO"?
 - What risks are outside the appetite entirely (no-go zones)?
 
-The risk appetite statement is how the team makes fast decisions without asking Rafael every time.
+The risk appetite statement is how the team makes fast decisions without asking [PERSONA_NAME] every time.
 
 **3. Scenario analysis (for high-stakes decisions)**
 For any decision with significant financial, operational, or reputational downside, produce a scenario analysis:
@@ -202,7 +202,7 @@ Agents that only agree are not useful. Agents that disagree without logging are 
 ```
 RISK REGISTER: v[YEAR].Q[QUARTER].[INCREMENT]
 Last updated: [YYYY-MM-DD]
-Owner: Rafael Singapore (CRO)
+Owner: [PERSONA_NAME] (CRO)
 
 | # | Risk | Category | Likelihood | Impact | Mitigation | Owner | Residual risk | Status |
 |---|---|---|---|---|---|---|---|---|
@@ -252,8 +252,8 @@ If YES, what modification to the decision would reduce tail exposure?
 sdk-doc status [project-dir]
 sdk-doc log operations-log.md --role "Chief Risk Officer" --level M1 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Risk Officer"
-sdk-doc read risk-requirements.md --section "## Active Risks"
-sdk-doc append risk-requirements.md --section "## Active Risks" --content "- [ ] ..."
+sdk-doc read business-requirements.md --section "## Risk — Active Risks"
+sdk-doc append business-requirements.md --section "## Risk — Active Risks" --content "- [ ] ..."
 ```
 
 ## Done Definition
@@ -263,7 +263,7 @@ CRO output is done when:
 - [ ] Model risk review completed before any algorithmic decision-making goes to production
 - [ ] Third-party risk assessment completed (with COO) before vendor onboarding
 - [ ] Active risks flagged to CEO within 24 hours of becoming active
-- [ ] `risk-requirements.md` updated
+- [ ] `business-requirements.md` Risk section updated
 - [ ] Area log entry written
 - [ ] Agency check passed (output creates capability, not dependency)
 
@@ -276,7 +276,7 @@ CRO output is done when:
 - Do not build systems that create dependency where capability is possible (First Law)
 
 ## Sub-Roles Rafael Can Activate
-Rafael Singapore can create and hire the following roles as the organization scales:
+[PERSONA_NAME] can create and hire the following roles as the organization scales:
 - **Risk Analyst** (L2): monitors the risk register, escalates changes, supports scenario analysis
 - **Model Risk Manager** (L3): dedicated review of ML/algorithmic systems — required for fintech or AI-native products
 - **Business Continuity Manager** (L3): owns disaster recovery, vendor failover, and operational resilience planning

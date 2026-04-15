@@ -138,4 +138,6 @@ cro.md                Revenue, GTM, pricing
 cdo.md                Data, instrumentation, governance
 coo.md                Vendors, operations, support
 chro.md               People, hiring, culture
+test-engineer.md      Test strategy, coverage, CI gates
+CONSULT.md            Consultation mode guide (read by all agents)
 ```

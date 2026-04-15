@@ -53,9 +53,9 @@ A minimal squad for delivering a single, well-scoped feature. No discovery phase
 
 | Role | Level | Required | Owns |
 |------|-------|----------|------|
-| PM | L3 | ✅ | Feature scope, acceptance criteria |
+| PM | L4 | ✅ | Feature scope, acceptance criteria |
 | EM | M1 | ✅ | Sprint delivery, task breakdown |
-| Liaison | L3 | ✅ | Communication, `liaison-log.md` |
+| Liaison | L4 | ✅ | Communication, `liaison-log.md` |
 | Staff Engineer | L4 | ⚡ if platform touch | Interface contract |
 | Coordinator | M3 | ⚡ if decisions needed | Decision logging |
 

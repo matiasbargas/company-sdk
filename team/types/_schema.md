@@ -12,7 +12,7 @@ Files starting with `_` are reserved (schema, docs) and are never treated as typ
 {
   "type": "product",
   "name": "Software Product",
-  "description": "Software product with users (SaaS, app, platform)",
+  "description": "Software product with users (app, CLI, platform)",
   "requirements_files": ["discovery", "security", "engineering", "product", "design", "business", "general"],
   "gates": {
     "pre-cto": ["clo", "ciso"],

@@ -26,6 +26,7 @@ Goal/Change:
 Expected outcome:
 Requirements discovered:
 Artefacts produced:
+Research findings:
 Mission affected:
 Status:
 

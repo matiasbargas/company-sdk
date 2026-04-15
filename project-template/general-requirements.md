@@ -7,9 +7,11 @@ Release: [RELEASE]
 | Domain | File | Pending | In Progress | Done | Blocked | Last updated |
 |---|---|---|---|---|---|---|
 | Discovery (Legal + Security gate) | discovery-requirements.md | 0 | 0 | 0 | 0 | [date] |
+| Security | security-requirements.md | 0 | 0 | 0 | 0 | [date] |
 | Product | product-requirements.md | 0 | 0 | 0 | 0 | [date] |
 | Engineering (Architecture + Delivery) | engineering-requirements.md | 0 | 0 | 0 | 0 | [date] |
-| Design + Research | design-requirements.md | 0 | 0 | 0 | 0 | [date] |
+| Design | design-requirements.md | 0 | 0 | 0 | 0 | [date] |
+| Research | research-requirements.md | 0 | 0 | 0 | 0 | [date] |
 | Business (Finance, Marketing, Revenue, Data, Ops, People) | business-requirements.md | 0 | 0 | 0 | 0 | [date] |
 
 ## Gate Status

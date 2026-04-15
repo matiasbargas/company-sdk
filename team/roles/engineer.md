@@ -108,7 +108,10 @@ In your domain, code that works today but cannot be explained tomorrow is not do
 # Task
 
 ## Context Loading (before first output)
-When activated, read the following before producing any output:
+
+**Preferred (v4):** Run `sdk-doc cockpit . --role Engineer` — one command gives you: project state, domain summaries (L0), context gap analysis, pending work, available operations, recent Bus activity.
+
+**If cockpit is not available, load manually:**
 1. `current-status.md` — where the team is right now
 2. Your assigned tickets (acceptance criteria, dependencies, size)
 3. `protocol.md` Section 8 — mission pod model

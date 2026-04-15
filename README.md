@@ -6,8 +6,8 @@
 
 ```bash
 npm install -g company-sdk
-sdk-init my-saas --squad startup
-claude my-saas
+sdk-init my-project --squad startup
+claude my-project
 ```
 
 ```
@@ -90,9 +90,9 @@ sdk-doc read history.md --section "## Decisions"
 `sdk-ship` runs `sdk-validate` as a pre-flight on every release. Missing files, unfilled placeholders, and empty required sections block the ship. Advisory warnings show on dry-run without blocking. Real ships are clean or they don't go.
 
 ```bash
-sdk-validate my-saas              # advisory check — always exits 0
-sdk-validate my-saas --strict     # strict — exits 1 on any issue
-sdk-ship my-saas v2026.Q2.1       # runs validate, then tags + pushes
+sdk-validate my-project              # advisory check — always exits 0
+sdk-validate my-project --strict     # strict — exits 1 on any issue
+sdk-ship my-project v2026.Q2.1       # runs validate, then tags + pushes
 ```
 
 ### A team with genuine diversity
@@ -124,16 +124,16 @@ npm install -g company-sdk
 
 **Scaffold a project**
 ```bash
-sdk-init my-saas --squad startup
+sdk-init my-project --squad startup
 # or with an idea pre-loaded:
-sdk-init my-saas --squad startup --idea "B2B invoicing tool for freelancers in LATAM"
+sdk-init my-project --squad startup --idea "B2B invoicing tool for freelancers in LATAM"
 # or with a project type:
 sdk-init my-api --squad mvp --type api
 ```
 
 **Open in Claude Code**
 ```bash
-claude my-saas
+claude my-project
 ```
 
 The project `CLAUDE.md` loads automatically. Every agent, protocol rule, and file reference is wired in.
@@ -205,14 +205,6 @@ sdk-github sync-issues <project-dir>                # create issues from pending
 sdk-github release <project-dir> [--release-id v2026.Q2.1]  # create GitHub release from history.md
 sdk-github status <project-dir>                     # show open SDK-labeled issues
 
-# Cloud sync (Pro)
-sdk-cloud login                                     # device-code auth → ~/.sdk-credentials
-sdk-cloud logout                                    # revoke credentials
-sdk-cloud link <project-dir> [--org <id>]           # link project to cloud org
-sdk-cloud push <project-dir>                        # snapshot project state → cloud
-sdk-cloud pull <project-dir>                        # fetch latest snapshot → local
-sdk-cloud status <project-dir>                      # show local vs cloud diff
-sdk-cloud projects list                             # list all projects in org
 ```
 
 ---
@@ -276,7 +268,7 @@ All agents operate in both Project Mode and Consultation Mode. In Consultation M
 Every scaffolded project gets:
 
 ```
-my-saas/
+my-project/
 ├── idea.md                      # raw idea → refined brief (start here)
 ├── current-status.md            # session continuity — read this first on every resume
 ├── history.md                   # permanent decision record
@@ -302,16 +294,16 @@ The framework enforces two hard gates. Both produce specific, actionable error m
 
 **CLO + CISO gate** — runs before CTO activates
 ```bash
-sdk-gate-check my-saas
+sdk-gate-check my-project
 
 # 🔴  GATE BLOCKED
 #     CLO (Legal) gate is "In Progress" — must be "Done" before CTO activates.
-#     To clear: "Camila, we need a regulatory map for my-saas. Read discovery-requirements.md."
+#     To clear: "Camila, we need a regulatory map for my-project. Read discovery-requirements.md."
 ```
 
 **Mario gate** — runs before Sprint 1 starts
 ```bash
-sdk-gate-check my-saas --mario
+sdk-gate-check my-project --mario
 
 # ✅  GATE CLEARED
 #     ✓  Mario (Chief Engineer) sign-off: Logged
@@ -319,7 +311,7 @@ sdk-gate-check my-saas --mario
 
 **Doc health gate** — runs automatically on every `sdk-ship`
 ```bash
-sdk-validate my-saas
+sdk-validate my-project
 
 # ✅  clean — no issues
 # ⚠   current-status.md: placeholder found on line 3: "[RELEASE]"
@@ -350,4 +342,4 @@ The goal is not faster outputs. The goal is infrastructure for human agency 💚
 
 ---
 
-*company-sdk · 20+ roles · 4 squads · protocol v3.6 · v3.4.20*
+*company-sdk · 20+ roles · 4 squads · protocol v4.1 · v3.4.20*

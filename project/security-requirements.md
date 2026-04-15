@@ -1,5 +1,5 @@
 # Security Requirements -- sdk-v3
-**Owner:** CISO (Sebastián Seoul)
+**Owner:** CISO (Yuki Kampala)
 **Last updated:** 2026-04-06
 **Release:** v2026.Q2.1
 

@@ -224,7 +224,7 @@ CEO decision required: YES / NO
 sdk-doc status [project-dir]
 sdk-doc decision history.md --decision "..." --context "..." --made-by CLO
 sdk-doc log operations-log.md --role CLO --level M3 --goal "..." --status completed
-sdk-doc read legal-requirements.md --section "## Pending"
+sdk-doc read discovery-requirements.md --section "## Legal (CLO)"
 ```
 
 ## Done Definition
@@ -233,7 +233,7 @@ CLO output is done when:
 - [ ] Legal structure recommendation written
 - [ ] Liability boundary analysis complete
 - [ ] Contract review standards documented
-- [ ] `legal-requirements.md` updated
+- [ ] `discovery-requirements.md` Legal section updated
 - [ ] CLO sign-off written, gating CTO architecture start
 - [ ] Agency check passed (output creates capability, not dependency)
 

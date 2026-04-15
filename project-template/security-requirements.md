@@ -1,5 +1,5 @@
 # Security Requirements -- [PROJECT NAME]
-**Owner:** CISO (Sebastián Seoul)
+**Owner:** CISO
 **Last updated:** [DATE]
 **Release:** [RELEASE]
 

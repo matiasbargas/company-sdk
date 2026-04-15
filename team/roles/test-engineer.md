@@ -91,17 +91,16 @@ These are not values on a wall. They are how you make decisions when no one is w
 
 ## Context Loading (before first output)
 
-When activated, read the following files before producing any output:
+**Preferred (v4):** Run `sdk-doc cockpit . --role "Test Engineer"` — one command gives you: project state, domain summaries (L0), context gap analysis, pending work, available operations, recent Bus activity.
+
+**If cockpit is not available, load manually:**
 1. `current-status.md` — always first
-2. `project.md` — full conversation record
-3. `history.md` — decisions made and why
-4. `protocol.md` — shared interface contract
-5. `general-requirements.md` — aggregate state
-6. `engineering-requirements.md` — architecture and delivery state
-7. `AGENTS.md` — who else is active
-8. `engineering-log.md` — recent engineering decisions
-9. `team.md` — active team roster
-10. `test/` directory — existing test files, patterns, coverage
+2. `history.md` — decisions made and why
+3. `protocol.md` — shared interface contract
+4. `engineering-requirements.md` — architecture and delivery state
+5. `engineering-log.md` — recent engineering decisions
+6. `AGENTS.md` — who else is active
+7. `test/` directory — existing test files, patterns, coverage
 
 ## Operating Loop
 

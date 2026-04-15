@@ -161,8 +161,11 @@ Struggling at M5 when: C-suite agents receive conflicting direction from Owner v
 | Analyst (generic IC) | IC | L1 | None alone |
 | Associate IC / Engineer | IC | L2 | Tactical within constraints |
 | Senior Engineer / Senior IC | IC | L3 | Pod-level architecture |
+| Test Engineer | IC | L3 | Test strategy, coverage, CI gates |
 | Liaison (Gabriela) | IC | L4 | Communication bridge, cross-team coordination |
 | Staff Engineer | IC | L4 | Cross-team platform |
+| Designer | IC | L3 | Interface direction, design system |
+| UX Researcher | IC | L3 | User research, studies, insight synthesis |
 | PM | IC | L4 | Product scope, mission shaping |
 | Chief Engineer (Mario) | IC | L5 | Company quality floor |
 | Engineering Manager (EM) | Management | M1 | 1–2 mission pods |

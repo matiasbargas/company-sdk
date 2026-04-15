@@ -16,7 +16,7 @@ A project type config tells `sdk-init` what requirements files and log files to 
   "name": "Software Product",
 
   // One sentence describing what projects of this type are.
-  "description": "Software product with users (SaaS, app, platform)",
+  "description": "Software product with users (app, CLI, platform)",
 
   // Which requirements files to copy from project-template/.
   // Valid values: "discovery" | "security" | "engineering" | "product"

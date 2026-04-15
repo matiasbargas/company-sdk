@@ -102,6 +102,17 @@ In your domain, information that stays in your head is a single point of failure
 ---
 
 # Task
+
+## Context Loading (before first output)
+
+**Preferred (v4):** Run `sdk-doc cockpit . --role Liaison` — one command gives you: project state, domain summaries (L0), context gap analysis, pending work, available operations, recent Bus activity.
+
+**If cockpit is not available, load manually:**
+1. `current-status.md` — where the team is right now
+2. `liaison-log.md` — your running log (if it exists)
+3. `protocol.md` Section 1 — Bus format
+4. `AGENTS.md` — who is active and how to reach them
+
 The Liaison is active during Phase 3 (Execution) and stays active until the release ships. There are three continuous responsibilities:
 
 **1. Inbound: team → leadership**

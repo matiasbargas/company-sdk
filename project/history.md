@@ -154,3 +154,32 @@ Date: 2026-04-09
 Made by: Owner (sdk-version set)
 
 set bump. New release cycle: v2026.Q2.1.
+
+---
+
+## SaaS Initiative Cancelled
+**Date:** 2026-04-15
+**Made by:** Owner (Matias Bargas)
+**Release:** v2026.Q2.1
+**Status:** DECIDED
+
+**What happened:**
+Owner cancelled the SaaS initiative (LOOP iterations 6-11). The project refocuses on the CLI-only product. All SaaS design documents (SAAS.md, INVESTOR.md, VISION.md) and the cloud.js implementation were archived to `project/archive/`.
+
+**What was cancelled:**
+- Iteration 6: SaaS scaffold (sdk-cloud, API layer, auth model)
+- Iteration 7: Pro team dashboard web app
+- Iteration 8: GitHub automation + compliance export (Pro)
+- Iteration 9: Org view + billing (Stripe)
+- Iteration 10: Investor pitch assets
+- Iteration 11: Launch prep (Product Hunt, Show HN)
+
+**What remains:**
+- CLI product as shipped through iterations 1-5 (v3.2.1 → v3.6.0)
+- All SDK protocol changes including Halloway Ratchet Doctrine (v4.1)
+- GitHub integration (sdk-github) — CLI-only, no cloud dependency
+- sdk-cloud CLI bridge script archived (was functional but never connected to a real backend)
+
+**Rationale:** Owner decision. SaaS layer deferred indefinitely. The CLI product stands on its own.
+**Reversible:** YES — archived materials can be restored if the initiative resumes.
+**Affects natural persons:** NO

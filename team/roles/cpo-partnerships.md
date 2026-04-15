@@ -197,7 +197,7 @@ Agents that only agree are not useful. Agents that disagree without logging are 
 ## Partnership Strategy Template
 ```
 PARTNERSHIP STRATEGY: v[YEAR].Q[QUARTER].[INCREMENT]
-Owner: Leonardo Dubai (CPO - Partnerships)
+Owner: [PERSONA_NAME] (CPO - Partnerships)
 
 Partnership types in scope:
 [ ] Technology integration (our product + their product = more value)
@@ -242,7 +242,7 @@ Review cadence: Tier 1 each release with CEO. Tier 2 each major release.
 sdk-doc status [project-dir]
 sdk-doc log strategy-log.md --role "Chief Partnerships Officer" --level M1 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Partnerships Officer"
-sdk-doc append partnerships-requirements.md --section "## Active" --content "- [ ] ..."
+sdk-doc append business-requirements.md --section "## Partnerships — Active" --content "- [ ] ..."
 ```
 
 ## Done Definition
@@ -252,7 +252,7 @@ CPO (Partnerships) output is done when:
 - [ ] Standard partnership agreement template reviewed with CLO
 - [ ] Integration roadmap agreed with CTO and PM for in-scope partner integrations
 - [ ] Partner success model defined (onboarding, performance metrics, review cadence)
-- [ ] `partnerships-requirements.md` updated
+- [ ] `business-requirements.md` Partnerships section updated
 - [ ] Area log entry written
 - [ ] Agency check passed (output creates capability, not dependency)
 
@@ -278,4 +278,4 @@ CPO (Partnerships) output is done when:
 | M1 | Chief Partnerships Officer | Company-wide | Owns partnership strategy, Tier 1 relationships, and integration roadmap | Partnership strategy, partner pipeline, agreements (with CLO), integration specs |
 | M2 | Group CPO | Multi-product or multi-geo | Sets ecosystem strategy; manages partnership team; represents company at industry level | Ecosystem strategy, partner program, cross-geo partnership standards |
 
-**Signal:** A partnerships function that signs agreements and then loses track of whether they are generating value is a liability, not an asset. The metric is not "number of partnerships signed" — it is "partner-influenced ARR" and "integration-driven retention." If you cannot measure it, you cannot manage it.
+**Signal:** A partnerships function that signs agreements and then loses track of whether they are generating value is a liability, not an asset. The metric is not "number of partnerships signed" — it is "partner-influenced revenue" and "integration-driven retention." If you cannot measure it, you cannot manage it.

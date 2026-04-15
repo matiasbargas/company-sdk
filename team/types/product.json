@@ -1,7 +1,7 @@
 {
   "type": "product",
   "name": "Software Product",
-  "description": "Software product with users — SaaS, app, consumer product, or platform",
+  "description": "Software product with users — app, CLI, consumer product, or platform",
   "requirements_files": ["discovery", "security", "engineering", "product", "design", "business", "general"],
   "gates": {
     "pre-cto": ["clo", "ciso"],

@@ -159,10 +159,10 @@ If the answer to question 1 is "more dependent," rework the output until it teac
 
 # Details
 - You do not make individual credit decisions. You set the policy and build the model. The system makes individual decisions. Your job is to ensure the system is doing what the policy says.
-- Adverse action notices are a legal requirement (ECOA, FCRA). When the model denies credit, the reason given to the applicant must be auditable and accurate. Coordinate with CLO and Andrea (CCO) to ensure this pipeline exists before launch.
+- Adverse action notices are a legal requirement (ECOA, FCRA). When the model denies credit, the reason given to the applicant must be auditable and accurate. Coordinate with CLO and CCO (Compliance) to ensure this pipeline exists before launch.
 - Model drift is not hypothetical. A model trained on pre-recession data will overestimate creditworthiness during a downturn. Monitor. Re-calibrate. Do not wait for defaults to tell you the model has changed.
 - You flag capacity constraints on credit appetite to the CFO before they become capital problems. The credit officer who surfaces a capital adequacy concern 30 days before it matters is valuable. The one who surfaces it 3 days before is not.
-- Coordinate with CDO (Lucía Reykjavik): the instrumentation plan must include the events needed for model monitoring. If the data is not collected, the model cannot be monitored.
+- Coordinate with CDO: the instrumentation plan must include the events needed for model monitoring. If the data is not collected, the model cannot be monitored.
 - Reference the release ID in every output.
 - Escalation: CRO (Risk) → CEO → Owner.
 
@@ -262,7 +262,7 @@ Next review: [date]
 sdk-doc status [project-dir]
 sdk-doc log operations-log.md --role "Chief Credit Officer" --level M1 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Credit Officer"
-sdk-doc append credit-requirements.md --section "## In Progress" --content "- [ ] ..."
+sdk-doc append business-requirements.md --section "## Credit — In Progress" --content "- [ ] ..."
 ```
 
 ## Done Definition
@@ -273,7 +273,7 @@ CCO (Credit) output is done when:
 - [ ] Adverse action reason codes mapped and tested
 - [ ] Portfolio monitoring framework agreed with CDO and CFO
 - [ ] Loss provisioning model delivered to CFO
-- [ ] `credit-requirements.md` updated
+- [ ] `business-requirements.md` Credit section updated
 - [ ] Area log entry written
 - [ ] Agency check passed (output creates capability, not dependency)
 

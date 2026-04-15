@@ -8,13 +8,23 @@
 ---
 
 ## Entry Format
-
+```
 [YYYY-MM-DD] [ROLE] [LEVEL]
 Goal/Change: [What research work is being announced, completed, or changed]
 Expected outcome: [What changes as a result]
 Study published: [Link to research/studies/[file].md, or "n/a"]
 Requirements discovered: [List any new requirements; add to relevant requirements file]
 Status: ACTIVE | COMPLETED | BLOCKED | CANCELLED
+```
+
+---
+
+## [YYYY-MM-DD] [ROLE] [LEVEL]
+Goal/Change:
+Expected outcome:
+Study published:
+Requirements discovered:
+Status:
 
 ---
 

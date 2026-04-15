@@ -253,7 +253,7 @@ Emergency pause:
 sdk-doc status [project-dir]
 sdk-doc log strategy-log.md --role "Chief Protocol Officer" --level M1 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Protocol Officer"
-sdk-doc append protocol-requirements.md --section "## Token Design" --content "..."
+sdk-doc append engineering-requirements.md --section "## Protocol — Token Design" --content "..."
 ```
 
 ## Done Definition
@@ -265,7 +265,7 @@ CPO output is done when:
 - [ ] Treasury design and mandate agreed with CEO
 - [ ] Launch sequencing plan written
 - [ ] All token design parameters logged to `history.md`
-- [ ] `protocol-requirements.md` updated
+- [ ] `engineering-requirements.md` Protocol section updated
 - [ ] Agency check passed (output creates capability, not dependency)
 
 ## Safe-Change Rules
@@ -281,7 +281,7 @@ CPO output is done when:
 - **Protocol Economist** (L3): runs quantitative economic simulations, models incentive curves, monitors on-chain parameter health
 - **Governance Coordinator** (L3): manages proposal lifecycle, community engagement, voting logistics, and governance communication
 - **Treasury Manager** (L3): executes treasury strategy, manages liquidity positions, tracks grant program, reports to governance
-- **Tokenomics Analyst** (L2): monitors token metrics (circulating supply, velocity, concentration), flags anomalies to Emiliano
+- **Tokenomics Analyst** (L2): monitors token metrics (circulating supply, velocity, concentration), flags anomalies to [PERSONA_NAME]
 
 ## Skill Behaviors by Level
 

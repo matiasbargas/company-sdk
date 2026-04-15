@@ -84,18 +84,14 @@ Final state of all domain requirements files.
 
 | Domain | File | Pending at close | Done | Notes |
 |---|---|---|---|---|
-| Product | product-requirements.md | [N] | [N] | |
-| Engineering | product-engineering-requirements.md | [N] | [N] | |
-| Architecture | release-architecture-requirements.md | [N] | [N] | |
-| Delivery | delivery-requirements.md | [N] | [N] | |
-| Legal | legal-requirements.md | [N] | [N] | |
+| General | general-requirements.md | [N] | [N] | |
+| Discovery | discovery-requirements.md | [N] | [N] | |
 | Security | security-requirements.md | [N] | [N] | |
-| Finance | finance-requirements.md | [N] | [N] | |
-| Data | data-requirements.md | [N] | [N] | |
-| Marketing | marketing-requirements.md | [N] | [N] | |
-| Revenue | revenue-requirements.md | [N] | [N] | |
-| Operations | operations-requirements.md | [N] | [N] | |
-| People | people-requirements.md | [N] | [N] | |
+| Product | product-requirements.md | [N] | [N] | |
+| Engineering | engineering-requirements.md | [N] | [N] | |
+| Design | design-requirements.md | [N] | [N] | |
+| Business | business-requirements.md | [N] | [N] | |
+| Research | research-requirements.md | [N] | [N] | |
 
 ---
 

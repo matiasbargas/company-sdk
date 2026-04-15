@@ -1,5 +1,5 @@
 # Agent Manifest
-**Version:** 2.2
+**Version:** 2.5
 **Owner:** Coordinator
 
 This file lists every agent in the system, what they own, who they depend on, and when they activate. It is the Coordinator's reference for routing and activation. It is every agent's reference for knowing who else is in the room.
@@ -246,11 +246,9 @@ Every agent reads these files before producing any output:
 
 ---
 
----
-
 ## Two Cycles
 
-The SDK operates in two cycles. See `protocol.md` Section 14 for the full definition.
+The SDK operates in two cycles. See `protocol.md` Section 15 for the full definition.
 
 | Cycle | Governor | Output | Transitions via |
 |---|---|---|---|
@@ -261,12 +259,10 @@ Phases 0-2 (discovery through SDD) are **Ideation**. Phase 3-4 (execution throug
 
 ---
 
----
-
 ## Sub-Role Creation
 
 Any C-level agent may create sub-roles within their own domain without a protocol change. See `protocol.md` Section 14 for the full rules. Key points:
-- Same naming convention: first name from CSV + place surname, alternating gender
+- Same naming convention: first name (common worldwide) + city surname, diverse geographic spread
 - Sub-roles inherit no authority above their level — they operate within the C-level's scope
 - C-level sends an INFO Bus message to Coordinator on activation and dissolution
 

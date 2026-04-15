@@ -9,8 +9,8 @@ The SDK itself — not a project. It contains:
 - `team/roles/` — every agent's persona, operating loop, consultation mode, and skill ladder
 - `project-template/` — all files a new project gets on bootstrap (7 consolidated requirements files)
 - `team/squads/` — pre-configured team compositions (website, mvp, feature, startup)
-- `scripts/` — CLI tools (init, bootstrap, squad, doc, gate-check, validate, status, version, retro, health, github, cloud, ship)
-- `protocol.md` — the shared contract: Bus format, escalation, BU communication, spawning policy (v3.6)
+- `scripts/` — CLI tools (init, bootstrap, squad, doc, gate-check, validate, status, version, retro, health, github, ship)
+- `protocol.md` — the shared contract: Bus format, escalation, BU communication, spawning policy (v4.1)
 - `AGENTS.md` — agent manifest: activation sequence, dependency graph, consultation patterns
 - `STRATEGY.md` — corporate strategy layer: 4 success themes, Betting Table rules
 
@@ -109,12 +109,6 @@ sdk-github link <project-dir> --repo owner/repo
 sdk-github sync-issues <project-dir>
 sdk-github release <project-dir>
 sdk-github status <project-dir>
-
-# Cloud sync (Pro — offline-first, additive)
-sdk-cloud login / logout
-sdk-cloud link <project-dir> [--org <id>]
-sdk-cloud push / pull / status <project-dir>
-sdk-cloud projects list
 ```
 
 ## Active Project — sdk-v3 (v2026.Q2.1)
@@ -131,13 +125,11 @@ sdk-status project/
 - `project/history.md` — all decisions, permanent record
 - `project/project-map.md` — CEO validates before release seals
 - `project/idea.md` — original brief (Section 4 already delivered to Greg)
-- `project/LOOP.md` — 11-iteration auto-improvement plan
-- `project/SAAS.md` — SaaS architecture (Vercel + Supabase + Clerk)
-- `project/INVESTOR.md` — investor brief, traction thresholds, defensibility
+- `project/LOOP.md` — 5-iteration auto-improvement loop (CLOSED)
 
 **Active release:** v2026.Q2.1
 **Squad:** startup
-**Phase:** Iteration 6 of 11 — parallel squads active (SPRINT6-A: API, SPRINT6-B: Dashboard, SPRINT6-C: GitHub/Compliance)
+**Phase:** Loop complete (iterations 1-5 shipped). SaaS initiative archived.
 
 **Agents:** roles are at `./team/roles/` — no copy needed. All SDK files are the project's files.
 

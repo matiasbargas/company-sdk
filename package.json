@@ -45,7 +45,7 @@
     "sdk-squad": "./scripts/squad.js",
     "sdk-next": "./scripts/next.js",
     "sdk-resume": "./scripts/resume.js",
-    "sdk-cloud": "./scripts/cloud.js",
+
     "sdk-github": "./scripts/github.js",
     "sdk-health": "./scripts/health.js",
     "sdk-retro": "./scripts/retro.js",

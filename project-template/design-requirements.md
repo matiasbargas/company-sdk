@@ -66,4 +66,8 @@
 
 ---
 
+## Notes
+
+---
+
 *design-requirements.md — owned by Designer + UX Researcher. Updated when interface requirements or research findings are discovered, changed, or completed.*

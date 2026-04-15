@@ -1,4 +1,4 @@
-<!-- AI BOOTSTRAP — company-sdk v3.4.20 / protocol v3.6 -->
+<!-- AI BOOTSTRAP — company-sdk / protocol v4.1 -->
 <!-- Read this file first. It is the complete operating context for this project. -->
 <!-- After reading this file, follow the LOAD ORDER below to activate. -->
 
@@ -65,7 +65,7 @@ Hey Greg — here's a new project brief.
 
 ---
 
-## PROTOCOL v3.6
+## PROTOCOL v4.1
 
 Full spec: `protocol.md` (single source of truth — never duplicate it)
 
@@ -279,7 +279,7 @@ sdk-ship . v2026.Q2.1     # validate → tag → push
 | `people-log.md` | People area log | CHRO, EM | On team changes |
 | `strategy-log.md` | Strategy area log | CEO, Coordinator | After retro; major strategic decisions |
 | `team.md` | Active team roster + onboarding log | CHRO | On agent spawn or dissolve |
-| `.sdkrc` | Project config: sdkPath, releaseId, GitHub, cloud | Coordinator | On init; on release ID change |
+| `.sdkrc` | Project config: sdkPath, releaseId, GitHub | Coordinator | On init; on release ID change |
 | `SDK.md` | This file — AI bootstrap | SDK | Read-only during project |
 
 ---
@@ -396,11 +396,6 @@ sdk-github sync-issues <project-dir>
 sdk-github release <project-dir> [--release-id v2026.Q2.1]
 sdk-github status <project-dir>
 
-# Cloud sync (Pro)
-sdk-cloud login | logout
-sdk-cloud link <project-dir> [--org <id>]
-sdk-cloud push | pull | status <project-dir>
-sdk-cloud projects list
 ```
 
 ---
@@ -474,13 +469,7 @@ export TEAM_SDK_GITHUB_TOKEN=ghp_...
 sdk-github link . --repo owner/repo
 ```
 
-**4. Link to cloud** (if using `sdk-cloud`)
-```bash
-sdk-cloud login
-sdk-cloud link . --org <your-org-id>
-```
-
-**5. Activate Greg**
+**4. Activate Greg**
 ```
 Hey Greg — here's a new project brief.
 
@@ -508,4 +497,4 @@ Agent manifest: `AGENTS.md`
 
 ---
 
-*company-sdk · protocol v3.6 · v3.4.20 · MIT*
+*company-sdk · protocol v4.1 · MIT*

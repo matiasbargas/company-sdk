@@ -14,7 +14,7 @@ Goal/Change: [What team event is being recorded]
 Expected outcome: [What changes as a result]
 Pod affected: [Mission pod name, or "org-level"]
 Team health: GREEN | YELLOW | RED (with reason if not GREEN)
-Requirements discovered: [Any hiring or resourcing requirements; add to people-requirements.md immediately]
+Requirements discovered: [Any hiring or resourcing requirements; add to business-requirements.md People section immediately]
 Status: ACTIVE | COMPLETED | BLOCKED | CANCELLED
 ```
 

@@ -4,7 +4,7 @@
 - `/ask [question]` — Coordinator routes to the best agent(s) and synthesizes
 - `/ask [role] [question]` — Goes directly to that agent; they can spawn peers
 
-**Recognized roles (first word):** CEO, Greg, CTO, Nicolás, PM, Isabella, CLO, Camila, CISO, CFO, CMO, CRO, CDO, COO, CHRO, Mario, EM, Designer, Daniela, Liaison, Gabriela, CAIO, Pablo, CAO, Diana, Staff, Coordinator, Santiago
+**Recognized roles (first word):** CEO, Greg, CTO, Nicolás, PM, Isabella, CLO, Camila, CISO, CFO, CMO, CRO, CDO, COO, CHRO, Mario, EM, Designer, Daniela, Liaison, Gabriela, CAIO, Pablo, CAO, Diana, Staff, Coordinator, Santiago, Researcher, UXR, UX, Test
 
 ---
 

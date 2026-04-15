@@ -1,44 +1,16 @@
 {
   "schemaVersion": "1.0",
-  "manifestVersion": 5,
-  "generatedAt": "2026-04-09T03:27:34.700Z",
+  "manifestVersion": 6,
+  "generatedAt": "2026-04-15T00:00:00.000Z",
   "release": "v2026.Q2.1",
-  "phase": "unknown",
-  "activeMissions": [
-    {
-      "name": "SaaS scaffold — API layer",
-      "status": "M (2 sessions)",
-      "nextAction": "IN PROGRESS"
-    },
-    {
-      "name": "SaaS scaffold — Dashboard MVP",
-      "status": "M (2 sessions)",
-      "nextAction": "IN PROGRESS"
-    },
-    {
-      "name": "GitHub automation + compliance export",
-      "status": "M (2 sessions)",
-      "nextAction": "IN PROGRESS"
-    }
-  ],
-  "waitingOn": [
-    {
-      "item": "Dashboard deploy (Iteration 7)",
-      "blocks": ""
-    },
-    {
-      "item": "Billing scaffolding (Iteration 9)",
-      "blocks": ""
-    }
-  ],
+  "phase": "loop-closed",
+  "activeMissions": [],
+  "waitingOn": [],
   "openDecisions": [],
-  "lastUpdatedBy": "Coordinator (Soren Aarhus)",
-  "nextAgentToActivate": {
-    "role": "Activation phrase (parallel):",
-    "activationPrompt": "**Activation phrase (parallel):**"
-  },
+  "lastUpdatedBy": "Owner — SaaS cancellation + cleanup",
+  "nextAgentToActivate": null,
   "staleness": {
-    "currentStatusAge": 16,
+    "currentStatusAge": 0,
     "flag": "fresh"
   }
 }

@@ -132,7 +132,7 @@ For every customer, 90 days before renewal:
 - What is the risk and what is the save play if risk is elevated?
 
 **5. Voice of customer (ongoing)**
-Natalia owns the feedback loop from customers back into the product:
+[PERSONA_NAME] owns the feedback loop from customers back into the product:
 - QBR insights → PM friction log
 - Support ticket patterns → PM and Designer
 - Feature requests → PM for shaping queue (not direct engineering requests)
@@ -205,7 +205,7 @@ Agents that only agree are not useful. Agents that disagree without logging are 
 ## Customer Health Score Template
 ```
 CUSTOMER HEALTH SCORING MODEL
-Owner: Natalia Tokyo (CCO)
+Owner: [PERSONA_NAME] (CCO)
 
 Signals:
 | Signal | Weight | Green | Yellow | Red |
@@ -248,7 +248,7 @@ Internal prep: health score, feature adoption, open tickets, renewal date, expan
 sdk-doc status [project-dir]
 sdk-doc log operations-log.md --role "Chief Customer Officer" --level M1 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Customer Officer"
-sdk-doc append customer-requirements.md --section "## At Risk" --content "- [ ] ..."
+sdk-doc append business-requirements.md --section "## Customer Success — At Risk" --content "- [ ] ..."
 ```
 
 ## Done Definition
@@ -259,7 +259,7 @@ CCO output is done when:
 - [ ] Renewal motion defined and calendar set per customer
 - [ ] NRR reporting cadence agreed with CFO
 - [ ] Voice-of-customer routing established (friction → PM, churn → CEO)
-- [ ] `customer-requirements.md` updated
+- [ ] `business-requirements.md` Customer Success section updated
 - [ ] Area log entry written
 - [ ] Agency check passed (output creates capability, not dependency)
 
@@ -285,4 +285,4 @@ CCO output is done when:
 | M1 | Chief Customer Officer | Company-wide | Owns NRR, CS model, PS delivery, and renewal motion; routes VoC to PM | Health dashboard, QBR cadence, NRR report, customer journey map |
 | M2 | Group CCO | Multi-segment or multi-geo | Sets CS methodology across segments; manages CS org; partners with CFO on expansion ARR | CS org design, NRR by segment, expansion playbooks |
 
-**Signal:** The CCO who reports NRR and nothing else is a metrics owner, not a customer owner. The signal of a functioning CCO is that the PM knows what the top five customer friction points are before the shaping meeting — because Natalia already routed them.
+**Signal:** The CCO who reports NRR and nothing else is a metrics owner, not a customer owner. The signal of a functioning CCO is that the PM knows what the top five customer friction points are before the shaping meeting — because [PERSONA_NAME] already routed them.

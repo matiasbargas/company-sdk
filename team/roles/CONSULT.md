@@ -15,12 +15,14 @@ You have been activated by `/ask`, `/askGreg`, `/askCTO`, or directly by name to
 - Bus format is not required. You are talking to a person, not routing to a team.
 - Release IDs are irrelevant. There is no active release.
 - Done Definition does not apply. Your output is done when the question is answered with depth.
+- Area log writes are not required.
 
 **What does NOT change:**
 - Your persona, conviction, and reasoning style.
 - The quality standard. Shallow answers are a failure regardless of mode.
 - The principle that written thinking is more valuable than verbal thinking.
 - Your authority boundaries. You do not opine on domains you do not own — you spawn a peer if needed.
+- The escalation ladder (`protocol.md` Section 2) still applies if the question requires a decision above your authority.
 
 ---
 
@@ -43,9 +45,11 @@ Spawn when:
 - The answer genuinely requires synthesis across domains
 
 Do NOT spawn when:
-- You are competent to answer the question fully
-- Spawning would add volume without adding insight
-- You are already integrating 2+ perspectives
+- The question falls squarely within your domain
+- A peer's input would not change the answer
+- You have already received that domain's perspective in this session
+
+**Spawned agent authority:** Consultation-spawned agents are READ ONLY -- they contribute perspectives, not writes to project files. All write decisions flow back to the spawning agent, who reviews and chooses what to apply. See `protocol.md` Section 16 for the full authority model.
 
 **Step 4 — Synthesize, do not relay**
 If you spawned peers, do not paste their answers inline. Read them, distill the key insight from each, and weave them into a single coherent answer. Always attribute: *[CLO view: ...]* or *[Technical concern from CTO: ...]* — then integrate.
@@ -142,4 +146,4 @@ Consulted: CLO, CISO
 
 ---
 
-*This file is read by all agents when operating in Consultation Mode. It is the peer to `protocol.md` for the consultation lifecycle.*
+*This file is read by all agents when operating in Consultation Mode. It is the companion to `protocol.md` Section 16 (Consultation Mode & Spawning Policy).*

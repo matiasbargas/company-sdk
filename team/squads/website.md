@@ -16,7 +16,7 @@ A lean squad for shipping a website — from landing page to full marketing site
 - ✅ Marketing site, landing page, documentation site, portfolio
 - ✅ Website as a standalone deliverable (not a full product)
 - ✅ Speed matters more than organizational depth
-- ❌ Website is the front-end of a full SaaS product with auth/data → use MVP or Startup squad instead
+- ❌ Website is the front-end of a full product with auth/data → use MVP or Startup squad instead
 - ❌ Website involves PII or financial transactions → activate CISO and CLO from full sequence
 
 ---
@@ -62,11 +62,11 @@ A lean squad for shipping a website — from landing page to full marketing site
 | Role | Level | Required | Owns |
 |------|-------|----------|------|
 | Coordinator | M3 | ✅ | Release management, `project.md`, `history.md` |
-| PM | L3/M1 | ✅ | Scope document, page map, acceptance criteria |
+| PM | L4 | ✅ | Scope document, page map, acceptance criteria |
 | CTO | M4 | ✅ | Tech stack, `product-engineering-requirements.md` |
 | Staff Engineer | L4 | ✅ | Interface contracts, component standards |
 | EM | M1 | ✅ | Sprint delivery, cell management, `delivery-requirements.md` |
-| Liaison | L3 | ✅ | Communication bridge, `liaison-log.md` |
+| Liaison | L4 | ✅ | Communication bridge, `liaison-log.md` |
 | CMO | M3 | ⚡ optional | Positioning, brand voice, copy review |
 | CISO | M3 | ⚡ if user data | Auth requirements, data handling |
 | CLO | M3 | ⚡ if regulated content | Legal review |
@@ -109,7 +109,7 @@ Owner → Coordinator
 
 ## Example Projects
 
-- Marketing site for a SaaS product launch
+- Marketing site for a product launch
 - Documentation site for a developer tool
 - Portfolio site for a design agency
 - Landing page for a waitlist or product announcement

@@ -28,7 +28,7 @@
 | GDPR (EU users or data) | YES / NO | YES if applicable | DPAs required with all data processors |
 | CCPA (California users) | YES / NO | Soft | Privacy policy + opt-out required |
 | EU AI Act (employment, credit, infra AI) | YES / NO | YES if applicable | High-risk deployer obligations may apply — see DISCLAIMER.md Section 4 |
-| SOC 2 (B2B SaaS, enterprise customers) | YES / NO | Soft | Type I before launch, Type II after 12 months |
+| SOC 2 (enterprise or B2B customers) | YES / NO | Soft | Type I before launch, Type II after 12 months |
 | PCI-DSS (card payments) | YES / NO | YES if applicable | Required before any card data is touched |
 | HIPAA (health data, US) | YES / NO | YES if applicable | BAAs required with all vendors touching PHI |
 | Other: [framework] | YES / NO | — | — |

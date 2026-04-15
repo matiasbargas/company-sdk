@@ -72,10 +72,10 @@ A compressed version of the Startup squad. Runs abbreviated discovery (CEO + CIS
 | CFO | M3 | ✅ | Budget validation |
 | CTO | M4 | ✅ | Architecture |
 | Mario | L5 | ✅ | Irreversible decision review |
-| PM | L3 | ✅ | MVP scope, user stories |
+| PM | L4 | ✅ | MVP scope, user stories |
 | Staff Engineer | L4 | ✅ | Interface contracts |
 | EM | M1 | ✅ | Sprint delivery |
-| Liaison | L3 | ✅ | Communication |
+| Liaison | L4 | ✅ | Communication |
 | CMO | M3 | ⚡ if public launch | Positioning |
 
 ---
@@ -116,7 +116,7 @@ These domain specialists are NOT activated in MVP mode. Activate them when the M
 
 ## Example Projects
 
-- Auth + core CRUD for a SaaS tool
+- Auth + core CRUD for a web application
 - Mobile app prototype for a marketplace
-- API + dashboard for an analytics product
+- CLI tool with API backend
 - E-commerce store with 1 product category
