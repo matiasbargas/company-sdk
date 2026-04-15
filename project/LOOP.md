@@ -15,12 +15,12 @@
 
 | Iteration | Sprint | Focus | Release | Status |
 |---|---|---|---|---|
-| 1 | Sprint 2 | Foundation hardening — validate-script + onboarding polish | v3.2.1 | **IN PROGRESS** |
-| 2 | Sprint 3 | Owner CLI completeness — sdk-status, sdk-next, sdk-version, sdk-retro | v3.3.0 | Pending |
-| 3 | Sprint 4 | GitHub integration MVP — link, sync-issues, release | v3.4.0 | Pending |
-| 4 | Sprint 5 | Documentation enforcement — blocking at sdk-ship, advisory during sprint | v3.5.0 | Pending |
-| 5 | Sprint 6 | The Last Picture — session continuity, health checks, auto-manifest | v3.6.0 | Pending |
-| 6 | Sprint 7 | SaaS scaffold — cloud sync, auth model, API layer | v4.0.0-alpha | Pending |
+| 1 | Sprint 2 | Foundation hardening — validate-script + onboarding polish | v3.2.1 | **DONE** |
+| 2 | Sprint 3 | Owner CLI completeness — sdk-status, sdk-next, sdk-version, sdk-retro | v3.3.0 | **DONE** |
+| 3 | Sprint 4 | GitHub integration MVP — link, sync-issues, release | v3.4.0 | **DONE** |
+| 4 | Sprint 5 | Documentation enforcement — blocking at sdk-ship, advisory during sprint | v3.5.0 | **DONE** |
+| 5 | Sprint 6 | The Last Picture — session continuity, health checks, auto-manifest | v3.6.0 | **DONE** |
+| 6 | Sprint 7 | SaaS scaffold — cloud sync, auth model, API layer | v4.0.0-alpha | **IN PROGRESS** |
 | 7 | Sprint 8 | Pro: Team dashboard web app MVP | v4.0.0 | Pending |
 | 8 | Sprint 9 | Pro: GitHub automation + compliance audit trail export | v4.1.0 | Pending |
 | 9 | Sprint 10 | Pro: Multi-project org view + billing scaffolding | v4.2.0 | Pending |
@@ -187,6 +187,20 @@ Track these across iterations to see the shape of the product evolving:
 
 ---
 
+## Sprint Closure Ritual
+
+Every iteration closes with this sequence, in order. No release is marked complete until all steps are done.
+
+1. **sdk-validate** — advisory doc health check. Fix any blockers before tagging.
+2. **sdk-health** — staleness + validate + manifest + .sdkrc + ratchet pattern scan. The ratchet scan output (protocol.md Section 24) is appended to `engineering-log.md` under this sprint's entry. RATCHET-CANDIDATE items go to Mario for registry review.
+3. **EM retrospective input** — what slowed the team, what process change would help, what tech debt was introduced this sprint.
+4. **Coordinator session close** — `current-status.md` canonical block written. Next activation phrase confirmed.
+5. **Release tag** — `sdk-ship <project-dir> <release-id>` only after steps 1–4 are complete.
+
+`sdk-health` is not optional and cannot be skipped. A sprint that did not run `sdk-health` did not close. The iteration counter does not increment.
+
+---
+
 ## Loop Rules
 
 1. **Iteration counter increments on release.** No release = iteration not complete.
@@ -195,6 +209,7 @@ Track these across iterations to see the shape of the product evolving:
 4. **Investor track runs parallel from Iteration 6.** CFO and CMO shape pitch assets while engineering continues.
 5. **SaaS layer does not break the CLI.** Every change is backward compatible. Cloud is additive.
 6. **Stop at 11.** No scope creep into a 12th iteration. If something didn't ship by Iteration 11, it's v5.
+7. **sdk-health runs after every sprint.** Non-negotiable. See Sprint Closure Ritual above.
 
 ---
 

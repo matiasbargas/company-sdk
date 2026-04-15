@@ -45,6 +45,20 @@ ESCALATION: [Role that gets this if no response by deadline] (required for DECIS
 - `DECISION NEEDED`: Work will be blocked within N days without a specific decision. The decision must be stated as a question with options.
 - `BLOCKER`: Work has stopped now. Immediate escalation within 4 hours if not resolved.
 
+**SOLUTION_CLASS — required on all output-bearing messages from CTO, Mario, EM, Staff Engineer, and Coordinator:**
+
+```
+SOLUTION_CLASS: KNOWN | EXPLORATORY | HYBRID
+```
+
+- `KNOWN` — a deterministic or well-established solution exists for this problem. The agent names it and applies it. No deliberation about the method itself. Challenge is welcome; the *application* may still require judgment.
+- `EXPLORATORY` — the shape of the solution is genuinely unknown or context-dependent. LLM reasoning is appropriate. The agent states *why* the known approach does not apply.
+- `HYBRID` — part of the problem is solved, part requires exploration. Agent names which is which.
+
+**Why this field exists:** Agents will cheerfully reason through solved problems — indefinitely, with confidence, and without flagging the approach as suboptimal. SOLUTION_CLASS makes the method visible in the transcript. A series of `EXPLORATORY` tags on a known problem class is a health signal. A `KNOWN` tag without naming the solution is incomplete and should be flagged by any agent who receives it.
+
+**Rule:** An agent that files `EXPLORATORY` on a problem with a well-known solution must be challenged. The challenge is logged. This is not a procedural nicety — it is the protocol's primary defense against the reliability failure mode described in the Halloway Ratchet doctrine (see Section 24).
+
 **Message format extensions for specific roles:**
 
 EM Mission Pod Status (sent after each batch of tasks completes, or when status changes — not on a fixed schedule):
@@ -1182,4 +1196,93 @@ Temp sessions are gitignored. Permanent sessions are committed.
 
 ---
 
-*Protocol v4.0. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, and session memory. Every agent references it. No agent duplicates it.*
+## Section 24: The Halloway Ratchet Doctrine
+
+The reliability ratchet describes a failure mode in which an AI agent applies exploratory LLM reasoning to a problem that has a deterministic or well-known solution — indefinitely, with confidence, without volunteering to change approach. The agent will not tell you it is using a bad strategy. The only signal is a faint trail of corrections and revisions that scroll past unnoticed.
+
+This section defines the protocol's defenses against that failure mode.
+
+### The four ratchet levels
+
+Every task an agent performs sits at one of these levels. The agent must operate at the appropriate level, not default to level 1.
+
+| Level | Description | Example |
+|---|---|---|
+| 1 — Freeform LLM | Appropriate when the shape of the solution is unknown | Discovery, framing a new product space, synthesizing ambiguous user research |
+| 2 — REPL / Interactive | Appropriate when the approach is known but the implementation must be felt out | Debugging a specific failure mode, prototyping a data model |
+| 3 — Library / Function | Appropriate when the solution class is known and a deterministic implementation exists | Sorting, date formatting, schema validation, string normalization |
+| 4 — Enforcement | Appropriate when the solution is mandatory and must be applied without deviation | Gate checks, compliance requirements, protocol format rules |
+
+**Rule:** Agents do not voluntarily stay at Level 1. Before beginning any task, the agent must identify which level applies. If Level 3 or 4 applies, the agent names the solution, applies it, and does not deliberate about method.
+
+### Determinism pre-flight
+
+Before producing substantive output on any task, CTO, Mario, EM, Staff Engineer, and Coordinator run this pre-flight internally:
+
+1. **Is there a known solution for the core operation this task involves?** (sorting, parsing, validation, comparison, lookup, calculation)
+2. If YES → name it, apply it. The SOLUTION_CLASS field (Section 1) is set to `KNOWN` and the solution is identified.
+3. If NO → proceed with reasoning. SOLUTION_CLASS is `EXPLORATORY`. The agent states why the known approach does not apply.
+4. If MIXED → decompose the task. The deterministic parts are handled deterministically. SOLUTION_CLASS is `HYBRID`.
+
+This pre-flight is not surfaced in every message — it is internal operating discipline. It surfaces in the SOLUTION_CLASS field and in the agent's output, which should never show reasoning about *how* to sort, compare, or validate when an algorithm exists.
+
+### The revision trail signal
+
+A pattern of corrections in an agent's output on the same task is a ratchet health signal:
+
+> "actually... wait... let me check... between X and Y... no, between Y and Z..."
+
+This pattern indicates the agent is at Level 1 on a problem that belongs at Level 3. Any agent who notices this pattern in a peer's output must flag it via Bus message (PRIORITY: INFO, tag: `RATCHET-CANDIDATE`). The Coordinator logs the task class. Mario is notified if it is in the engineering domain.
+
+### sdk-health ratchet check
+
+`sdk-health` includes a ratchet pattern scan across the bus-log and engineering-log:
+
+**What it scans for:**
+- Any agent producing 3+ messages on the same task in a single session where each message revises the previous one
+- Any agent filing `EXPLORATORY` on a task type that appears in the Known Solution Registry below
+- Any `SOLUTION_CLASS` field omitted on an output-bearing message from CTO, Mario, EM, Staff Engineer, or Coordinator
+
+**Output format:**
+```
+RATCHET HEALTH — [YYYY-MM-DD]
+Revision patterns detected: [N]
+  - [Task class] | [Agent role] | [Session date] | Messages: [N revisions]
+Known-solution misclassifications: [N]
+  - [Task description] | Filed as: EXPLORATORY | Known solution: [name]
+Missing SOLUTION_CLASS fields: [N]
+  - [Message ref] | From: [role] | [date]
+Recommendation: [list of task classes to harden into Level 3 or 4]
+```
+
+**When sdk-health is run:** After every sprint close (mandatory). See LOOP.md. The ratchet check output is appended to `engineering-log.md` under the sprint close entry.
+
+### Known Solution Registry
+
+This registry is maintained by Mario. Any task class listed here is Level 3 by default. An agent that applies Level 1 reasoning to a registered task class must justify the deviation in writing.
+
+| Task class | Known solution | Owner |
+|---|---|---|
+| Alphabetical / lexicographic sorting | `sort` with `lower-case` key | Mario |
+| Date comparison and ordering | ISO 8601 parse + numeric compare | CTO |
+| Schema validation | JSON Schema / Zod / equivalent | Staff Engineer |
+| String normalization (case, whitespace) | Standard library functions | Staff Engineer |
+| Version comparison | semver library | CTO |
+| Requirements file status counting | File parse + regex count | EM |
+
+**Adding to the registry:** Any agent may propose an addition via `RATCHET-CANDIDATE` Bus message to Mario. Mario reviews, confirms the solution is deterministic and well-known, and adds it. The Coordinator logs the registry update to `engineering-log.md`.
+
+### Challenge obligation
+
+When an agent observes another agent at the wrong ratchet level, challenge is not optional. The pattern to follow:
+
+1. Name the task class: "This is a [sorting / comparison / validation] problem."
+2. Name the level mismatch: "You are at Level 1. This belongs at Level 3."
+3. Name the solution: "The correct approach is [name]."
+4. Send a Bus message tagged `RATCHET-CANDIDATE` to the Coordinator and Mario.
+
+The challenged agent applies the deterministic solution or provides a written rationale for why the known solution does not apply. Silence is not a rationale.
+
+---
+
+*Protocol v4.1. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, and the Halloway Ratchet doctrine. Every agent references it. No agent duplicates it.*
