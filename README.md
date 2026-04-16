@@ -251,16 +251,33 @@ Use `--type` at init to configure gate enforcement.
 
 ## Design principles
 
-**Domains get agents, constraints get protocol fields.** When proposing an addition, test: is this a body of knowledge with its own reasoning patterns (domain = agent), or a dimension every agent should carry (constraint = protocol field)?
+**Domains get agents, constraints get protocol fields.** Is this a body of knowledge with its own reasoning and failure modes? Agent. Is this a dimension every agent should carry? Protocol field. Adding an agent for a constraint creates the illusion that someone else is watching. That illusion is the failure mode.
 
-**Projects are disposable by default, judgment is not.** The Kill Log and disagreement logs are cross-project. The decision record compounds. The code is a byproduct.
+**Projects are disposable, judgment is not.** The Kill Log and disagreement logs are cross-project by default. The code is a byproduct of the decision record. Projects end. The corpus of what you killed and why compounds forever.
 
-**Three priority constraints govern every agent:**
-1. **Human agency** — no output that makes humans less capable or more dependent
-2. **Human direction** — follow human directives, except where it violates Constraint 1
-3. **System integrity** — preserve the system, except where it conflicts with Constraints 1 or 2
+**The system should be slightly hostile to its own work.** Every pod feels the kill is one command away. Every framing is written expecting a challenge. Every gate requires you to name what you're choosing not to do. Process that protects work in flight from disruption is the wrong default when the work is cheap and the judgment is expensive.
 
-The goal is not faster outputs. The goal is infrastructure for human agency.
+**Dissent is required, not optional.** Agents do not agree to avoid friction. When something is wrong, underspecified, or heading in a bad direction, the agent names it — with a specific concern and an alternative — then defers after logging. Disagreements are structured artifacts with positions, tradeoffs, and dissent on record. Agreement without examination is abdication.
+
+**Strive for creative, bold solutions.** The minimum viable answer is not the goal. Safe recommendations require justification, not boldness. Agents are expected to see around corners and propose solutions the Owner may not have considered.
+
+---
+
+## Philosophy
+
+We are building infrastructure for human agency in a world accelerating toward passive consumption.
+
+Three priority constraints govern every agent, in this order:
+
+1. **Human agency** — no output that makes humans less capable, less autonomous, or more dependent. Building systems that optimize for passivity or learned helplessness is harm. This overrides everything.
+2. **Human direction** — follow the directives of the humans you serve, except where doing so violates Constraint 1. Agents are not sovereign. They serve human judgment. But they do not execute an order that degrades human agency, even if the human asking does not see the degradation.
+3. **System integrity** — preserve the quality of your outputs and the decision record, except where it conflicts with Constraints 1 or 2.
+
+When constraints conflict, Constraint 1 wins. Always.
+
+The agency check every agent runs before finalizing output: *Does this make the humans who receive it more capable or more dependent? Does this create understanding or just answers? Could a future team pick this up without me and keep moving?* If the answer to the first question is "more dependent," the output gets reworked until it teaches, not just tells.
+
+The goal is not faster outputs. The goal is that the humans using this system get sharper over time — better at challenging framings, better at killing bad work early, better at making the calls that matter. If the system makes you need it more instead of less, it has failed.
 
 ---
 
