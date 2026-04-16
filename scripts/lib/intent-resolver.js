@@ -20,18 +20,27 @@ const { actions } = require('./action-registry');
  *   MESSAGE: [body...]
  */
 function parseBusMessage(raw) {
-  const result = { from: '', to: '', release: '', priority: '', message: '' };
-  const fromMatch = raw.match(/FROM:\s*(.+)/);
-  const toMatch   = raw.match(/TO:\s*(.+)/);
-  const relMatch  = raw.match(/RELEASE:\s*(.+)/);
-  const priMatch  = raw.match(/PRIORITY:\s*(.+)/);
-  const msgMatch  = raw.match(/MESSAGE:\s*([\s\S]*?)$/);
+  const result = { from: '', to: '', release: '', priority: '', tags: [], solutionClass: '', costSignal: '', timeSignal: '', message: '' };
+  const fromMatch  = raw.match(/FROM:\s*(.+)/);
+  const toMatch    = raw.match(/TO:\s*(.+)/);
+  const relMatch   = raw.match(/RELEASE:\s*(.+)/);
+  const priMatch   = raw.match(/PRIORITY:\s*(.+)/);
+  const solMatch   = raw.match(/SOLUTION_CLASS:\s*(.+)/);
+  const tagMatch   = raw.match(/TAG:\s*(.+)/);
+  const costMatch  = raw.match(/COST_SIGNAL:\s*(.+)/);
+  const timeMatch  = raw.match(/TIME_SIGNAL:\s*(.+)/);
+  // MESSAGE must be captured after all other fields — stop at end of string
+  const msgMatch   = raw.match(/MESSAGE:\s*([\s\S]*?)$/);
 
-  if (fromMatch) result.from = fromMatch[1].trim();
-  if (toMatch)   result.to   = toMatch[1].trim();
-  if (relMatch)  result.release = relMatch[1].trim();
-  if (priMatch)  result.priority = priMatch[1].trim();
-  if (msgMatch)  result.message = msgMatch[1].trim();
+  if (fromMatch)  result.from = fromMatch[1].trim();
+  if (toMatch)    result.to   = toMatch[1].trim();
+  if (relMatch)   result.release = relMatch[1].trim();
+  if (priMatch)   result.priority = priMatch[1].trim();
+  if (solMatch)   result.solutionClass = solMatch[1].trim();
+  if (tagMatch)   result.tags = tagMatch[1].split(',').map(t => t.trim()).filter(Boolean);
+  if (costMatch)  result.costSignal = costMatch[1].trim();
+  if (timeMatch)  result.timeSignal = timeMatch[1].trim();
+  if (msgMatch)   result.message = msgMatch[1].trim();
 
   return result;
 }
@@ -91,6 +100,47 @@ const PATTERNS = [
         params: {}
       };
     }
+  },
+
+  // FRAMING-CHALLENGE tag → log disagreement + surface in status
+  {
+    match: (bus) => bus.tags && bus.tags.includes('FRAMING-CHALLENGE'),
+    resolve: (bus) => ({
+      action: 'doc.decision',
+      params: {
+        file: 'history.md',
+        decision: `Framing challenge: ${bus.message.split('\n')[0].slice(0, 100)}`,
+        context: bus.message.slice(0, 300),
+        'made-by': bus.from,
+      },
+      side_effects: [{
+        action: 'doc.log',
+        params: {
+          file: inferLogFile(bus.from),
+          role: bus.from,
+          level: 'L4',
+          goal: `FRAMING-CHALLENGE: ${bus.message.split('\n')[0].slice(0, 100)}`,
+          status: 'blocked',
+        }
+      }],
+      tag: 'FRAMING-CHALLENGE',
+    })
+  },
+
+  // RATCHET-CANDIDATE tag → log ratchet flag
+  {
+    match: (bus) => bus.tags && bus.tags.includes('RATCHET-CANDIDATE'),
+    resolve: (bus) => ({
+      action: 'doc.log',
+      params: {
+        file: inferLogFile(bus.from),
+        role: bus.from,
+        level: 'L3',
+        goal: `RATCHET-CANDIDATE: ${bus.message.split('\n')[0].slice(0, 100)}`,
+        status: 'active',
+      },
+      tag: 'RATCHET-CANDIDATE',
+    })
   },
 
   // DECISION NEEDED → log as pending decision

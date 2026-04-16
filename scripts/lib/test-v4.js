@@ -387,7 +387,7 @@ console.log('\n═══ Bus Command ═══\n');
   const dir = tmpProject();
 
   // Send a Bus message
-  const busOut = run(`node scripts/doc.js bus "${dir}" --from CTO --to CLO --priority BLOCKER --message "Need compliance review before architecture."`, SDK_ROOT);
+  const busOut = run(`node scripts/doc.js bus "${dir}" --from CTO --to CLO --priority BLOCKER --solution-class KNOWN --message "Need compliance review before architecture."`, SDK_ROOT);
   assert('bus command logs to bus-log.md', fs.existsSync(path.join(dir, 'bus-log.md')));
   const busLog = fs.readFileSync(path.join(dir, 'bus-log.md'), 'utf8');
   assert('bus-log.md contains the message', busLog.includes('Need compliance review'));
@@ -423,7 +423,7 @@ console.log('\n═══ Cockpit ═══\n');
   run(`node scripts/doc.js index "${dir}"`, SDK_ROOT);
 
   // Add a bus message
-  run(`node scripts/doc.js bus "${dir}" --from CTO --to CLO --priority BLOCKER --message "Need compliance review."`, SDK_ROOT);
+  run(`node scripts/doc.js bus "${dir}" --from CTO --to CLO --priority BLOCKER --solution-class KNOWN --message "Need compliance review."`, SDK_ROOT);
 
   // Run cockpit for CTO
   const cockpitCTO = run(`node scripts/doc.js cockpit "${dir}" --role CTO`, SDK_ROOT);

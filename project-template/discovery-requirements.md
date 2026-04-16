@@ -65,6 +65,17 @@
 
 ---
 
+## Explicit Non-Goals
+
+> What this project is NOT doing. Each item must be as specific as the goals.
+> If you can't name what you're choosing not to do, you haven't scoped the work.
+> Minimum 2 items required to pass gate. `sdk-gate-check` enforces this.
+
+- [What adjacent problem we are deliberately ignoring and why]
+- [What capability we are choosing not to build in this cycle and why]
+
+---
+
 ## Gate Status
 
 | Domain | Owner | Status | Ready to ungate CTO? |

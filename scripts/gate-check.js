@@ -22,13 +22,16 @@ const args = process.argv.slice(2);
 if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   console.log(`
 Usage:
-  node scripts/gate-check.js <project-dir>           # CLO + CISO gate (default)
-  node scripts/gate-check.js <project-dir> --mario   # Mario gate only
-  node scripts/gate-check.js <project-dir> --all     # All gates
+  node scripts/gate-check.js <project-dir>                # CLO + CISO gate (default)
+  node scripts/gate-check.js <project-dir> --mario        # Mario gate only
+  node scripts/gate-check.js <project-dir> --pre-mortem   # Pre-mortem gate only
+  node scripts/gate-check.js <project-dir> --all          # All gates
 
 Gates:
-  CLO + CISO  — discovery-requirements.md must show both Done before CTO activates.
-  Mario       — history.md must contain a Mario sign-off entry before Sprint 1 starts.
+  CLO + CISO    — discovery-requirements.md must show both Done before CTO activates.
+  Mario         — history.md must contain a Mario sign-off entry before Sprint 1 starts.
+  Neg. Scope    — Explicit Non-Goals section required (checked with discovery + mario gates).
+  Pre-mortem    — Pre-mortem section with 3 failure modes, 2 indicators, Owner review.
 
 Gate behavior is controlled by the project type config (team/types/{type}.json).
 If .sdkrc is absent or has no type field, defaults to full product-type gate behavior.
@@ -38,7 +41,8 @@ If .sdkrc is absent or has no type field, defaults to full product-type gate beh
 
 const projectDir    = path.resolve(args[0]);
 const runMario      = args.includes('--mario') || args.includes('--all');
-const runDiscovery  = !args.includes('--mario') || args.includes('--all');
+const runPreMortem  = args.includes('--pre-mortem') || args.includes('--all');
+const runDiscovery  = (!args.includes('--mario') && !args.includes('--pre-mortem')) || args.includes('--all');
 const discoveryFile = path.join(projectDir, 'discovery-requirements.md');
 const historyFile   = path.join(projectDir, 'history.md');
 
@@ -90,8 +94,14 @@ const gateRunMario = preSprint1Gates.includes('mario');
 function fail(message) {
   console.error(`\n🔴  GATE BLOCKED\n`);
   console.error(`    ${message}\n`);
-  console.error(`    CTO cannot be activated until this gate is cleared.`);
-  console.error(`    File: ${discoveryFile}\n`);
+  if (runPreMortem && !runDiscovery && !runMario) {
+    console.error(`    Sprint 1 cannot start until the pre-mortem gate is cleared.`);
+  } else if (runMario && !runDiscovery) {
+    console.error(`    Sprint 1 cannot start until this gate is cleared.`);
+  } else {
+    console.error(`    CTO cannot be activated until this gate is cleared.`);
+  }
+  console.error(`    Project: ${projectDir}\n`);
   process.exit(1);
 }
 
@@ -192,6 +202,126 @@ if (runMario && gateRunMario) {
   }
 }
 
+// ─── Negative Scope Gate ─────────────────────────────────────────────────────
+// Checks for Explicit Non-Goals section with at least 2 top-level items.
+// Applied to discovery-requirements.md (pre-CTO) and product/engineering-requirements.md (pre-Sprint1).
+
+function checkNegativeScope(filePath, label) {
+  if (!fs.existsSync(filePath)) return; // file not present — don't add error for missing file here
+
+  const content = fs.readFileSync(filePath, 'utf8');
+  const sectionMatch = content.match(/## Explicit Non-Goals\s*\n([\s\S]*?)(?:\n---|\n## |\s*$)/);
+
+  if (!sectionMatch) {
+    errors.push(`Explicit Non-Goals section missing in ${label}.\n    Every gate-crossing artifact must name at least 2 things this project is NOT doing and why.\n    Add a "## Explicit Non-Goals" section with at least 2 items.`);
+    return;
+  }
+
+  const sectionBody = sectionMatch[1];
+  // Count top-level bullet items (lines starting with "- " but not "  - ")
+  // Exclude template placeholder lines containing brackets [...]
+  const items = sectionBody.split('\n').filter(line => {
+    const trimmed = line.trimStart();
+    if (!trimmed.startsWith('- ')) return false;
+    if (line.startsWith('  ')) return false; // sub-bullet
+    if (/^\s*- \[/.test(line) && /\]$/.test(trimmed)) return false; // template placeholder
+    return true;
+  });
+
+  if (items.length < 2) {
+    errors.push(`Explicit Non-Goals section in ${label} has ${items.length} item(s) — minimum 2 required.\n    Each item must name what is excluded AND why. Template placeholders don't count.`);
+  }
+}
+
+if (runDiscovery) {
+  checkNegativeScope(discoveryFile, 'discovery-requirements.md');
+}
+
+if (runMario) {
+  const productFile = path.join(projectDir, 'product-requirements.md');
+  const engineeringFile = path.join(projectDir, 'engineering-requirements.md');
+  checkNegativeScope(productFile, 'product-requirements.md');
+  checkNegativeScope(engineeringFile, 'engineering-requirements.md');
+}
+
+// ─── Pre-Mortem Gate ─────────────────────────────────────────────────────────
+// Checks for Pre-Mortem section in product-requirements.md or mission brief.
+// Required before Sprint 1 (Phase 2.5).
+
+if (runPreMortem) {
+  const productFile = path.join(projectDir, 'product-requirements.md');
+  let preMortemFound = false;
+  let preMortemContent = '';
+
+  // Search product-requirements.md first, then any file with pre-mortem
+  const filesToCheck = [productFile];
+  // Also check for standalone pre-mortem files
+  const preMortemFile = path.join(projectDir, 'pre-mortem.md');
+  if (fs.existsSync(preMortemFile)) filesToCheck.unshift(preMortemFile);
+
+  for (const f of filesToCheck) {
+    if (!fs.existsSync(f)) continue;
+    const content = fs.readFileSync(f, 'utf8');
+    const match = content.match(/## Pre-Mortem\s*\n([\s\S]*?)(?:\n## [^P]|\s*$)/);
+    if (match) {
+      preMortemFound = true;
+      preMortemContent = match[1];
+      break;
+    }
+  }
+
+  if (!preMortemFound) {
+    errors.push('Pre-mortem section not found.\n    A Pre-Mortem section is required before Sprint 1 starts.\n    Add a "## Pre-Mortem" section to product-requirements.md or create pre-mortem.md.\n    See specs/wave-1/03-pre-mortem.md for the template.');
+  } else {
+    // Check structural requirements
+    const section1Match = preMortemContent.match(/### 1\.\s+This mission will fail because[\s\S]*?(?=### 2|$)/i);
+    const section2Match = preMortemContent.match(/### 2\.\s+We will know we are failing[\s\S]*?(?=### 3|$)/i);
+    const section3Match = preMortemContent.match(/### 3\.\s+Non-goals[\s\S]*?(?=### 4|$)/i);
+    const section4Match = preMortemContent.match(/### 4\.\s+The assumption[\s\S]*?(?=### |$)/i);
+
+    // Count numbered items in each section
+    const countItems = (text) => {
+      if (!text) return 0;
+      return (text.match(/^\d+\.\s+/gm) || []).length;
+    };
+
+    const failureModes = section1Match ? countItems(section1Match[0]) : 0;
+    const indicators   = section2Match ? countItems(section2Match[0]) : 0;
+    const nonGoalItems = section3Match ? countItems(section3Match[0]) : 0;
+    const assumptions  = section4Match ? 1 : 0; // section 4 exists = 1 assumption
+
+    if (failureModes < 3) {
+      errors.push(`Pre-mortem Section 1 has ${failureModes} failure mode(s) — minimum 3 required.`);
+    }
+    if (indicators < 2) {
+      errors.push(`Pre-mortem Section 2 has ${indicators} leading indicator(s) — minimum 2 required.`);
+    }
+    if (nonGoalItems < 1) {
+      errors.push('Pre-mortem Section 3 (Non-goals drift) has no items — minimum 1 required.');
+    }
+    if (!section4Match) {
+      errors.push('Pre-mortem Section 4 (falsifiable assumption) is missing.');
+    }
+
+    // Check participants
+    const participantsMatch = preMortemContent.match(/\*\*Participants:\*\*\s*(.+)/i);
+    if (!participantsMatch) {
+      errors.push('Pre-mortem Participants field is missing. At least 2 participants from distinct domains required.');
+    } else {
+      const participants = participantsMatch[1].split(/[,·]/).map(p => p.trim()).filter(Boolean);
+      if (participants.length < 2) {
+        errors.push(`Pre-mortem has ${participants.length} participant(s) — minimum 2 from distinct domains required.`);
+      }
+    }
+
+    // Check Owner review checkbox
+    const ownerReviewed = /- \[x\]\s*Owner reviewed pre-mortem/i.test(preMortemContent);
+    if (!ownerReviewed) {
+      errors.push('Owner has not reviewed the pre-mortem.\n    Check the "Owner reviewed pre-mortem" checkbox after review: - [x] Owner reviewed pre-mortem');
+    }
+  }
+}
+
 // ─── Output ───────────────────────────────────────────────────────────────────
 
 if (errors.length > 0) {
@@ -224,11 +354,22 @@ if (!runMario) {
   marioPassed = '✓  Mario (Chief Engineer) sign-off: Logged';
 }
 
+const negativeScopePassed = '✓  Negative Scope: Explicit Non-Goals present';
+
+let preMortemPassed;
+if (!runPreMortem) {
+  preMortemPassed = '—  Pre-mortem gate (not checked)';
+} else {
+  preMortemPassed = '✓  Pre-mortem: Reviewed by Owner';
+}
+
 console.log(`
 ✅  GATE CLEARED
 
     ${discoveryPassed}
     ${marioPassed}
+    ${negativeScopePassed}
+    ${preMortemPassed}
 
     Project: ${projectDir}
 `);

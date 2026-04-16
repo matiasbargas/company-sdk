@@ -8,7 +8,7 @@
  *
  * Options:
  *   --output <dir>    Output directory (default: ../projects/<project-name>)
- *   --squad <type>    website | mvp | feature | startup  (default: startup)
+ *   --squad <type>    website | mvp | feature | startup  (default: mvp)
  *   --type <type>     Project type config from team/types/ (default: product)
  *   --idea "..."      Drop your raw idea directly — skips the placeholder in idea.md
  *   --source <file>   Path to a vision doc (PDF, markdown, text) — copied into project as source material
@@ -42,7 +42,7 @@ Usage:
 
 Options:
   --output <dir>    Output directory (default: ../projects/<project-name>)
-  --squad <type>    website | mvp | feature | startup  (default: startup)
+  --squad <type>    website | mvp | feature | startup  (default: mvp)
   --type <type>     Project type from team/types/ (default: product)
   --idea "..."      Seed idea.md Section 1 with your raw idea text
 
@@ -58,7 +58,7 @@ Examples:
 
 const projectName = args[0];
 let outputDir    = null;
-let squadType    = 'startup';
+let squadType    = 'mvp';
 let projectType  = 'product';
 let seedIdea     = null;
 let sourceFile   = null;

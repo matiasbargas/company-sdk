@@ -1,6 +1,6 @@
 {
   "name": "company-sdk",
-  "version": "3.4.20",
+  "version": "4.0.0",
   "description": "AI agent team OS — 20+ role-based agents, shared protocol, compliance gates, and CLI tools for running a software project with a structured AI team.",
   "keywords": [
     "ai",
@@ -42,6 +42,7 @@
     "sdk-doc": "./scripts/doc.js",
     "sdk-gate-check": "./scripts/gate-check.js",
     "sdk-init": "./scripts/init.js",
+    "sdk-kill": "./scripts/kill.js",
     "sdk-squad": "./scripts/squad.js",
     "sdk-next": "./scripts/next.js",
     "sdk-resume": "./scripts/resume.js",

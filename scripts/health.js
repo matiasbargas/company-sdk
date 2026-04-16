@@ -89,6 +89,7 @@ if (!fs.existsSync(manifestFile)) {
 }
 
 // 4. Domain health
+const sdkrcPath = path.join(projectDir, '.sdkrc');
 const domainsDir = path.join(projectDir, 'domains');
 const sdkrcForDomains = fs.existsSync(sdkrcPath) ? (() => { try { return JSON.parse(fs.readFileSync(sdkrcPath, 'utf8')); } catch (_) { return {}; } })() : {};
 
@@ -168,7 +169,6 @@ if (!fs.existsSync(busLogPath)) {
 }
 
 // 7. .sdkrc validity
-const sdkrcPath = path.join(projectDir, '.sdkrc');
 if (!fs.existsSync(sdkrcPath)) {
   notices.push('.sdkrc not found — SDK path may not be set (run sdk-init)');
 } else {
@@ -178,6 +178,78 @@ if (!fs.existsSync(sdkrcPath)) {
     else notices.push('.sdkrc: sdkPath set ✓');
   } catch (_) {
     issues.push('.sdkrc is malformed JSON — run sdk-init to recreate');
+  }
+}
+
+// 8. Framing drift detection (--framing-drift or included in default checks)
+const checkDrift = args.includes('--framing-drift') || !args.some(a => a.startsWith('--') && a !== '--json' && a !== '--stale-hours');
+
+if (checkDrift) {
+  const ideaPath = path.join(projectDir, 'idea.md');
+  const historyPath3 = path.join(projectDir, 'history.md');
+  const productPath = path.join(projectDir, 'product-requirements.md');
+
+  if (fs.existsSync(ideaPath)) {
+    const ideaContent = fs.readFileSync(ideaPath, 'utf8');
+
+    // Extract original brief keywords from idea.md Section 4
+    const sec4Match = ideaContent.match(/## 4[\s\S]*?\n\n([\s\S]*?)(?:\n## |\s*$)/i);
+    if (sec4Match) {
+      const briefText = sec4Match[1].trim();
+      if (briefText && !briefText.startsWith('[') && !briefText.startsWith('```') && briefText.length > 30) {
+        // Extract significant words (4+ chars, not common words)
+        const stopWords = new Set(['this', 'that', 'with', 'from', 'they', 'been', 'have', 'will', 'what', 'when', 'where', 'which', 'their', 'about', 'would', 'could', 'should', 'other', 'these', 'those', 'than', 'then', 'each', 'make', 'more', 'some', 'into', 'also', 'does', 'need', 'very']);
+        const briefWords = new Set(
+          briefText.toLowerCase()
+            .replace(/[^a-z\s]/g, '')
+            .split(/\s+/)
+            .filter(w => w.length >= 4 && !stopWords.has(w))
+        );
+
+        // Check product-requirements for current framing
+        let driftSignals = [];
+
+        if (fs.existsSync(productPath)) {
+          const prodContent = fs.readFileSync(productPath, 'utf8');
+          const prodWords = new Set(
+            prodContent.toLowerCase()
+              .replace(/[^a-z\s]/g, '')
+              .split(/\s+/)
+              .filter(w => w.length >= 4 && !stopWords.has(w))
+          );
+
+          // Words in brief not in current product requirements
+          const lostWords = [...briefWords].filter(w => !prodWords.has(w));
+          // Words in product requirements not in brief (potential drift)
+          const newWords = [...prodWords].filter(w => !briefWords.has(w) && w.length >= 5);
+
+          const lostRatio = lostWords.length / Math.max(briefWords.size, 1);
+
+          if (lostRatio > 0.5) {
+            driftSignals.push(`Brief → product-requirements: ${Math.round(lostRatio * 100)}% of original brief terms missing from current scope`);
+          }
+        }
+
+        // Check history.md for scope-changing decisions without logged rationale
+        if (fs.existsSync(historyPath3)) {
+          const histContent = fs.readFileSync(historyPath3, 'utf8');
+          const scopeChanges = (histContent.match(/scope|pivot|reframe|redirect|changed direction/gi) || []).length;
+          const loggedDecisions = (histContent.match(/### Decision:/g) || []).length;
+
+          if (scopeChanges > 0 && loggedDecisions === 0) {
+            driftSignals.push(`${scopeChanges} scope-related term(s) in history.md but no structured decisions logged`);
+          }
+        }
+
+        if (driftSignals.length > 0) {
+          for (const signal of driftSignals) {
+            issues.push(`Framing drift: ${signal}`);
+          }
+        } else {
+          notices.push('Framing drift: no significant drift detected ✓');
+        }
+      }
+    }
   }
 }
 

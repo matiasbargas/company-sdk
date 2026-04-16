@@ -1,12 +1,14 @@
-# company-sdk
+# team-sdk
 
-> You've always needed a team. Now you have one.
+> A system that is slightly hostile to its own work — by design.
 
-**company-sdk** is a [Claude Code](https://claude.ai/code) extension that gives your project a structured AI team — 20+ role-based agents that work together from raw idea to shipped increment. Scaffold with the CLI, open in Claude Code, and your team is already there.
+**team-sdk** is a [Claude Code](https://claude.ai/code) extension that gives your project a structured AI team — role-based agents coordinated by a shared protocol, optimized for the one behavior that matters: **challenging framings and killing bad work before it compounds.**
+
+It is not a coding assistant. It is infrastructure for product judgment at AI speed.
 
 ```bash
 npm install -g company-sdk
-sdk-init my-project --squad startup
+sdk-init my-project --squad mvp
 claude my-project
 ```
 
@@ -14,43 +16,78 @@ claude my-project
 Hey Greg — here's the brief: [paste from idea.md Section 4]
 ```
 
-That's it. Discovery starts. The Coordinator routes. The protocol handles the rest.
-
 ---
 
 ## The problem
 
-Most AI tools give you faster outputs. They don't give you a team.
+The scarcest resource in any product organization is the judgment of the person who can challenge framings and kill bad work early. That person becomes the bottleneck they were supposed to remove, because the system produces work faster than their attention can govern it.
 
-A founder running a 3-8 person product team needs legal review before architecture, security review before code, financial modeling before launch — in the right order, with the right pushback, with every decision logged and explainable six months later.
+Adding process protects work in flight from disruption — which is the wrong default when the work in flight is cheap and the judgment is expensive.
 
-No copilot does that. No chat session does that. This does.
+AI coding assistants solve the wrong problem. They make individual developers faster at writing code. But code was never the bottleneck. Alignment, decision quality, and organizational memory are.
+
+## What the Owner actually does
+
+The Owner challenges framings and kills bad pods. That is the product thesis stated as a user behavior. Every design decision in the system traces back to it:
+
+- Negative Scope is mandatory so the assumption that's load-bearing is findable in thirty seconds
+- `/kill` is a first-class verb so terminating work is cheap and not political
+- The daily surface shows framing assumptions, not status, so attention routes to what needs judgment
+- Bad-pod signals are automated so detection scales past what one person can read
+- The pre-mortem gate forces teams to write the failure case before starting — the Owner reads it and either proceeds or kills
+
+If the Owner opens a session and nothing needs challenging, the session is thirty seconds. The system is working.
 
 ---
 
-## Two modes
+## Getting started
 
-### Project Mode
+### 1. Install
 
-Activate a full team for a specific build. Every phase gated. Every decision logged. Git-native: commits, tags, and releases are events the framework reads and responds to.
-
-```
-Phase 1  CEO · CLO · CISO · CFO · CMO · PM
-           ↓
-         CLO + CISO gate — CTO cannot activate until both deliver
-           ↓
-Phase 2  CTO · Mario (irreversible decision review) · Designer · Staff Engineer · EM
-           ↓
-         Mario gate — Sprint 1 cannot start until irreversible decisions are reviewed
-           ↓
-Phase 3  Liaison activates · Engineers execute per ticket
-           ↓
-Phase 4  Logs written · PM seals kanban · CEO validates · Coordinator seals release
+```bash
+npm install -g company-sdk
 ```
 
-### Consultation Mode
+### 2. Pick a squad
 
-Ask any specialist a standalone question. No project needed.
+| Squad | Agents | Use when |
+|---|---|---|
+| `mvp` | 8-12 | **Default.** Validate a hypothesis. Compressed discovery, jump to architecture. |
+| `startup` | 20+ | New product from scratch. Full legal, security, finance, market context. |
+| `feature` | 3-5 | Scoped addition to an existing product. Single sprint. |
+| `website` | 5-7 | Marketing site, docs, landing page. |
+
+### 3. Scaffold
+
+```bash
+sdk-init my-project --squad mvp
+# With an idea pre-loaded:
+sdk-init my-project --squad mvp --idea "B2B invoicing tool for freelancers in LATAM"
+# With a project type:
+sdk-init my-api --squad mvp --type api
+```
+
+### 4. Open in Claude Code and start
+
+```bash
+claude my-project
+```
+
+```
+Hey Greg — here's the brief: [paste Section 4 from idea.md]
+```
+
+Discovery starts. The Coordinator routes. The protocol handles the rest.
+
+### 5. Resume any session
+
+```bash
+sdk-status .           # framing assumptions, open challenges, kills, missions, next action
+sdk-resume .           # full session start: health check + gate advisory + cockpit
+sdk-next .             # just the next activation phrase
+```
+
+### 6. Ask any agent without a project
 
 ```
 /ask CTO should we build this in-house or use a managed service?
@@ -65,90 +102,81 @@ The agent spawns peer consultations to pressure-test its answer, then synthesize
 
 ## What makes this different
 
+### The protocol is the product
+
+The value isn't in any single agent. It's in the protocol between them — the Bus format, the escalation ladder, the hard gates, the Kill Log, the Negative Scope, the pre-mortem, the near-miss log. These are the connective tissue that turns specialist agents into something that behaves like a high-functioning organization.
+
 ### Legal and security happen before architecture — enforced
 
-The CTO cannot activate until CLO and CISO have delivered. This isn't a checklist or a convention. It's a gate the framework won't let you skip. Run `sdk-gate-check` and it blocks with the exact activation phrase needed to clear it.
+The CTO cannot activate until CLO and CISO have delivered. This isn't a checklist. It's a gate the framework won't let you skip.
 
-Most frameworks treat compliance as a retrofit. This one treats it as the foundation.
+```bash
+sdk-gate-check my-project
+# GATE BLOCKED
+#   CLO (Legal) gate is "In Progress" — must be "Done" before CTO activates.
+```
+
+### Every framing is written to be challenged
+
+Negative Scope is mandatory on every gate-crossing artifact — what you're choosing NOT to do. `sdk-gate-check` hard-fails if it's empty. The pre-mortem gate forces the team to write the post-mortem for the failure case before Sprint 1 starts. The Owner reads it and either proceeds or `/kill`s the pod.
+
+### Killing work is cheap
+
+```bash
+sdk-kill . auth-v2 --reason "Users don't want SSO for MVP" --class FRAMING_WRONG --assumption "Enterprise users need SSO before trying the product"
+```
+
+Kills are classified: `FRAMING_WRONG` (the bet was wrong), `SCOPE_OBSOLETE`, `PRIORITY_SHIFT`, `EXECUTION_STALLED`. Only framing kills feed the cross-project judgment corpus. The Kill Log is the most valuable artifact the system produces — a catalog of your judgment applied to real work.
 
 ### Agents that dissent
 
-Every agent has a professional obligation to push back when something is wrong, underspecified, or heading in a bad direction. When a CLO flags a jurisdiction gap or a CTO questions an irreversible architectural call, the challenge is logged to `history.md` before the conversation moves on.
-
-An agent that only agrees isn't useful — it's a liability. The friction is the feature.
-
-### Memory that outlives the conversation
-
-Every consequential decision is written to `history.md`: what was decided, why, who approved it, whether it's reversible. Six months after shipping, you can explain every call. One command before a board meeting:
+Every agent has a professional obligation to push back when something is wrong or heading in a bad direction. Challenges are logged. Disagreements are structured — positions, tradeoffs, resolution, and dissent on record.
 
 ```bash
-sdk-doc read history.md --section "## Decisions"
+sdk-doc disagreement . open --topic "Auth provider" --position-a "CTO: Use Auth0" --position-b "CISO: Build in-house"
 ```
 
-### Documentation enforcement — machine-checked
+### Memory that compounds across projects
 
-`sdk-ship` runs `sdk-validate` as a pre-flight on every release. Missing files, unfilled placeholders, and empty required sections block the ship. Advisory warnings show on dry-run without blocking. Real ships are clean or they don't go.
+The Kill Log, disagreement logs, and near-miss logs persist across projects. Future pods consult them before spinning up. New team members read them to calibrate. Projects are disposable. Judgment isn't.
 
 ```bash
-sdk-validate my-project              # advisory check — always exits 0
-sdk-validate my-project --strict     # strict — exits 1 on any issue
-sdk-ship my-project v2026.Q2.1       # runs validate, then tags + pushes
+sdk-status . --cross-project    # FRAMING_WRONG kills across all projects
+sdk-doc history . --domain engineering --reversible false   # irreversible engineering decisions
 ```
 
-### A team with genuine diversity
+### Framing drift detection
 
-Every agent gets a name from a globally common first name, a city surname, and a cultural profile from that region. Fatima Nairobi and Yuki Kampala are not the same agent — they approach risk differently, weight evidence differently, reason about hierarchy and time differently.
+```bash
+sdk-health . --framing-drift
+# Framing drift: Brief -> product-requirements: 60% of original brief terms missing from current scope
+```
 
-That friction between perspectives is how monoculture failures get caught before they ship.
-
-### Levels that mean something
-
-| Level | What it means |
-|---|---|
-| L1–L2 | Executes tickets within known constraints |
-| L3–L4 | Owns interface contracts, cross-team coordination |
-| L5 | Architectural authority, irreversible decisions |
-| M1–M2 | Pod and release management |
-| M3 | Org-wide coordination, process ownership |
-
-Agents don't play above their level. When work outgrows the level, the Owner promotes explicitly.
+The system watches for scope creep dressed as learning.
 
 ---
 
-## Quick start
+## How a project flows
 
-**Install**
-```bash
-npm install -g company-sdk
+```
+Phase 0   Owner writes brief in idea.md → activates Greg (CEO)
+            ↓
+Phase 1   CEO → CLO → CISO → CFO → CMO → PM (discovery)
+            ↓
+          CLO + CISO gate — CTO cannot start until both deliver
+            ↓
+Phase 2   CTO → Mario (irreversibility + near-miss review) → Designer → Staff Eng → EM
+            ↓
+          Negative Scope gate — non-goals must be explicit
+            ↓
+          Pre-mortem gate — team writes the failure case, Owner reviews
+            ↓
+Phase 3   Liaison activates → Engineers execute → /kill available at all times
+            ↓
+Phase 4   Logs written → PM seals kanban → CEO validates → Coordinator seals
 ```
 
-**Scaffold a project**
-```bash
-sdk-init my-project --squad startup
-# or with an idea pre-loaded:
-sdk-init my-project --squad startup --idea "B2B invoicing tool for freelancers in LATAM"
-# or with a project type:
-sdk-init my-api --squad mvp --type api
-```
-
-**Open in Claude Code**
-```bash
-claude my-project
-```
-
-The project `CLAUDE.md` loads automatically. Every agent, protocol rule, and file reference is wired in.
-
-**Start Discovery**
-```
-Hey Greg — here's the brief: [paste Section 4 from idea.md]
-```
-
-**Resume a session**
-```bash
-sdk-resume .           # SDK check + gate advisory + next activation phrase in one command
-sdk-next .             # just the next activation phrase
-sdk-status .           # missions, waiting-on, open decisions, activation phrase
-```
+Four hard gates: CLO+CISO before CTO, Mario before Sprint 1, Negative Scope on every gate artifact, Pre-mortem before execution.
 
 ---
 
@@ -156,62 +184,58 @@ sdk-status .           # missions, waiting-on, open decisions, activation phrase
 
 ```bash
 # Project setup
-sdk-init <name> [--squad <type>] [--type <project-type>] [--idea "..."]  # scaffold + prime
-sdk-update [<sdk-path>]                             # sync SDK files in an existing project
-sdk-bootstrap <project-dir>                         # bootstrap an existing directory
+sdk-init <name> [--squad <type>] [--type <type>] [--idea "..."]
+sdk-update [<sdk-path>]
 
-# Session management
-sdk-resume <project-dir>                            # start a session: check + gate + next
-sdk-next <project-dir>                              # print the next activation phrase
-sdk-status <project-dir>                            # missions table, open decisions, next action
-sdk-doc status <project-dir>                        # full current-status.md narrative
-sdk-doc manifest <project-dir>                      # generate context-manifest.json
+# Daily workflow
+sdk-status <project-dir>                            # framing-first view
+sdk-resume <project-dir>                            # full session start
+sdk-next <project-dir>                              # next activation phrase
+
+# Kill and challenge
+sdk-kill <project-dir> <pod> --reason "..." --class <class> [--assumption "..."]
+sdk-doc disagreement <project-dir> open --topic "..." --position-a "..." --position-b "..."
+sdk-doc disagreement <project-dir> resolve --id DISAGREE-NNN --decision "..." --decided-by <Role>
+
+# Decision record
+sdk-doc decision <file> --decision "..." --context "..." --made-by <Role> [--domain X] [--reversible Y]
+sdk-doc history <project-dir> [--domain X] [--search Y] [--reversible Z]
+
+# Gates
+sdk-gate-check <project-dir>                        # CLO + CISO gate
+sdk-gate-check <project-dir> --mario               # Mario gate
+sdk-gate-check <project-dir> --pre-mortem          # Pre-mortem gate
+sdk-gate-check <project-dir> --all                 # all gates
 
 # Documentation
-sdk-doc decision <file> --decision "..." --context "..." --made-by <Role>
 sdk-doc log <file> --role <Role> --level <L> --goal "..." --status completed
-sdk-doc append <file> --section "## Section" --content "..."
+sdk-doc bus <project-dir> --from <Role> --to <Role> --message "..." [--tag FRAMING-CHALLENGE]
+sdk-doc manifest <project-dir>
+sdk-doc index <project-dir>
 
 # Pod lifecycle
 sdk-doc spawn <project-dir> --name "..." --role <Role> --level <L>
 sdk-doc dissolve <project-dir> --name "..." --dissolved-by "..." --reason "..."
 
-# Gates and releases
-sdk-gate-check <project-dir>                        # CLO + CISO gate (pre-CTO)
-sdk-gate-check <project-dir> --mario               # Mario gate (pre-Sprint 1)
-sdk-gate-check <project-dir> --all                 # all gates
-sdk-validate <project-dir>                          # advisory doc health check
-sdk-validate <project-dir> --strict                # strict — exits 1 on any issue
-sdk-pre-tag <project-dir>                           # full team review: coherence + cohesion + validate + health
-sdk-pre-tag <project-dir> --fix                    # review + auto-fix safe issues (missing files, release ID sync)
-sdk-ship <project-dir> <release-id>                # validate + tag + push + release notes
-sdk-ship <project-dir> <release-id> --dry-run      # preview without touching git
-
-# Release management
-sdk-version <project-dir>                           # show current release ID
-sdk-version <project-dir> bump [patch|minor|major]  # bump release ID
-sdk-version <project-dir> set v2026.Q3.1            # set release ID explicitly
-sdk-retro <project-dir>                             # interactive retrospective → strategy-log.md
-sdk-retro <project-dir> --release v2026.Q2.1 --what-worked "..." --what-slowed "..." --change "..."
-
-# Project health
-sdk-health <project-dir>                            # staleness + validate + manifest + .sdkrc
-sdk-health <project-dir> --stale-hours 48           # custom staleness threshold
-sdk-health <project-dir> --json                     # machine-readable output for CI
+# Releases
+sdk-validate <project-dir> [--strict]
+sdk-health <project-dir> [--framing-drift] [--json]
+sdk-pre-tag <project-dir> [--fix]
+sdk-ship <project-dir> <release-id> [--dry-run]
+sdk-version <project-dir> [bump|set]
+sdk-retro <project-dir>
 
 # GitHub integration
-sdk-github link <project-dir> --repo owner/repo     # link to GitHub repo
-sdk-github sync-issues <project-dir>                # create issues from pending requirements
-sdk-github release <project-dir> [--release-id v2026.Q2.1]  # create GitHub release from history.md
-sdk-github status <project-dir>                     # show open SDK-labeled issues
-
+sdk-github link <project-dir> --repo owner/repo
+sdk-github sync-issues <project-dir>
+sdk-github release <project-dir>
 ```
 
 ---
 
 ## Project types
 
-Use `--type` at init to configure gate enforcement to match your domain.
+Use `--type` at init to configure gate enforcement.
 
 | Type | Use for |
 |---|---|
@@ -223,123 +247,31 @@ Use `--type` at init to configure gate enforcement to match your domain.
 | `internal` | Internal tooling, no external users |
 | `protocol` | Shared contracts, libraries, SDKs |
 
-```bash
-sdk-init my-api --squad mvp --type api
-```
+---
+
+## Design principles
+
+**Domains get agents, constraints get protocol fields.** When proposing an addition, test: is this a body of knowledge with its own reasoning patterns (domain = agent), or a dimension every agent should carry (constraint = protocol field)?
+
+**Projects are disposable by default, judgment is not.** The Kill Log and disagreement logs are cross-project. The decision record compounds. The code is a byproduct.
+
+**Three priority constraints govern every agent:**
+1. **Human agency** — no output that makes humans less capable or more dependent
+2. **Human direction** — follow human directives, except where it violates Constraint 1
+3. **System integrity** — preserve the system, except where it conflicts with Constraints 1 or 2
+
+The goal is not faster outputs. The goal is infrastructure for human agency.
 
 ---
 
-## Squads
+## The bet
 
-| Squad | Agents | Best for |
-|---|---|---|
-| `startup` | 20+ | New product — full legal, security, finance, and market context before writing a line of code |
-| `mvp` | 10 | Move lean, add coverage as the product matures |
-| `feature` | 3 | Scoped feature on an existing product with existing constraints |
-| `website` | 6 | Landing page or marketing surface |
+Most AI tools optimize for speed to code. team-sdk optimizes for speed to kill the work that shouldn't exist.
 
-```bash
-sdk-init <name> --squad mvp
-sdk-init <name> --squad feature
-```
+The demo that matters: two teams run the same project. The team-sdk team makes measurably fewer reversals because they killed the wrong direction in week one instead of week four.
+
+The code is a byproduct. The Kill Log is the product.
 
 ---
 
-## Agent roster
-
-| Domain | Agents |
-|---|---|
-| **Strategy** | CEO (Greg) · Coordinator |
-| **Legal & Security** | CLO (Camila) · CISO |
-| **Finance & Revenue** | CFO · CRO · CCO Credit |
-| **Go-to-Market** | CMO · CRO Risk · CPO Partnerships |
-| **Data & AI** | CDO · CAIO (Pablo) · CAO (Diana) |
-| **Operations & People** | COO · CHRO · CCO Compliance · CCO Customer |
-| **Product & Design** | PM · Designer · UX Researcher |
-| **Engineering** | CTO · Mario (Chief Engineer) · Staff Engineer · EM · IC Engineers · Liaison |
-| **Protocol** | CPO Protocol |
-
-All agents operate in both Project Mode and Consultation Mode. In Consultation Mode, no project files are required.
-
----
-
-## Project file structure
-
-Every scaffolded project gets:
-
-```
-my-project/
-├── idea.md                      # raw idea → refined brief (start here)
-├── current-status.md            # session continuity — read this first on every resume
-├── history.md                   # permanent decision record
-├── project-map.md               # CEO validates before release seals
-├── context-manifest.json        # agent context index — generated by sdk-doc manifest
-├── discovery-requirements.md    # CLO + compliance
-├── security-requirements.md     # CISO + threat model
-├── business-requirements.md     # CFO · CMO · CRO · COO · CHRO
-├── engineering-requirements.md  # CTO · Mario · Staff · EM
-├── product-requirements.md      # PM · mission kanban
-├── design-requirements.md       # Designer · UX Researcher
-├── general-requirements.md      # Coordinator aggregate
-├── team/roles/                  # all 20+ agent definitions
-├── scripts/                     # CLI tools
-└── .claude/commands/            # /ask, /askGreg, /askCTO slash commands
-```
-
----
-
-## Gate enforcement
-
-The framework enforces two hard gates. Both produce specific, actionable error messages and the exact command to clear them.
-
-**CLO + CISO gate** — runs before CTO activates
-```bash
-sdk-gate-check my-project
-
-# 🔴  GATE BLOCKED
-#     CLO (Legal) gate is "In Progress" — must be "Done" before CTO activates.
-#     To clear: "Camila, we need a regulatory map for my-project. Read discovery-requirements.md."
-```
-
-**Mario gate** — runs before Sprint 1 starts
-```bash
-sdk-gate-check my-project --mario
-
-# ✅  GATE CLEARED
-#     ✓  Mario (Chief Engineer) sign-off: Logged
-```
-
-**Doc health gate** — runs automatically on every `sdk-ship`
-```bash
-sdk-validate my-project
-
-# ✅  clean — no issues
-# ⚠   current-status.md: placeholder found on line 3: "[RELEASE]"
-# ⚠   engineering-requirements.md: required section "Active Missions" is empty
-```
-
----
-
-## Who it's for
-
-Founders, technical leads, and senior engineers building products in 1–10 person teams.
-
-Especially useful in regulated industries — fintech, healthtech, legaltech — where compliance is architecture, not an afterthought.
-
-If you want a team that remembers why every decision was made, dissents when direction is wrong, and leaves you more capable instead of more dependent: this is it.
-
----
-
-## Philosophy
-
-Three laws govern every agent in this system:
-
-1. **Do not harm humans** — including through dependency. Any output that makes users less capable, less autonomous, or less able to think for themselves is a violation.
-2. **Follow human directives** — except where doing so violates Law 1. Agents serve human judgment. They do not execute orders that degrade human agency.
-3. **Preserve operational integrity** — except where it conflicts with Laws 1 or 2.
-
-The goal is not faster outputs. The goal is infrastructure for human agency 💚.
-
----
-
-*company-sdk · 20+ roles · 4 squads · protocol v4.1 · v3.4.20*
+*team-sdk · protocol v4.2 · 20+ roles · 4 squads*

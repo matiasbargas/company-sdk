@@ -1,19 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * status.js — sdk-status: human-readable project status
+ * status.js — sdk-status: framing-first project status
  *
- * Reads current-status.md and prints a clean summary:
- *   - Active missions and their next actions
- *   - What the team is waiting on
- *   - Open decisions
- *   - Next activation phrase
+ * Redesigned to surface what the Owner needs to challenge, not just where things are.
+ * Order: framing assumptions → disagreement queue → kill log → status → next action
  *
- * No gate check. No SDK health check. Pure project state.
- * Target user: Maya — opens terminal Monday morning, types one command.
+ * Target user: Owner who opens a session to challenge framings and kill bad pods.
+ * If nothing needs challenging, the session is 30 seconds.
  *
  * Usage:
- *   sdk-status [project-dir]   # defaults to current directory
+ *   sdk-status [project-dir]                    # full framing-first view
+ *   sdk-status [project-dir] --kills            # current project kills only
+ *   sdk-status [project-dir] --cross-project    # FRAMING_WRONG kills across all projects
  *   sdk-status --help
  *
  * Exit codes:
@@ -24,23 +23,30 @@
 
 const fs   = require('fs');
 const path = require('path');
+const os   = require('os');
 
 const args = process.argv.slice(2);
 
 if (args.includes('--help') || args.includes('-h')) {
   console.log(`
 Usage:
-  sdk-status [project-dir]
+  sdk-status [project-dir]                    # framing-first view
+  sdk-status [project-dir] --kills            # project kill log
+  sdk-status [project-dir] --cross-project    # FRAMING_WRONG kills across projects
 
-Prints current project state from current-status.md in plain English.
-No gate check. No file health check. Just where you are and what's next.
+Shows what needs the Owner's judgment right now:
+  1. Active framings (the bet each pod is making)
+  2. Open challenges and disagreements
+  3. Recent kills
+  4. Mission status
+  5. Next activation phrase
 
 Defaults to current directory if no argument given.
 `);
   process.exit(0);
 }
 
-const projectDir = path.resolve(args[0] || process.cwd());
+const projectDir = path.resolve(args.filter(a => !a.startsWith('--'))[0] || process.cwd());
 const statusFile = path.join(projectDir, 'current-status.md');
 
 if (!fs.existsSync(statusFile)) {
@@ -71,27 +77,25 @@ function parseLoopStatus(content) {
 }
 
 function parseMissions(content) {
-  // Find Active Missions table
   const tableMatch = content.match(/##\s+Active Missions\s*\n([\s\S]*?)(?:\n##|\n---)/);
   if (!tableMatch) return [];
 
   const rows = tableMatch[1]
     .split('\n')
-    .filter(l => l.startsWith('|') && !/^\|\s*[-:]+/.test(l)); // skip separator rows
+    .filter(l => l.startsWith('|') && !/^\|\s*[-:]+/.test(l));
 
   const missions = [];
   for (const row of rows) {
     const cells = row.split('|').map(c => c.trim()).filter(Boolean);
-    if (cells.length < 6) continue;
-    if (/^mission$/i.test(cells[0])) continue; // skip header row
-    // columns: Mission | Pod | Owner | Appetite | Status | Next action
+    if (cells.length < 4) continue;
+    if (/^mission$/i.test(cells[0])) continue;
     missions.push({
       name:       cells[0],
-      pod:        cells[1],
-      owner:      cells[2],
-      appetite:   cells[3],
-      status:     cells[4].replace(/\*\*/g, ''),
-      nextAction: cells[5],
+      pod:        cells[1] || '',
+      owner:      cells[2] || '',
+      appetite:   cells[3] || '',
+      status:     (cells[4] || '').replace(/\*\*/g, ''),
+      nextAction: cells[5] || '',
     });
   }
   return missions;
@@ -119,15 +123,13 @@ function parseNextAgent(content) {
 
   const block = m[1];
 
-  // Try table format: | Role | Pod | Reads first |
   const tableRows = block.split('\n').filter(l => l.startsWith('|') && !/^\|\s*[-:]/.test(l));
   let role = null;
-  if (tableRows.length >= 2) { // header row + at least one data row
+  if (tableRows.length >= 2) {
     const cells = tableRows[1].split('|').map(c => c.trim()).filter(Boolean);
     if (cells.length >= 1) role = cells[0];
   }
 
-  // Activation phrase
   const phraseMatch = block.match(/\*\*Activation phrase:\*\*\s*"([^"]+)"/m)
     || block.match(/Activation phrase:\s*"([^"]+)"/m)
     || block.match(/Activation phrase:\s*(.+)$/m);
@@ -136,7 +138,129 @@ function parseNextAgent(content) {
   return { role, phrase };
 }
 
-// ─── Render ───────────────────────────────────────────────────────────────────
+// ─── Framing extraction ─────────────────────────────────────────────────────
+
+function parseFramingAssumptions(projectDir) {
+  const assumptions = [];
+
+  // Extract from product-requirements.md pre-mortem section 4
+  const productFile = path.join(projectDir, 'product-requirements.md');
+  if (fs.existsSync(productFile)) {
+    const prodContent = fs.readFileSync(productFile, 'utf8');
+
+    // Falsifiable assumption from pre-mortem
+    const sec4Match = prodContent.match(/### 4\.\s+The assumption[\s\S]*?\n\n(.+)/i);
+    if (sec4Match && !sec4Match[1].startsWith('[')) {
+      assumptions.push({ source: 'Pre-mortem', assumption: sec4Match[1].trim() });
+    }
+
+    // Non-goals (first 2)
+    const nonGoalMatch = prodContent.match(/## Explicit Non-Goals\s*\n([\s\S]*?)(?:\n---|\n## )/);
+    if (nonGoalMatch) {
+      const items = nonGoalMatch[1].split('\n')
+        .filter(l => l.startsWith('- ') && !l.includes('['))
+        .slice(0, 2)
+        .map(l => l.replace(/^- /, '').trim());
+      for (const item of items) {
+        assumptions.push({ source: 'Non-goal', assumption: item });
+      }
+    }
+  }
+
+  // Extract from idea.md section 4 if it has content
+  const ideaFile = path.join(projectDir, 'idea.md');
+  if (fs.existsSync(ideaFile)) {
+    const ideaContent = fs.readFileSync(ideaFile, 'utf8');
+    const sec4Match = ideaContent.match(/## 4\.\s+Brief[\s\S]*?\n\n([\s\S]*?)(?:\n## |\s*$)/i);
+    if (sec4Match) {
+      const brief = sec4Match[1].trim();
+      // Skip template placeholders, code blocks, and short entries
+      if (brief && !brief.startsWith('[') && !brief.startsWith('```') && brief.length > 20) {
+        // Extract first sentence as the bet
+        const firstSentence = brief.split(/\.\s/)[0];
+        if (firstSentence.length > 10 && firstSentence.length < 200) {
+          assumptions.push({ source: 'Brief', assumption: firstSentence.trim() });
+        }
+      }
+    }
+  }
+
+  return assumptions;
+}
+
+// ─── Disagreement / challenge queue ─────────────────────────────────────────
+
+function parseOpenChallenges(projectDir) {
+  const challenges = [];
+
+  // Check bus-log.md for FRAMING-CHALLENGE tags
+  const busLogPath = path.join(projectDir, 'bus-log.md');
+  if (fs.existsSync(busLogPath)) {
+    const busContent = fs.readFileSync(busLogPath, 'utf8');
+    const entries = busContent.split(/\n---\n/).filter(Boolean);
+
+    for (const entry of entries) {
+      if (/TAG:\s*FRAMING-CHALLENGE/i.test(entry)) {
+        const fromMatch = entry.match(/FROM:\s*(\S+)/);
+        const dateMatch = entry.match(/\[(\d{4}-\d{2}-\d{2})/);
+        const msgLines = entry.split('\n').filter(l => !l.startsWith('[') && !l.startsWith('#') && !l.startsWith('>') && l.trim());
+        const summary = msgLines.slice(1, 3).join(' ').trim().slice(0, 120);
+
+        challenges.push({
+          from: fromMatch ? fromMatch[1] : 'Unknown',
+          date: dateMatch ? dateMatch[1] : 'Unknown',
+          summary: summary || 'Framing challenge (see bus-log.md)',
+        });
+      }
+    }
+  }
+
+  // Check history.md for open disagreements (DISAGREE-NNN with Status: OPEN)
+  const historyPath = path.join(projectDir, 'history.md');
+  if (fs.existsSync(historyPath)) {
+    const histContent = fs.readFileSync(historyPath, 'utf8');
+    const disagreeMatches = histContent.match(/### \[DISAGREE-\d+\].*\n[\s\S]*?Status:\s*OPEN/gi);
+    if (disagreeMatches) {
+      for (const match of disagreeMatches) {
+        const topicMatch = match.match(/### \[DISAGREE-\d+\]\s*(.+)/);
+        challenges.push({
+          from: 'Disagreement',
+          date: '',
+          summary: topicMatch ? topicMatch[1].trim() : 'Open disagreement',
+        });
+      }
+    }
+  }
+
+  return challenges;
+}
+
+// ─── Kill log ───────────────────────────────────────────────────────────────
+
+function parseKills(projectDir) {
+  const killLogPath = path.join(os.homedir(), '.claude', 'kill-log.json');
+  if (!fs.existsSync(killLogPath)) return { kills: [], crossProject: false };
+
+  try {
+    const allKills = JSON.parse(fs.readFileSync(killLogPath, 'utf8'));
+    const crossProject = args.includes('--cross-project') || args.includes('--kills');
+
+    if (crossProject) {
+      return { kills: allKills.filter(k => k.killClass === 'FRAMING_WRONG').slice(-5), crossProject: true };
+    }
+
+    const kills = allKills.filter(k => {
+      const resolvedProject = path.resolve(k.projectDir || '');
+      return resolvedProject === projectDir || k.project === path.basename(projectDir);
+    }).slice(-5);
+
+    return { kills, crossProject: false };
+  } catch (_) {
+    return { kills: [], crossProject: false };
+  }
+}
+
+// ─── Render ──────────────────────────────────────────────────────────────────
 
 const release  = parseRelease(content);
 const updated  = parseUpdated(content);
@@ -145,6 +269,9 @@ const missions = parseMissions(content);
 const waiting  = parseWaiting(content);
 const openDec  = parseOpenDecisions(content);
 const next     = parseNextAgent(content);
+const framings = parseFramingAssumptions(projectDir);
+const challenges = parseOpenChallenges(projectDir);
+const killData = parseKills(projectDir);
 
 const projectName = (() => {
   const m = content.match(/^#\s+(.+)$/m);
@@ -157,21 +284,64 @@ console.log(`  ${projectName}`);
 if (release) console.log(`  Release: ${release}`);
 if (updated) console.log(`  Updated: ${updated}`);
 if (loop)    console.log(`  Loop:    ${loop}`);
-console.log('');
 
-// Active missions
+// ─── 1. CHALLENGE SURFACE (framing assumptions + open challenges) ────────────
+
+const needsAttention = framings.length > 0 || challenges.length > 0;
+
+if (framings.length > 0) {
+  console.log('');
+  console.log('  ACTIVE FRAMINGS — challenge or confirm');
+  console.log('  ─────────────────────────────────────────');
+  for (const f of framings) {
+    console.log(`    [${f.source}] ${f.assumption}`);
+  }
+}
+
+if (challenges.length > 0) {
+  console.log('');
+  console.log('  OPEN CHALLENGES — needs your judgment');
+  console.log('  ─────────────────────────────────────────');
+  for (const c of challenges) {
+    const dateStr = c.date ? `${c.date}  ` : '';
+    console.log(`    ${dateStr}${c.from}: ${c.summary}`);
+  }
+}
+
+if (!needsAttention) {
+  console.log('');
+  console.log('  No framings to challenge. No open disagreements.');
+}
+
+// ─── 2. KILL LOG ─────────────────────────────────────────────────────────────
+
+const { kills, crossProject } = killData;
+if (kills.length > 0) {
+  console.log('');
+  console.log(crossProject ? '  KILL LOG (FRAMING_WRONG — cross-project)' : '  KILL LOG');
+  for (const k of kills) {
+    const classLabel = k.killClass === 'FRAMING_WRONG' ? 'FRAMING' : k.killClass.replace('_', ' ');
+    const projectLabel = crossProject ? ` [${k.project}]` : '';
+    console.log(`    ${k.date}  ${classLabel.padEnd(16)}  ${k.pod}${projectLabel}`);
+    console.log(`    ${' '.repeat(10)}${' '.repeat(16)}  ${k.reason}`);
+  }
+}
+
+// ─── 3. STATUS ───────────────────────────────────────────────────────────────
+
+console.log('');
 if (missions.length) {
-  console.log(`  Active missions (${missions.length})`);
+  console.log(`  MISSIONS (${missions.length})`);
   for (const m of missions) {
     console.log(`  ─────────────────────────────────────────`);
-    console.log(`  ${m.name}  [${m.pod}]`);
+    console.log(`  ${m.name}  [${m.pod || 'no pod'}]`);
     console.log(`  Status: ${m.status}`);
     console.log(`  Next:   ${m.nextAction}`);
     if (m.owner && m.owner !== 'n/a') console.log(`  Owner:  ${m.owner}`);
   }
   console.log(`  ─────────────────────────────────────────`);
 } else {
-  console.log(`  Active missions: None`);
+  console.log(`  MISSIONS: None active`);
 }
 
 // Waiting on
@@ -190,7 +360,8 @@ if (openDec) {
   openDec.split('\n').filter(Boolean).forEach(l => console.log(`    ${l.trim()}`));
 }
 
-// Next agent
+// ─── 4. NEXT ACTION ─────────────────────────────────────────────────────────
+
 console.log('');
 if (next && next.phrase) {
   console.log(`  To resume — paste this:`);

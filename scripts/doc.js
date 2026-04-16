@@ -81,6 +81,8 @@ Commands:
   session     <project-dir> clean [--confirm]                Delete all temp sessions
   cockpit     <project-dir> --role <role>                     Role-specific session briefing (replaces 6-read startup)
   bus         <project-dir> --from <role> --to <role>         Send a Bus message: logs to bus-log.md + intent resolution
+  disagreement <project-dir> open --topic "..." --positions "A:...,B:..."  Open a structured disagreement
+  history      <project-dir> [--domain X] [--search Y] [--reversible Z]  Query structured decisions
                      --message "..." [--priority INFO|BLOCKER|DECISION NEEDED|CONTEXT REQUEST]
   domain      <project-dir> add --name <name> --lead <role>  Create a new project domain
                      [--summary "..."] [--spawn-when "..."]
@@ -125,6 +127,22 @@ function parseOptions(args) {
 }
 
 const opts = parseOptions(args);
+
+// ─── Domain inference ────────────────────────────────────────────────────────
+
+function inferDomain(role) {
+  const r = (role || '').toLowerCase();
+  if (['cto', 'mario', 'chief engineer', 'staff engineer', 'em', 'engineer'].some(k => r.includes(k))) return 'engineering';
+  if (['pm', 'cmo', 'cro'].some(k => r.includes(k))) return 'product';
+  if (['clo', 'ciso'].some(k => r.includes(k))) return 'legal-security';
+  if (['cfo'].some(k => r.includes(k))) return 'finance';
+  if (['designer', 'ux researcher'].some(k => r.includes(k))) return 'design';
+  if (['ceo', 'coordinator', 'greg'].some(k => r.includes(k))) return 'strategy';
+  if (['cdo'].some(k => r.includes(k))) return 'data';
+  if (['coo'].some(k => r.includes(k))) return 'operations';
+  if (['chro'].some(k => r.includes(k))) return 'people';
+  return 'general';
+}
 
 // ─── File utilities ──────────────────────────────────────────────────────────
 
@@ -322,19 +340,34 @@ function cmdDecision() {
   const release = opts.release || 'current';
   const rationale = opts.rationale || '—';
   const reversible = opts.reversible || 'unknown';
+  const domain = opts.domain || inferDomain(opts['made-by']);
+  const affects = opts.affects || '—';
 
+  // YAML frontmatter structured entry (protocol v4.2)
   const entry = `
 ### Decision: ${opts.decision}
+
+<!--
+decision: "${opts.decision.replace(/"/g, '\\"')}"
+date: "${now}"
+release: "${release}"
+made_by: "${opts['made-by']}"
+domain: "${domain}"
+reversible: ${reversible}
+affects: "${affects}"
+-->
 
 | Field | Value |
 |-------|-------|
 | Date | ${now} |
 | Release | ${release} |
 | Made by | ${opts['made-by']} |
+| Domain | ${domain} |
 | Context | ${opts.context} |
 | Decision | ${opts.decision} |
 | Rationale | ${rationale} |
 | Reversible | ${reversible} |
+| Affects | ${affects} |
 `.trimStart();
 
   const content = readFile(filePath);
@@ -366,6 +399,46 @@ function cmdDecision() {
   }
 
   console.log(`✓ Decision logged to ${filePath}`);
+
+  // Conflict detection: check existing decisions in same domain for keyword overlap
+  const existingDecisions = [];
+  const decisionPattern = /<!--\n([\s\S]*?)-->/g;
+  let cdMatch;
+  while ((cdMatch = decisionPattern.exec(content)) !== null) {
+    const block = cdMatch[1];
+    const d = {};
+    for (const line of block.split('\n')) {
+      const kvMatch = line.match(/^(\w+):\s*"?([^"]*)"?\s*$/);
+      if (kvMatch) d[kvMatch[1]] = kvMatch[2].trim();
+    }
+    if (d.decision) existingDecisions.push(d);
+  }
+
+  const sameDomain = existingDecisions.filter(d => d.domain === domain && d.decision !== opts.decision);
+  if (sameDomain.length > 0) {
+    // Extract keywords from new decision
+    const newWords = new Set(opts.decision.toLowerCase().split(/\s+/).filter(w => w.length >= 4));
+    const conflicts = [];
+
+    for (const existing of sameDomain) {
+      const existingWords = new Set((existing.decision || '').toLowerCase().split(/\s+/).filter(w => w.length >= 4));
+      const overlap = [...newWords].filter(w => existingWords.has(w));
+
+      if (overlap.length >= 2) {
+        conflicts.push({ decision: existing.decision, date: existing.date, overlap });
+      }
+    }
+
+    if (conflicts.length > 0) {
+      console.log('');
+      console.log('  ⚠  Potential conflicts with existing decisions:');
+      for (const c of conflicts) {
+        console.log(`     ${c.date || '?'}  "${c.decision}"`);
+        console.log(`     Overlapping terms: ${c.overlap.join(', ')}`);
+      }
+      console.log('  Review these decisions to ensure consistency.');
+    }
+  }
 }
 
 // ─── New commands ─────────────────────────────────────────────────────────────
@@ -1929,13 +2002,40 @@ function cmdBus() {
     }
   }
 
-  const from     = busOpts.from;
-  const to       = busOpts.to;
-  const priority = busOpts.priority || 'INFO';
-  const message  = busOpts.message;
+  const from           = busOpts.from;
+  const to             = busOpts.to;
+  const priority       = busOpts.priority || 'INFO';
+  const message        = busOpts.message;
+  const tag            = busOpts.tag || '';
+  const solutionClass  = busOpts['solution-class'] || '';
+  const costSignal     = busOpts['cost-signal'] || '';
+  const timeSignal     = busOpts['time-signal'] || '';
 
   if (!from || !to || !message) {
-    console.error('Usage: sdk-doc bus <project-dir> --from <role> --to <role> --message "..." [--priority INFO|DECISION NEEDED|BLOCKER|CONTEXT REQUEST]');
+    console.error('Usage: sdk-doc bus <project-dir> --from <role> --to <role> --message "..." [--priority ...] [--tag ...] [--solution-class KNOWN|EXPLORATORY|HYBRID] [--cost-signal LOW|MEDIUM|HIGH] [--time-signal "Nh"]');
+    process.exit(1);
+  }
+
+  // Validate TAG + PRIORITY combinations
+  if (tag === 'FRAMING-CHALLENGE' && priority === 'INFO') {
+    console.error('Error: FRAMING-CHALLENGE tag requires PRIORITY: DECISION NEEDED or BLOCKER, not INFO.');
+    process.exit(1);
+  }
+
+  // Enforce SOLUTION_CLASS on output-bearing messages from technical roles
+  const technicalRoles = ['cto', 'mario', 'chief engineer', 'em', 'staff engineer', 'coordinator'];
+  const fromLower = (from || '').toLowerCase();
+  const isTechnicalRole = technicalRoles.some(r => fromLower.includes(r));
+  const isOutputBearing = priority !== 'INFO' || message.length > 50; // INFO with substantial content is output-bearing
+
+  if (isTechnicalRole && isOutputBearing && !solutionClass) {
+    console.error(`Error: SOLUTION_CLASS is required for output-bearing messages from ${from}.`);
+    console.error('Add --solution-class KNOWN|EXPLORATORY|HYBRID');
+    process.exit(1);
+  }
+
+  if (solutionClass && !['KNOWN', 'EXPLORATORY', 'HYBRID'].includes(solutionClass)) {
+    console.error('Error: --solution-class must be KNOWN, EXPLORATORY, or HYBRID.');
     process.exit(1);
   }
 
@@ -1952,11 +2052,17 @@ function cmdBus() {
   // Format the Bus message
   const now = new Date();
   const timestamp = now.toISOString().replace('T', ' ').slice(0, 16);
-  const formatted = `FROM: ${from}\nTO: ${to}\nRELEASE: ${release}\nPRIORITY: ${priority}\nMESSAGE: ${message}`;
+  const solLine  = solutionClass ? `\nSOLUTION_CLASS: ${solutionClass}` : '';
+  const tagLine  = tag ? `\nTAG: ${tag}` : '';
+  const costLine = costSignal ? `\nCOST_SIGNAL: ${costSignal}` : '';
+  const timeLine = timeSignal ? `\nTIME_SIGNAL: ${timeSignal}` : '';
+  const formatted = `FROM: ${from}\nTO: ${to}\nRELEASE: ${release}\nPRIORITY: ${priority}${solLine}${tagLine}${costLine}${timeLine}\nMESSAGE: ${message}`;
 
   // Append to bus-log.md
   const logPath = path.join(projectDir, 'bus-log.md');
-  const logEntry = `\n---\n[${timestamp}] FROM: ${from} → TO: ${to} | PRIORITY: ${priority} | RELEASE: ${release}\n${message}\n`;
+  const tagSuffix = tag ? ` | TAG: ${tag}` : '';
+  const solSuffix = solutionClass ? ` | SOL: ${solutionClass}` : '';
+  const logEntry = `\n---\n[${timestamp}] FROM: ${from} → TO: ${to} | PRIORITY: ${priority}${solSuffix}${tagSuffix} | RELEASE: ${release}\n${message}\n`;
 
   if (!fs.existsSync(logPath)) {
     fs.writeFileSync(logPath, `# Bus Log\n\n> Append-only record of all inter-agent communication. Do not edit — only append.\n${logEntry}`, 'utf8');
@@ -1965,7 +2071,7 @@ function cmdBus() {
   }
 
   console.log(`✓ Bus message logged to bus-log.md`);
-  console.log(`  ${from} → ${to} [${priority}]`);
+  console.log(`  ${from} → ${to} [${priority}]${tag ? ` TAG: ${tag}` : ''}`);
 
   // Run intent resolver
   const { resolve: resolveIntent } = require('./lib/intent-resolver');
@@ -2146,6 +2252,298 @@ ${summary}
   }
 }
 
+// ─── History Query ───────────────────────────────────────────────────────────
+
+/**
+ * cmdHistory — Query structured decisions from history.md.
+ *
+ * Usage:
+ *   sdk-doc history <project-dir>                             # all decisions
+ *   sdk-doc history <project-dir> --domain engineering        # filter by domain
+ *   sdk-doc history <project-dir> --since 2026-Q1             # filter by date
+ *   sdk-doc history <project-dir> --search "auth"             # keyword search
+ *   sdk-doc history <project-dir> --reversible false          # irreversible only
+ */
+function cmdHistory() {
+  const projectDir = filePath ? path.resolve(filePath) : process.cwd();
+  const historyPath = path.join(projectDir, 'history.md');
+
+  if (!fs.existsSync(historyPath)) {
+    console.error('history.md not found.');
+    process.exit(1);
+  }
+
+  const content = fs.readFileSync(historyPath, 'utf8');
+
+  // Parse YAML-structured decision entries (HTML comments with structured data)
+  const decisionPattern = /### Decision:\s*(.+)\n\n<!--\n([\s\S]*?)-->/g;
+  const decisions = [];
+  let match;
+
+  while ((match = decisionPattern.exec(content)) !== null) {
+    const title = match[1].trim();
+    const yamlBlock = match[2];
+
+    const entry = { title };
+    for (const line of yamlBlock.split('\n')) {
+      const kvMatch = line.match(/^(\w+):\s*"?([^"]*)"?\s*$/);
+      if (kvMatch) {
+        entry[kvMatch[1]] = kvMatch[2].trim();
+      }
+    }
+    decisions.push(entry);
+  }
+
+  // Also parse old-format entries (table format without YAML)
+  const oldPattern = /### Decision:\s*(.+)\n\n\| Field[\s\S]*?\| Date \| (.+?) \|[\s\S]*?\| Made by \| (.+?) \|/g;
+  while ((match = oldPattern.exec(content)) !== null) {
+    // Check if we already captured this via YAML
+    const title = match[1].trim();
+    if (!decisions.some(d => d.title === title)) {
+      decisions.push({
+        title,
+        date: match[2].trim(),
+        made_by: match[3].trim(),
+        domain: 'unknown',
+        reversible: 'unknown',
+      });
+    }
+  }
+
+  if (decisions.length === 0) {
+    console.log('No structured decisions found in history.md.');
+    console.log('Decisions logged with sdk-doc decision include structured metadata.');
+    return;
+  }
+
+  // Apply filters
+  const filterOpts = {};
+  for (let i = 2; i < args.length; i++) {
+    if (args[i].startsWith('--') && args[i + 1]) {
+      filterOpts[args[i].slice(2)] = args[++i];
+    }
+  }
+
+  let filtered = decisions;
+
+  if (filterOpts.domain) {
+    filtered = filtered.filter(d => (d.domain || '').toLowerCase().includes(filterOpts.domain.toLowerCase()));
+  }
+
+  if (filterOpts.since) {
+    const since = filterOpts.since.replace('Q', '-Q');
+    filtered = filtered.filter(d => (d.date || '') >= since.slice(0, 10));
+  }
+
+  if (filterOpts.search) {
+    const term = filterOpts.search.toLowerCase();
+    filtered = filtered.filter(d =>
+      (d.title || '').toLowerCase().includes(term) ||
+      (d.decision || '').toLowerCase().includes(term) ||
+      (d.domain || '').toLowerCase().includes(term)
+    );
+  }
+
+  if (filterOpts.reversible) {
+    filtered = filtered.filter(d => String(d.reversible) === filterOpts.reversible);
+  }
+
+  // Output
+  console.log(`\nDecisions (${filtered.length}/${decisions.length}):\n`);
+  for (const d of filtered) {
+    const rev = d.reversible === 'false' ? ' [IRREVERSIBLE]' : '';
+    console.log(`  ${d.date || '?'}  ${(d.domain || '?').padEnd(16)}  ${d.title}${rev}`);
+    if (d.made_by) console.log(`  ${' '.repeat(10)}${' '.repeat(16)}  by ${d.made_by}`);
+  }
+  console.log('');
+}
+
+// ─── Disagreement Log ────────────────────────────────────────────────────────
+
+/**
+ * cmdDisagreement — Open, resolve, or list structured disagreements in history.md.
+ *
+ * Usage:
+ *   sdk-doc disagreement <project-dir> open --topic "..." --position-a "Role: position" --position-b "Role: position"
+ *   sdk-doc disagreement <project-dir> resolve --id DISAGREE-NNN --decision "..." --decided-by Role --reasoning "..."
+ *   sdk-doc disagreement <project-dir> list
+ */
+function cmdDisagreement() {
+  const projectDir = filePath ? path.resolve(filePath) : process.cwd();
+  const subcommand = args[2]; // open | resolve | list
+  const historyPath = path.join(projectDir, 'history.md');
+
+  if (!subcommand || !['open', 'resolve', 'list'].includes(subcommand)) {
+    console.error(`Usage:
+  sdk-doc disagreement <project-dir> open --topic "..." --position-a "Role: position" --position-b "Role: position"
+  sdk-doc disagreement <project-dir> resolve --id DISAGREE-NNN --decision "..." --decided-by Role --reasoning "..."
+  sdk-doc disagreement <project-dir> list`);
+    process.exit(1);
+  }
+
+  const opts = {};
+  for (let i = 3; i < args.length; i++) {
+    if (args[i].startsWith('--') && args[i + 1]) {
+      opts[args[i].slice(2)] = args[++i];
+    }
+  }
+
+  if (subcommand === 'open') {
+    const topic     = opts.topic;
+    const posA      = opts['position-a'];
+    const posB      = opts['position-b'];
+
+    if (!topic || !posA || !posB) {
+      console.error('Error: --topic, --position-a, and --position-b are required.');
+      process.exit(1);
+    }
+
+    // Parse "Role: position" format
+    const parsePosition = (pos) => {
+      const colonIdx = pos.indexOf(':');
+      if (colonIdx === -1) return { role: 'Unknown', position: pos.trim() };
+      return { role: pos.slice(0, colonIdx).trim(), position: pos.slice(colonIdx + 1).trim() };
+    };
+
+    const a = parsePosition(posA);
+    const b = parsePosition(posB);
+
+    // Generate ID
+    let nextId = 1;
+    if (fs.existsSync(historyPath)) {
+      const content = fs.readFileSync(historyPath, 'utf8');
+      const matches = content.match(/DISAGREE-(\d+)/g);
+      if (matches) {
+        const ids = matches.map(m => parseInt(m.replace('DISAGREE-', '')));
+        nextId = Math.max(...ids) + 1;
+      }
+    }
+
+    const id = `DISAGREE-${String(nextId).padStart(3, '0')}`;
+    const date = new Date().toISOString().slice(0, 10);
+
+    const entry = `
+---
+
+### [${id}] ${topic}
+Date opened: ${date}
+Date resolved: —
+Status: OPEN
+
+**Positions:**
+
+| Agent | Position | Key tradeoff |
+|-------|----------|-------------|
+| ${a.role} | ${a.position} | |
+| ${b.role} | ${b.position} | |
+
+**Resolution:** Pending
+**Decided by:** —
+**Reasoning:** —
+**Dissent on record:** —
+`;
+
+    if (!fs.existsSync(historyPath)) {
+      fs.writeFileSync(historyPath, `# History\n${entry}`, 'utf8');
+    } else {
+      fs.appendFileSync(historyPath, entry, 'utf8');
+    }
+
+    console.log(`✓ Disagreement opened: ${id} — ${topic}`);
+    console.log(`  Positions: ${a.role} vs ${b.role}`);
+    console.log(`  Status: OPEN (surfaces in sdk-status)`);
+    return;
+  }
+
+  if (subcommand === 'resolve') {
+    const id        = opts.id;
+    const decision  = opts.decision;
+    const decidedBy = opts['decided-by'];
+    const reasoning = opts.reasoning || '';
+    const dissent   = opts.dissent || 'None';
+
+    if (!id || !decision || !decidedBy) {
+      console.error('Error: --id, --decision, and --decided-by are required.');
+      process.exit(1);
+    }
+
+    if (!fs.existsSync(historyPath)) {
+      console.error('Error: history.md not found.');
+      process.exit(1);
+    }
+
+    let content = fs.readFileSync(historyPath, 'utf8');
+    const date = new Date().toISOString().slice(0, 10);
+
+    // Find the disagreement entry and update it
+    const pattern = new RegExp(`(### \\[${id}\\][\\s\\S]*?)Status: OPEN`, 'i');
+    if (!pattern.test(content)) {
+      console.error(`Error: ${id} not found or not OPEN.`);
+      process.exit(1);
+    }
+
+    content = content.replace(pattern, `$1Status: RESOLVED`);
+    content = content.replace(
+      new RegExp(`(### \\[${id}\\][\\s\\S]*?)Date resolved: —`),
+      `$1Date resolved: ${date}`
+    );
+    content = content.replace(
+      new RegExp(`(### \\[${id}\\][\\s\\S]*?)\\*\\*Resolution:\\*\\* Pending`),
+      `$1**Resolution:** ${decision}`
+    );
+    content = content.replace(
+      new RegExp(`(### \\[${id}\\][\\s\\S]*?)\\*\\*Decided by:\\*\\* —`),
+      `$1**Decided by:** ${decidedBy}`
+    );
+    content = content.replace(
+      new RegExp(`(### \\[${id}\\][\\s\\S]*?)\\*\\*Reasoning:\\*\\* —`),
+      `$1**Reasoning:** ${reasoning}`
+    );
+    content = content.replace(
+      new RegExp(`(### \\[${id}\\][\\s\\S]*?)\\*\\*Dissent on record:\\*\\* —`),
+      `$1**Dissent on record:** ${dissent}`
+    );
+
+    fs.writeFileSync(historyPath, content, 'utf8');
+    console.log(`✓ Disagreement resolved: ${id}`);
+    console.log(`  Decision: ${decision}`);
+    console.log(`  Decided by: ${decidedBy}`);
+    if (dissent !== 'None') console.log(`  Dissent: ${dissent}`);
+    return;
+  }
+
+  if (subcommand === 'list') {
+    if (!fs.existsSync(historyPath)) {
+      console.log('No history.md found. No disagreements recorded.');
+      return;
+    }
+
+    const content = fs.readFileSync(historyPath, 'utf8');
+    const entries = content.match(/### \[DISAGREE-\d+\][^\n]*/g);
+
+    if (!entries || entries.length === 0) {
+      console.log('No disagreements recorded.');
+      return;
+    }
+
+    console.log(`\nDisagreements (${entries.length}):\n`);
+    for (const entry of entries) {
+      const idMatch = entry.match(/\[(DISAGREE-\d+)\]/);
+      const topic = entry.replace(/### \[DISAGREE-\d+\]\s*/, '').trim();
+      const id = idMatch ? idMatch[1] : '?';
+
+      // Find status
+      const fullEntry = content.match(new RegExp(`### \\[${id}\\][\\s\\S]*?Status:\\s*(\\w+)`, 'i'));
+      const status = fullEntry ? fullEntry[1] : 'UNKNOWN';
+      const statusIcon = status === 'OPEN' ? '!' : '-';
+
+      console.log(`  ${statusIcon} ${id}  ${status.padEnd(10)}  ${topic}`);
+    }
+    console.log('');
+    return;
+  }
+}
+
 // ─── Dispatch ────────────────────────────────────────────────────────────────
 
 switch (command) {
@@ -2168,6 +2566,8 @@ switch (command) {
   case 'bus':      cmdBus();      break;
   case 'cockpit':    cmdCockpit();    break;
   case 'discovery':  cmdDiscovery();  break;
+  case 'disagreement': cmdDisagreement(); break;
+  case 'history':      cmdHistory();      break;
   default:
     console.error(`Unknown command: "${command}"`);
     printHelp();

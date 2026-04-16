@@ -7,6 +7,16 @@
 
 ---
 
+## Explicit Non-Goals
+
+> What this architecture is NOT doing. Each item must be as specific as the goals.
+> Minimum 2 items required to pass pre-Sprint 1 gate.
+
+- [What architectural approach we are deliberately not taking and why]
+- [What capability we are choosing not to build in this cycle and why]
+
+---
+
 ## Architecture (CTO)
 
 ### Pending

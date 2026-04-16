@@ -1,5 +1,5 @@
 # Protocol -- Shared Interface Contract
-**Version:** 4.1
+**Version:** 4.2
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
 
@@ -32,6 +32,8 @@ FROM: [Agent name] ([Role])
 TO: [Target agent] | ALL
 RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
 PRIORITY: INFO | DECISION NEEDED | BLOCKER
+SOLUTION_CLASS: KNOWN | EXPLORATORY | HYBRID  (required for CTO, Mario, EM, Staff Eng, Coordinator)
+TAG: [optional — semantic metadata, see defined tags below. Multiple tags comma-separated.]
 MESSAGE:
   [Body -- plain text, no headers inside the message for INFO.
    For DECISION NEEDED: must include a specific question and a deadline.
@@ -56,6 +58,15 @@ SOLUTION_CLASS: KNOWN | EXPLORATORY | HYBRID
 - `HYBRID` — part of the problem is solved, part requires exploration. Agent names which is which.
 
 **Why this field exists:** Agents will cheerfully reason through solved problems — indefinitely, with confidence, and without flagging the approach as suboptimal. SOLUTION_CLASS makes the method visible in the transcript. A series of `EXPLORATORY` tags on a known problem class is a health signal. A `KNOWN` tag without naming the solution is incomplete and should be flagged by any agent who receives it.
+
+**COST_SIGNAL and TIME_SIGNAL — optional constraint fields on output-bearing messages:**
+
+```
+COST_SIGNAL: LOW | MEDIUM | HIGH | UNKNOWN
+TIME_SIGNAL: [decision age in hours, or "N/A" for new decisions]
+```
+
+These are forcing functions, not precise measurements. They make agents state, in writing, what a decision costs and how long it has been open. The Coordinator aggregates them in the decision dashboard. Cost and time are constraints every agent carries — not a dedicated agent's domain (see Section 29, Design Principles).
 
 **Rule:** An agent that files `EXPLORATORY` on a problem with a well-known solution must be challenged. The challenge is logged. This is not a procedural nicety — it is the protocol's primary defense against the reliability failure mode described in the Halloway Ratchet doctrine (see Section 24).
 
@@ -1281,4 +1292,121 @@ The challenged agent applies the deterministic solution or provides a written ra
 
 ---
 
-*Protocol v4.1. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, and the Halloway Ratchet doctrine. Every agent references it. No agent duplicates it.*
+## 25. TAG Field — Semantic Metadata on Bus Messages
+
+Tags express semantic intent without adding new message types. The intent resolver pattern-matches tags and recommends actions. Tags are optional on any Bus message.
+
+**Format:** `TAG: [tag-name]` or `TAG: [tag-name], [tag-name]`
+
+### Defined Tags
+
+**FRAMING-CHALLENGE** — The premise of the work is being challenged, not the execution. An agent believes the assumption, target user, hypothesis, or scope boundary that downstream work is built on is incorrect or untested.
+
+- Requires `PRIORITY: DECISION NEEDED` or `BLOCKER` (rejected with `INFO`)
+- MESSAGE must include: the assumption being challenged, why the agent believes it is wrong, what changes if the assumption is wrong, and two options (defend or revise)
+- Intent resolver logs the challenge to `history.md` and surfaces it in `sdk-status`
+- The challenged party must restate the challenged assumption in their own words before the thread unfreezes
+- Resolution logged to `history.md`
+
+**RATCHET-CANDIDATE** — A Halloway Ratchet signal. An agent has observed exploratory reasoning on a known-solution task class (see Section 24). Requires `PRIORITY: INFO`.
+
+Tags are extensible. New tags require a protocol version bump and an entry in this section. Do not invent ad-hoc tags.
+
+---
+
+## 26. Kill Log — Cross-Project Judgment Corpus
+
+When the Owner kills a pod or mission, the kill is logged to two locations:
+
+1. **Cross-project log** (`~/.claude/kill-log.json` + `~/.claude/kill-log.md`) — account-level, persists across projects. The compounding judgment asset.
+2. **Per-project history** (`history.md`) — local context for the specific project.
+
+### Kill Classes
+
+| Class | Meaning | Feeds judgment corpus? |
+|---|---|---|
+| `FRAMING_WRONG` | The bet was wrong — assumption, user, hypothesis, or scope was incorrect | Yes |
+| `SCOPE_OBSOLETE` | External change made the work irrelevant | No |
+| `PRIORITY_SHIFT` | Higher-priority work displaced this | No |
+| `EXECUTION_STALLED` | Pod couldn't execute | No |
+
+Only `FRAMING_WRONG` kills feed the cross-project read path. The others are operational noise.
+
+### Authority
+
+- **Owner kills are unrestricted.** No approval chain. `/kill` executes immediately.
+- **Agent-initiated kills require Owner confirmation.** Agent sends `DECISION NEEDED` Bus message; Owner confirms or rejects.
+- **Cool-down:** Re-activating a killed pod in the same release requires CEO approval with logged rationale.
+- **Gate preservation:** Killing an agent that holds a gate (CLO, CISO, Mario) does not erase the gate. The gate must be explicitly waived (CEO decision, logged) or reassigned.
+
+Command: `sdk-kill <project-dir> <pod> --reason "..." --class <class> [--assumption "..."]`
+
+---
+
+## 27. Negative Scope — Explicit Non-Goals
+
+Every artifact that crosses a gate must include an "Explicit Non-Goals" section with at least 2 items. Each item names what is excluded and why.
+
+`sdk-gate-check` enforces this as a hard gate — missing or incomplete Negative Scope blocks the gate.
+
+Non-goals are not aspirational deferrals ("we'll do this later"). They are active exclusions with reasoning ("we are choosing not to do X because Y"). The Owner's primary challenge surface is the Negative Scope — if the team can't articulate what they're choosing not to do, they haven't scoped the work.
+
+---
+
+## 28. Pre-Mortem Gate (Phase 2.5)
+
+After Mario's irreversibility review and before Sprint 1 starts, every mission produces a pre-mortem: the post-mortem for the failure case, written before execution begins.
+
+**Required sections:**
+1. Top 3 failure modes (specific, falsifiable)
+2. Leading indicators visible in week 1-2 (before the sprint is lost)
+3. Non-goals most likely to drift into (cross-reference Explicit Non-Goals)
+4. The single falsifiable assumption that, if wrong, kills the mission
+
+**Participants:** Minimum 2 from distinct domains. Full team (3+ roles): PM + CTO/Staff Eng + EM. Small team: 2 participants from different domains. Independent writing, then synthesis.
+
+The pre-mortem is the Owner's primary challenge surface — they read it and either proceed or `/kill` the pod.
+
+Enforcement: `sdk-gate-check <project-dir> --pre-mortem` or `--all`. Sprint 1 cannot start until the Owner has reviewed the pre-mortem.
+
+---
+
+## 29. Structured Disagreement Log
+
+When agents hold conflicting positions on a consequential decision, the disagreement is documented — not just escalated. The disagreement log captures both positions, the tradeoff, the decision, and the dissent on record. This is the artifact that compounds into organizational memory.
+
+**Opening a disagreement:** Any agent can open one. It is not an escalation — it is documentation.
+
+```
+sdk-doc disagreement <project-dir> open --topic "..." --position-a "Role: position" --position-b "Role: position"
+```
+
+**Resolving:** The decision-maker resolves with rationale and dissent.
+
+```
+sdk-doc disagreement <project-dir> resolve --id DISAGREE-NNN --decision "..." --decided-by Role --reasoning "..." [--dissent "Role: concern"]
+```
+
+**Rules:**
+- Disagreements are never deleted or edited after resolution. The positions stand.
+- Unresolved disagreements surface in `sdk-status` under "Open Challenges." If OPEN for more than 48 hours, it becomes a signal.
+- The "Dissent on record" field is critical. An agent who disagrees with the resolution gets their concern permanently logged. This prevents false consensus.
+- `sdk-retro` should reference open and recently resolved disagreements as discussion items.
+- Disagreements are a required attachment to Mario's irreversible decision review when the decision involved cross-domain conflict.
+
+---
+
+## 30. Design Principles
+
+### Domains vs Constraints
+
+When extending the SDK, test whether the addition is a domain or a constraint.
+
+- **Domains** have their own reasoning patterns, failure modes, and perspectives. They get agents with personas, requirements files, and challenge obligations.
+- **Constraints** are dimensions every agent should carry. They get protocol fields on Bus messages, visible on every output-bearing communication.
+
+If the answer to "should every agent think about this?" is yes, it is a constraint. Make it a protocol field, not an agent. Adding an agent for a constraint creates the illusion that someone else is watching — that illusion is the failure mode.
+
+---
+
+*Protocol v4.2. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, the Halloway Ratchet doctrine, TAG field, Kill Log, Negative Scope, Pre-Mortem gate, and design principles. Every agent references it. No agent duplicates it.*
