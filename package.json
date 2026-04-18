@@ -29,6 +29,7 @@
     "team/",
     "project-template/",
     "scripts/",
+    "packages/",
     "AGENTS.md",
     "CLAUDE.md",
     "DISCLAIMER.md",
