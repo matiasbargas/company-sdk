@@ -24,6 +24,7 @@
 const fs   = require('fs');
 const path = require('path');
 const os   = require('os');
+const { safeReadFile, findSection: ctxFindSection } = require('../packages/context/src');
 
 const args = process.argv.slice(2);
 
@@ -144,9 +145,8 @@ function parseFramingAssumptions(projectDir) {
   const assumptions = [];
 
   // Extract from product-requirements.md pre-mortem section 4
-  const productFile = path.join(projectDir, 'product-requirements.md');
-  if (fs.existsSync(productFile)) {
-    const prodContent = fs.readFileSync(productFile, 'utf8');
+  const prodContent = safeReadFile(projectDir, 'product-requirements.md');
+  if (prodContent) {
 
     // Falsifiable assumption from pre-mortem
     const sec4Match = prodContent.match(/### 4\.\s+The assumption[\s\S]*?\n\n(.+)/i);
@@ -168,9 +168,8 @@ function parseFramingAssumptions(projectDir) {
   }
 
   // Extract from idea.md section 4 if it has content
-  const ideaFile = path.join(projectDir, 'idea.md');
-  if (fs.existsSync(ideaFile)) {
-    const ideaContent = fs.readFileSync(ideaFile, 'utf8');
+  const ideaContent = safeReadFile(projectDir, 'idea.md');
+  if (ideaContent) {
     const sec4Match = ideaContent.match(/## 4\.\s+Brief[\s\S]*?\n\n([\s\S]*?)(?:\n## |\s*$)/i);
     if (sec4Match) {
       const brief = sec4Match[1].trim();
@@ -194,9 +193,8 @@ function parseOpenChallenges(projectDir) {
   const challenges = [];
 
   // Check bus-log.md for FRAMING-CHALLENGE tags
-  const busLogPath = path.join(projectDir, 'bus-log.md');
-  if (fs.existsSync(busLogPath)) {
-    const busContent = fs.readFileSync(busLogPath, 'utf8');
+  const busContent = safeReadFile(projectDir, 'bus-log.md');
+  if (busContent) {
     const entries = busContent.split(/\n---\n/).filter(Boolean);
 
     for (const entry of entries) {
@@ -216,9 +214,8 @@ function parseOpenChallenges(projectDir) {
   }
 
   // Check history.md for open disagreements (DISAGREE-NNN with Status: OPEN)
-  const historyPath = path.join(projectDir, 'history.md');
-  if (fs.existsSync(historyPath)) {
-    const histContent = fs.readFileSync(historyPath, 'utf8');
+  const histContent = safeReadFile(projectDir, 'history.md');
+  if (histContent) {
     const disagreeMatches = histContent.match(/### \[DISAGREE-\d+\].*\n[\s\S]*?Status:\s*OPEN/gi);
     if (disagreeMatches) {
       for (const match of disagreeMatches) {

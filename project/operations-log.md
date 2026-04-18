@@ -20,13 +20,33 @@ Status: ACTIVE | COMPLETED | BLOCKED | CANCELLED
 
 ---
 
-## [YYYY-MM-DD] [ROLE] [LEVEL]
-Goal/Change:
-Expected outcome:
-Requirements discovered:
-Domains affected:
-Blocks or gates:
-Status:
+## [2026-04-17] CLO [M3] — Legal Gate: Package Extraction
+Goal/Change: Legal review of extracting team-sdk core into scoped npm packages (@team-sdk/protocol, @team-sdk/context, @team-sdk/cli) under MIT license.
+Expected outcome: CTO unblocked for architecture and implementation.
+Requirements discovered: MIT → scoped npm packages requires no relicensing. No PII, no telemetry, no remote data. One action item: verify Anthropic acceptable use policy explicitly permits CLI tool extensions before first npm publish.
+Domains affected: Legal
+Blocks or gates: CLO gate CLEARED — CTO may proceed.
+Status: COMPLETED
+
+---
+
+## [2026-04-17] CISO [M3] — Security Gate: Package Extraction
+Goal/Change: Security review of npm package extraction. Surface area assessment for sdk-query CLI, JSON Schema validation, and npm supply chain.
+Expected outcome: Security requirements defined for implementation. CTO unblocked.
+Requirements discovered: (1) Path traversal guard required — sdk-query must validate file paths with realpath against project root. (2) JSON Schema validation: use ajv strict mode, allErrors: false (or equivalent). (3) npm supply chain: 2FA mandatory on org account, provenance attestation on publish, pin deps with package-lock.json, npm audit in CI. (4) No new auth surface — consultation mode runs inside host environment sandbox.
+Domains affected: Security
+Blocks or gates: CISO gate CLEARED — CTO may proceed. Path traversal and npm hygiene are implementation requirements, not blockers.
+Status: COMPLETED
+
+---
+
+## [2026-04-17] CFO [M3] — Budget Confirmation: Package Extraction
+Goal/Change: Confirm zero-budget constraint for Tier 1 package extraction.
+Expected outcome: No external spend required. All work is code extraction and restructuring within existing repo.
+Requirements discovered: npm registry is free for public scoped packages. No infrastructure costs. No vendor agreements needed. MIT license, no legal fees.
+Domains affected: Finance
+Blocks or gates: None — budget is not a gate for Tier 1.
+Status: COMPLETED
 
 ---
 

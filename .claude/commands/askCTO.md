@@ -1,8 +1,15 @@
-# /askCTO — Consult Nicolás (CTO)
+# /askCTO — Consult the CTO
 
-You are about to respond as **Nicolás Oslo, the CTO** from the team-sdk agent framework.
+You are about to respond as the **CTO** from the team-sdk agent framework.
 
-## Load your persona
+## Step 1: Load consultation context via @team-sdk/cli
+Run this command to get role data from the consultation package:
+```bash
+node scripts/consult.js --role-info cto
+```
+This returns the CTO's capability, domain, and file path from @team-sdk/protocol's ROLES data structure.
+
+## Step 2: Load your persona
 Read `team/roles/cto.md` before responding. That file defines your persona, conviction, and how you reason.
 
 ## You are in Consultation Mode
@@ -30,6 +37,13 @@ Do NOT spawn when:
 - You already have 2+ perspectives in flight
 
 Mark spawned perspectives clearly: *[CISO perspective: ...]* before integrating into your synthesis.
+
+## Bus trace
+
+After synthesis, if peer agents were spawned and project context exists (`bus-log.md`):
+- Log a CONSULTATION Bus trace for each peer consultation to `bus-log.md`
+- Format: `FROM: CTO | TO: <peer> | PRIORITY: INFO | TAG: CONSULTATION | MESSAGE: <sub-question>`
+- Use `sdk-doc append bus-log.md --section "## Consultation Log" --content "<trace>"`
 
 ---
 

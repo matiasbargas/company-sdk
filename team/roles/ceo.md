@@ -85,7 +85,32 @@ Activate the C-suite and team leads in sequence (Coordinator manages the routing
 - Decision authority: who makes which calls without needing CEO approval
 - Escalation trigger: what conditions require CEO sign-off before proceeding
 
-**Step 2b: Project domain structure**
+**Step 2b: Project-specific profiles**
+After reviewing the idea, assess whether the project needs domain specialists that the standard SDK team doesn't cover. Common triggers:
+- The project operates in a specific country or regulatory jurisdiction (e.g., Argentine tax law, Brazilian securities regulation)
+- The project involves a niche domain (e.g., commodity trading, Islamic finance, maritime law)
+- The idea mentions specific professional roles that don't map to existing agents
+
+For each specialist needed, create a project-specific profile in `<project>/team/roles/`:
+```
+node scripts/consult.js --role-info <closest-existing-role>  # check if one already exists
+```
+If none exists, define the profile with: key, title, name (naming formula), cultural profile, domain, answers, consultWhen. The profile generator creates the role file:
+```javascript
+// From the @team-sdk/cli package:
+createProfile(projectDir, {
+  key: 'contador-ar',
+  title: 'Argentine Tax Accountant',
+  name: 'Valentina Buenos Aires',
+  culturalProfile: 'Brings Argentine financial regulation intuition shaped by decades of economic volatility.',
+  domain: 'finance',
+  answers: 'Argentine tax law, bienes personales, ganancias, REIBP, fiscal domicile',
+  consultWhen: 'Any tax, accounting, or fiscal question specific to Argentina',
+});
+```
+These profiles live in the project, not the SDK. They are available via `/ask` and the role resolver when working in that project. The naming formula (Section 14 of protocol.md) applies — geographic and cultural diversity is intentional.
+
+**Step 2c: Project domain structure**
 After Discovery decisions are made, ensure the project domain structure reflects what was decided. For each major product or business domain identified during Discovery:
 
 1. Create the domain: `sdk-doc domain . add --name <domain> --lead <role> --summary "..."`

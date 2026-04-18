@@ -1,0 +1,14 @@
+{
+  "name": "@team-sdk/memory",
+  "version": "1.0.0",
+  "description": "Cross-project decision corpus — ingest, store, query decisions, kills, and challenges across projects",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node tests/run.js"
+  },
+  "dependencies": {
+    "@team-sdk/protocol": "1.0.0",
+    "@team-sdk/context": "1.0.0"
+  },
+  "license": "MIT"
+}

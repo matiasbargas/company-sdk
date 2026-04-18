@@ -1,6 +1,6 @@
 {
   "name": "company-sdk",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "AI agent team OS — 20+ role-based agents, shared protocol, compliance gates, and CLI tools for running a software project with a structured AI team.",
   "keywords": [
     "ai",
@@ -57,15 +57,20 @@
     "sdk-pre-tag": "./scripts/pre-tag.js",
     "sdk-version": "./scripts/version.js",
     "sdk-daemon": "./scripts/daemon.js",
-    "sdk-ops": "./scripts/ops.js"
+    "sdk-ops": "./scripts/ops.js",
+    "sdk-consult": "./scripts/consult.js",
+    "sdk-memory": "./scripts/memory.js"
   },
   "scripts": {
     "bootstrap": "node scripts/bootstrap.js",
     "squad": "node scripts/squad.js",
     "doc": "node scripts/doc.js",
     "update": "node scripts/update.js",
-    "test": "node scripts/lib/test-ship.js && node scripts/lib/test-validate.js && node scripts/lib/test-v4.js"
+    "test": "node scripts/lib/test-ship.js && node scripts/lib/test-validate.js && node scripts/lib/test-v4.js && node packages/protocol/tests/run.js && node packages/context/tests/run.js && node packages/cli/tests/run.js && node packages/memory/tests/run.js && node packages/runtime/tests/run.js"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "engines": {
     "node": ">=18"
   }

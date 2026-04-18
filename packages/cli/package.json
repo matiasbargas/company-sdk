@@ -1,0 +1,40 @@
+{
+  "name": "@team-sdk/cli",
+  "version": "1.1.0",
+  "description": "Consultation extension API for team-sdk — integrate SDK agents into any agentic environment.",
+  "license": "MIT",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src/"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@team-sdk/protocol": "1.0.0",
+    "@team-sdk/context": "1.0.0"
+  },
+  "scripts": {
+    "test": "node tests/run.js",
+    "audit": "npm audit"
+  },
+  "keywords": [
+    "team-sdk",
+    "cli",
+    "consultation",
+    "agents",
+    "extension"
+  ],
+  "author": "matiasbargas",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/matiasbargas/company-sdk.git",
+    "directory": "packages/cli"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

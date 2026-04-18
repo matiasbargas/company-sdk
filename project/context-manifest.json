@@ -1,16 +1,48 @@
 {
   "schemaVersion": "1.0",
-  "manifestVersion": 6,
-  "generatedAt": "2026-04-15T00:00:00.000Z",
-  "release": "v2026.Q2.1",
-  "phase": "loop-closed",
-  "activeMissions": [],
+  "manifestVersion": 7,
+  "generatedAt": "2026-04-18T13:29:52.586Z",
+  "release": "v2026.Q2.2",
+  "phase": "unknown",
+  "activeMissions": [
+    {
+      "name": "1",
+      "status": "CTO",
+      "nextAction": "—"
+    },
+    {
+      "name": "2",
+      "status": "CTO + PM",
+      "nextAction": "Mission 1"
+    },
+    {
+      "name": "3",
+      "status": "PM + CTO",
+      "nextAction": "Missions 1 + 2"
+    }
+  ],
   "waitingOn": [],
-  "openDecisions": [],
-  "lastUpdatedBy": "Owner — SaaS cancellation + cleanup",
-  "nextAgentToActivate": null,
+  "openDecisions": [
+    {
+      "decision": "~~Monorepo~~ → **Confirmed.** npm workspaces, single repo.",
+      "neededBy": ""
+    },
+    {
+      "decision": "~~doc.js decomposition~~ → **Audit first.** Before committing timeline.",
+      "neededBy": ""
+    },
+    {
+      "decision": "~~Consultation Mode channel~~ → **Extend agentic environments.** Not a standalone binary. The SDK extends whatever runtime the user is already in (Claude Code, other engines). Slash commands, skills, MCP servers — not a separate tool.",
+      "neededBy": ""
+    }
+  ],
+  "lastUpdatedBy": "Greg (CEO) — Tier 1 complete, governance closure",
+  "nextAgentToActivate": {
+    "role": "Tier 1 complete.",
+    "activationPrompt": "**Tier 1 complete.** All 3 missions shipped. Tier 2 awaits owner direction."
+  },
   "staleness": {
-    "currentStatusAge": 0,
+    "currentStatusAge": 2,
     "flag": "fresh"
   }
 }

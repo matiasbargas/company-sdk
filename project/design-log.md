@@ -21,13 +21,13 @@ Status: ACTIVE | COMPLETED | BLOCKED | CANCELLED
 
 ---
 
-## [YYYY-MM-DD] [ROLE] [LEVEL]
-Goal/Change:
-Expected outcome:
-Requirements discovered:
-Artefacts produced:
-Mission affected:
-Status:
+## [2026-04-18] Greg (CEO) [M4] — No Design Scoped for Tier 1
+Goal/Change: Tier 1 (package extraction) is infrastructure — no UI, no user-facing design, no interface direction. Design was intentionally not activated for this cycle.
+Expected outcome: Design-log remains empty for Tier 1. This is intentional, not neglected.
+Requirements discovered: If Tier 2 includes consultation mode UX (how `/ask` looks and feels in an agentic environment), Designer should be activated.
+Artefacts produced: None.
+Mission affected: All Tier 1 missions (infrastructure only).
+Status: COMPLETED
 
 ---
 

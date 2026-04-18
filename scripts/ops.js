@@ -23,8 +23,9 @@
 const fs   = require('fs');
 const path = require('path');
 const config = require('./daemon-config');
+const { safeReadFile, findSection: ctxFindSection, calculateStaleness } = require('../packages/context/src');
 
-// ── Inline utilities (from doc.js patterns, kept local to avoid coupling) ────
+// ── Utilities (delegating to @team-sdk/context) ──────────────────────────────
 
 function safeRead(filePath) {
   if (!fs.existsSync(filePath)) return null;
@@ -32,31 +33,17 @@ function safeRead(filePath) {
 }
 
 function fileAgeHours(filePath) {
-  if (!fs.existsSync(filePath)) return -1;
-  return (Date.now() - fs.statSync(filePath).mtimeMs) / (1000 * 60 * 60);
+  const result = calculateStaleness(filePath);
+  return result ? result.ageHours : -1;
 }
 
 function findSection(content, heading) {
   if (!content) return '';
-  const lines = content.split('\n');
-  const headingLower = heading.toLowerCase().replace(/^#+\s*/, '');
-  let start = -1;
-  let level = 0;
-  for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(/^(#{1,6})\s+(.*)/);
-    if (m && m[2].toLowerCase().includes(headingLower)) {
-      start = i + 1;
-      level = m[1].length;
-      break;
-    }
-  }
-  if (start === -1) return '';
-  let end = lines.length;
-  for (let i = start; i < lines.length; i++) {
-    const m = lines[i].match(/^(#{1,6})\s/);
-    if (m && m[1].length <= level) { end = i; break; }
-  }
-  return lines.slice(start, end).join('\n').trim();
+  const result = ctxFindSection(content, heading);
+  if (!result) return '';
+  // Return content without the heading line itself
+  const lines = result.content.split('\n');
+  return lines.slice(1).join('\n').trim();
 }
 
 function parseChecklistItems(sectionContent) {

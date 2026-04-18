@@ -1,7 +1,7 @@
 # Team Roster
-**Project:** sdk (v2026.Q2.1)
-**Release:** v2026.Q2.1
-**Last updated:** 2026-04-06
+**Project:** sdk (v2026.Q2.2)
+**Release:** v2026.Q2.2
+**Last updated:** 2026-04-18
 **Owner:** CHRO
 
 > Every agent that activates on this project is logged here. CHRO updates this file on each spawn and dissolution. The roster is the single source of truth for who is currently active, at what level, and with what cultural profile. No agent is considered active until they appear in this table.
@@ -12,11 +12,11 @@
 
 | Metric | Value |
 |---|---|
-| Total sessions | 2 |
+| Total sessions | 4 |
 | Total agents ever activated | 10 |
 | Planning sessions (Discovery + Phase 2 setup) | 2 |
-| Execution sessions (Sprint 1+) | 0 |
-| Planning / Execution ratio | 2:0 (execution not yet started) |
+| Execution sessions (Sprint 1+) | 2 |
+| Planning / Execution ratio | 2:2 |
 | Current active agents | 9 |
 
 > Sessions are tracked by the Coordinator at each session close. A session is any contiguous working period ended by a `current-status.md` write. Planning sessions run from project start through EM pod composition. Execution sessions begin at Sprint 1.

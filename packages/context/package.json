@@ -1,0 +1,37 @@
+{
+  "name": "@team-sdk/context",
+  "version": "1.0.0",
+  "description": "Context generation, knowledge graph, and project file indexing for team-sdk.",
+  "license": "MIT",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src/"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@team-sdk/protocol": "1.0.0"
+  },
+  "scripts": {
+    "test": "node tests/run.js"
+  },
+  "keywords": [
+    "team-sdk",
+    "context",
+    "knowledge-graph",
+    "index"
+  ],
+  "author": "matiasbargas",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/matiasbargas/company-sdk.git",
+    "directory": "packages/context"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

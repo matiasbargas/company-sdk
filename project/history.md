@@ -157,6 +157,120 @@ set bump. New release cycle: v2026.Q2.1.
 
 ---
 
+## Bus Policy Decision — Mandatory Everywhere
+**Date:** 2026-04-18
+**Made by:** Owner (Matias Bargas)
+**Release:** v2026.Q2.2
+**Status:** DECIDED
+
+**What happened:**
+Greg (CEO) audited the project's compliance with its own framework and found that the Bus format was not used for inter-agent communication during the entire Tier 1 cycle. All routing happened through direct consultation and area logs. The Bus parser was shipped with 399 tests — while the Bus itself had 0 messages from the cycle that built it.
+
+Owner was asked: should Bus communication be mandatory for internal SDK development, or only for projects that use the SDK?
+
+**Decision:** Bus communication is mandatory everywhere, including internal SDK development. The SDK dogfoods its own protocol fully. If we don't use it ourselves, we can't credibly tell others to.
+
+**Implications:**
+- Tier 2 must use Bus messages for all inter-agent communication
+- Pod activations, gate results, and mission completions must flow through the Bus
+- bus-log.md must be current at session close
+- The Tier 1 gap is acknowledged in the retrospective (project-map.md Section 10), not retroactively fixed
+
+**Reversible:** YES — could exempt internal development later, but the default is full dogfooding.
+**Affects natural persons:** NO
+**Human approved by:** Matias Bargas (Owner) on 2026-04-18
+
+---
+
+## Mario Gate — 5 Irreversible Decisions for Package Extraction
+**Date:** 2026-04-17
+**Made by:** Mario (Chief Engineer)
+**Release:** v2026.Q2.2
+**Status:** COMPLETED — All 5 APPROVED
+
+| # | Decision | Verdict | Conditions |
+|---|---|---|---|
+| 1 | Package naming: @team-sdk/protocol, @team-sdk/context, @team-sdk/cli | APPROVED | None. Names map to dependency chain. |
+| 2 | parseBusMessage stays regex-based | APPROVED WITH CONDITIONS | Must ship with contract test suite covering every field, multi-line bodies, missing fields, malformed input before any external consumer imports it. |
+| 3 | Role-to-domain mapping unification | APPROVED WITH CONDITIONS | (a) Canonical mapping must be data structure (object/map), not if-chains. (b) Test asserting every role from CLAUDE.md resolves — no silent fallthrough. |
+| 4 | CATALOG becomes declarative schema | APPROVED WITH CONDITIONS | Must include version field + load-time validation. All consumers import from package, no local copies. Missing file handling surfaces as warning. |
+| 5 | context-index.json schemaVersion bump to 3.0 | APPROVED | @team-sdk/context must export SUPPORTED_SCHEMA_VERSIONS constant. |
+
+**Near-misses investigated:** Circular dependency risk between cli/context (dismissed — no cycle in traced code). Regex parser field-drop risk (dismissed — covered by contract test suite condition).
+
+---
+
+## CTO Architecture Brief — Package Extraction
+**Date:** 2026-04-17
+**Made by:** CTO (Nicolas)
+**Release:** v2026.Q2.2
+**Status:** COMPLETED
+
+**Key findings:**
+- doc.js: 2,575 lines, 7 functional clusters, extractable in order (A: markdown utils → B: protocol-aware → D: context/knowledge graph → rest)
+- scripts/lib/: 8 files, already partially factored. intent-resolver.js and action-registry.js map directly to @team-sdk/protocol.
+- protocol.md: 10 structural elements expressible as JSON Schema, ~10 behavioral elements stay as prose.
+- Package architecture: monorepo, npm workspaces, 3 packages. Protocol (zero deps) → Context (depends on protocol) → CLI (depends on both).
+- Migration: additive, existing scripts continue working. Estimated 4-5 weeks.
+- Riskiest target: doc.js decomposition. Mitigated by cluster-order extraction with per-cluster tests.
+
+---
+
+## CLO + CISO Gate — Package Extraction
+**Date:** 2026-04-17
+**Made by:** CLO (Camila) + CISO (Sebastian)
+**Release:** v2026.Q2.2
+**Status:** CLEAR
+
+**CLO:** MIT → scoped npm: no issues. No PII, no telemetry. Action item: verify Anthropic acceptable use policy permits CLI tool extensions before first publish.
+**CISO:** Path traversal check needed on sdk-query (realpath vs project root). npm supply chain: 2FA required, provenance attestation, pin deps. JSON Schema: use ajv, strict mode.
+
+---
+
+## New Discovery Cycle — The Extractable Core
+**Date:** 2026-04-17
+**Made by:** Greg (CEO), directed by Owner (Matias Bargas)
+**Release:** v2026.Q2.2
+**Status:** DISCOVERY
+
+**What happened:**
+Owner initiated a new discovery cycle for team-sdk. The previous loop (iterations 1-5) shipped CLI tooling and documentation enforcement. SaaS was cancelled. The next phase addresses six structural problems in the SDK, organized in two tiers.
+
+**The problems:**
+1. Decision memory is trapped in markdown — kills, decisions, challenges are not queryable
+2. Protocol is human-readable only — no machine can validate a Bus message or gate state
+3. Adoption requires full project commitment before delivering any value
+4. Each project is an island — no organizational memory across projects
+5. Single-vendor lock-in — role files are model-agnostic but execution is Claude Code-only
+6. Squads are frozen — only the maintainer can create team compositions
+
+**Strategic direction:**
+Extract team-sdk's core infrastructure into reusable packages that people can use independently. The Bus format, context index, protocol spec, and knowledge graph become `@team-sdk/core`. The full SDK becomes an opinionated implementation on top of a reusable foundation.
+
+**Package architecture (CTO recommendation):**
+- `@team-sdk/protocol` — Bus schema, message parser/validator, escalation rules
+- `@team-sdk/context` — manifest/index generation, knowledge graph, context loading
+- `@team-sdk/cli` — current scripts/ rewritten to consume the above
+
+Monorepo with npm workspaces. Single repo, single CI, version-locked.
+
+**Build order:** Protocol Schema first (dependency for everything) → Knowledge Graph → Consultation Standalone. Tier 2 (cross-project memory, pluggable runtime, squad marketplace) blocked until Tier 1 lands.
+
+**CTO risk flag:** doc.js at 115KB is the riskiest extraction target. Audit before timeline commitment. Protocol schema can only validate structure, not orchestration semantics — that boundary must be explicit.
+
+**Key decisions:**
+- Decision: Tier 1 before Tier 2. No multiplier work until foundations are solid.
+- Decision: Extraction, not redesign. Tier 1 must not break existing SDK workflow.
+- Decision: Monorepo with npm workspaces. Owner confirmed 2026-04-17.
+- Decision: doc.js audit before committing timeline. Owner confirmed 2026-04-17.
+- Decision: Consultation Mode targets people already inside agentic environments (Claude Code, other engines). Not a standalone binary. The SDK extends the runtime the user is already in — slash commands, skills, MCP servers — not a separate tool. This applies regardless of which engine is used. Owner confirmed 2026-04-17.
+
+**Reversible:** YES — packages are additive. The current SDK continues to work.
+**Affects natural persons:** NO
+**Human approved by:** Matias Bargas (Owner) on 2026-04-17
+
+---
+
 ## SaaS Initiative Cancelled
 **Date:** 2026-04-15
 **Made by:** Owner (Matias Bargas)
@@ -183,3 +297,9 @@ Owner cancelled the SaaS initiative (LOOP iterations 6-11). The project refocuse
 **Rationale:** Owner decision. SaaS layer deferred indefinitely. The CLI product stands on its own.
 **Reversible:** YES — archived materials can be restored if the initiative resumes.
 **Affects natural persons:** NO
+
+## Version Bump — v2026.Q2.1 → v2026.Q2.3
+Date: 2026-04-18
+Made by: Owner (sdk-version set)
+
+set bump. New release cycle: v2026.Q2.3.

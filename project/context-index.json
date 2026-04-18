@@ -1,0 +1,1194 @@
+{
+  "schemaVersion": "3.0",
+  "indexVersion": 2,
+  "generatedAt": "2026-04-18T13:29:52.586Z",
+  "release": "v2026.Q2.2",
+  "project": {
+    "name": "project",
+    "type": "product",
+    "squad": "startup",
+    "summary": ""
+  },
+  "projectDomains": {},
+  "orgDomains": {
+    "strategy": {
+      "lead": "Coordinator",
+      "consult": "CEO",
+      "files": [
+        "current-status.md",
+        "project.md",
+        "history.md",
+        "project-map.md",
+        "strategy-log.md",
+        "general-requirements.md"
+      ]
+    },
+    "engineering": {
+      "lead": "CTO",
+      "consult": "CTO",
+      "files": [
+        "engineering-requirements.md",
+        "engineering-log.md"
+      ]
+    },
+    "legal": {
+      "lead": "CLO",
+      "consult": "CLO",
+      "files": [
+        "discovery-requirements.md"
+      ]
+    },
+    "security": {
+      "lead": "CISO",
+      "consult": "CISO",
+      "files": [
+        "security-requirements.md"
+      ]
+    },
+    "product": {
+      "lead": "PM",
+      "consult": "PM",
+      "files": [
+        "product-requirements.md",
+        "product-log.md"
+      ]
+    },
+    "design": {
+      "lead": "Designer",
+      "consult": "Designer",
+      "files": [
+        "design-requirements.md",
+        "design-log.md"
+      ]
+    },
+    "business": {
+      "lead": "CFO",
+      "consult": "CFO",
+      "files": [
+        "business-requirements.md",
+        "operations-log.md"
+      ]
+    },
+    "people": {
+      "lead": "CHRO",
+      "consult": "CHRO",
+      "files": [
+        "people-log.md",
+        "team.md"
+      ]
+    },
+    "research": {
+      "lead": "UX Researcher",
+      "consult": "UX Researcher",
+      "files": [
+        "research-requirements.md",
+        "research-log.md"
+      ]
+    }
+  },
+  "queryMap": {
+    "architecture": {
+      "read": [
+        "engineering-requirements.md"
+      ],
+      "consult": "CTO"
+    },
+    "technical-decision": {
+      "read": [
+        "engineering-requirements.md",
+        "history.md"
+      ],
+      "consult": "CTO"
+    },
+    "build-vs-buy": {
+      "read": [
+        "engineering-requirements.md",
+        "business-requirements.md"
+      ],
+      "consult": "CTO"
+    },
+    "platform-risk": {
+      "read": [
+        "engineering-requirements.md",
+        "security-requirements.md"
+      ],
+      "consult": "CTO"
+    },
+    "irreversible-decision": {
+      "read": [
+        "engineering-requirements.md",
+        "history.md"
+      ],
+      "consult": "Mario"
+    },
+    "quality-standard": {
+      "read": [
+        "engineering-requirements.md"
+      ],
+      "consult": "Mario"
+    },
+    "interface-contract": {
+      "read": [
+        "engineering-requirements.md"
+      ],
+      "consult": "Staff Engineer"
+    },
+    "sprint-state": {
+      "read": [
+        "engineering-requirements.md",
+        "product-requirements.md"
+      ],
+      "consult": "EM"
+    },
+    "pod-composition": {
+      "read": [
+        "engineering-requirements.md",
+        "people-log.md"
+      ],
+      "consult": "EM"
+    },
+    "legal-constraints": {
+      "read": [
+        "discovery-requirements.md"
+      ],
+      "consult": "CLO"
+    },
+    "compliance": {
+      "read": [
+        "discovery-requirements.md",
+        "security-requirements.md"
+      ],
+      "consult": "CLO"
+    },
+    "regulatory": {
+      "read": [
+        "discovery-requirements.md"
+      ],
+      "consult": "CLO"
+    },
+    "contracts": {
+      "read": [
+        "discovery-requirements.md",
+        "history.md"
+      ],
+      "consult": "CLO"
+    },
+    "security": {
+      "read": [
+        "security-requirements.md"
+      ],
+      "consult": "CISO"
+    },
+    "threat-model": {
+      "read": [
+        "security-requirements.md"
+      ],
+      "consult": "CISO"
+    },
+    "auth-design": {
+      "read": [
+        "security-requirements.md",
+        "engineering-requirements.md"
+      ],
+      "consult": "CISO"
+    },
+    "data-protection": {
+      "read": [
+        "security-requirements.md",
+        "discovery-requirements.md"
+      ],
+      "consult": "CISO"
+    },
+    "product-scope": {
+      "read": [
+        "product-requirements.md"
+      ],
+      "consult": "PM"
+    },
+    "user-story": {
+      "read": [
+        "product-requirements.md",
+        "design-requirements.md"
+      ],
+      "consult": "PM"
+    },
+    "mission-kanban": {
+      "read": [
+        "product-requirements.md",
+        "product-log.md"
+      ],
+      "consult": "PM"
+    },
+    "friction-log": {
+      "read": [
+        "product-requirements.md"
+      ],
+      "consult": "PM"
+    },
+    "interface-design": {
+      "read": [
+        "design-requirements.md"
+      ],
+      "consult": "Designer"
+    },
+    "ux-patterns": {
+      "read": [
+        "design-requirements.md"
+      ],
+      "consult": "Designer"
+    },
+    "user-research": {
+      "read": [
+        "research-requirements.md",
+        "research-log.md"
+      ],
+      "consult": "UX Researcher"
+    },
+    "assumption-validation": {
+      "read": [
+        "research-requirements.md",
+        "product-requirements.md"
+      ],
+      "consult": "UX Researcher"
+    },
+    "study": {
+      "read": [
+        "research-requirements.md"
+      ],
+      "consult": "UX Researcher"
+    },
+    "research-backlog": {
+      "read": [
+        "research-requirements.md"
+      ],
+      "consult": "UX Researcher"
+    },
+    "user-evidence": {
+      "read": [
+        "research-requirements.md",
+        "research-log.md"
+      ],
+      "consult": "UX Researcher"
+    },
+    "budget": {
+      "read": [
+        "business-requirements.md"
+      ],
+      "consult": "CFO"
+    },
+    "unit-economics": {
+      "read": [
+        "business-requirements.md"
+      ],
+      "consult": "CFO"
+    },
+    "runway": {
+      "read": [
+        "business-requirements.md"
+      ],
+      "consult": "CFO"
+    },
+    "revenue-model": {
+      "read": [
+        "business-requirements.md"
+      ],
+      "consult": "CRO"
+    },
+    "pricing": {
+      "read": [
+        "business-requirements.md"
+      ],
+      "consult": "CRO"
+    },
+    "gtm": {
+      "read": [
+        "business-requirements.md"
+      ],
+      "consult": "CMO"
+    },
+    "positioning": {
+      "read": [
+        "business-requirements.md"
+      ],
+      "consult": "CMO"
+    },
+    "vendor": {
+      "read": [
+        "business-requirements.md",
+        "operations-log.md"
+      ],
+      "consult": "COO"
+    },
+    "operations-runbook": {
+      "read": [
+        "business-requirements.md",
+        "operations-log.md"
+      ],
+      "consult": "COO"
+    },
+    "data-governance": {
+      "read": [
+        "business-requirements.md",
+        "engineering-requirements.md"
+      ],
+      "consult": "CDO"
+    },
+    "instrumentation": {
+      "read": [
+        "business-requirements.md",
+        "product-requirements.md"
+      ],
+      "consult": "CDO"
+    },
+    "ai-strategy": {
+      "read": [
+        "engineering-requirements.md"
+      ],
+      "consult": "CAIO"
+    },
+    "model-evaluation": {
+      "read": [
+        "engineering-requirements.md"
+      ],
+      "consult": "CAIO"
+    },
+    "analytics": {
+      "read": [
+        "business-requirements.md",
+        "product-requirements.md"
+      ],
+      "consult": "CAO"
+    },
+    "experimentation": {
+      "read": [
+        "business-requirements.md",
+        "product-requirements.md"
+      ],
+      "consult": "CAO"
+    },
+    "hiring": {
+      "read": [
+        "people-log.md"
+      ],
+      "consult": "CHRO"
+    },
+    "team-composition": {
+      "read": [
+        "team.md",
+        "people-log.md"
+      ],
+      "consult": "CHRO"
+    },
+    "partnerships": {
+      "read": [
+        "business-requirements.md"
+      ],
+      "consult": "CPO Partnerships"
+    },
+    "ecosystem": {
+      "read": [
+        "business-requirements.md"
+      ],
+      "consult": "CPO Partnerships"
+    },
+    "enterprise-risk": {
+      "read": [
+        "business-requirements.md",
+        "discovery-requirements.md"
+      ],
+      "consult": "CRO Risk"
+    },
+    "credit-risk": {
+      "read": [
+        "business-requirements.md"
+      ],
+      "consult": "CCO Credit"
+    },
+    "customer-success": {
+      "read": [
+        "business-requirements.md",
+        "product-requirements.md"
+      ],
+      "consult": "CCO Customer"
+    },
+    "protocol-design": {
+      "read": [
+        "engineering-requirements.md"
+      ],
+      "consult": "CPO Protocol"
+    },
+    "decisions": {
+      "read": [
+        "history.md"
+      ],
+      "consult": "Coordinator"
+    },
+    "current-state": {
+      "read": [
+        "current-status.md"
+      ],
+      "consult": "Coordinator"
+    },
+    "release-plan": {
+      "read": [
+        "current-status.md",
+        "history.md"
+      ],
+      "consult": "Coordinator"
+    },
+    "strategy": {
+      "read": [
+        "project.md",
+        "history.md"
+      ],
+      "consult": "CEO"
+    },
+    "vision": {
+      "read": [
+        "project.md",
+        "idea.md"
+      ],
+      "consult": "CEO"
+    },
+    "prior-session": {
+      "read": [],
+      "consult": "Coordinator"
+    },
+    "session-context": {
+      "read": [],
+      "consult": "Coordinator"
+    }
+  },
+  "opsMap": {
+    "record-decision": {
+      "fields": [
+        "decision",
+        "rationale",
+        "reversibility",
+        "affects"
+      ],
+      "required": [
+        "decision",
+        "rationale"
+      ],
+      "action": "doc.decision",
+      "writes": true,
+      "description": "Log a consequential decision to history.md"
+    },
+    "update-mission": {
+      "fields": [
+        "mission",
+        "status",
+        "next",
+        "blockers"
+      ],
+      "required": [
+        "mission",
+        "status"
+      ],
+      "action": "doc.pod-update",
+      "writes": true,
+      "description": "Update a mission status in current-status.md"
+    },
+    "log-work": {
+      "fields": [
+        "goal",
+        "outcome",
+        "status"
+      ],
+      "required": [
+        "goal",
+        "status"
+      ],
+      "action": "doc.log",
+      "writes": true,
+      "description": "Write an area log entry for completed work"
+    },
+    "save-session": {
+      "fields": [
+        "title",
+        "domains",
+        "tags",
+        "participants"
+      ],
+      "required": [
+        "title"
+      ],
+      "action": "doc.session.save",
+      "writes": true,
+      "description": "Save the current session context to temp"
+    },
+    "promote-session": {
+      "fields": [
+        "filename"
+      ],
+      "required": [
+        "filename"
+      ],
+      "action": "doc.session.promote",
+      "writes": true,
+      "description": "Promote a session from temp to permanent (indexed)"
+    },
+    "request-study": {
+      "fields": [
+        "title",
+        "question",
+        "requested-by"
+      ],
+      "required": [
+        "title"
+      ],
+      "action": "doc.study.create",
+      "writes": true,
+      "description": "Create a research study request"
+    },
+    "check-gates": {
+      "fields": [],
+      "required": [],
+      "action": "gate.check",
+      "writes": false,
+      "description": "Verify CLO + CISO gate status"
+    },
+    "check-health": {
+      "fields": [],
+      "required": [],
+      "action": "health",
+      "writes": false,
+      "description": "Run full project health check"
+    },
+    "refresh-manifest": {
+      "fields": [],
+      "required": [],
+      "action": "doc.manifest",
+      "writes": true,
+      "description": "Regenerate context-manifest.json"
+    },
+    "refresh-index": {
+      "fields": [],
+      "required": [],
+      "action": "doc.index",
+      "writes": true,
+      "description": "Regenerate context-index.json"
+    },
+    "spawn-agent": {
+      "fields": [
+        "name",
+        "role",
+        "level",
+        "activated-by",
+        "profile"
+      ],
+      "required": [
+        "name",
+        "role",
+        "level"
+      ],
+      "action": "doc.spawn",
+      "writes": true,
+      "description": "Activate a new agent on the team"
+    },
+    "dissolve-agent": {
+      "fields": [
+        "name",
+        "dissolved-by",
+        "reason"
+      ],
+      "required": [
+        "name"
+      ],
+      "action": "doc.dissolve",
+      "writes": true,
+      "description": "Deactivate an agent from the team"
+    },
+    "consult-role": {
+      "fields": [
+        "role",
+        "question",
+        "project"
+      ],
+      "required": [
+        "question"
+      ],
+      "action": "consult",
+      "writes": false,
+      "description": "Consult an agent role with a domain question"
+    }
+  },
+  "actions": {
+    "doc.append": {
+      "writes": true,
+      "requires": [
+        "file",
+        "section",
+        "content"
+      ],
+      "description": "Append content to a section in a markdown file"
+    },
+    "doc.decision": {
+      "writes": true,
+      "requires": [
+        "file",
+        "decision",
+        "context",
+        "made-by"
+      ],
+      "description": "Log a decision to history.md"
+    },
+    "doc.log": {
+      "writes": true,
+      "requires": [
+        "file",
+        "role",
+        "level",
+        "goal",
+        "status"
+      ],
+      "description": "Write a structured area log entry"
+    },
+    "doc.pod-update": {
+      "writes": true,
+      "requires": [
+        "file",
+        "mission",
+        "status",
+        "next"
+      ],
+      "description": "Update a mission row in current-status.md"
+    },
+    "doc.rewrite": {
+      "writes": true,
+      "requires": [
+        "file",
+        "section",
+        "content"
+      ],
+      "description": "Rewrite a section in a markdown file"
+    },
+    "doc.add-item": {
+      "writes": true,
+      "requires": [
+        "file",
+        "section",
+        "item"
+      ],
+      "description": "Add a checklist item to a section"
+    },
+    "doc.status": {
+      "writes": false,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Print current-status.md to stdout"
+    },
+    "doc.list": {
+      "writes": false,
+      "requires": [
+        "file"
+      ],
+      "description": "List all headings in a file"
+    },
+    "doc.read": {
+      "writes": false,
+      "requires": [
+        "file",
+        "section"
+      ],
+      "description": "Read a specific section from a file"
+    },
+    "doc.manifest": {
+      "writes": true,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Generate context-manifest.json from current-status.md"
+    },
+    "doc.index": {
+      "writes": true,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Generate context-index.json (file catalog + routing)"
+    },
+    "doc.session.save": {
+      "writes": true,
+      "requires": [
+        "project-dir",
+        "title"
+      ],
+      "description": "Save a session summary to sessions/temp/"
+    },
+    "doc.session.promote": {
+      "writes": true,
+      "requires": [
+        "project-dir",
+        "filename"
+      ],
+      "description": "Promote session from temp to permanent (indexed)"
+    },
+    "doc.session.list": {
+      "writes": false,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "List saved sessions"
+    },
+    "doc.session.clean": {
+      "writes": true,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Delete all temp sessions"
+    },
+    "doc.study.create": {
+      "writes": true,
+      "requires": [
+        "project-dir",
+        "title"
+      ],
+      "description": "Create a new study file in research/studies/"
+    },
+    "doc.study.list": {
+      "writes": false,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "List all studies"
+    },
+    "doc.spawn": {
+      "writes": true,
+      "requires": [
+        "project-dir",
+        "name",
+        "role",
+        "level",
+        "activated-by",
+        "profile",
+        "how",
+        "fun-fact"
+      ],
+      "description": "Add an agent to team.md"
+    },
+    "doc.dissolve": {
+      "writes": true,
+      "requires": [
+        "project-dir",
+        "name",
+        "dissolved-by",
+        "reason"
+      ],
+      "description": "Move agent from Active to Dissolved in team.md"
+    },
+    "gate.check": {
+      "writes": false,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Run CLO + CISO gate check"
+    },
+    "gate.check-all": {
+      "writes": false,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Run all gates (advisory)"
+    },
+    "gate.mario": {
+      "writes": false,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Run Mario irreversible decision gate"
+    },
+    "validate": {
+      "writes": false,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Advisory doc health check"
+    },
+    "health": {
+      "writes": false,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Staleness + validate + manifest check"
+    },
+    "pre-tag": {
+      "writes": false,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Full team review before tagging"
+    },
+    "pre-tag.fix": {
+      "writes": true,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Pre-tag with auto-fix"
+    },
+    "version.show": {
+      "writes": false,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Show current release ID"
+    },
+    "version.bump": {
+      "writes": true,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Bump release ID"
+    },
+    "ship": {
+      "writes": true,
+      "requires": [
+        "project-dir",
+        "release-id"
+      ],
+      "description": "Validate, tag, push, release notes"
+    },
+    "retro": {
+      "writes": true,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Interactive retrospective → strategy-log.md"
+    },
+    "resume": {
+      "writes": false,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Session start: health + gates + sessions + next agent"
+    },
+    "consult": {
+      "writes": false,
+      "requires": [
+        "role",
+        "question"
+      ],
+      "description": "Consult a role with a question"
+    },
+    "consult.suggest": {
+      "writes": false,
+      "requires": [
+        "question"
+      ],
+      "description": "Suggest the best role for a question"
+    },
+    "consult.list": {
+      "writes": false,
+      "requires": [],
+      "description": "List all available roles"
+    },
+    "consult.info": {
+      "writes": false,
+      "requires": [
+        "role"
+      ],
+      "description": "Get detailed info about a role"
+    }
+  },
+  "sessions": [],
+  "files": [
+    {
+      "path": "current-status.md",
+      "domain": "strategy",
+      "owner": "Coordinator",
+      "purpose": "Session continuity — read every session, always first",
+      "load_when": [
+        "session-start"
+      ],
+      "exists": true,
+      "ageHours": 2,
+      "stale": false
+    },
+    {
+      "path": "project.md",
+      "domain": "strategy",
+      "owner": "Coordinator",
+      "purpose": "Full conversation record and release plan",
+      "load_when": [
+        "session-start",
+        "full-context"
+      ],
+      "exists": true,
+      "ageHours": 282,
+      "stale": true
+    },
+    {
+      "path": "history.md",
+      "domain": "strategy",
+      "owner": "all",
+      "purpose": "Permanent decision record — all consequential decisions with rationale",
+      "load_when": [
+        "decision-review",
+        "pre-tag",
+        "irreversible-decision"
+      ],
+      "exists": true,
+      "ageHours": 2,
+      "stale": false
+    },
+    {
+      "path": "project-map.md",
+      "domain": "strategy",
+      "owner": "CEO",
+      "purpose": "CEO-validated release artifact — sealed at project completion",
+      "load_when": [
+        "release-close",
+        "ceo-gate"
+      ],
+      "exists": true,
+      "ageHours": 2,
+      "stale": false
+    },
+    {
+      "path": "idea.md",
+      "domain": "strategy",
+      "owner": "CEO",
+      "purpose": "Day 0 brief — raw idea shaped into the CEO activation message",
+      "load_when": [
+        "discovery",
+        "first-session"
+      ],
+      "exists": true,
+      "ageHours": 278,
+      "stale": true
+    },
+    {
+      "path": "strategy-log.md",
+      "domain": "strategy",
+      "owner": "Coordinator",
+      "purpose": "CEO and Coordinator strategy decisions and retrospectives",
+      "load_when": [
+        "strategy-review",
+        "retro"
+      ],
+      "exists": true,
+      "ageHours": 282,
+      "stale": true
+    },
+    {
+      "path": "team.md",
+      "domain": "people",
+      "owner": "Coordinator",
+      "purpose": "Active agents roster, metrics, dissolved agents history, onboarding log",
+      "load_when": [
+        "session-start",
+        "team-review",
+        "onboarding"
+      ],
+      "exists": true,
+      "ageHours": 2,
+      "stale": false
+    },
+    {
+      "path": ".sdkrc",
+      "domain": "strategy",
+      "owner": "Coordinator",
+      "purpose": "SDK configuration — release ID, squad type, project metadata",
+      "load_when": [
+        "session-start",
+        "config"
+      ],
+      "exists": true,
+      "ageHours": 228,
+      "stale": true
+    },
+    {
+      "path": "general-requirements.md",
+      "domain": "strategy",
+      "owner": "Coordinator",
+      "purpose": "Cross-domain requirements aggregate — Coordinator-maintained",
+      "load_when": [
+        "full-context",
+        "session-start"
+      ],
+      "exists": true,
+      "ageHours": 282,
+      "stale": true
+    },
+    {
+      "path": "engineering-requirements.md",
+      "domain": "engineering",
+      "owner": "CTO",
+      "purpose": "Architecture decisions, make/buy/partner, interface contracts, delivery state",
+      "load_when": [
+        "architecture-review",
+        "sprint-planning",
+        "technical-decision",
+        "build-vs-buy"
+      ],
+      "exists": true,
+      "ageHours": 276,
+      "stale": true
+    },
+    {
+      "path": "product-requirements.md",
+      "domain": "product",
+      "owner": "PM",
+      "purpose": "Product scope, user stories, friction log, mission kanban",
+      "load_when": [
+        "mission-shaping",
+        "scope-review",
+        "sprint-planning",
+        "user-story"
+      ],
+      "exists": true,
+      "ageHours": 277,
+      "stale": true
+    },
+    {
+      "path": "discovery-requirements.md",
+      "domain": "legal",
+      "owner": "CLO",
+      "purpose": "CLO + CISO regulatory map and legal blockers — hard gate for CTO activation",
+      "load_when": [
+        "legal-review",
+        "before-cto-activation",
+        "compliance-check",
+        "regulatory"
+      ],
+      "exists": true,
+      "ageHours": 282,
+      "stale": true
+    },
+    {
+      "path": "security-requirements.md",
+      "domain": "security",
+      "owner": "CISO",
+      "purpose": "CISO threat model, auth design constraints, security requirements",
+      "load_when": [
+        "security-review",
+        "before-cto-activation",
+        "threat-model",
+        "auth-design"
+      ],
+      "exists": true,
+      "ageHours": 68,
+      "stale": true
+    },
+    {
+      "path": "design-requirements.md",
+      "domain": "design",
+      "owner": "Designer",
+      "purpose": "Interface requirements, design direction, SDD artifacts",
+      "load_when": [
+        "interface-design",
+        "sdd-step2",
+        "ux-review"
+      ],
+      "exists": true,
+      "ageHours": 282,
+      "stale": true
+    },
+    {
+      "path": "business-requirements.md",
+      "domain": "business",
+      "owner": "CFO",
+      "purpose": "Finance, marketing, revenue, data, operations, and people requirements",
+      "load_when": [
+        "budget-review",
+        "gtm-planning",
+        "vendor-review",
+        "unit-economics"
+      ],
+      "exists": true,
+      "ageHours": 282,
+      "stale": true
+    },
+    {
+      "path": "engineering-log.md",
+      "domain": "engineering",
+      "owner": "CTO",
+      "purpose": "CTO, Mario, Staff Eng, EM, IC engineers — state changes and decisions",
+      "load_when": [
+        "engineering-domain",
+        "architecture-review"
+      ],
+      "exists": true,
+      "ageHours": 277,
+      "stale": true
+    },
+    {
+      "path": "product-log.md",
+      "domain": "product",
+      "owner": "PM",
+      "purpose": "PM, CMO, CRO, CDO — product and go-to-market state changes",
+      "load_when": [
+        "product-domain",
+        "mission-shaping"
+      ],
+      "exists": true,
+      "ageHours": 278,
+      "stale": true
+    },
+    {
+      "path": "design-log.md",
+      "domain": "design",
+      "owner": "Designer",
+      "purpose": "Designer and UX Researcher — design decisions and research findings",
+      "load_when": [
+        "design-domain",
+        "interface-design"
+      ],
+      "exists": true,
+      "ageHours": 2,
+      "stale": false
+    },
+    {
+      "path": "operations-log.md",
+      "domain": "business",
+      "owner": "COO",
+      "purpose": "COO, CLO, CISO, CFO — operations and compliance state changes",
+      "load_when": [
+        "operations-domain",
+        "vendor-review"
+      ],
+      "exists": true,
+      "ageHours": 2,
+      "stale": false
+    },
+    {
+      "path": "people-log.md",
+      "domain": "people",
+      "owner": "CHRO",
+      "purpose": "CHRO and EM — team changes, pod formation, onboarding entries",
+      "load_when": [
+        "people-domain",
+        "pod-management",
+        "hiring"
+      ],
+      "exists": true,
+      "ageHours": 2,
+      "stale": false
+    },
+    {
+      "path": "context-manifest.json",
+      "domain": "strategy",
+      "owner": "Coordinator",
+      "purpose": "Generated project snapshot — current phase, missions, next agent to activate",
+      "load_when": [
+        "session-start"
+      ],
+      "exists": true,
+      "ageHours": 0,
+      "stale": false
+    },
+    {
+      "path": "context-index.json",
+      "domain": "strategy",
+      "owner": "Coordinator",
+      "purpose": "Generated file map — domain routing, query map, agent capabilities",
+      "load_when": [
+        "session-start"
+      ],
+      "exists": true,
+      "ageHours": 0,
+      "stale": false
+    }
+  ]
+}

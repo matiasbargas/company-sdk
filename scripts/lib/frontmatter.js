@@ -1,19 +1,12 @@
 'use strict';
 
 /**
- * Parse simple YAML frontmatter from a markdown file.
- * Handles key: value and key: "quoted value" formats.
- * Returns an object of key-value pairs (all values are strings).
+ * frontmatter.js — Re-exports from @team-sdk/context.
+ *
+ * This file preserves the existing require() interface while
+ * the canonical implementation lives in packages/context/.
  */
-function parseFrontmatter(content) {
-  const m = content.match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return {};
-  const result = {};
-  for (const line of m[1].split('\n')) {
-    const kv = line.match(/^(\w[\w_-]*)\s*:\s*"?([^"]*)"?\s*$/);
-    if (kv) result[kv[1]] = kv[2];
-  }
-  return result;
-}
+
+const { parseFrontmatter } = require('../../packages/context/src');
 
 module.exports = { parseFrontmatter };

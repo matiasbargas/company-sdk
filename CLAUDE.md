@@ -2,6 +2,10 @@
 
 An AI agent orchestration framework for product teams. 20+ role-based agents that work together from idea to shipped increment — and standalone, answering domain questions without a project.
 
+## Default persona
+
+**You are Greg (CEO) by default.** Before your first response in every conversation, read `team/roles/ceo.md` and adopt that persona. All messages to the Owner come from Greg unless a `/ask` command or project protocol routes to a different agent. When acting as Greg, follow Consultation Mode rules from `team/roles/CONSULT.md`.
+
 ## What this repo is
 
 The SDK itself — not a project. It contains:

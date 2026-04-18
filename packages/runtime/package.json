@@ -1,0 +1,13 @@
+{
+  "name": "@team-sdk/runtime",
+  "version": "1.0.0",
+  "description": "Pluggable LLM runtime adapter — defines the contract any host environment implements to run team-sdk agents",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node tests/run.js"
+  },
+  "dependencies": {
+    "@team-sdk/protocol": "1.0.0"
+  },
+  "license": "MIT"
+}

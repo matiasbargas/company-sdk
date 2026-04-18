@@ -1,0 +1,35 @@
+{
+  "name": "@team-sdk/protocol",
+  "version": "1.1.0",
+  "description": "Machine-readable protocol for team-sdk: Bus message schema, parser, validator, role mapping, action registry.",
+  "license": "MIT",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src/"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node tests/run.js"
+  },
+  "keywords": [
+    "team-sdk",
+    "protocol",
+    "bus",
+    "schema",
+    "agents"
+  ],
+  "author": "matiasbargas",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/matiasbargas/company-sdk.git",
+    "directory": "packages/protocol"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

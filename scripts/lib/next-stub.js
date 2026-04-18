@@ -1,6 +1,13 @@
 'use strict';
-const fs = require('fs');
+
+/**
+ * next-stub.js — Activation phrase extraction.
+ *
+ * Uses @team-sdk/context for safe file reading and section parsing.
+ */
+
 const path = require('path');
+const { safeReadFile, findSection } = require('../../packages/context/src');
 
 /**
  * Returns the activation phrase from current-status.md "Next Agent To Activate"
@@ -9,12 +16,10 @@ const path = require('path');
 function getNextAgentStub(projectDir) {
   if (!projectDir) return null;
   try {
-    const statusPath = path.join(projectDir, 'current-status.md');
-    if (!fs.existsSync(statusPath)) return null;
-    const content = fs.readFileSync(statusPath, 'utf8');
+    const content = safeReadFile(projectDir, 'current-status.md');
+    if (!content) return null;
     const match = content.match(/##\s+Next Agent To Activate[\s\S]*?\*\*Activation phrase:\*\*\s*"([^"]+)"/i);
     if (match) return match[1].trim();
-    // fallback: bare "Activation phrase:" line
     const bare = content.match(/##\s+Next Agent To Activate[\s\S]*?Activation phrase:\s*"([^"]+)"/i);
     if (bare) return bare[1].trim();
     return null;
@@ -25,7 +30,6 @@ function getNextAgentStub(projectDir) {
 
 /**
  * Prints the next-agent stub to stdout if stdout is a TTY.
- * Never prints to stderr. Never throws.
  */
 function printNextStub(projectDir) {
   if (!process.stdout.isTTY) return;

@@ -1,5 +1,5 @@
 # Protocol -- Shared Interface Contract
-**Version:** 4.2
+**Version:** 4.3
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
 

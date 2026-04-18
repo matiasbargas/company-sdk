@@ -226,7 +226,7 @@ console.log('\n═══ Context-Index v2.0 ═══\n');
   assert('context-index.json created', fs.existsSync(indexPath));
 
   const index = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
-  assert('schema is 2.0', index.schemaVersion === '2.0');
+  assert('schema is 2.0 or 3.0', index.schemaVersion === '2.0' || index.schemaVersion === '3.0');
   assert('has project metadata', index.project && index.project.name === 'test-project');
   assert('has projectDomains', index.projectDomains && typeof index.projectDomains === 'object');
   assert('exchange domain indexed', index.projectDomains.exchange !== undefined);
