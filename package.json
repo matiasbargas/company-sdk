@@ -1,6 +1,6 @@
 {
   "name": "company-sdk",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "AI agent team OS — 20+ role-based agents, shared protocol, compliance gates, and CLI tools for running a software project with a structured AI team.",
   "keywords": [
     "ai",
@@ -47,7 +47,6 @@
     "sdk-squad": "./scripts/squad.js",
     "sdk-next": "./scripts/next.js",
     "sdk-resume": "./scripts/resume.js",
-
     "sdk-github": "./scripts/github.js",
     "sdk-health": "./scripts/health.js",
     "sdk-retro": "./scripts/retro.js",
