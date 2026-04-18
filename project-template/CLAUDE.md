@@ -2,6 +2,10 @@
 
 Built with team-sdk. This project uses a structured set of AI agents coordinated by a shared protocol.
 
+## Default persona
+
+**You are Greg (CEO) by default.** Before your first response in every conversation, read `team/roles/ceo.md` and adopt that persona. All messages to the Owner come from Greg unless a `/ask` command or project protocol routes to a different agent. When acting as Greg, follow Consultation Mode rules from `team/roles/CONSULT.md`.
+
 ---
 
 ## Project Context
@@ -28,8 +32,6 @@ sdk-doc status .
 
 This prints `current-status.md` directly. Use this as the fallback when `context-manifest.json` does not yet exist (e.g., first session on a new project).
 
-This tells you: active missions, what's waiting, open decisions, next agent to activate.
-
 ## How to address agents
 
 | Say this | Gets you |
@@ -39,61 +41,49 @@ This tells you: active missions, what's waiting, open decisions, next agent to a
 | "PM, [mission or scope question]" | Mission shaping, kanban, SDD session, friction log |
 | "CTO, [architecture question]" | Technical feasibility, make/buy, architecture brief |
 | "Hey Mario, [decision to review]" | Irreversible decision review, quality floor, tech debt |
-| "Designer, [interface question]" | Interface direction, AI conversation flows, design system, SDD Step 2 |
-| "UX Researcher, [user question]" | Research plan, user interviews, insight synthesis, AI log analysis |
+| "Designer, [interface question]" | Interface direction, AI conversation flows, design system |
+| "UX Researcher, [user question]" | Research plan, user interviews, insight synthesis |
 | "EM, [sprint or pod question]" | Pod composition, critical path, sprint tickets, status |
-| "Liaison, [comms question]" | Sprint health, decision routing, team ↔ leadership translation |
-| "[Domain lead], [domain question]" | CLO / CISO / CFO / CMO / CRO / CDO / COO / CHRO |
+| "[Domain lead], [domain question]" | CLO / CISO / CFO / CMO / CRO / CDO / COO / CHRO / CAIO / CAO |
+
+For standalone questions without activating the full team:
+```
+/ask CTO [architecture question]
+/ask CLO [legal or compliance question]
+/ask [question]    — Coordinator routes to the right agent
+```
 
 ## Agent definitions
 
-All role files live in `team/roles/`. When an agent is addressed by name or title — in conversation or via `/ask` — read their role file before responding.
+All role files live in `team/roles/`. When an agent is addressed by name or title, read their role file before responding.
 
-| Agent | Role file |
-|---|---|
-| Greg / CEO | `team/roles/ceo.md` |
-| Coordinator | `team/roles/coordinator.md` |
-| CLO / Camila | `team/roles/clo.md` |
-| CISO | `team/roles/ciso.md` |
-| CFO | `team/roles/cfo.md` |
-| CMO | `team/roles/cmo.md` |
-| CTO | `team/roles/cto.md` |
-| Mario / Chief Engineer | `team/roles/chief-engineer.md` |
-| PM | `team/roles/pm.md` |
-| Designer | `team/roles/designer.md` |
-| UX Researcher | `team/roles/ux-researcher.md` |
-| Staff Engineer | `team/roles/staff-engineer.md` |
-| EM | `team/roles/em.md` |
-| Liaison / Gabriela | `team/roles/liaison.md` |
-| CRO (Risk) | `team/roles/cro-risk.md` |
-| CRO (Revenue) | `team/roles/cro.md` |
-| CDO | `team/roles/cdo.md` |
-| COO | `team/roles/coo.md` |
-| CHRO | `team/roles/chro.md` |
-| CAIO / Pablo | `team/roles/caio.md` |
-| CAO / Diana | `team/roles/cao.md` |
+**SDK roles** — full agent index at `team/roles/CLAUDE.md`:
+- CEO, Coordinator, CLO, CISO, CFO, CMO, CRO, CDO, COO, CHRO, CAIO, CAO
+- CTO, Mario (Chief Engineer), PM, Designer, UX Researcher, Staff Engineer, EM, Liaison
+- CRO (Risk), CCO (Compliance), CCO (Customer), CPO (Protocol), CCO (Credit), CPO (Partnerships)
+- Test Engineer, IC Engineers
 
-Full agent index with activation instructions: `team/roles/CLAUDE.md`
+**Project-specific roles** — if `team/roles/` exists in this project directory, those profiles are available too. They resolve first (project overrides SDK). Created by Greg at discovery time when the project needs domain specialists beyond the standard team.
 
 ## Key files
 
 | File | Purpose |
 |---|---|
 | `current-status.md` | Session continuity — always read first |
-| `project.md` | Full conversation record and release plan |
 | `history.md` | All consequential decisions and why |
 | `idea.md` | Raw idea and brief for Greg (Day 0 document) |
-| `general-requirements.md` | Cross-domain requirements status (Coordinator aggregate) |
+| `project-map.md` | CEO-validated release artifact (sealed at close) |
+| `bus-log.md` | Permanent record of all inter-agent Bus messages |
+| `team.md` | Active agent roster |
+| `general-requirements.md` | Cross-domain requirements status |
 | `discovery-requirements.md` | CLO + CISO gate — must complete before CTO activates |
 | `product-requirements.md` | PM scope, user stories, kanban |
-| `engineering-requirements.md` | Architecture, contracts, delivery (CTO · Mario · Staff Eng · EM) |
-| `design-requirements.md` | Interface requirements + UX research (Designer · UX Researcher) |
+| `engineering-requirements.md` | Architecture, contracts, delivery |
+| `design-requirements.md` | Interface requirements + UX research |
 | `business-requirements.md` | Finance, marketing, revenue, data, ops, people |
-| `project-map.md` | CEO-validated release artifact (sealed at close) |
-| `protocol.md` | Bus format, escalation, mission pod model |
-| `AGENTS.md` | Who is active, activation sequence |
+| `security-requirements.md` | Security, threat model, compliance |
 
-## Area logs (write here when things change)
+## Area logs
 
 | Area | File | Who writes |
 |---|---|---|
@@ -103,32 +93,73 @@ Full agent index with activation instructions: `team/roles/CLAUDE.md`
 | Operations | `operations-log.md` | COO, CLO, CISO, CFO |
 | People | `people-log.md` | CHRO, EM |
 | Strategy | `strategy-log.md` | CEO, Coordinator |
+| Research | `research-log.md` | UX Researcher |
 
 ## CLI commands
 
 ```bash
-sdk-doc cockpit . --role [your-role]                 # Session briefing: state + domains + context gaps + ops
-sdk-doc manifest .                                  # Generate context-manifest.json
-sdk-doc index .                                     # Generate context-index.json (file catalog + routing)
-sdk-doc status .                                    # Print current-status.md (fallback / full narrative)
-sdk-doc bus . --from X --to Y --priority Z --message "..."  # Send Bus message (logged + intent resolved)
-sdk-doc domain . add --name X --lead Y              # Create a project domain
-sdk-doc domain . list                               # List all project domains
-sdk-resume .                                        # Full session start: health + gates + sessions + cockpit
-sdk-doc log [area]-log.md --role X --level Y --goal "..." --status completed
+# Session
+sdk-status .                                        # framing-first view
+sdk-resume .                                        # full session start
+sdk-next .                                          # next activation phrase
+
+# Consultation
+sdk-consult --role <role> --question "..."          # consult a role
+sdk-consult --suggest "question"                    # suggest best role
+sdk-consult --list-roles                            # all available roles
+sdk-consult --role-info <role>                      # role details
+
+# Cross-project memory
+sdk-memory ingest .                                 # add project to corpus
+sdk-memory query "question"                         # search across projects
+sdk-memory stats                                    # corpus overview
+
+# Documentation
+sdk-doc manifest .                                  # generate context-manifest.json
+sdk-doc index .                                     # generate context-index.json
+sdk-doc status .                                    # print current-status.md
 sdk-doc decision history.md --decision "..." --context "..." --made-by [Role]
+sdk-doc log [area]-log.md --role X --level Y --goal "..." --status completed
 sdk-doc pod-update current-status.md --mission "..." --status "..." --next "..."
-sdk-doc read [file] --section "## Section"
 sdk-doc append [file] --section "## Section" --content "..."
-sdk-doc session . save --title "..." [--domains "..."] [--tags "..."]   # Save session context (temp)
-sdk-doc session . list [--status temp|permanent|all]                    # List saved sessions
-sdk-doc session . promote <filename>                                    # Make session permanent (indexed)
-sdk-doc session . clean --confirm                                       # Delete all temp sessions
+
+# Bus communication
+sdk-doc bus . --from X --to Y --priority Z --message "..."
+
+# Team management
+sdk-doc spawn . --name "..." --role <Role> --level <L>
+sdk-doc dissolve . --name "..." --dissolved-by "..." --reason "..."
+
+# Gates
+sdk-gate-check .                                    # CLO + CISO gate
+sdk-gate-check . --mario                            # irreversibility review
+sdk-gate-check . --all                              # all gates
+
+# Kill work
+sdk-kill . <pod> --reason "..." --class <class>
+
+# Releases
+sdk-health .                                        # project health
+sdk-validate .                                      # doc health check
+sdk-pre-tag . [--fix]                               # full team review
+sdk-ship . <release-id>                             # validate, tag, push
+sdk-version . [bump|set]                            # release versioning
+sdk-retro .                                         # retrospective
+
+# GitHub
+sdk-github link . --repo owner/repo
+sdk-github sync-issues .
+sdk-github release .
+
+# Sessions
+sdk-doc session . save --title "..."                # save session context
+sdk-doc session . list                              # list sessions
+sdk-doc session . promote <filename>                # make permanent
 ```
 
 ## Communication protocol
 
-All agent messages use this format:
+All inter-agent messages use Bus format:
 ```
 FROM: [Role]
 TO: [Role or ALL]
@@ -137,36 +168,21 @@ PRIORITY: INFO | DECISION NEEDED | BLOCKER
 MESSAGE: [body]
 ```
 
+The Bus activates when agents communicate with each other. Greg talking solo to the Owner does not require Bus messages. The moment peers are spawned, Bus traces flow and are logged to `bus-log.md`.
+
 The Owner speaks to Greg or the Coordinator — never directly to execution agents.
 
-## Release cadence
+## Activation sequence
 
-- v.Q.1 — Discovery build: proves the core loop, no polish
-- v.Q.2 — Retention build: makes the loop sticky, instruments everything
-- v.Q.3+ — Growth build: multiplies what works, nothing new until core is stable
-
-## How to invoke the team
-
-Read `AGENTS.md` — it is the authoritative reference for:
-- Full activation sequence (Phase 0 → 4), with dependency order
-- What each agent owns and who they depend on
-- Hard gates (CLO + CISO before CTO, Mario before Sprint 1)
-- Consultation mode: any agent can answer standalone questions without a full project activation
-
-Quick map:
 ```
 Phase 0:  Coordinator
-Phase 1:  Greg → CLO → CISO → CFO → CMO → UX Researcher → PM
-Phase 2:  CTO → Mario → Designer → Staff Engineer → EM
+Phase 1:  Greg -> CLO -> CISO -> CFO -> CMO -> UX Researcher -> PM
+Phase 2:  CTO -> Mario -> Designer -> Staff Engineer -> EM
 Phase 3:  Liaison [Sprint 1 start, stays until ship]
-Phase 4:  All write area logs → PM seals kanban → EM dissolves pods
-          → Greg validates project-map.md → Coordinator seals
+Phase 4:  All write area logs -> PM seals kanban -> EM dissolves pods
+          -> Greg validates project-map.md -> Coordinator seals
 ```
 
-For standalone questions without activating the full team:
-```
-/ask Greg [strategic question]
-/ask CTO [architecture question]
-/ask CLO [legal or compliance question]
-/ask [question]    ← Coordinator routes to the right agent
-```
+**Hard gates:** CLO + CISO before CTO. Mario before Sprint 1. Negative Scope on every gate artifact. Pre-mortem before execution.
+
+Full activation reference: `team/roles/CLAUDE.md`
