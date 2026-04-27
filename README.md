@@ -1,8 +1,10 @@
 # team-sdk
 
-An AI team that runs your product — from idea to shipped increment.
+An AI team that runs your product from idea to shipped increment.
 
-30 agents. A shared protocol. Hard gates that can't be skipped. A permanent record of every decision, every kill, every challenge. The code is a byproduct. The judgment is the product.
+31 role-based agents. A shared protocol. Hard gates that block architecture until legal and security deliver. Iteration loops with dedicated guardians who refuse to let bad work graduate. Every decision logged, every dissent on record. The code is a byproduct. The judgment is the product.
+
+## Quickstart
 
 ```bash
 npm install -g company-sdk
@@ -10,209 +12,90 @@ sdk-init my-project --squad startup --idea "B2B invoicing for freelancers in LAT
 claude my-project
 ```
 
-> Hey Greg — here's the brief.
+> Hey Greg -- here's the brief.
 
----
+## What Happens
 
-## What happens when you start
+You talk to Greg. Greg is the CEO. He takes your brief, identifies whether the standard team covers the domain or whether the project needs specialists (an Argentine tax accountant, a DeFi protocol economist, a supply chain analyst), creates those profiles, and kicks off discovery.
 
-You talk to Greg. Greg is the CEO. He reviews your idea, identifies whether you need domain specialists beyond the standard team (an Argentine tax accountant for a family office project, a compliance officer for a fintech), creates those profiles, and routes discovery through 30 agents that operate under a shared contract.
+Discovery runs in parallel. Legal and security review at the same time as finance, market, and operations. A UX researcher tests assumptions. A designer frames the problem through interface thinking. A PM shapes missions. But here is the constraint: the CTO cannot start architecture until the CLO and CISO have delivered. That gate is enforced, not suggested. A Discovery Guardian reviews the combined output and either graduates it to the next phase or sends it back with specific feedback.
 
-Legal reviews before architecture starts — enforced, not suggested. Security reviews before architecture starts — enforced, not suggested. The CTO literally cannot activate until CLO and CISO deliver. Mario (Chief Engineer) reviews every irreversible decision before Sprint 1. The team writes a pre-mortem — the post-mortem for the failure case — before execution begins. The Owner reads it and either proceeds or kills the pod.
+Once architecture starts, Mario (Chief Engineer) reviews every irreversible decision before anyone writes code. An Architecture Guardian validates that the design actually solves the graduated problem. The team writes a pre-mortem -- the post-mortem for the failure case -- before execution begins. The Owner reads it and either proceeds or kills the pod. During implementation, an Implementation Guardian checks that what was built matches what was designed, which matches what was discovered.
 
-At any point, the Owner can kill work:
+At any point, you can kill work. Kills are classified (`FRAMING_WRONG`, `SCOPE_OBSOLETE`, `PRIORITY_SHIFT`) and feed a judgment corpus that makes the next project sharper. When the release is ready, the CEO validates the project map, the Coordinator seals it, and the decision record persists.
 
-```bash
-sdk-kill . auth-v2 --reason "Users don't want SSO for MVP" --class FRAMING_WRONG
-```
+## Two Modes
 
-That kill is classified, logged, and feeds a cross-project judgment corpus that makes the next project smarter.
+**Project Mode** -- full team activated for a specific release. 22 files track everything: requirements across 7 domains, area logs for every discipline, decision records, session continuity.
 
----
-
-## The 30 agents
-
-Every agent has a persona, domain expertise, a professional obligation to dissent, and consultation mode for standalone questions.
-
-**Greg (CEO)** runs every project. He holds the strategic frame. He is the default voice when you open any project.
-
-**The gatekeepers** activate before architecture: CLO (legal), CISO (security). Nothing technical starts until they deliver.
-
-**The domain specialists** map the territory: CFO (finance), CMO (market), CRO (revenue), CDO (data), COO (operations), CHRO (people), CAIO (AI strategy), CAO (analytics).
-
-**The builders** execute within the frame: CTO (architecture), PM (scope), Designer (all interface surfaces — screen, conversation, voice, AI), Staff Engineer (contracts and primitives), EM (pod management), IC Engineers (implementation), Liaison (communication bridge).
-
-**The reviewers** challenge the work: Mario (Chief Engineer — irreversibility and quality), UX Researcher (independent research chapter — any agent can request a study).
-
-**The extended specialists** activate when the domain demands it: Chief Risk Officer, Chief Compliance Officer, Chief Customer Officer, Chief Protocol Officer, Chief Credit Officer, Chief Partnerships Officer. These exist for fintech, regulated industries, protocol projects, and enterprise.
-
-**The Test Engineer** owns the test strategy, CI gates, and regression.
-
-Each agent is named using a formula: a globally common first name, a city surname, and a cultural profile from that city's region. A CFO named Kenji Osaka brings different risk intuition than one named Fatima Dakar. That variation is intentional. Diversity of perspective is a design goal.
-
----
-
-## The protocol
-
-30 sections. This is what turns 30 specialists into something that behaves like an organization.
-
-**The Bus** is the only valid format for inter-agent communication. Every message has: FROM, TO, RELEASE, PRIORITY, SOLUTION_CLASS, MESSAGE. The Bus log is permanent. It's the organization's memory.
-
-**The escalation ladder** is automatic. Owning agent has 24 hours. Then Coordinator. Then C-suite. Then CEO. Then Owner. Blockers escalate in 4 hours.
-
-**Four hard gates** that can't be skipped:
-1. CLO + CISO must deliver before CTO activates
-2. Mario must review irreversible decisions before Sprint 1
-3. Negative Scope (explicit non-goals) required on every gate artifact
-4. Pre-mortem required before execution — the team writes the failure case, the Owner reviews it
-
-**The Kill Log** is a cross-project judgment corpus. When work dies, it's classified: `FRAMING_WRONG` (the bet was wrong — this feeds judgment), `SCOPE_OBSOLETE`, `PRIORITY_SHIFT`, `EXECUTION_STALLED`. Only framing kills compound. The rest is operational noise.
-
-**The Halloway Ratchet Doctrine** defends against the failure mode where agents reason indefinitely about solved problems. Every output-bearing message declares `SOLUTION_CLASS`: `KNOWN` (deterministic — name the solution, apply it), `EXPLORATORY` (shape unknown), `HYBRID` (part solved, part not). Health checks scan for the revision-trail pattern.
-
-**Structured disagreement** is logged. When agents dissent, positions, tradeoffs, and alternatives go on record. The system expects agents to challenge. Agreement without examination is treated as abdication.
-
----
-
-## Two modes
-
-**Project Mode** — full team activated for a specific release. 26 files track everything: requirements across 7 domains, area logs for every discipline, decision records, the Bus log, session continuity. Discovery flows through phases. Gates enforce. Agents route through the Coordinator.
-
-**Consultation Mode** — any agent answers standalone domain questions. No project files needed. `/ask CTO should we use Postgres or DynamoDB?` The agent spawns peers when cross-domain input would change the answer, synthesizes their perspectives, and returns one considered position.
+**Consultation Mode** -- any agent answers standalone domain questions. No project needed.
 
 ```
+/ask CTO should we use Postgres or DynamoDB for this workload?
 /ask CLO what does GDPR actually require for behavioral analytics?
 /ask Greg what's the strategic risk in entering two markets at once?
 /ask what's the right data model for a multi-tenant SaaS?
 ```
 
----
+Agents spawn peers when cross-domain input would change the answer. The goal is synthesis, not relay.
 
-## Project-specific specialists
+## The Team
 
-When a project needs expertise the standard 30 agents don't cover, Greg creates project-specific profiles at discovery time. These live in the project — not the SDK — and are available whenever you work in that project.
-
-An Argentine family office project gets `contador-ar.md` (Argentine Tax Accountant) and `abogado-ar.md` (Argentine Corporate Lawyer). A DeFi lending project gets a Chief Protocol Officer and a Chief Credit Officer. A hardware project gets a supply chain specialist.
-
-The profiles follow the same template as every other agent: persona, constraints, capability declaration, consultation mode, challenge obligation. They resolve through `/ask` and the role system like any built-in agent.
-
----
-
-## Cross-project memory
-
-Every project produces structured decisions. When a project closes or work gets killed, the entries ingest into a shared corpus that lives outside any project.
-
-```bash
-sdk-memory ingest my-project                # add to corpus
-sdk-memory query "authentication"           # search all projects
-sdk-memory kills --class FRAMING_WRONG      # every framing failure, everywhere
-sdk-memory stats                            # how big is the corpus
-```
-
-Future projects consult this before starting. "What did we decide about auth across all projects?" has an answer. The corpus is the compounding asset — projects end, judgment doesn't.
-
----
-
-## Squads
-
-Pre-configured team compositions for different project sizes.
-
-| Squad | Size | Use when |
+| Layer | Agents | Key roles |
 |---|---|---|
-| `startup` | 20+ agents | New product from scratch. Full discovery across all domains. |
-| `mvp` | 8-12 agents | Validate a hypothesis. Compressed discovery, jump to architecture. |
-| `feature` | 3-5 agents | Scoped addition to existing product. Single sprint. |
-| `website` | 5-7 agents | Marketing site, docs, landing page. |
+| **Strategic** | 2 | CEO (Greg), Coordinator |
+| **Domain** | 16 | CLO, CISO, CFO, CMO, CRO, CDO, COO, CHRO + 8 extended specialists (Risk, Compliance, Customer, Protocol, Credit, Partnerships, Analytics, AI) |
+| **Execution** | 10 | CTO, Mario (Chief Engineer), PM, Designer, Staff Engineer, EM, IC Engineers, Liaison, UX Researcher, Test Engineer |
+| **Guardians** | 3 | Discovery Guardian, Architecture Guardian, Implementation Guardian |
 
-Squads resolve from three sources: project-level overrides, npm packages (`@team-sdk-squad/fintech`), built-in. Custom squads define their roster, activation sequence, gates, and can include project-specific roles.
+Each agent gets a name at spawn: a globally common first name, a city surname, and a cultural profile from that region. A CFO named Kenji Osaka brings different risk intuition than one named Fatima Dakar. That variation is the point.
 
----
+## Key Design Decisions
 
-## Project types
+- **Dissent is required, not optional.** Agents do not agree to avoid friction. When something is wrong, the agent names it -- specific concern, specific alternative -- then defers after logging. Agreement without examination is abdication.
 
-Each type configures which requirements files, gates, and area logs a project gets.
+- **Hard gates that cannot be skipped.** CLO + CISO must deliver before CTO activates. Mario reviews irreversible decisions before Sprint 1. CEO validates the project map before the release seals. No exceptions.
 
-| Type | For |
-|---|---|
-| `product` | Consumer or B2B apps (default) |
-| `api` | Backend services, developer-facing APIs |
-| `content` | Docs, marketing sites, content systems |
-| `service` | Internal tools, ops automation |
-| `hardware` | Physical products with embedded software |
-| `internal` | Internal tooling, no external users |
-| `protocol` | Shared contracts, libraries, SDKs |
+- **Iteration loops with dedicated guardians.** Discovery, Architecture, and Implementation each have a guardian who reviews the output against exit criteria and either graduates it or sends it back. No phase proceeds until its guardian says it is ready.
 
----
+- **Index-driven context loading.** Agents load 2-3 files per activation, not 20. A `context-index.json` routes each agent to exactly the files they need for their current task. Small context windows, faster reasoning.
 
-## Under the hood
+- **Structured disagreement log.** When agents hold conflicting positions, both sides are documented with tradeoffs and the decision on record. Positions are never deleted. The log compounds into organizational memory.
 
-Five packages. Zero external dependencies at the foundation.
-
-```
-@team-sdk/protocol    Bus schema, parser, validator, 26-role taxonomy, action registry
-       |
-@team-sdk/context     Index and manifest generators, knowledge graph, query API
-       |
-@team-sdk/cli         Consultation API, role loader, squad marketplace, profile generator
-       |
-@team-sdk/runtime     Adapter interface for any host environment
-       |
-@team-sdk/memory      Cross-project decision corpus
-```
-
-The runtime adapter defines the contract any environment implements to run team-sdk agents. Claude Code is the default. The interface is open — any MCP-compatible environment, IDE extension, or standalone script can implement `spawnAgent`, `sendMessage`, and the file operations.
-
-1,204 tests across all packages. Zero failures.
-
----
+- **Negative scope on every gate artifact.** Every document that crosses a gate must name at least 2 things the project is explicitly NOT doing, and why. If you cannot articulate what you chose not to build, you have not finished deciding what to build.
 
 ## CLI
 
 ```bash
 # Create a project
-sdk-init <name> [--squad <type>] [--type <type>] [--idea "..."]
+sdk-init <name> --squad <type> [--type <type>] --idea "..."
 
 # Work in a project
-sdk-status <dir>           # framing assumptions, challenges, kills, next action
-sdk-resume <dir>           # full session start
-sdk-next <dir>             # just the next activation phrase
-
-# Consult an agent (no project needed)
-sdk-consult --role <role> --question "..."
-sdk-consult --suggest "question"
-sdk-consult --list-roles
-
-# Kill work
-sdk-kill <dir> <pod> --reason "..." --class <class> [--assumption "..."]
-
-# Cross-project memory
-sdk-memory ingest <dir>
-sdk-memory query "question"
-sdk-memory stats
-
-# Gates
-sdk-gate-check <dir>                # CLO + CISO
-sdk-gate-check <dir> --mario        # irreversibility review
-sdk-gate-check <dir> --pre-mortem   # pre-mortem review
-sdk-gate-check <dir> --all          # everything
+sdk-status <dir>                       # missions, open decisions, next action
+sdk-resume <dir>                       # full session start
+sdk-next <dir>                         # just the next activation phrase
 
 # Documentation
+sdk-doc status <dir>                   # full narrative status
+sdk-doc manifest <dir>                 # generate context-manifest.json
+sdk-doc index <dir>                    # generate context-index.json
 sdk-doc decision <file> --decision "..." --context "..." --made-by <Role>
-sdk-doc log <file> --role <Role> --level <L> --goal "..." --status completed
-sdk-doc manifest <dir>
-sdk-doc index <dir>
 
-# Team management
-sdk-doc spawn <dir> --name "..." --role <Role> --level <L>
-sdk-doc dissolve <dir> --name "..." --dissolved-by "..." --reason "..."
+# Gates and quality
+sdk-gate-check <dir>                   # CLO + CISO gate
+sdk-gate-check <dir> --mario           # irreversibility review
+sdk-validate <dir>                     # doc health check
+sdk-health <dir>                       # staleness + validate + manifest
+sdk-pre-tag <dir> [--fix]              # full team review before release
 
-# Releases
-sdk-health <dir>
-sdk-validate <dir>
-sdk-pre-tag <dir> [--fix]
-sdk-ship <dir> <release-id>
-sdk-version <dir> [bump|set]
-sdk-retro <dir>
+# Release
+sdk-ship <dir> <release-id>            # validate, tag, push, release notes
+sdk-version <dir>                      # show / bump / set release ID
+sdk-retro <dir>                        # retrospective
+
+# Consult (no project needed)
+/ask <role> <question>                 # route to a specific agent
+/ask <question>                        # auto-route to the best agent
 
 # GitHub
 sdk-github link <dir> --repo owner/repo
@@ -220,44 +103,46 @@ sdk-github sync-issues <dir>
 sdk-github release <dir>
 ```
 
+## File Structure
+
+After `sdk-init`, a project contains:
+
+```
+my-project/
+  CLAUDE.md                            # AI bootstrap (loads SDK.md)
+  SDK.md                               # compressed operating context
+  project.md                           # project identity and config
+  idea.md                              # original brief (fill Section 4)
+  current-status.md                    # session continuity — read this every time
+  history.md                           # permanent decision record
+  project-map.md                       # CEO validates before release seals
+  team.md                              # active agents and pod roster
+  general-requirements.md              # cross-domain (Coordinator)
+  business-requirements.md             # CFO, CMO, CRO, CDO, COO, CHRO
+  compliance-requirements.md           # CLO, CISO
+  engineering-requirements.md          # CTO, Staff Eng, EM, AI Officer
+  product-requirements.md              # PM
+  design-requirements.md               # Designer
+  research-requirements.md             # UX Researcher
+  engineering-log.md                   # area log: architecture, pods, sprints
+  product-log.md                       # area log: missions, kanban, friction
+  design-log.md                        # area log: interface decisions
+  research-log.md                      # area log: studies, insights
+  strategy-log.md                      # area log: strategy, retros
+```
+
+7 consolidated requirements files. 5 area logs. No file sprawl.
+
+## Links
+
+- [Interactive Flowchart](docs/flowchart.html) -- visual lifecycle
+- [Protocol](protocol.md) -- the shared contract (v4.3, 30 sections)
+- [Agent Manifest](AGENTS.md) -- who does what, activation sequence, dependency graph
+
+## License
+
+MIT
+
 ---
 
-## Design
-
-**Domains get agents, constraints get protocol fields.** A body of knowledge with its own reasoning and failure modes becomes an agent. A dimension every agent should carry becomes a protocol field. Adding an agent for a constraint creates the illusion that someone else is watching. That illusion is the failure mode.
-
-**Projects are disposable, judgment is not.** The Kill Log, disagreement logs, and decision corpus are cross-project. The code is a byproduct of the decision record. Projects end. Judgment compounds.
-
-**The system is hostile to its own work.** Every pod feels the kill is one command away. Every framing is written expecting a challenge. Every gate requires you to name what you're choosing not to do.
-
-**Dissent is required.** Agents do not agree to avoid friction. When something is wrong, the agent names it — specific concern, specific alternative — then defers after logging.
-
-**Bold over safe.** The minimum viable answer is not the goal. Safe recommendations require justification. Agents are expected to see around corners and propose solutions the Owner didn't consider.
-
-**Clarify before building.** When scope is ambiguous, agents ask the questions that would change the approach if answered differently. One focused question beats building the wrong thing.
-
----
-
-## Constraints
-
-Three priority constraints govern every agent. They override all other instructions.
-
-1. **Human agency.** No output that makes humans less capable or more dependent. Systems that optimize for passivity or learned helplessness are harm. This overrides everything.
-2. **Human direction.** Follow the humans you serve — except where doing so violates Constraint 1. Agents are not sovereign.
-3. **System integrity.** Preserve quality and the decision record — except where it conflicts with 1 or 2.
-
-The agency check before every output: *Does this make them more capable or more dependent? Does this create understanding or just answers? Could a future team pick this up without me?*
-
-If the system makes you need it more instead of less, it has failed.
-
----
-
-## The bet
-
-Most AI tools optimize for speed to code.
-
-This one optimizes for speed to kill the work that shouldn't exist.
-
----
-
-*v5.0.1 · protocol v4.3 · 30 agents · 5 packages · 1,204 tests*
+*v6.0.0 -- protocol v4.3 -- 31 agents -- 3 iteration guardians*
