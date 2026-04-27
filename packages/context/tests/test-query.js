@@ -16,8 +16,8 @@ const mockIndex = {
   files: [
     { path: 'engineering-requirements.md', domain: 'engineering', owner: 'CTO',       load_when: ['architecture-review', 'sprint-planning'] },
     { path: 'product-requirements.md',     domain: 'product',     owner: 'PM',        load_when: ['mission-shaping', 'sprint-planning'] },
-    { path: 'security-requirements.md',    domain: 'security',    owner: 'CISO',      load_when: ['security-review'] },
-    { path: 'people-log.md',               domain: 'people',      owner: 'CHRO',      load_when: ['people-domain', 'hiring'] },
+    { path: 'compliance-requirements.md',   domain: 'security',    owner: 'CISO',      load_when: ['security-review'] },
+    { path: 'product-log.md',              domain: 'people',      owner: 'CHRO',      load_when: ['people-domain', 'hiring'] },
     { path: 'engineering-log.md',          domain: 'engineering', owner: 'CTO',       load_when: ['engineering-domain'] },
   ],
 };

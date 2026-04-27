@@ -20,14 +20,14 @@ const ROLES = Object.freeze({
   coordinator:      { title: 'Coordinator',            domain: 'strategy',    logFile: 'strategy-log.md',    group: 'strategic',  bu: 'strategy' },
 
   // Domain Specialists
-  clo:              { title: 'CLO',                    domain: 'legal',       logFile: 'operations-log.md',  group: 'specialist', bu: 'operations' },
-  ciso:             { title: 'CISO',                   domain: 'security',    logFile: 'operations-log.md',  group: 'specialist', bu: 'operations' },
-  cfo:              { title: 'CFO',                    domain: 'finance',     logFile: 'operations-log.md',  group: 'specialist', bu: 'operations' },
+  clo:              { title: 'CLO',                    domain: 'legal',       logFile: 'strategy-log.md',  group: 'specialist', bu: 'operations' },
+  ciso:             { title: 'CISO',                   domain: 'security',    logFile: 'strategy-log.md',  group: 'specialist', bu: 'operations' },
+  cfo:              { title: 'CFO',                    domain: 'finance',     logFile: 'strategy-log.md',  group: 'specialist', bu: 'operations' },
   cmo:              { title: 'CMO',                    domain: 'product',     logFile: 'product-log.md',     group: 'specialist', bu: 'product' },
   cro:              { title: 'CRO',                    domain: 'revenue',     logFile: 'product-log.md',     group: 'specialist', bu: 'product' },
   cdo:              { title: 'CDO',                    domain: 'data',        logFile: 'engineering-log.md', group: 'specialist', bu: 'engineering' },
-  coo:              { title: 'COO',                    domain: 'operations',  logFile: 'operations-log.md',  group: 'specialist', bu: 'operations' },
-  chro:             { title: 'CHRO',                   domain: 'people',      logFile: 'people-log.md',      group: 'specialist', bu: 'people' },
+  coo:              { title: 'COO',                    domain: 'operations',  logFile: 'strategy-log.md',  group: 'specialist', bu: 'operations' },
+  chro:             { title: 'CHRO',                   domain: 'people',      logFile: 'product-log.md',      group: 'specialist', bu: 'people' },
 
   // Execution Layer
   cto:              { title: 'CTO',                    domain: 'engineering', logFile: 'engineering-log.md', group: 'execution',  bu: 'engineering' },
@@ -43,11 +43,11 @@ const ROLES = Object.freeze({
   'ux-researcher':  { title: 'UX Researcher',          domain: 'research',    logFile: 'research-log.md',    group: 'research',   bu: 'product' },
 
   // Extended Specialists
-  'cro-risk':       { title: 'Chief Risk Officer',     domain: 'risk',        logFile: 'operations-log.md',  group: 'extended',   bu: 'operations' },
-  'cco-compliance': { title: 'Chief Compliance Officer', domain: 'compliance', logFile: 'operations-log.md', group: 'extended',   bu: 'operations' },
+  'cro-risk':       { title: 'Chief Risk Officer',     domain: 'risk',        logFile: 'strategy-log.md',  group: 'extended',   bu: 'operations' },
+  'cco-compliance': { title: 'Chief Compliance Officer', domain: 'compliance', logFile: 'strategy-log.md', group: 'extended',   bu: 'operations' },
   'cco-customer':   { title: 'Chief Customer Officer', domain: 'customer',    logFile: 'product-log.md',     group: 'extended',   bu: 'product' },
   'cpo-protocol':   { title: 'Chief Protocol Officer', domain: 'protocol',    logFile: 'engineering-log.md', group: 'extended',   bu: 'engineering' },
-  'cco-credit':     { title: 'Chief Credit Officer',   domain: 'credit',      logFile: 'operations-log.md',  group: 'extended',   bu: 'operations' },
+  'cco-credit':     { title: 'Chief Credit Officer',   domain: 'credit',      logFile: 'strategy-log.md',  group: 'extended',   bu: 'operations' },
   'cpo-partnerships': { title: 'Chief Partnerships Officer', domain: 'partnerships', logFile: 'product-log.md', group: 'extended', bu: 'product' },
   cao:              { title: 'Chief Analytics Officer', domain: 'analytics',   logFile: 'engineering-log.md', group: 'extended',   bu: 'engineering' },
   caio:             { title: 'Chief AI Officer',        domain: 'ai',          logFile: 'engineering-log.md', group: 'extended',   bu: 'engineering' },
