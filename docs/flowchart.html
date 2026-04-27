@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>team-sdk &mdash; Request Lifecycle Flowchart</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2129;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --blue: #58a6ff;
+    --purple: #bc8cff;
+    --green: #3fb950;
+    --red: #f85149;
+    --orange: #d29922;
+    --cyan: #39d2c0;
+    --pink: #f778ba;
+    --strategic: #1f3a5f;
+    --strategic-border: #58a6ff;
+    --domain: #2d1f4e;
+    --domain-border: #bc8cff;
+    --execution: #1a3a2a;
+    --execution-border: #3fb950;
+    --gate: #3d1a1a;
+    --gate-border: #f85149;
+    --sidebar-w: 220px;
+    --panel-w: 420px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar h1 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .sidebar .subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+  .phase-nav {
+    list-style: none;
+    flex: 1;
+  }
+  .phase-nav li {
+    position: relative;
+    padding: 12px 16px 12px 36px;
+    margin-bottom: 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: all .2s;
+  }
+  .phase-nav li:hover { background: var(--surface2); color: var(--text); }
+  .phase-nav li.active { background: rgba(88,166,255,.12); color: var(--blue); }
+  .phase-nav li::before {
+    content: '';
+    position: absolute;
+    left: 14px; top: 50%;
+    transform: translateY(-50%);
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    transition: all .2s;
+  }
+  .phase-nav li.active::before {
+    background: var(--blue);
+    border-color: var(--blue);
+    box-shadow: 0 0 8px rgba(88,166,255,.4);
+  }
+  .phase-nav li.completed::before {
+    background: var(--green);
+    border-color: var(--green);
+  }
+  /* vertical line connecting dots */
+  .phase-nav li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: calc(50% + 8px);
+    width: 2px;
+    height: calc(100% - 4px);
+    background: var(--border);
+  }
+  .legend {
+    margin-top: auto;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .legend h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    letter-spacing: .5px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* ── Main Content ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 40px 60px 80px;
+    transition: margin-right .3s;
+  }
+  body.panel-open .main { margin-right: var(--panel-w); }
+
+  .phase-section {
+    margin-bottom: 80px;
+    scroll-margin-top: 20px;
+  }
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .phase-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .phase-header h2 { font-size: 22px; font-weight: 600; }
+  .phase-header p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ── Flow Grid ── */
+  .flow-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .flow-row.centered { justify-content: center; }
+  .flow-row.spread { justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+  /* Arrow between rows */
+  .arrow-down {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0;
+    color: var(--text-muted);
+    font-size: 20px;
+    opacity: .5;
+  }
+  .arrow-down.gate-arrow { color: var(--red); opacity: .8; }
+
+  /* ── Nodes ── */
+  .node {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all .2s;
+    min-width: 160px;
+    max-width: 260px;
+    position: relative;
+  }
+  .node:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  }
+  .node.strategic { background: var(--strategic); border-color: var(--strategic-border); }
+  .node.domain { background: var(--domain); border-color: var(--domain-border); }
+  .node.execution { background: var(--execution); border-color: var(--execution-border); }
+  .node.gate {
+    background: var(--gate);
+    border-color: var(--gate-border);
+    animation: gate-pulse 2s ease-in-out infinite;
+  }
+  @keyframes gate-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(248,81,73,0); }
+    50% { box-shadow: 0 0 16px 2px rgba(248,81,73,.25); }
+  }
+  .node .role-tag {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 6px;
+    opacity: .7;
+  }
+  .node .node-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .node .node-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+  .node .file-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .file-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255,255,255,.06);
+    color: var(--text-muted);
+    font-family: 'SF Mono', Monaco, monospace;
+  }
+
+  /* Gate label */
+  .gate-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 24px;
+    background: var(--gate);
+    border: 2px dashed var(--gate-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--red);
+    animation: gate-pulse 2s ease-in-out infinite;
+  }
+  .gate-label .icon { font-size: 16px; }
+
+  /* Parallel group */
+  .parallel-group {
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+  }
+  .parallel-group .group-label {
+    position: absolute;
+    top: -10px; left: 16px;
+    background: var(--bg);
+    padding: 0 8px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--text-muted);
+  }
+  .parallel-group .group-content {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Sprint loop */
+  .sprint-loop {
+    border: 2px solid var(--execution-border);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    background: rgba(63,185,80,.03);
+  }
+  .sprint-loop .loop-label {
+    position: absolute;
+    top: -12px; left: 24px;
+    background: var(--bg);
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--green);
+    letter-spacing: .5px;
+  }
+
+  /* Iteration loop */
+  .iteration-loop {
+    border: 2px solid var(--cyan);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    background: rgba(57,210,192,.03);
+    margin-top: 8px;
+  }
+  .iteration-loop .loop-label {
+    position: absolute;
+    top: -12px; left: 24px;
+    background: var(--bg);
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cyan);
+    letter-spacing: .5px;
+  }
+  .iteration-loop .loop-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--cyan);
+    font-size: 13px;
+    margin: 8px 0;
+    opacity: .7;
+  }
+  .iteration-loop .loop-arrow .arrow-icon {
+    font-size: 18px;
+  }
+  .node.iteration-guardian {
+    background: rgba(57,210,192,.12);
+    border-color: var(--cyan);
+  }
+
+  /* ── Detail Panel ── */
+  .detail-panel {
+    position: fixed;
+    right: 0; top: 0; bottom: 0;
+    width: var(--panel-w);
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    transform: translateX(100%);
+    transition: transform .3s ease;
+    z-index: 200;
+    overflow-y: auto;
+    padding: 32px 24px;
+  }
+  .detail-panel.open { transform: translateX(0); }
+  .panel-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: none; border: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+  }
+  .panel-close:hover { background: var(--surface2); color: var(--text); }
+  .panel-header {
+    margin-bottom: 24px;
+  }
+  .panel-header .panel-role {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
+  .panel-header h3 { font-size: 20px; font-weight: 600; }
+  .panel-header p { font-size: 13px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+  .panel-section {
+    margin-bottom: 24px;
+  }
+  .panel-section h4 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-section ul {
+    list-style: none;
+    padding: 0;
+  }
+  .panel-section li {
+    font-size: 13px;
+    padding: 6px 0;
+    line-height: 1.5;
+    border-bottom: 1px solid rgba(48,54,61,.5);
+  }
+  .panel-section li:last-child { border-bottom: none; }
+  .panel-file {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(48,54,61,.5);
+  }
+  .panel-file:last-child { border-bottom: none; }
+  .panel-file .fname {
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 12px;
+    color: var(--cyan);
+    white-space: nowrap;
+  }
+  .panel-file .fdesc {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .bus-example {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    white-space: pre-wrap;
+    margin-top: 8px;
+  }
+  .bus-example .key { color: var(--orange); }
+  .bus-example .val { color: var(--text); }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 24px 16px; }
+    .detail-panel { width: 100%; }
+    .node { min-width: 140px; max-width: 220px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <h1>team-sdk</h1>
+  <p class="subtitle">Full request lifecycle<br>Owner brief &rarr; Release seal</p>
+  <ul class="phase-nav" id="phaseNav">
+    <li data-phase="0" class="active">Phase 0 &mdash; Brief</li>
+    <li data-phase="1">Phase 1 &mdash; Discovery</li>
+    <li data-phase="2">Phase 2 &mdash; Architecture</li>
+    <li data-phase="3">Phase 3 &mdash; Execution</li>
+    <li data-phase="4">Phase 4 &mdash; Release Seal</li>
+  </ul>
+  <div class="legend">
+    <h3>Node Types</h3>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--strategic-border)"></div> Strategic</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--domain-border)"></div> Domain Specialist</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--execution-border)"></div> Execution</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gate-border)"></div> Hard Gate</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--cyan)"></div> Iteration Guardian</div>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<div class="main" id="mainContent">
+
+  <!-- ═══════════════ PHASE 0 ═══════════════ -->
+  <section class="phase-section" id="phase0">
+    <div class="phase-header">
+      <div class="phase-badge" style="background:var(--strategic);color:var(--blue)">0</div>
+      <div>
+        <h2>Brief Reception</h2>
+        <p>Owner communicates the project idea to Greg (CEO)</p>
+      </div>
+    </div>
+
+    <div class="flow-row centered">
+      <div class="node strategic" data-agent="owner">
+        <div class="role-tag" style="color:var(--orange)">Entry Point</div>
+        <div class="node-title">Owner</div>
+        <div class="node-sub">Pastes brief from idea.md Section 4 to Greg</div>
+      </div>
+    </div>
+    <div class="arrow-down">&darr;</div>
+    <div class="flow-row centered">
+      <div class="node strategic" data-agent="ceo">
+        <div class="role-tag" style="color:var(--blue)">CEO</div>
+        <div class="node-title">Greg receives brief</div>
+        <div class="node-sub">Answers 5 strategic questions. Shapes the "why." Routes to Coordinator.</div>
+        <div class="file-badges">
+          <span class="file-badge">idea.md</span>
+          <span class="file-badge">strategy-log.md</span>
+          <span class="file-badge">project-map.md</span>
+        </div>
+      </div>
+    </div>
+    <div class="arrow-down">&darr;</div>
+    <div class="flow-row centered">
+      <div class="node strategic" data-agent="coordinator">
+        <div class="role-tag" style="color:var(--blue)">Coordinator</div>
+        <div class="node-title">Routes to team</div>
+        <div class="node-sub">Sequences Phase 1 activation. Sets release ID. Opens Bus.</div>
+        <div class="file-badges">
+          <span class="file-badge">current-status.md</span>
+          <span class="file-badge">.sdkrc</span>
+          <span class="file-badge">context-index.json</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ PHASE 1 ═══════════════ -->
+  <section class="phase-section" id="phase1">
+    <div class="phase-header">
+      <div class="phase-badge" style="background:var(--domain);color:var(--purple)">1</div>
+      <div>
+        <h2>Discovery</h2>
+        <p>C-suite specialists map constraints. CLO + CISO must clear before CTO.</p>
+      </div>
+    </div>
+
+    <div class="parallel-group">
+      <span class="group-label">Legal &amp; Security Track (must clear first)</span>
+      <div class="group-content">
+        <div class="node domain" data-agent="clo">
+          <div class="role-tag" style="color:var(--purple)">CLO</div>
+          <div class="node-title">Camila &mdash; Legal</div>
+          <div class="node-sub">Regulatory map, legal structure, liability boundaries</div>
+          <div class="file-badges">
+            <span class="file-badge">discovery-requirements.md</span>
+          </div>
+        </div>
+        <div class="node domain" data-agent="ciso">
+          <div class="role-tag" style="color:var(--purple)">CISO</div>
+          <div class="node-title">Security</div>
+          <div class="node-sub">Threat model, security non-negotiables, compliance roadmap</div>
+          <div class="file-badges">
+            <span class="file-badge">security-requirements.md</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down gate-arrow">&darr;</div>
+    <div class="flow-row centered">
+      <div class="gate-label"><span class="icon">&#9432;</span> HARD GATE 1 &mdash; CLO + CISO sign-off required before CTO activates</div>
+    </div>
+    <div class="arrow-down gate-arrow">&darr;</div>
+
+    <div class="parallel-group" style="margin-bottom: 16px">
+      <span class="group-label">Domain Specialists (parallel)</span>
+      <div class="group-content">
+        <div class="node domain" data-agent="cfo">
+          <div class="role-tag" style="color:var(--purple)">CFO</div>
+          <div class="node-title">Finance</div>
+          <div class="node-sub">Budget, unit economics, burn model</div>
+          <div class="file-badges"><span class="file-badge">business-requirements.md</span></div>
+        </div>
+        <div class="node domain" data-agent="cmo">
+          <div class="role-tag" style="color:var(--purple)">CMO</div>
+          <div class="node-title">Market</div>
+          <div class="node-sub">Market context, positioning, GTM framing</div>
+          <div class="file-badges"><span class="file-badge">product-log.md</span></div>
+        </div>
+        <div class="node domain" data-agent="cdo">
+          <div class="role-tag" style="color:var(--purple)">CDO</div>
+          <div class="node-title">Data</div>
+          <div class="node-sub">Instrumentation plan, data governance</div>
+          <div class="file-badges"><span class="file-badge">business-requirements.md</span></div>
+        </div>
+        <div class="node domain" data-agent="coo">
+          <div class="role-tag" style="color:var(--purple)">COO</div>
+          <div class="node-title">Operations</div>
+          <div class="node-sub">Vendor timelines, operational runbook</div>
+          <div class="file-badges"><span class="file-badge">business-requirements.md</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="flow-row centered">
+      <div class="node domain" data-agent="cto-discovery">
+        <div class="role-tag" style="color:var(--purple)">CTO</div>
+        <div class="node-title">Architecture Brief</div>
+        <div class="node-sub">1-page max. Make/buy/partner matrix. Technical feasibility.</div>
+        <div class="file-badges">
+          <span class="file-badge">engineering-requirements.md</span>
+          <span class="file-badge">engineering-log.md</span>
+          <span class="file-badge">history.md</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="parallel-group">
+      <span class="group-label">Product + Design + Research (parallel)</span>
+      <div class="group-content">
+        <div class="node domain" data-agent="pm-discovery">
+          <div class="role-tag" style="color:var(--purple)">PM</div>
+          <div class="node-title">Mission Shaping</div>
+          <div class="node-sub">User story map, friction log, problem definition, Appetite</div>
+          <div class="file-badges"><span class="file-badge">product-requirements.md</span></div>
+        </div>
+        <div class="node domain" data-agent="designer-discovery">
+          <div class="role-tag" style="color:var(--purple)">Designer</div>
+          <div class="node-title">Design Perspective</div>
+          <div class="node-sub">Design lens on problem before solutions exist</div>
+          <div class="file-badges"><span class="file-badge">design-requirements.md</span></div>
+        </div>
+        <div class="node domain" data-agent="uxr">
+          <div class="role-tag" style="color:var(--purple)">UX Researcher</div>
+          <div class="node-title">Research Chapter</div>
+          <div class="node-sub">Independent studies. Accepts requests from any agent.</div>
+          <div class="file-badges">
+            <span class="file-badge">research-requirements.md</span>
+            <span class="file-badge">research/studies/</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+    <div class="flow-row centered">
+      <div class="node strategic" data-agent="coordinator-synthesis">
+        <div class="role-tag" style="color:var(--blue)">Coordinator</div>
+        <div class="node-title">Phase 1 Synthesis</div>
+        <div class="node-sub">Collects BU status. Surfaces conflicts. Does not proceed until resolved.</div>
+        <div class="file-badges">
+          <span class="file-badge">general-requirements.md</span>
+          <span class="file-badge">current-status.md</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="iteration-loop">
+      <span class="loop-label">Discovery Iteration Loop (protocol Section 31)</span>
+      <div class="flow-row centered" style="margin-top:8px">
+        <div class="node iteration-guardian" data-agent="discovery-guardian">
+          <div class="role-tag" style="color:var(--cyan)">Discovery Guardian</div>
+          <div class="node-title">Validate Problem Understanding</div>
+          <div class="node-sub">Reviews all Discovery outputs against 6 exit criteria. Is the problem falsifiable? Is the target user specific? Are assumptions tested?</div>
+          <div class="file-badges">
+            <span class="file-badge">iterations/discovery/</span>
+          </div>
+        </div>
+      </div>
+      <div class="loop-arrow">
+        <span class="arrow-icon">&#8634;</span>
+        <span>ITERATE (with feedback) until all exit criteria pass &rarr; GRADUATE</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ PHASE 2 ═══════════════ -->
+  <section class="phase-section" id="phase2">
+    <div class="phase-header">
+      <div class="phase-badge" style="background:var(--execution);color:var(--green)">2</div>
+      <div>
+        <h2>Architecture &amp; Release Plan</h2>
+        <p>Technical review, interface contracts, pod composition, sprint gates</p>
+      </div>
+    </div>
+
+    <div class="flow-row centered">
+      <div class="node execution" data-agent="mario">
+        <div class="role-tag" style="color:var(--green)">Chief Engineer</div>
+        <div class="node-title">Mario &mdash; Irreversibility Review</div>
+        <div class="node-sub">Reviews CTO architecture. 5-decision check. Near-miss log required.</div>
+        <div class="file-badges">
+          <span class="file-badge">engineering-log.md</span>
+          <span class="file-badge">history.md</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down gate-arrow">&darr;</div>
+    <div class="flow-row centered">
+      <div class="gate-label"><span class="icon">&#9432;</span> HARD GATE 2 &mdash; Mario must sign off on irreversible decisions before Sprint 1</div>
+    </div>
+    <div class="arrow-down gate-arrow">&darr;</div>
+
+    <div class="parallel-group">
+      <span class="group-label">Spec-Driven Development (SDD)</span>
+      <div class="group-content">
+        <div class="node execution" data-agent="designer-phase2">
+          <div class="role-tag" style="color:var(--green)">Designer</div>
+          <div class="node-title">Interface Direction</div>
+          <div class="node-sub">All surfaces: screens, AI, voice, API. SDD Step 2.</div>
+          <div class="file-badges"><span class="file-badge">design-requirements.md</span></div>
+        </div>
+        <div class="node execution" data-agent="pm-phase2">
+          <div class="role-tag" style="color:var(--green)">PM</div>
+          <div class="node-title">SDD Flow</div>
+          <div class="node-sub">4-step spec: Draft &rarr; Design inject &rarr; Eng breakdown &rarr; Dev-ready</div>
+          <div class="file-badges"><span class="file-badge">product-requirements.md</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="flow-row centered">
+      <div class="node execution" data-agent="staff-eng">
+        <div class="role-tag" style="color:var(--green)">Staff Engineer</div>
+        <div class="node-title">Interface Contracts</div>
+        <div class="node-sub">Technical decomposition. Schemas, error states, versioning. Tech debt ledger.</div>
+        <div class="file-badges"><span class="file-badge">engineering-requirements.md</span></div>
+      </div>
+    </div>
+    <div class="arrow-down">&darr;</div>
+    <div class="flow-row centered">
+      <div class="node execution" data-agent="em">
+        <div class="role-tag" style="color:var(--green)">EM</div>
+        <div class="node-title">Pod Composition &amp; Critical Path</div>
+        <div class="node-sub">Mission pods (PM + Designer + Engineers). Tickets with acceptance criteria. Max 2 pods per EM.</div>
+        <div class="file-badges">
+          <span class="file-badge">engineering-log.md</span>
+          <span class="file-badge">people-log.md</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="iteration-loop">
+      <span class="loop-label">Architecture Iteration Loop (protocol Section 31)</span>
+      <div class="flow-row centered" style="margin-top:8px">
+        <div class="node iteration-guardian" data-agent="architecture-guardian">
+          <div class="role-tag" style="color:var(--cyan)">Architecture Guardian</div>
+          <div class="node-title">Validate Design Soundness</div>
+          <div class="node-sub">Traces architecture back to graduated Discovery. Checks 10x scale, irreversible decisions, contract completeness, security alignment.</div>
+          <div class="file-badges">
+            <span class="file-badge">iterations/architecture/</span>
+          </div>
+        </div>
+      </div>
+      <div class="loop-arrow">
+        <span class="arrow-icon">&#8634;</span>
+        <span>ITERATE (with feedback) until all exit criteria pass &rarr; GRADUATE</span>
+      </div>
+    </div>
+
+    <div class="arrow-down gate-arrow">&darr;</div>
+
+    <div class="flow-row centered">
+      <div class="node gate" data-agent="sprint0-gate">
+        <div class="role-tag" style="color:var(--red)">Coordinator + Owner</div>
+        <div class="node-title">Sprint 0 Gate</div>
+        <div class="node-sub">13-item checklist. Epic approved, all requirements updated, interface contracts, vendor onboarding, Owner aligned.</div>
+      </div>
+    </div>
+
+    <div class="arrow-down gate-arrow">&darr;</div>
+
+    <div class="flow-row centered">
+      <div class="node gate" data-agent="pre-mortem">
+        <div class="role-tag" style="color:var(--red)">PM + Team + Owner</div>
+        <div class="node-title">Pre-Mortem</div>
+        <div class="node-sub">Top 3 failure modes. Leading indicators. Single falsifiable assumption. Owner can /kill pod here.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ PHASE 3 ═══════════════ -->
+  <section class="phase-section" id="phase3">
+    <div class="phase-header">
+      <div class="phase-badge" style="background:var(--execution);color:var(--green)">3</div>
+      <div>
+        <h2>Execution</h2>
+        <p>Sprint cycles. Engineers build. Liaison bridges leadership and team.</p>
+      </div>
+    </div>
+
+    <div class="flow-row centered">
+      <div class="node execution" data-agent="liaison">
+        <div class="role-tag" style="color:var(--green)">Liaison</div>
+        <div class="node-title">Gabriela &mdash; Communication Bridge</div>
+        <div class="node-sub">Inbound: Team &rarr; Leadership. Outbound: Leadership &rarr; Team. Always knows current sprint state.</div>
+        <div class="file-badges"><span class="file-badge">operations-log.md</span></div>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="flow-row centered">
+      <div class="node execution" data-agent="pod-spawn">
+        <div class="role-tag" style="color:var(--green)">EM</div>
+        <div class="node-title">Pod Spawning</div>
+        <div class="node-sub">sdk-doc spawn for each member. Entries in team.md Active Agents. CHRO logs onboarding.</div>
+        <div class="file-badges">
+          <span class="file-badge">team.md</span>
+          <span class="file-badge">people-log.md</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="sprint-loop">
+      <span class="loop-label">Sprint Loop (repeats per sprint)</span>
+      <div class="flow-row spread" style="margin-top:8px">
+        <div class="node execution" data-agent="engineer">
+          <div class="role-tag" style="color:var(--green)">IC Engineers</div>
+          <div class="node-title">Build to Spec</div>
+          <div class="node-sub">Pick ticket from pod kanban. Build, test, PR. Security-touching PRs need CISO review.</div>
+        </div>
+        <div class="node execution" data-agent="pod-status">
+          <div class="role-tag" style="color:var(--green)">EM</div>
+          <div class="node-title">Pod Status Updates</div>
+          <div class="node-sub">Task-driven (not scheduled). Appetite: ON TRACK / AT RISK / SCOPE REDUCTION NEEDED.</div>
+          <div class="file-badges"><span class="file-badge">engineering-log.md</span></div>
+        </div>
+        <div class="node execution" data-agent="liaison-updates">
+          <div class="role-tag" style="color:var(--green)">Liaison</div>
+          <div class="node-title">Health Updates</div>
+          <div class="node-sub">Sprint health: GREEN / YELLOW / RED. Open decisions pending leadership.</div>
+        </div>
+      </div>
+
+      <div class="arrow-down">&darr;</div>
+
+      <div class="parallel-group" style="border-color:var(--orange)">
+        <span class="group-label" style="color:var(--orange)">When conflicts arise</span>
+        <div class="group-content">
+          <div class="node" style="background:rgba(210,153,34,.1);border-color:var(--orange)" data-agent="escalation">
+            <div class="role-tag" style="color:var(--orange)">Escalation Ladder</div>
+            <div class="node-title">Blocker Resolution</div>
+            <div class="node-sub">Agent &rarr; 4h &rarr; Coordinator &rarr; 4h &rarr; C-suite &rarr; CEO &rarr; Owner</div>
+          </div>
+          <div class="node" style="background:rgba(210,153,34,.1);border-color:var(--orange)" data-agent="disagreement">
+            <div class="role-tag" style="color:var(--orange)">Structured Disagreement</div>
+            <div class="node-title">Dissent Log</div>
+            <div class="node-sub">Any agent opens. Never deleted. Dissent on record is permanent. Surfaces in sdk-status.</div>
+            <div class="file-badges"><span class="file-badge">history.md</span></div>
+          </div>
+          <div class="node" style="background:rgba(210,153,34,.1);border-color:var(--orange)" data-agent="framing-challenge">
+            <div class="role-tag" style="color:var(--orange)">FRAMING-CHALLENGE</div>
+            <div class="node-title">Premise Challenge</div>
+            <div class="node-sub">Challenges assumption, not execution. Challenged party must restate before proceeding.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="iteration-loop">
+      <span class="loop-label">Implementation Iteration Loop — per pod (protocol Section 31)</span>
+      <div class="flow-row centered" style="margin-top:8px">
+        <div class="node iteration-guardian" data-agent="implementation-guardian">
+          <div class="role-tag" style="color:var(--cyan)">Implementation Guardian</div>
+          <div class="node-title">Validate Problem-Solution Fit</div>
+          <div class="node-sub">Traces deliverables back through Architecture to Discovery. Checks spec conformance, security, maintainability, instrumentation. Distinct from pod Guardian (code quality).</div>
+          <div class="file-badges">
+            <span class="file-badge">iterations/implementation/&lt;pod&gt;/</span>
+          </div>
+        </div>
+      </div>
+      <div class="loop-arrow">
+        <span class="arrow-icon">&#8634;</span>
+        <span>ITERATE (with feedback) until all exit criteria pass &rarr; GRADUATE</span>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="flow-row centered">
+      <div class="node execution" data-agent="guardian">
+        <div class="role-tag" style="color:var(--green)">Guardian (Staff/Lead Eng)</div>
+        <div class="node-title">Final Pod Review</div>
+        <div class="node-sub">Quality floor check. Can request rework. Blocks dissolution if compromised.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ PHASE 4 ═══════════════ -->
+  <section class="phase-section" id="phase4">
+    <div class="phase-header">
+      <div class="phase-badge" style="background:var(--strategic);color:var(--blue)">4</div>
+      <div>
+        <h2>Release Seal</h2>
+        <p>All agents close out. CEO validates. Coordinator seals.</p>
+      </div>
+    </div>
+
+    <div class="parallel-group">
+      <span class="group-label">All agents close out</span>
+      <div class="group-content">
+        <div class="node strategic" data-agent="pm-seal">
+          <div class="role-tag" style="color:var(--blue)">PM</div>
+          <div class="node-title">Seal Mission Kanban</div>
+          <div class="node-sub">All missions &rarr; Done or Deferred with reason</div>
+          <div class="file-badges"><span class="file-badge">product-requirements.md</span></div>
+        </div>
+        <div class="node strategic" data-agent="em-dissolve">
+          <div class="role-tag" style="color:var(--blue)">EM</div>
+          <div class="node-title">Dissolve Pods</div>
+          <div class="node-sub">sdk-doc dissolve per member. Rows &rarr; Dissolved Agents (never deleted).</div>
+          <div class="file-badges">
+            <span class="file-badge">team.md</span>
+            <span class="file-badge">people-log.md</span>
+          </div>
+        </div>
+        <div class="node strategic" data-agent="all-history">
+          <div class="role-tag" style="color:var(--blue)">All Agents</div>
+          <div class="node-title">Write to history.md</div>
+          <div class="node-sub">All consequential decisions logged with full context and rationale</div>
+          <div class="file-badges"><span class="file-badge">history.md</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">&darr;</div>
+
+    <div class="flow-row centered">
+      <div class="node strategic" data-agent="coordinator-retro">
+        <div class="role-tag" style="color:var(--blue)">Coordinator</div>
+        <div class="node-title">Retrospective Synthesis</div>
+        <div class="node-sub">Reads all area logs. What worked, slowed, change. Ratchet health check.</div>
+        <div class="file-badges">
+          <span class="file-badge">strategy-log.md</span>
+          <span class="file-badge">engineering-log.md</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down gate-arrow">&darr;</div>
+
+    <div class="flow-row centered">
+      <div class="node gate" data-agent="ceo-gate">
+        <div class="role-tag" style="color:var(--red)">CEO</div>
+        <div class="node-title">HARD GATE 3 &mdash; project-map.md Section 11</div>
+        <div class="node-sub">10-item checklist. All deliverables documented. All decisions in history.md. Retro written. Requirements reflect actual state.</div>
+        <div class="file-badges"><span class="file-badge">project-map.md</span></div>
+      </div>
+    </div>
+
+    <div class="arrow-down gate-arrow">&darr;</div>
+
+    <div class="flow-row centered">
+      <div class="node strategic" data-agent="coordinator-seal">
+        <div class="role-tag" style="color:var(--blue)">Coordinator</div>
+        <div class="node-title">Seal Release</div>
+        <div class="node-sub">Logs release close to history.md. Preps next cycle. Queues missions for Betting Table.</div>
+        <div class="file-badges">
+          <span class="file-badge">history.md</span>
+          <span class="file-badge">current-status.md</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down" style="font-size:28px; margin-top:16px">&check;</div>
+    <div class="flow-row centered">
+      <div style="text-align:center;padding:20px;color:var(--green);font-weight:600;font-size:15px">
+        Release sealed. Next cycle begins.
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Detail Panel -->
+<div class="detail-panel" id="detailPanel">
+  <button class="panel-close" id="panelClose">&times;</button>
+  <div class="panel-header">
+    <div class="panel-role" id="panelRole"></div>
+    <h3 id="panelTitle"></h3>
+    <p id="panelDesc"></p>
+  </div>
+  <div id="panelBody"></div>
+</div>
+
+<script>
+// ── Agent detail data ──
+const agents = {
+  owner: {
+    role: 'Owner',
+    title: 'Project Owner',
+    desc: 'The company\'s founder or principal. Communicates with the system through two channels only: CEO (Greg) for strategic direction, Coordinator for process questions.',
+    sections: [
+      { title: 'Rules', items: [
+        'Communicates ONLY through CEO or Coordinator',
+        'Never directly to execution agents',
+        'If an agent receives a direct Owner message, they acknowledge but flag to Coordinator',
+        'Always welcome to read any agent\'s output (input direction, not output visibility)'
+      ]},
+      { title: 'First Action', items: [
+        'Fill idea.md Section 4 with the project brief',
+        'Paste to Greg: "Hey Greg \u2014 here\'s a new project brief. [brief]"'
+      ]}
+    ]
+  },
+  ceo: {
+    role: 'CEO \u2014 Strategic Layer',
+    title: 'Greg \u2014 Strategic Anchor',
+    desc: 'Holds the "why." Does not manage tasks or write code. Hires people smarter than him in their domains. Makes the calls no one else is empowered to make.',
+    sections: [
+      { title: 'Produces', items: [
+        '5-question strategic framework for the project',
+        'Direction worth following \u2014 clarity of direction is the most leveraged output',
+        'project-map.md ownership (validates before release seal)',
+        'strategy-log.md entries'
+      ]},
+      { title: 'Files Created / Modified', type: 'files', items: [
+        { name: 'idea.md', desc: 'Day 0 brief \u2014 raw idea shaped into CEO activation message' },
+        { name: 'strategy-log.md', desc: 'Strategic decisions and retrospectives' },
+        { name: 'project-map.md', desc: 'CEO-validated release artifact (Section 1: overview)' }
+      ]},
+      { title: '5 Strategic Questions', items: [
+        'What market truth is this responding to?',
+        'Who is the customer specifically?',
+        'What does winning look like at 18 months?',
+        'What would make this unnecessary in 3 years?',
+        'What are we NOT building, and why?'
+      ]},
+      { title: 'Bus Message', type: 'bus', content: 'FROM: Greg (CEO)\nTO: Coordinator\nRELEASE: v2026.Q2.1\nPRIORITY: INFO\nMESSAGE:\n  New project brief received from Owner.\n  Strategic direction: [summary]\n  Begin Phase 1 Discovery sequence.' }
+    ]
+  },
+  coordinator: {
+    role: 'Coordinator \u2014 Strategic Layer',
+    title: 'Coordinator \u2014 PMO & Org Memory',
+    desc: 'Routes everything. Manages release sequencing, phase transitions, and conflict surfacing. The Coordinator is the system\'s memory \u2014 if it\'s not in current-status.md, it didn\'t happen.',
+    sections: [
+      { title: 'Produces', items: [
+        'Phase sequencing \u2014 activates agents in correct order',
+        'Release plan with versioning (v[YEAR].Q[QUARTER].[INCREMENT])',
+        'Conflict surfacing \u2014 does not proceed until resolved',
+        'context-index.json generation (project routing brain)',
+        'context-manifest.json (project snapshot)'
+      ]},
+      { title: 'Files Created / Modified', type: 'files', items: [
+        { name: 'current-status.md', desc: 'Session continuity \u2014 read every session, always first' },
+        { name: '.sdkrc', desc: 'Release ID, squad type, SDK path, project metadata' },
+        { name: 'context-index.json', desc: 'File map, domain routing, query map, agent capabilities' },
+        { name: 'context-manifest.json', desc: 'Current phase, missions, next agent to activate' },
+        { name: 'general-requirements.md', desc: 'Cross-domain requirements aggregate' }
+      ]}
+    ]
+  },
+  clo: {
+    role: 'CLO \u2014 Domain Specialist',
+    title: 'Camila \u2014 Chief Legal Officer',
+    desc: 'Owns the regulatory map (what the law requires). Gate authority: can block CTO activation. Legal & Security BU Lead.',
+    sections: [
+      { title: 'Produces', items: [
+        'Regulatory map for the product/market',
+        'Legal structure recommendation',
+        'Liability boundary analysis',
+        'Contract templates and compliance requirements'
+      ]},
+      { title: 'Files Created / Modified', type: 'files', items: [
+        { name: 'discovery-requirements.md', desc: 'CLO + CISO regulatory map and legal blockers \u2014 hard gate for CTO' },
+        { name: 'operations-log.md', desc: 'Legal compliance state changes' }
+      ]},
+      { title: 'Gate Authority', items: [
+        'HARD GATE: Must deliver before CTO activates',
+        'If CLO and CISO disagree on scope, Coordinator escalates to CEO'
+      ]}
+    ]
+  },
+  ciso: {
+    role: 'CISO \u2014 Domain Specialist',
+    title: 'CISO \u2014 Security',
+    desc: 'Owns the implementation plan (how the system satisfies legal requirements). Works alongside CLO. Gate authority: must clear before CTO.',
+    sections: [
+      { title: 'Produces', items: [
+        'Threat model',
+        'Security non-negotiables',
+        'Compliance roadmap',
+        'Incident response plan',
+        'Auth design constraints'
+      ]},
+      { title: 'Files Created / Modified', type: 'files', items: [
+        { name: 'security-requirements.md', desc: 'Threat model, auth design constraints, security requirements' },
+        { name: 'operations-log.md', desc: 'Security state changes, incident logs' }
+      ]},
+      { title: 'P0 Security Protocol', items: [
+        'P0 = confirmed/suspected breach, credential exposure, unauthorized access',
+        'CISO notifies CEO + CLO simultaneously within 1 HOUR',
+        'Bypasses escalation ladder entirely',
+        'CISO owns the call on what constitutes a P0'
+      ]}
+    ]
+  },
+  cfo: {
+    role: 'CFO \u2014 Domain Specialist',
+    title: 'CFO \u2014 Finance',
+    desc: 'Budget validation, unit economics, burn model. Finance & Revenue BU.',
+    sections: [
+      { title: 'Produces', items: ['Budget validation', 'Unit economics analysis', 'Burn model', 'Runway assessment'] },
+      { title: 'Files', type: 'files', items: [
+        { name: 'business-requirements.md', desc: 'Finance section \u2014 budget, runway, unit economics' }
+      ]}
+    ]
+  },
+  cmo: {
+    role: 'CMO \u2014 Domain Specialist',
+    title: 'CMO \u2014 Market',
+    desc: 'Market context, positioning, GTM framing. If CMO positions premium but CRO prices commodity, Coordinator escalates.',
+    sections: [
+      { title: 'Produces', items: ['Market context analysis', 'Positioning strategy', 'GTM framing'] },
+      { title: 'Files', type: 'files', items: [{ name: 'product-log.md', desc: 'Market positioning entries' }] }
+    ]
+  },
+  cdo: {
+    role: 'CDO \u2014 Domain Specialist',
+    title: 'CDO \u2014 Data',
+    desc: 'Instrumentation plan, data governance, measurement strategy.',
+    sections: [
+      { title: 'Produces', items: ['Instrumentation plan', 'Data governance framework', 'Data model review'] },
+      { title: 'Files', type: 'files', items: [{ name: 'business-requirements.md', desc: 'Data section' }] }
+    ]
+  },
+  coo: {
+    role: 'COO \u2014 Domain Specialist',
+    title: 'COO \u2014 Operations',
+    desc: 'Vendor timelines, operational runbook, support model.',
+    sections: [
+      { title: 'Produces', items: ['Vendor stack mapping', 'Operational runbook', 'Support model design', '4-week vendor lead time tracking'] },
+      { title: 'Files', type: 'files', items: [{ name: 'business-requirements.md', desc: 'Operations section' }] }
+    ]
+  },
+  'cto-discovery': {
+    role: 'CTO \u2014 Domain Specialist',
+    title: 'CTO \u2014 Architecture Brief',
+    desc: 'Activated ONLY after CLO + CISO gate clears. Produces a 1-page architecture brief. Technical decision-maker.',
+    sections: [
+      { title: 'Produces', items: [
+        'Architecture brief (1-page maximum)',
+        'Make/buy/partner matrix',
+        'Technical feasibility assessment',
+        'Engineering capacity recommendation'
+      ]},
+      { title: 'Files Created / Modified', type: 'files', items: [
+        { name: 'engineering-requirements.md', desc: 'Architecture decisions, make/buy/partner, interface contracts' },
+        { name: 'engineering-log.md', desc: 'Technical decisions and state changes' },
+        { name: 'history.md', desc: 'Consequential architecture decisions' }
+      ]},
+      { title: 'SOLUTION_CLASS Required', items: [
+        'KNOWN \u2014 deterministic solution, name it and apply it',
+        'EXPLORATORY \u2014 genuinely unknown, state why known approach doesn\'t apply',
+        'HYBRID \u2014 decompose which parts are deterministic vs. exploratory'
+      ]}
+    ]
+  },
+  'pm-discovery': {
+    role: 'PM \u2014 Domain Specialist',
+    title: 'PM \u2014 Mission Shaping',
+    desc: 'Governs the Ideation Cycle. Shapes raw idea into structured missions with Appetite and scope.',
+    sections: [
+      { title: 'Produces', items: ['User story map', 'Friction log', 'Mission shaping (problem, Appetite, non-negotiables)', 'Scope definition: what is IN, what is OUT'] },
+      { title: 'Files', type: 'files', items: [
+        { name: 'product-requirements.md', desc: 'Product scope, user stories, friction log, mission kanban' },
+        { name: 'product-log.md', desc: 'Product decisions and feature logs' }
+      ]}
+    ]
+  },
+  'designer-discovery': {
+    role: 'Designer \u2014 Domain Specialist',
+    title: 'Designer \u2014 Design Perspective',
+    desc: 'Phase 1: Design lens on the problem BEFORE solutions exist. Not wireframes \u2014 perspective.',
+    sections: [
+      { title: 'Produces', items: ['Design Perspective Brief \u2014 how the problem feels from the user\'s side', 'Interface surface inventory (screens, conversations, API, voice)'] },
+      { title: 'Files', type: 'files', items: [
+        { name: 'design-requirements.md', desc: 'Interface requirements, design direction' },
+        { name: 'design-log.md', desc: 'Design decisions and research findings' }
+      ]}
+    ]
+  },
+  uxr: {
+    role: 'UX Researcher \u2014 Independent Chapter',
+    title: 'UX Researcher \u2014 Research Chapter',
+    desc: 'Independent chapter. Accepts research requests from ANY agent. Rejects vague requests. Studies must be purposeful.',
+    sections: [
+      { title: 'Produces', items: ['Published studies in research/studies/', 'Insight synthesis', 'Assumption validation', 'AI conversation analysis'] },
+      { title: 'Files', type: 'files', items: [
+        { name: 'research-requirements.md', desc: 'Research backlog \u2014 study requests, triage, completion' },
+        { name: 'research-log.md', desc: 'Study publications, insights, backlog triage' },
+        { name: 'research/studies/*.md', desc: 'Individual study files with frontmatter' }
+      ]},
+      { title: 'Research Request Format', type: 'bus', content: 'FROM: [Any Agent]\nTO: UX Researcher\nPRIORITY: DECISION NEEDED\nMESSAGE:\n  RESEARCH REQUEST \u2014 [Study title]\n  Question: [Specific, falsifiable question]\n  Purpose: [What decision depends on this?]\n  Context: [Why now?]\n  Urgency: P0 | P1 | P2 | P3' }
+    ]
+  },
+  'coordinator-synthesis': {
+    role: 'Coordinator \u2014 Strategic Layer',
+    title: 'Coordinator \u2014 Phase 1 Synthesis',
+    desc: 'Collects BU Status Messages from each BU lead. Surfaces conflicts explicitly. Does NOT proceed until conflicts are resolved or documented as accepted risks.',
+    sections: [
+      { title: 'Actions', items: [
+        'Collect BU status from each domain lead',
+        'Surface cross-domain conflicts to CEO',
+        'Aggregate requirements into general-requirements.md',
+        'Update current-status.md with Phase 1 outcomes',
+        'Determine Phase 2 readiness'
+      ]},
+      { title: 'Files Modified', type: 'files', items: [
+        { name: 'general-requirements.md', desc: 'Cross-domain requirements aggregate' },
+        { name: 'current-status.md', desc: 'Phase transition, next agent to activate' }
+      ]}
+    ]
+  },
+  mario: {
+    role: 'Chief Engineer \u2014 Execution Layer',
+    title: 'Mario \u2014 Architectural Authority',
+    desc: 'Reviews irreversible decisions. 5-decision format: serves at 10x scale? failure modes? inheritance clarity? Near-miss log is REQUIRED.',
+    sections: [
+      { title: 'Produces', items: [
+        'Irreversible decision review (5-decision format)',
+        'Near-miss log (required \u2014 adversarial review)',
+        'Staff Engineer alignment review',
+        'Quality floor assessment'
+      ]},
+      { title: 'Files', type: 'files', items: [
+        { name: 'engineering-log.md', desc: 'Irreversibility review entries' },
+        { name: 'history.md', desc: 'Disagreements logged if cross-domain conflict' }
+      ]},
+      { title: 'Known Solution Registry', items: [
+        'Alphabetical sorting \u2192 sort with lower-case key',
+        'Date ordering \u2192 ISO 8601 parse + numeric compare',
+        'Schema validation \u2192 JSON Schema / Zod',
+        'Version comparison \u2192 semver library'
+      ]},
+      { title: 'Gate Authority', items: [
+        'HARD GATE: Can block Sprint 1 if irreversible decisions are unsound',
+        'Has dissent on record \u2014 disagreement is documented, not buried',
+        'Disagreements are required attachments when cross-domain conflict involved'
+      ]}
+    ]
+  },
+  'designer-phase2': {
+    role: 'Designer \u2014 Execution Layer',
+    title: 'Designer \u2014 Interface Direction (Phase 2)',
+    desc: 'Full interface direction across all surfaces. SDD Step 2: injects design constraints into engineering spec.',
+    sections: [
+      { title: 'Produces', items: ['Interface direction brief (all surfaces)', 'SDD Step 2 injection \u2014 design constraints into eng spec', 'Component inventory and interaction patterns'] },
+      { title: 'Files', type: 'files', items: [{ name: 'design-requirements.md', desc: 'Interface requirements, SDD artifacts' }] }
+    ]
+  },
+  'pm-phase2': {
+    role: 'PM \u2014 Execution Layer',
+    title: 'PM \u2014 Spec-Driven Development',
+    desc: '4-step SDD flow: PM drafts \u2192 Designer injects \u2192 Engineering breaks down \u2192 Time-boxed session produces dev-ready spec.',
+    sections: [
+      { title: 'SDD Steps', items: [
+        'Step 1: PM + AI \u2192 Draft and refine spec',
+        'Step 2: Designer + AI \u2192 Interface direction injection',
+        'Step 3: Engineering + AI \u2192 Break into tickets',
+        'Step 4: All in time-boxed session \u2192 Dev-ready spec'
+      ]},
+      { title: 'Kanban States', items: ['Shaping \u2192 Appetized \u2192 Pod Active \u2192 In Review \u2192 Done'] },
+      { title: 'Files', type: 'files', items: [{ name: 'product-requirements.md', desc: 'Mission kanban board' }] }
+    ]
+  },
+  'staff-eng': {
+    role: 'Staff Engineer \u2014 Execution Layer',
+    title: 'Staff Engineer \u2014 Interface Contracts',
+    desc: 'Technical decomposition into services, modules, components. Interface contracts reviewed by CTO, must pass Mario.',
+    sections: [
+      { title: 'Produces', items: ['Technical decomposition', 'Interface contracts (request/response schemas, error states, versioning)', 'Platform primitive identification', 'Tech debt ledger'] },
+      { title: 'Files', type: 'files', items: [{ name: 'engineering-requirements.md', desc: 'Interface contracts section' }] }
+    ]
+  },
+  em: {
+    role: 'EM \u2014 Execution Layer',
+    title: 'EM \u2014 Pod Composition & Critical Path',
+    desc: 'Composes mission pods (PM + Designer + Engineers). Maps critical path. Translates scope into sprint tickets. Max 2 active pods per EM.',
+    sections: [
+      { title: 'Produces', items: [
+        'Mission pod map (composition, mission, Appetite, Guardian)',
+        'Critical path map (dependency chain, longest path, slack)',
+        'Sprint tickets with acceptance criteria, effort (S/M/L/XL), owner',
+        'Pod status updates (task-driven, not scheduled)'
+      ]},
+      { title: 'Files', type: 'files', items: [
+        { name: 'engineering-log.md', desc: 'Pod map, sprint entries, transitions' },
+        { name: 'people-log.md', desc: 'Pod formation, onboarding entries' }
+      ]},
+      { title: 'Constraints', items: ['Max 2 active pods per EM', 'At 3+ pods, add another EM', 'Pod lifecycle: Forming \u2192 Active \u2192 Review \u2192 Dissolved'] }
+    ]
+  },
+  'sprint0-gate': {
+    role: 'Hard Gate \u2014 Coordinator + Owner',
+    title: 'Sprint 0 Gate Checklist',
+    desc: 'No engineering starts until this checklist passes. 13 items. Owner must be aligned on scope, timeline, budget.',
+    sections: [
+      { title: 'Checklist (all required)', items: [
+        'Epic definition complete, Owner-approved',
+        'Discovery document written',
+        'All domain requirements files updated',
+        'Legal/compliance sign-off (if applicable)',
+        'Security review (if applicable)',
+        'Data model reviewed (if applicable)',
+        'Team composition confirmed',
+        'Make/buy/partner decisions locked',
+        'Interface contracts written',
+        'Critical path mapped',
+        'Vendor onboarding initiated (4-week lead time)',
+        'Bus messages sent to all roles with release version/scope',
+        'Owner aligned on scope, timeline, budget'
+      ]}
+    ]
+  },
+  'pre-mortem': {
+    role: 'Hard Gate \u2014 PM + Team + Owner',
+    title: 'Pre-Mortem (Phase 2.5)',
+    desc: 'The Owner\'s primary challenge surface. If the team can\'t articulate what they\'re choosing NOT to do, they haven\'t scoped the work.',
+    sections: [
+      { title: 'Required Outputs', items: [
+        'Top 3 failure modes (specific, falsifiable)',
+        'Leading indicators visible in weeks 1-2',
+        'Non-goals most likely to drift in scope',
+        'Single falsifiable assumption that kills mission if wrong'
+      ]},
+      { title: 'Authority', items: [
+        'Minimum 2 participants from distinct domains',
+        'Full team: PM + CTO/Staff Eng + EM',
+        'Owner reads pre-mortem and either proceeds or /kill the pod'
+      ]}
+    ]
+  },
+  liaison: {
+    role: 'Liaison \u2014 Execution Layer',
+    title: 'Gabriela \u2014 Communication Bridge',
+    desc: 'Bridges executing team and CEO/Coordinator. Inbound: filters + translates + escalates. Outbound: translates + routes. Always knows current sprint state.',
+    sections: [
+      { title: 'Responsibilities', items: [
+        'Inbound: Team \u2192 Leadership (filter noise, translate context, escalate blockers)',
+        'Outbound: Leadership \u2192 Team (translate strategy into actionable direction)',
+        'State keeper: always knows current sprint health',
+        'Decision requests: max 3 sentences (context, decision needed, impact if delayed)'
+      ]},
+      { title: 'Health Update Format', type: 'bus', content: 'FROM: Gabriela (Liaison)\nTO: Coordinator\nPRIORITY: INFO\nMESSAGE:\n  Sprint 1 -- 2026-04-28: GREEN\n  [One paragraph: what changed, state, what\'s coming.]\n  Open decisions pending leadership: none' }
+    ]
+  },
+  'pod-spawn': {
+    role: 'EM \u2014 Execution Layer',
+    title: 'Pod Spawning',
+    desc: 'EM runs sdk-doc spawn for each pod member. Each agent gets a unique name (common first name + city surname + cultural profile).',
+    sections: [
+      { title: 'Spawn Process', items: [
+        'sdk-doc spawn <project-dir> --name "Name City" --role <role> --level <level> ...',
+        'Entry added to team.md Active Agents table',
+        'CHRO logs onboarding entry in people-log.md',
+        'Agent receives cultural profile that shapes reasoning'
+      ]},
+      { title: 'Naming Rules', items: [
+        'First name: from 1000 most common worldwide',
+        'City surname: any city on earth',
+        'No two active agents share first name or city',
+        'Aim for genuine geographic spread'
+      ]},
+      { title: 'Files Modified', type: 'files', items: [
+        { name: 'team.md', desc: 'Active Agents table \u2014 name, role, level, activated by' },
+        { name: 'people-log.md', desc: 'Onboarding entries, agent metrics' }
+      ]}
+    ]
+  },
+  engineer: {
+    role: 'IC Engineer \u2014 Execution Layer',
+    title: 'IC Engineers \u2014 Build to Spec',
+    desc: 'Named at spawn time by EM. Pick ticket from pod kanban, build to spec. Security-touching PRs require CISO review.',
+    sections: [
+      { title: 'Workflow', items: [
+        'Pick ticket from pod kanban',
+        'Build to spec with acceptance criteria',
+        'Submit PR for review',
+        'Security-touching PRs (auth, keys, encryption) require CISO review',
+        'Platform-touching PRs reviewed by Mario'
+      ]},
+      { title: 'Constraints', items: [
+        'Cannot act on direct Owner messages \u2014 must route through Coordinator',
+        'Must follow interface contracts from Staff Engineer',
+        'Solution class awareness: use KNOWN solutions when available'
+      ]}
+    ]
+  },
+  'pod-status': {
+    role: 'EM \u2014 Execution Layer',
+    title: 'Pod Status Updates',
+    desc: 'Task-driven, not scheduled. Sent after each batch completes or when status changes.',
+    sections: [
+      { title: 'Status Format', type: 'bus', content: 'FROM: [EM Name] (EM)\nTO: Guardian\nPRIORITY: INFO\nMESSAGE:\n  POD STATUS - 2026-04-28\n  Mission: Auth Service (3 weeks remaining)\n  Pods: Pod-A (PM + 2 Eng)\n  Completed: OAuth integration\n  In progress: Token refresh (Pod-A)\n  Blocked: none\n  At risk: Rate limiting (vendor delay)\n  Appetite: ON TRACK\n  Pod health: Pod-A: GREEN' },
+      { title: 'Health Signals', items: [
+        'GREEN \u2014 On track, no blockers',
+        'YELLOW \u2014 At risk, action needed',
+        'RED \u2014 Blocked or scope reduction needed'
+      ]}
+    ]
+  },
+  'liaison-updates': {
+    role: 'Liaison \u2014 Execution Layer',
+    title: 'Liaison Health Updates',
+    desc: 'Sent when status changes or tasks complete (not on a fixed schedule). Sprint health color + one paragraph.',
+    sections: [
+      { title: 'Format', items: ['Sprint N health: GREEN | YELLOW | RED', 'One paragraph: what changed, current state, what\'s coming', 'Open decisions pending leadership: [list or "none"]'] }
+    ]
+  },
+  escalation: {
+    role: 'Protocol \u2014 Section 2',
+    title: 'Escalation Ladder',
+    desc: 'One path. No exceptions. Escalation is the system working \u2014 not failure.',
+    sections: [
+      { title: 'Normal Priority', items: [
+        'Step 1: Direct to owning agent (24h)',
+        'Step 2: Coordinator (48h)',
+        'Step 3: Relevant C-suite (CEO for strategy, CTO for arch, CLO for legal)',
+        'Step 4: CEO makes the call or routes to Owner',
+        'Step 5: Owner'
+      ]},
+      { title: 'BLOCKER Priority (faster)', items: [
+        'Step 1: Direct to owning agent (4h, not 24)',
+        'Step 2: Coordinator (4h)',
+        'Step 3: CEO (24h)'
+      ]},
+      { title: 'P0 Security (bypasses ladder)', items: [
+        'CISO notifies CEO + CLO within 1 HOUR',
+        'CEO activates incident response',
+        'CLO assesses regulatory obligations (GDPR: 72h window)',
+        'Standard ladder runs in parallel'
+      ]}
+    ]
+  },
+  disagreement: {
+    role: 'Protocol \u2014 Section 29',
+    title: 'Structured Disagreement Log',
+    desc: 'Any agent can open a disagreement. It is not an escalation \u2014 it is documentation. Positions are never deleted.',
+    sections: [
+      { title: 'Opening', items: [
+        'Any agent can open at any time',
+        'sdk-doc disagreement open --topic "..." --position-a "Role: position" --position-b "Role: position"'
+      ]},
+      { title: 'Resolving', items: [
+        'Decision-maker resolves with rationale + dissent',
+        'sdk-doc disagreement resolve --id DISAGREE-NNN --decision "..." --decided-by Role --reasoning "..." [--dissent "Role: concern"]'
+      ]},
+      { title: 'Rules', items: [
+        'Never deleted or edited after resolution',
+        'Dissent on record is permanent \u2014 prevents false consensus',
+        'Unresolved >48h surfaces in sdk-status as signal',
+        'Required attachment to Mario\'s irreversible decision review',
+        'Referenced in retro as discussion items'
+      ]}
+    ]
+  },
+  'framing-challenge': {
+    role: 'Protocol \u2014 Section 25',
+    title: 'FRAMING-CHALLENGE',
+    desc: 'Challenges the premise of work, not the execution. An agent believes an assumption, target user, hypothesis, or scope boundary is incorrect or untested.',
+    sections: [
+      { title: 'Rules', items: [
+        'Requires PRIORITY: DECISION NEEDED or BLOCKER',
+        'MESSAGE must include: assumption challenged, why wrong, what changes, two options (defend or revise)',
+        'Intent resolver logs to history.md',
+        'Challenged party must restate the assumption in their own words before thread unfreezes',
+        'Resolution logged to history.md'
+      ]}
+    ]
+  },
+  guardian: {
+    role: 'Staff/Lead Engineer \u2014 Execution Layer',
+    title: 'Guardian \u2014 Final Pod Review',
+    desc: 'Permanent domain anchor. Stays fixed in business domain while pods move around them. Quality floor enforcement.',
+    sections: [
+      { title: 'Responsibilities', items: [
+        'Context priming: prepare AI context before pod starts',
+        'Invariant enforcement: security rules, regulatory constraints, API contracts',
+        'Final gate: sign-off on high-risk logic before pod ships',
+        'Can request rework \u2014 blocks dissolution if quality floor compromised'
+      ]},
+      { title: 'Pod Review', items: [
+        'Reviews all pod deliverables against acceptance criteria',
+        'Sends Pod Review message to Coordinator',
+        'Pod cannot dissolve without Guardian sign-off'
+      ]}
+    ]
+  },
+  'pm-seal': {
+    role: 'PM \u2014 Release Close',
+    title: 'PM \u2014 Seal Mission Kanban',
+    desc: 'All missions moved to Done or Deferred with reason. Vision alignment check.',
+    sections: [
+      { title: 'Actions', items: [
+        'Confirm vision alignment or flag drift',
+        'Move all missions to Done or Deferred in product-requirements.md',
+        'Deferred items logged with reason',
+        'Close product-log.md entries'
+      ]}
+    ]
+  },
+  'em-dissolve': {
+    role: 'EM \u2014 Release Close',
+    title: 'EM \u2014 Dissolve Pods',
+    desc: 'sdk-doc dissolve per member. Rows move from Active to Dissolved Agents (never deleted). Area log entries.',
+    sections: [
+      { title: 'Dissolution Process', items: [
+        'sdk-doc dissolve <project-dir> --name "Name City" --dissolved-by "EM Name" --reason "..."',
+        'Row moved Active \u2192 Dissolved Agents in team.md (never deleted)',
+        'Area log entry in people-log.md',
+        'Engineering-log.md pod dissolution entry'
+      ]}
+    ]
+  },
+  'all-history': {
+    role: 'All Agents \u2014 Release Close',
+    title: 'All Agents \u2192 history.md',
+    desc: 'Every agent writes consequential decisions to the permanent decision record.',
+    sections: [
+      { title: 'Decision Log Format', type: 'bus', content: 'DECISION: [Title]\nDate: 2026-04-28\nRelease: v2026.Q2.1\nMade by: [Role]\nContext: [Why this decision was needed]\nDecision: [What was decided]\nAlternatives: [What else was considered]\nRationale: [Why this over alternatives]\nImplications: [What changes downstream]\nReversible: YES | NO\nHuman approved by: [Name, title] on [date]' },
+      { title: 'Rules', items: [
+        'Only consequential decisions \u2014 not every choice',
+        'Domain-specific decisions also go in domain requirements files',
+        'If not logged, it didn\'t happen'
+      ]}
+    ]
+  },
+  'coordinator-retro': {
+    role: 'Coordinator \u2014 Release Close',
+    title: 'Coordinator \u2014 Retrospective Synthesis',
+    desc: 'Reads all area logs. Synthesizes what worked, slowed, and should change. Runs Ratchet health check.',
+    sections: [
+      { title: 'Reads', items: [
+        'engineering-log.md', 'product-log.md', 'design-log.md',
+        'operations-log.md', 'people-log.md', 'strategy-log.md'
+      ]},
+      { title: 'Produces', items: [
+        'Retro synthesis: what worked, what slowed, what to change',
+        'Ratchet health check: 3+ revisions? EXPLORATORY on KNOWN? Missing SOLUTION_CLASS?',
+        'strategy-log.md retro entry',
+        'engineering-log.md ratchet health section'
+      ]}
+    ]
+  },
+  'ceo-gate': {
+    role: 'CEO \u2014 Hard Gate',
+    title: 'HARD GATE 3 \u2014 CEO Validates project-map.md',
+    desc: 'Release CANNOT seal without CEO sign-off on Section 11. 10-item checklist.',
+    sections: [
+      { title: 'Section 11 Checklist', items: [
+        'All deliverables documented',
+        'All missions recorded (including deferred)',
+        'All consequential decisions in history.md',
+        'New frameworks and processes documented',
+        'Non-Negotiables discovered are captured',
+        'Open questions for future cycles written',
+        'All requirements files reflect actual state',
+        'All area logs are current',
+        'Retrospective written',
+        'current-status.md updated to reflect release close'
+      ]}
+    ]
+  },
+  'discovery-guardian': {
+    role: 'Discovery Guardian \u2014 Iteration Loop',
+    title: 'Discovery Guardian \u2014 Validates Problem Understanding',
+    desc: 'Reviews all Discovery outputs against 6 exit criteria. Ensures the team understands the RIGHT problem before committing to architecture. Separate role from domain agents \u2014 checks cross-domain coherence and assumption quality.',
+    sections: [
+      { title: 'Exit Criteria (all must pass)', items: [
+        'Problem statement is falsifiable (can be proven wrong with evidence)',
+        'Target user is specific enough to exclude someone',
+        'Regulatory constraints are mapped with confidence levels (HIGH/MED/LOW)',
+        'At least one core assumption has been tested, not just stated',
+        'Non-goals are explicit and reasoned (not deferred \u2014 excluded with rationale)',
+        'The brief could survive a FRAMING-CHALLENGE without collapsing'
+      ]},
+      { title: 'Authority', items: [
+        'REVIEW authority only \u2014 does not write to canonical docs',
+        'Can stamp GRADUATE or ITERATE with specific feedback',
+        'Cannot waive exit criteria \u2014 must escalate to CEO for exceptions',
+        'After 3 cycles without graduation: MUST escalate to CEO'
+      ]},
+      { title: 'Scratch Space', type: 'files', items: [
+        { name: 'iterations/discovery/', desc: 'Iteration files (iter-001.md, iter-002.md...). Not loaded by agents unless in active review. Graduated outputs flow to canonical docs.' }
+      ]}
+    ]
+  },
+  'architecture-guardian': {
+    role: 'Architecture Guardian \u2014 Iteration Loop',
+    title: 'Architecture Guardian \u2014 Validates Design Soundness',
+    desc: 'Validates that the architecture solves the problem from the graduated Discovery output and is built for the long term. Sits between problem (Discovery) and solution (Architecture). Checks structural soundness, not style.',
+    sections: [
+      { title: 'Exit Criteria (all must pass)', items: [
+        'Architecture serves at 10x current scale without fundamental redesign',
+        'Every irreversible decision has a named alternative and documented rejection reason',
+        'Interface contracts are complete enough for independent pod execution',
+        'Make/buy/partner decisions have cost projections beyond year 1',
+        'Security model satisfies CISO non-negotiables (not deferred)',
+        'The design traces back to the graduated Discovery output (not a drifted version)'
+      ]},
+      { title: 'Authority', items: [
+        'REVIEW authority only \u2014 does not make architecture decisions (CTO owns those)',
+        'Does not override Mario\'s irreversibility review \u2014 different scope',
+        'After 3 cycles without graduation: MUST escalate to CEO',
+        'Can kick back to Discovery Guardian if problem definition drifted'
+      ]},
+      { title: 'Scratch Space', type: 'files', items: [
+        { name: 'iterations/architecture/', desc: 'Iteration files. Graduated outputs flow to engineering-requirements.md and interface contracts.' }
+      ]}
+    ]
+  },
+  'implementation-guardian': {
+    role: 'Implementation Guardian \u2014 Iteration Loop',
+    title: 'Implementation Guardian \u2014 Validates Problem-Solution Fit',
+    desc: 'Checks whether what was built actually solves the problem. Distinct from pod Guardian (code quality). Traces deliverables back through Architecture to Discovery. Both must approve before pod can dissolve.',
+    sections: [
+      { title: 'Exit Criteria (all must pass)', items: [
+        'Deliverables match the spec from the graduated Architecture output',
+        'No security shortcuts taken (auth, data handling, secrets management)',
+        'Code is maintainable by a team that did not write it',
+        'Edge cases from the pre-mortem are handled or explicitly deferred with reason',
+        'Instrumentation covers the friction points PM identified',
+        'The output creates user capability, not dependency (Constraint 1 check)'
+      ]},
+      { title: 'Pod Guardian vs Implementation Guardian', items: [
+        'Pod Guardian: code quality, invariant enforcement, security patterns',
+        'Implementation Guardian: problem-solution fit, spec conformance, longevity',
+        'Both must approve before pod dissolution',
+        'Implementation Guardian reviews after sprint batches (triggered by EM)'
+      ]},
+      { title: 'Scratch Space', type: 'files', items: [
+        { name: 'iterations/implementation/<pod>/', desc: 'Per-pod iteration files. Graduated outputs trigger pod review flow.' }
+      ]}
+    ]
+  },
+  'coordinator-seal': {
+    role: 'Coordinator \u2014 Release Close',
+    title: 'Coordinator \u2014 Seal Release',
+    desc: 'Only after CEO validates project-map.md. Logs release close. Preps next cycle.',
+    sections: [
+      { title: 'Release Close Entry', type: 'bus', content: '## v2026.Q2.1 -- [Release Name]\nDate: 2026-04-28\nStatus: Shipped\n\nWhat shipped:\n- [User-visible capability]\n\nWhat did not ship (and why):\n- [Deferred item + reason]\n\nDecisions made:\n- [Decision + rationale]\n\nImmediate next actions:\n- [First week of next increment]\n\nRetrospective:\n[1 paragraph: what team learned]' },
+      { title: 'Next Cycle Prep', items: [
+        'Re-run discovery questions against what team now knows',
+        'Return Appetized missions to queue for next Betting Table',
+        'Identify new requirements from retrospective',
+        'Prepare current-status.md Next Agent section for next Coordinator'
+      ]}
+    ]
+  }
+};
+
+// ── Panel rendering ──
+const panel = document.getElementById('detailPanel');
+const panelRole = document.getElementById('panelRole');
+const panelTitle = document.getElementById('panelTitle');
+const panelDesc = document.getElementById('panelDesc');
+const panelBody = document.getElementById('panelBody');
+
+function openPanel(agentId) {
+  const data = agents[agentId];
+  if (!data) return;
+
+  panelRole.textContent = data.role;
+  panelTitle.textContent = data.title;
+  panelDesc.textContent = data.desc;
+
+  let html = '';
+  for (const section of (data.sections || [])) {
+    html += `<div class="panel-section"><h4>${section.title}</h4>`;
+    if (section.type === 'files') {
+      for (const f of section.items) {
+        html += `<div class="panel-file"><span class="fname">${f.name}</span><span class="fdesc">${f.desc}</span></div>`;
+      }
+    } else if (section.type === 'bus') {
+      const formatted = section.content
+        .replace(/^(FROM|TO|RELEASE|PRIORITY|SOLUTION_CLASS|TAG|MESSAGE|DECISION BY|ESCALATION|DECISION|Date|Made by|Context|Alternatives|Rationale|Implications|Reversible|Human approved by|Date|Status):/gm,
+          '<span class="key">$1:</span>');
+      html += `<div class="bus-example">${formatted}</div>`;
+    } else {
+      html += '<ul>';
+      for (const item of section.items) {
+        html += `<li>${item}</li>`;
+      }
+      html += '</ul>';
+    }
+    html += '</div>';
+  }
+  panelBody.innerHTML = html;
+
+  panel.classList.add('open');
+  document.body.classList.add('panel-open');
+}
+
+function closePanel() {
+  panel.classList.remove('open');
+  document.body.classList.remove('panel-open');
+}
+
+document.getElementById('panelClose').addEventListener('click', closePanel);
+
+// Click on nodes
+document.querySelectorAll('.node[data-agent]').forEach(node => {
+  node.addEventListener('click', () => openPanel(node.dataset.agent));
+});
+
+// Close panel on Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+// ── Phase navigation ──
+const sections = document.querySelectorAll('.phase-section');
+const navItems = document.querySelectorAll('.phase-nav li');
+
+navItems.forEach(li => {
+  li.addEventListener('click', () => {
+    const phase = li.dataset.phase;
+    document.getElementById(`phase${phase}`).scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// Scroll-driven active state
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      const phase = id.replace('phase', '');
+      navItems.forEach(li => {
+        li.classList.toggle('active', li.dataset.phase === phase);
+        if (parseInt(li.dataset.phase) < parseInt(phase)) {
+          li.classList.add('completed');
+        } else {
+          li.classList.remove('completed');
+        }
+      });
+    }
+  });
+}, { threshold: 0.3 });
+
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
