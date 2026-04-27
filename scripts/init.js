@@ -325,7 +325,7 @@ if (fs.existsSync(squadSrc)) {
 }
 
 // Shared SDK docs
-for (const extra of ['protocol.md', 'AGENTS.md', 'STRATEGY.md']) {
+for (const extra of ['protocol.md', 'protocol-core.md', 'protocol-reference.md', 'AGENTS.md', 'STRATEGY.md']) {
   const src = path.join(sdkRoot, extra);
   if (fs.existsSync(src)) {
     copyAndProcess(src, path.join(outputDir, extra), vars);

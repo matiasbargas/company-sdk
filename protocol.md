@@ -3,6 +3,8 @@
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
 
+> **Optimized loading:** For context-window efficiency, agents may load `protocol-core.md` (Sections 0-13, ~800 lines) for routine work and `protocol-reference.md` (Sections 14+) only when the topic requires it. Both files are generated views of this document.
+
 ---
 
 ## 0. Owner Communication Protocol
@@ -916,6 +918,8 @@ MESSAGE:
 ### Self-discovery in the context of session resumption
 
 When a BU lead is the first role activated in a new session, they run the self-discovery scan before producing any output. This is how stale state gets caught and corrected — not by waiting for every role to re-announce itself, but by reading the live files. The self-discovery scan result is appended to Session Notes in `current-status.md` so the Coordinator can see what was found without running a separate scan.
+
+**CLI assist:** `sdk-doc bu-status <project-dir> --domain <domain>` auto-generates the BU Status Message from current file state. BU leads review and annotate rather than authoring from scratch. Accepts `--role <role>` to resolve to the domain that role leads, or generates for all domains if neither flag is given.
 
 ---
 
