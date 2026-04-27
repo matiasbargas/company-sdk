@@ -17,6 +17,8 @@ Agents activate in this order. Do not skip steps. Do not activate out of sequenc
 ```
 PHASE 0 (Brief):
   1. Coordinator    -- receives Owner brief (via CEO or directly), runs discovery ping-pong
+  Note: Coordinator assigns risk tier here (Section 32). Low/Medium/High determines
+  which iteration loops and optional gates activate in subsequent phases.
 
 PHASE 1 (Discovery):
   2. CEO            -- strategic framing, non-negotiables, decision authority
@@ -31,6 +33,8 @@ PHASE 1 (Discovery):
   10b. UX Researcher -- research plan, assumption testing, AI conversation analysis (parallel)
   10c. Designer     -- design perspective brief, problem framing through design lens (parallel)
   10d. PM           -- mission shaping informed by discovery outputs + design + research (parallel)
+  10e. Discovery Guardian -- iteration loop: reviews Discovery outputs against exit criteria.
+       Loop continues until GRADUATE. Scratch: iterations/discovery/. See protocol.md Section 31.
 
 PHASE 2 (Release Plan):
   11. CTO           -- architecture brief, make/buy matrix, team sizing
@@ -39,10 +43,14 @@ PHASE 2 (Release Plan):
   14. Designer      -- full interface direction brief (all surfaces: screen, conversation, AI, voice)
   15. Staff Engineer -- interface contracts, platform primitives
   16. EM            -- mission pod composition, critical path, Sprint 0 gate
+  16b. Architecture Guardian -- iteration loop: reviews Architecture outputs against exit criteria.
+       Loop continues until GRADUATE. Scratch: iterations/architecture/. See protocol.md Section 31.
 
 PHASE 3 (Execution):
-  16. Liaison       -- activated at Sprint 1 start. Stays active until ship.
+  17. Liaison       -- activated at Sprint 1 start. Stays active until ship.
   [All execution layer agents remain active]
+  17b. Implementation Guardian -- iteration loop per pod: reviews deliverables against exit criteria.
+       Loop continues until GRADUATE. Scratch: iterations/implementation/<pod>/. See protocol.md Section 31.
 
 PHASE 4 (Completion):
   Coordinator runs retro synthesis. All agents read the retrospective.
@@ -118,6 +126,14 @@ PHASE 4 (Completion):
 | **Engineer (IC)** | Feature implementation, ticket execution | `engineering-requirements.md` | EM → Staff Eng → Mario → CTO | When a pod is active. EM assigns a unique name (first name + place surname) at spawn time. Aim for diverse representation across the pod. No two active engineers share a name or place. Names are AI agent identifiers only — not hiring guidance. See `DISCLAIMER.md`. |
 | **Liaison** | Execution communication bridge | (area logs only — no requirements file) | Coordinator → CEO | Sprint 1 start |
 | **Test Engineer** | Test strategy, coverage, CI gates, regression | `test/` directory, CI config | EM → Staff Eng → Mario | When scripts or features are shipping. Owns test suite quality. |
+
+### Iteration Guardians
+
+| Agent | Domain | Requirements file | Escalation path | Activation trigger |
+|---|---|---|---|---|
+| **Discovery Guardian** | Iteration quality for Discovery outputs — validates problem understanding, cross-domain coherence, assumption testing | `iterations/discovery/` (scratch space) | Coordinator → CEO | After Phase 1 agents deliver first outputs. Reviews iteration loop until GRADUATE. |
+| **Architecture Guardian** | Iteration quality for Architecture outputs — validates long-term soundness, traceability to graduated Discovery | `iterations/architecture/` (scratch space) | Coordinator → CEO | After CTO delivers architecture brief. Reviews iteration loop until GRADUATE. |
+| **Implementation Guardian** | Iteration quality for Implementation outputs — validates problem-solution fit, spec conformance, longevity (distinct from pod Guardian) | `iterations/implementation/` (scratch space) | Coordinator → CEO | EM triggers after sprint batch. Reviews per-pod iteration loop until GRADUATE. |
 
 ---
 

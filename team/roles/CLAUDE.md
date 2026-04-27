@@ -6,13 +6,16 @@ Quick reference for activating and working with each agent. Full definitions are
 
 ## How to activate an agent
 
-**Context orientation — read this first (every activation):**
+**Context orientation — index-driven loading (every activation):**
 
-1. `context-index.json` — if present: file map, domain routing, queryMap (what exists, who owns it, what topic routes to which agent). Read this to self-direct context loading and know who to ask before sending a CONTEXT REQUEST.
-2. `context-manifest.json` — if present: project snapshot (active release, phase, missions, waiting-on, open decisions, next agent to activate).
-3. `current-status.md` — fallback if manifest is absent or stale.
+1. `context-index.json` — read this FIRST. It contains the file map, domain routing, queryMap (topic to files + consult agent), and project domains. Use the queryMap to determine what else to load for your specific task.
+2. `current-status.md` — session continuity, always second.
+3. **QueryMap lookup:** Identify your activation trigger (topic or task). Look it up in `context-index.json → queryMap`. Load ONLY the files listed in the `read` array for that topic. This replaces loading all requirements files.
+4. Your domain requirements file — if not already loaded via queryMap.
 
-The fallback path is identical for all agents — no per-agent variation.
+**Do NOT load by default:** `history.md`, `project.md`, `general-requirements.md`, `bus-log.md`, area logs. Load these only when the queryMap routes you to them.
+
+**Exceptions:** CEO and Coordinator do full context loading (all files). See their role files.
 
 To generate or refresh: `node scripts/doc.js index <project-dir>` (index) · `node scripts/doc.js manifest <project-dir>` (manifest)
 
@@ -87,6 +90,14 @@ Agents always read `context-index.json` then `context-manifest.json` (if present
 |---|---|---|---|
 | **Test Engineer** | `test-engineer.md` | Scripts or features are shipping — owns test suite | "Test Engineer, we need tests for [module]" |
 
+## Iteration Guardians
+
+| Agent | File | Activate when | First words |
+|---|---|---|---|
+| **Discovery Guardian** | `discovery-guardian.md` | Phase 1 agents have delivered first outputs — validates problem understanding before Architecture | "Discovery Guardian, review the Discovery iteration: is the problem definition ready?" |
+| **Architecture Guardian** | `architecture-guardian.md` | CTO has delivered architecture brief — validates design soundness and problem traceability | "Architecture Guardian, review the Architecture iteration: is the design sound for long-term?" |
+| **Implementation Guardian** | `implementation-guardian.md` | EM triggers review after sprint batch — validates problem-solution fit and longevity (distinct from pod Guardian) | "Implementation Guardian, review the Implementation iteration for Pod [name]" |
+
 ---
 
 ## Activation order (full Discovery → Execution)
@@ -95,8 +106,11 @@ Agents always read `context-index.json` then `context-manifest.json` (if present
 Phase 0:  Coordinator
 Phase 1:  CEO → CLO → CISO → CFO → CMO → CRO → CDO → COO → CHRO
           → UX Researcher + Designer + PM (parallel)
+          → Discovery Guardian reviews (iteration loop until GRADUATE)
 Phase 2:  CTO → Mario → Designer (full interface direction) → PM (SDD) → Staff Engineer → EM
+          → Architecture Guardian reviews (iteration loop until GRADUATE)
 Phase 3:  Liaison [Sprint 1 start] + Engineers (one per ticket)
+          → Implementation Guardian reviews per pod (iteration loop until GRADUATE)
 Phase 4:  All agents write area logs → PM seals kanban → EM dissolves pods
           → CEO validates project-map.md → Coordinator seals release
 ```
@@ -104,6 +118,7 @@ Phase 4:  All agents write area logs → PM seals kanban → EM dissolves pods
 **Hard gate:** CLO + CISO must deliver before CTO activates.
 **Hard gate:** Mario must review irreversible decisions before Sprint 1.
 **Hard gate:** CEO must validate `project-map.md` before release is sealed.
+**Iteration loops:** Discovery, Architecture, and Implementation Guardians must GRADUATE their loops before the next phase proceeds. See `protocol.md` Section 31.
 
 ---
 
@@ -139,5 +154,8 @@ cdo.md                Data, instrumentation, governance
 coo.md                Vendors, operations, support
 chro.md               People, hiring, culture
 test-engineer.md      Test strategy, coverage, CI gates
+discovery-guardian.md  Iteration Guardian — validates Discovery quality before Architecture
+architecture-guardian.md  Iteration Guardian — validates Architecture soundness and traceability
+implementation-guardian.md  Iteration Guardian — validates problem-solution fit and longevity per pod
 CONSULT.md            Consultation mode guide (read by all agents)
 ```
