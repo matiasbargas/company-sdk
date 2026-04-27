@@ -45,9 +45,9 @@ Added to every artifact that crosses a gate (shaped brief, architecture brief, p
 Add a Negative Scope check to both gates:
 
 **Pre-CTO gate (CLO + CISO):**
-- Check `discovery-requirements.md` for `## Explicit Non-Goals` section
+- Check `compliance-requirements.md` for `## Explicit Non-Goals` section
 - Fail if section is missing or has fewer than 2 `- ` items
-- Error message: `Explicit Non-Goals section missing or incomplete in discovery-requirements.md. Every gate-crossing artifact must name at least 2 things this project is NOT doing and why.`
+- Error message: `Explicit Non-Goals section missing or incomplete in compliance-requirements.md. Every gate-crossing artifact must name at least 2 things this project is NOT doing and why.`
 
 **Pre-Sprint 1 gate (Mario):**
 - Check the mission/shaped brief for `## Explicit Non-Goals` section
@@ -65,7 +65,7 @@ Add a Negative Scope check to both gates:
 
 | Artifact | File | Section placement |
 |---|---|---|
-| Discovery brief | `discovery-requirements.md` | After gate status table, before Legal section |
+| Discovery brief | `compliance-requirements.md` | After gate status table, before Legal section |
 | Shaped brief | `product-requirements.md` | After mission statement, before user stories |
 | Architecture brief | `engineering-requirements.md` | After architecture decisions, before interface contracts |
 | Pre-mortem | Mission brief or `pre-mortem.md` | After failure modes, as cross-reference |

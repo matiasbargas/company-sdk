@@ -76,23 +76,20 @@ All role files live in `team/roles/`. When an agent is addressed by name or titl
 | `bus-log.md` | Permanent record of all inter-agent Bus messages |
 | `team.md` | Active agent roster |
 | `general-requirements.md` | Cross-domain requirements status |
-| `discovery-requirements.md` | CLO + CISO gate — must complete before CTO activates |
+| `compliance-requirements.md` | CLO + CISO gate — legal, regulatory, security, threat model |
 | `product-requirements.md` | PM scope, user stories, kanban |
 | `engineering-requirements.md` | Architecture, contracts, delivery |
 | `design-requirements.md` | Interface requirements + UX research |
 | `business-requirements.md` | Finance, marketing, revenue, data, ops, people |
-| `security-requirements.md` | Security, threat model, compliance |
 
 ## Area logs
 
 | Area | File | Who writes |
 |---|---|---|
 | Engineering | `engineering-log.md` | CTO, Mario, Staff Eng, EM |
-| Product | `product-log.md` | PM, CMO, CRO, CDO |
+| Product | `product-log.md` | PM, CMO, CRO, CDO, CHRO, EM |
 | Design | `design-log.md` | Designer, UX Researcher, PM |
-| Operations | `operations-log.md` | COO, CLO, CISO, CFO |
-| People | `people-log.md` | CHRO, EM |
-| Strategy | `strategy-log.md` | CEO, Coordinator |
+| Strategy | `strategy-log.md` | CEO, Coordinator, COO, CLO, CISO, CFO |
 | Research | `research-log.md` | UX Researcher |
 
 ## CLI commands

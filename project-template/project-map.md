@@ -85,8 +85,7 @@ Final state of all domain requirements files.
 | Domain | File | Pending at close | Done | Notes |
 |---|---|---|---|---|
 | General | general-requirements.md | [N] | [N] | |
-| Discovery | discovery-requirements.md | [N] | [N] | |
-| Security | security-requirements.md | [N] | [N] | |
+| Compliance | compliance-requirements.md | [N] | [N] | |
 | Product | product-requirements.md | [N] | [N] | |
 | Engineering | engineering-requirements.md | [N] | [N] | |
 | Design | design-requirements.md | [N] | [N] | |
@@ -105,8 +104,6 @@ All area logs should be current and complete before CEO validation.
 | Product | product-log.md | [ ] |
 | Engineering | engineering-log.md | [ ] |
 | Design | design-log.md | [ ] |
-| Operations | operations-log.md | [ ] |
-| People | people-log.md | [ ] |
 
 ---
 

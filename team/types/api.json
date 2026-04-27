@@ -3,8 +3,7 @@
   "name": "API / SDK / Developer Tool",
   "description": "Developer-facing products — APIs, SDKs, CLIs, infrastructure tools, and developer platforms.",
   "requirements_files": [
-    "discovery",
-    "security",
+    "compliance",
     "engineering",
     "product",
     "general"

@@ -230,7 +230,7 @@ PHASE 3 (Execution)
 PHASE 4 (Completion)
   All agents → area logs + requirements Done
   PM seals product-log.md
-  EM dissolves pods → people-log.md
+  EM dissolves pods → product-log.md
   Coordinator runs retro → strategy-log.md
   CEO validates project-map.md Section 11  ← HARD GATE
   Coordinator seals release after CEO validation
@@ -266,18 +266,15 @@ sdk-ship . v2026.Q2.1     # validate → tag → push
 | `idea.md` | Raw brief → structured brief for Greg | Owner | Day 0 |
 | `context-manifest.json` | Machine-readable project state | Generated (`sdk-doc manifest .`) | Run at session open if stale |
 | `general-requirements.md` | Cross-domain aggregate | Coordinator | Every sprint |
-| `discovery-requirements.md` | Legal + compliance requirements | CLO | Phase 1 → execution |
-| `security-requirements.md` | Security + threat model | CISO | Phase 1 → execution |
+| `compliance-requirements.md` | Legal + regulatory + security + threat model | CLO + CISO | Phase 1 → execution |
 | `engineering-requirements.md` | Architecture + delivery | CTO, Mario, Staff Eng, EM | Phase 2 → execution |
 | `product-requirements.md` | Scope + user stories + kanban | PM | Ongoing — every sprint |
 | `design-requirements.md` | Interface requirements + UX research | Designer, UX Researcher | Phase 2 → execution |
 | `business-requirements.md` | Finance, marketing, revenue, ops, people | CFO, CMO, CRO, CDO, COO, CHRO | Phase 1 → execution |
 | `engineering-log.md` | Engineering area log | CTO, Mario, Staff Eng, EM, ICs | On state change or task completion |
-| `product-log.md` | Product area log | PM, CMO, CRO, CDO | On state change or task completion |
+| `product-log.md` | Product + people area log | PM, CMO, CRO, CDO, CHRO, EM | On state change or task completion |
 | `design-log.md` | Design area log | Designer, UX Researcher | On state change |
-| `operations-log.md` | Operations area log | COO, CLO, CISO, CFO | On state change |
-| `people-log.md` | People area log | CHRO, EM | On team changes |
-| `strategy-log.md` | Strategy area log | CEO, Coordinator | After retro; major strategic decisions |
+| `strategy-log.md` | Strategy + operations area log | CEO, Coordinator, COO, CLO, CISO, CFO | After retro; major strategic decisions; ops state changes |
 | `team.md` | Active team roster + onboarding log | CHRO | On agent spawn or dissolve |
 | `.sdkrc` | Project config: sdkPath, releaseId, GitHub | Coordinator | On init; on release ID change |
 | `SDK.md` | This file — AI bootstrap | SDK | Read-only during project |

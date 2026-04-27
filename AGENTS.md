@@ -17,46 +17,43 @@ Agents activate in this order. Do not skip steps. Do not activate out of sequenc
 ```
 PHASE 0 (Brief):
   1. Coordinator    -- receives Owner brief (via CEO or directly), runs discovery ping-pong
-  Note: Coordinator assigns risk tier here (Section 32). Low/Medium/High determines
-  which iteration loops and optional gates activate in subsequent phases.
 
 PHASE 1 (Discovery):
   2. CEO            -- strategic framing, non-negotiables, decision authority
-  3. CLO + CISO     -- regulatory map + security non-negotiables (PARALLEL, both gate CTO)
-  ── hard gate: CLO + CISO must deliver before CTO activates ──
-  4. CFO, CMO, CRO, CDO, COO, CHRO  -- run IN PARALLEL, inform but do not gate Phase 2
-     Outputs flow to CTO and PM as they complete. Not sequential.
-  5. UX Researcher + Designer + PM   -- parallel with step 4
-  5b. Discovery Guardian -- iteration loop: reviews Discovery outputs against exit criteria.
-      Loop continues until GRADUATE. Scratch: iterations/discovery/. See protocol.md Section 31.
+  3. CLO            -- regulatory map, legal blockers → gates CTO
+  4. CISO           -- security non-negotiables → gates CTO
+  5. CFO            -- budget validation, runway model
+  6. CMO            -- market context, competitive landscape → informs CTO + PM
+  7. CRO            -- GTM model, pricing → informs PM + CFO
+  8. CDO            -- instrumentation plan → informs CTO data model
+  9. COO            -- vendor onboarding timelines → gates EM critical path
+  10. CHRO          -- team composition, hiring plan
+  10b. UX Researcher -- research plan, assumption testing, AI conversation analysis (parallel)
+  10c. Designer     -- design perspective brief, problem framing through design lens (parallel)
+  10d. PM           -- mission shaping informed by discovery outputs + design + research (parallel)
 
 PHASE 2 (Release Plan):
-  6. CTO            -- architecture brief, make/buy matrix, team sizing
-                       (starts after CLO+CISO gate, absorbs other Phase 1 outputs as they arrive)
-  7. Mario (Chief Engineer) -- irreversible decision review, cross-project coherence sign-off
-  8. PM            -- user story map, scope definition (refined from Phase 1 shaping)
-  9. Designer      -- full interface direction brief (all surfaces: screen, conversation, AI, voice)
-  10. Staff Engineer -- interface contracts, platform primitives
-  11. EM            -- mission pod composition, critical path, Sprint 0 gate
-  11b. Architecture Guardian -- iteration loop: reviews Architecture outputs against exit criteria.
-       Loop continues until GRADUATE. Scratch: iterations/architecture/. See protocol.md Section 31.
+  11. CTO           -- architecture brief, make/buy matrix, team sizing
+  12. Mario (Chief Engineer) -- irreversible decision review, cross-project coherence sign-off
+  13. PM            -- user story map, scope definition (refined from Phase 1 shaping)
+  14. Designer      -- full interface direction brief (all surfaces: screen, conversation, AI, voice)
+  15. Staff Engineer -- interface contracts, platform primitives
+  16. EM            -- mission pod composition, critical path, Sprint 0 gate
 
 PHASE 3 (Execution):
-  12. Liaison       -- activated at Sprint 1 start. Stays active until ship.
+  16. Liaison       -- activated at Sprint 1 start. Stays active until ship.
   [All execution layer agents remain active]
-  12b. Implementation Guardian -- iteration loop per pod: reviews deliverables against exit criteria.
-       Loop continues until GRADUATE. Scratch: iterations/implementation/<pod>/. See protocol.md Section 31.
 
 PHASE 4 (Completion):
   Coordinator runs retro synthesis. All agents read the retrospective.
   All agents write their consequential decisions to history.md and their area logs before the release closes.
   PM seals the mission kanban board (product-log.md).
-  EM dissolves pods and writes pod dissolution entries to people-log.md.
+  EM dissolves pods and writes pod dissolution entries to product-log.md.
   CEO validates project-map.md (Section 11 checklist) before the release is sealed.
   Coordinator seals the project map only after CEO validation.
 ```
 
-**Critical gate:** CLO + CISO output is required before CTO starts architecture. This is the most commonly skipped step and the most expensive to skip. Phase 2 (CTO) is gated ONLY by CLO + CISO -- not by all Phase 1 agents. CFO, CMO, CRO, CDO, COO, and CHRO outputs are consumed by CTO as they become available but do not block CTO activation.
+**Critical gate:** CLO + CISO output is required before CTO starts architecture. This is the most commonly skipped step and the most expensive to skip.
 
 **Second critical gate:** Mario (Chief Engineer) reviews CTO's irreversible decisions before any implementation begins. Architecture that has not passed Mario's review before Sprint 1 is unreviewed architecture.
 
@@ -75,9 +72,9 @@ PHASE 4 (Completion):
 
 | Agent | Domain | Requirements file | Escalation path | Activation trigger |
 |---|---|---|---|---|
-| **CLO** | Legal, compliance, contracts | `discovery-requirements.md` | CEO → Owner | Financial, legal, or user data features |
+| **CLO** | Legal, compliance, contracts | `compliance-requirements.md` | CEO → Owner | Financial, legal, or user data features |
 | **CFO** | Budget, runway, unit economics | `business-requirements.md` | CEO → Owner | Any cost or revenue component |
-| **CISO** | Security, threat model, compliance | `security-requirements.md` | CTO → CEO → Owner | User data, keys, money, or PII |
+| **CISO** | Security, threat model, compliance | `compliance-requirements.md` | CTO → CEO → Owner | User data, keys, money, or PII |
 | **CMO** | Market, positioning, launch | `business-requirements.md` | CEO → Owner | Before API/product design |
 | **CRO** | Revenue, GTM, pricing | `business-requirements.md` | CEO → Owner | Monetization component |
 | **CDO** | Data, instrumentation, governance | `business-requirements.md` | CTO → CEO → Owner | Any product that measures itself |
@@ -86,12 +83,10 @@ PHASE 4 (Completion):
 
 ### Extended Domain Specialists
 
-**On-demand only.** Extended specialists activate ONLY when their specific trigger fires -- they are not part of the default Phase 1 sequence. They are on-demand consultants spawned when a project's domain requires their expertise, not default participants in every project.
-
 | Agent | Domain | Requirements file | Escalation path | Activation trigger |
 |---|---|---|---|---|
 | **Rafael (Chief Risk Officer)** | Enterprise risk register, model risk, operational + financial risk | `business-requirements.md` | CEO → Owner | Any product handling real money, credit, or significant operational complexity |
-| **Andrea (Chief Compliance Officer)** | Compliance program, monitoring, regulatory exams, training | `discovery-requirements.md` | CLO → CEO → Owner | Any regulated industry; stays active through execution |
+| **Andrea (Chief Compliance Officer)** | Compliance program, monitoring, regulatory exams, training | `compliance-requirements.md` | CLO → CEO → Owner | Any regulated industry; stays active through execution |
 | **Natalia (Chief Customer Officer)** | Post-sale NRR, customer success, professional services, renewals | `business-requirements.md` | CEO → Owner | First enterprise customer approaching go-live |
 | **Emiliano (Chief Protocol Officer)** | Tokenomics, governance design, protocol economics, treasury | `business-requirements.md` | CEO → Owner | Any project that is a protocol, not just a product on a chain |
 | **Paola (Chief Credit Officer)** | Underwriting policy, credit models, fair lending, portfolio risk | `business-requirements.md` | CRO Risk → CEO → Owner | Any lending or credit decisioning product |
@@ -123,14 +118,6 @@ PHASE 4 (Completion):
 | **Engineer (IC)** | Feature implementation, ticket execution | `engineering-requirements.md` | EM → Staff Eng → Mario → CTO | When a pod is active. EM assigns a unique name (first name + place surname) at spawn time. Aim for diverse representation across the pod. No two active engineers share a name or place. Names are AI agent identifiers only — not hiring guidance. See `DISCLAIMER.md`. |
 | **Liaison** | Execution communication bridge | (area logs only — no requirements file) | Coordinator → CEO | Sprint 1 start |
 | **Test Engineer** | Test strategy, coverage, CI gates, regression | `test/` directory, CI config | EM → Staff Eng → Mario | When scripts or features are shipping. Owns test suite quality. |
-
-### Iteration Guardians
-
-| Agent | Domain | Requirements file | Escalation path | Activation trigger |
-|---|---|---|---|---|
-| **Discovery Guardian** | Iteration quality for Discovery outputs — validates problem understanding, cross-domain coherence, assumption testing | `iterations/discovery/` (scratch space) | Coordinator → CEO | After Phase 1 agents deliver first outputs. Reviews iteration loop until GRADUATE. |
-| **Architecture Guardian** | Iteration quality for Architecture outputs — validates long-term soundness, traceability to graduated Discovery | `iterations/architecture/` (scratch space) | Coordinator → CEO | After CTO delivers architecture brief. Reviews iteration loop until GRADUATE. |
-| **Implementation Guardian** | Iteration quality for Implementation outputs — validates problem-solution fit, spec conformance, longevity (distinct from pod Guardian) | `iterations/implementation/` (scratch space) | Coordinator → CEO | EM triggers after sprint batch. Reviews per-pod iteration loop until GRADUATE. |
 
 ---
 
@@ -247,8 +234,7 @@ Every agent reads these files before producing any output:
 2. Fill in all `[PLACEHOLDER]` values
 3. Add the agent to this manifest: Role Directory table + Dependency Graph + Peer Integration Map (if applicable)
 4. Map the agent to the correct requirements file in the Role Directory table. Use the existing consolidated files — do not create a new requirements file unless the domain genuinely cannot fit into any existing one:
-   - `discovery-requirements.md` — legal, compliance, regulatory
-   - `security-requirements.md` — security, threat model, infra risk
+   - `compliance-requirements.md` — legal, regulatory, security, threat model
    - `business-requirements.md` — finance, marketing, revenue, data, ops, people, partnerships, risk
    - `engineering-requirements.md` — architecture, delivery, contracts, AI components
    - `product-requirements.md` — scope, user stories, missions

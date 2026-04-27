@@ -2,7 +2,7 @@
   "type": "internal",
   "name": "Internal Tool",
   "description": "Internal tools — ops automation, data platforms, admin tools, and workflow systems built for a known org",
-  "requirements_files": ["discovery", "security", "engineering", "product", "general"],
+  "requirements_files": ["compliance", "engineering", "product", "general"],
   "gates": {
     "pre-cto": ["clo", "ciso"],
     "pre-sprint1": ["mario"]
@@ -14,5 +14,5 @@
     "success": "What does success look like for the org? Include: time saved per week, error rate reduction, or specific process milestone this unblocks.",
     "risks": "What is the riskiest dependency — a system integration, data ownership question, user adoption, or what happens if this tool goes down during a critical operation?"
   },
-  "logs": ["engineering", "product", "operations"]
+  "logs": ["engineering", "product", "strategy"]
 }

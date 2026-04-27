@@ -13,7 +13,7 @@ Files starting with `_` are reserved (schema, docs) and are never treated as typ
   "type": "product",
   "name": "Software Product",
   "description": "Software product with users (app, CLI, platform)",
-  "requirements_files": ["discovery", "security", "engineering", "product", "design", "business", "general"],
+  "requirements_files": ["compliance", "engineering", "product", "design", "business", "general"],
   "gates": {
     "pre-cto": ["clo", "ciso"],
     "pre-sprint1": ["mario"]
@@ -25,7 +25,7 @@ Files starting with `_` are reserved (schema, docs) and are never treated as typ
     "success": "What does winning look like at 18 months?",
     "risks": "What is the riskiest assumption?"
   },
-  "logs": ["engineering", "product", "design", "operations", "people", "strategy"]
+  "logs": ["engineering", "product", "design", "strategy"]
 }
 ```
 
@@ -59,8 +59,7 @@ Valid values and their file mappings:
 
 | Value | File copied |
 |---|---|
-| `"discovery"` | `discovery-requirements.md` |
-| `"security"` | `security-requirements.md` |
+| `"compliance"` | `compliance-requirements.md` |
 | `"engineering"` | `engineering-requirements.md` |
 | `"product"` | `product-requirements.md` |
 | `"design"` | `design-requirements.md` |
@@ -117,11 +116,9 @@ Valid values and their file mappings:
 | `"engineering"` | `engineering-log.md` |
 | `"product"` | `product-log.md` |
 | `"design"` | `design-log.md` |
-| `"operations"` | `operations-log.md` |
-| `"people"` | `people-log.md` |
 | `"strategy"` | `strategy-log.md` |
 
-**Fallback if absent:** all 6 log files are copied.
+**Fallback if absent:** all 4 log files are copied.
 
 ---
 

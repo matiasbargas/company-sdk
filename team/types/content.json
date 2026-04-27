@@ -3,7 +3,7 @@
   "name": "Content Business",
   "description": "Content businesses — newsletters, courses, media, creative studios, and publishing.",
   "requirements_files": [
-    "discovery",
+    "compliance",
     "product",
     "business",
     "general"
@@ -21,8 +21,6 @@
   },
   "logs": [
     "product",
-    "operations",
-    "people",
     "strategy"
   ]
 }

@@ -3,7 +3,7 @@
   "name": "Service Business",
   "description": "Service businesses — agencies, consultancies, professional services, and freelance studios.",
   "requirements_files": [
-    "discovery",
+    "compliance",
     "business",
     "general"
   ],
@@ -20,8 +20,6 @@
   },
   "logs": [
     "product",
-    "operations",
-    "people",
     "strategy"
   ]
 }

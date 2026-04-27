@@ -2,7 +2,7 @@
   "type": "hardware",
   "name": "Physical Hardware Product",
   "description": "Physical product companies — consumer hardware, IoT devices, manufacturing, and supply chain",
-  "requirements_files": ["discovery", "security", "engineering", "product", "business", "general"],
+  "requirements_files": ["compliance", "engineering", "product", "business", "general"],
   "gates": {
     "pre-cto": ["clo", "ciso"],
     "pre-sprint1": ["mario"]
@@ -14,5 +14,5 @@
     "success": "What does winning look like? Include: units shipped, target COGS achieved, key regulatory certifications obtained, and which distribution channel is proven.",
     "risks": "What is the single riskiest assumption — manufacturing method, key component supplier availability, target COGS, required regulatory certification, or distribution channel access?"
   },
-  "logs": ["engineering", "product", "operations", "strategy"]
+  "logs": ["engineering", "product", "strategy"]
 }

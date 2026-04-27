@@ -19,10 +19,10 @@ A project type config tells `sdk-init` what requirements files and log files to 
   "description": "Software product with users (app, CLI, platform)",
 
   // Which requirements files to copy from project-template/.
-  // Valid values: "discovery" | "security" | "engineering" | "product"
+  // Valid values: "compliance" | "engineering" | "product"
   //               | "design" | "business" | "general"
-  // Omit files that don't apply to this type. Omitting the field copies all 7.
-  "requirements_files": ["discovery", "security", "engineering", "product", "design", "business", "general"],
+  // Omit files that don't apply to this type. Omitting the field copies all 6.
+  "requirements_files": ["compliance", "engineering", "product", "design", "business", "general"],
 
   // Compliance gates. Reflects actual risk posture — do not copy product defaults blindly.
   "gates": {
@@ -46,10 +46,9 @@ A project type config tells `sdk-init` what requirements files and log files to 
   },
 
   // Which log files to copy from project-template/.
-  // Valid values: "engineering" | "product" | "design"
-  //               | "operations" | "people" | "strategy"
-  // Omit files that don't apply. Omitting the field copies all 6.
-  "logs": ["engineering", "product", "design", "operations", "people", "strategy"]
+  // Valid values: "engineering" | "product" | "design" | "strategy"
+  // Omit files that don't apply. Omitting the field copies all 4.
+  "logs": ["engineering", "product", "design", "strategy"]
 }
 ```
 

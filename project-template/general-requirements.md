@@ -6,8 +6,7 @@ Release: [RELEASE]
 
 | Domain | File | Pending | In Progress | Done | Blocked | Last updated |
 |---|---|---|---|---|---|---|
-| Discovery (Legal + Security gate) | discovery-requirements.md | 0 | 0 | 0 | 0 | [date] |
-| Security | security-requirements.md | 0 | 0 | 0 | 0 | [date] |
+| Compliance (Legal + Security gate) | compliance-requirements.md | 0 | 0 | 0 | 0 | [date] |
 | Product | product-requirements.md | 0 | 0 | 0 | 0 | [date] |
 | Engineering (Architecture + Delivery) | engineering-requirements.md | 0 | 0 | 0 | 0 | [date] |
 | Design | design-requirements.md | 0 | 0 | 0 | 0 | [date] |
@@ -18,7 +17,7 @@ Release: [RELEASE]
 
 | Gate | Condition | Status |
 |---|---|---|
-| CTO unlock | CLO Done + CISO Done in discovery-requirements.md | Blocked |
+| CTO unlock | CLO Done + CISO Done in compliance-requirements.md | Blocked |
 | Sprint 0 | Engineering requirements Architecture section Done | Blocked |
 | Release seal | CEO validates project-map.md Section 11 | Blocked |
 

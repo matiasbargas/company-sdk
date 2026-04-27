@@ -2,7 +2,7 @@
   "type": "product",
   "name": "Software Product",
   "description": "Software product with users — app, CLI, consumer product, or platform",
-  "requirements_files": ["discovery", "security", "engineering", "product", "design", "business", "general"],
+  "requirements_files": ["compliance", "engineering", "product", "design", "business", "general"],
   "gates": {
     "pre-cto": ["clo", "ciso"],
     "pre-sprint1": ["mario"]
@@ -14,5 +14,5 @@
     "success": "What does winning look like at 18 months? Concrete: users, revenue, market position.",
     "risks": "What is the single riskiest assumption this product makes?"
   },
-  "logs": ["engineering", "product", "design", "operations", "people", "strategy"]
+  "logs": ["engineering", "product", "design", "strategy"]
 }
