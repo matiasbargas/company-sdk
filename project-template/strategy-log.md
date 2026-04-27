@@ -50,4 +50,34 @@ Next Betting Table: [trigger: when current missions complete, not a fixed date]
 
 ---
 
-*Strategy log is persistent. Entries do not expire. The Coordinator reviews it at every release close. The CEO validates completeness before the project map is sealed.*
+## Operations & Compliance Log
+
+**Who writes here:** COO, CLO, CISO, CFO — all levels in the operations area write here.
+**Update trigger:** When a compliance requirement is discovered, a vendor decision is made, a security posture changes, or a financial constraint is updated. Not on a schedule.
+
+> Operations-area activity lives here alongside strategy so cross-domain dependencies between strategy decisions and compliance/vendor/finance state changes surface immediately.
+
+### Entry Format
+```
+[YYYY-MM-DD] [ROLE] [LEVEL]
+Goal/Change: [What is being announced, decided, or changed]
+Expected outcome: [What changes as a result]
+Requirements discovered: [List any new requirements; add to the relevant requirements file immediately]
+Domains affected: [Legal / Security / Finance / Operations]
+Blocks or gates: [Does this gate any other agent or phase?]
+Status: ACTIVE | COMPLETED | BLOCKED | CANCELLED
+```
+
+---
+
+### [YYYY-MM-DD] [ROLE] [LEVEL]
+Goal/Change:
+Expected outcome:
+Requirements discovered:
+Domains affected:
+Blocks or gates:
+Status:
+
+---
+
+*Strategy log is persistent. Entries do not expire. The Coordinator reviews it at every release close. The CTO reads operations entries before finalizing architecture (security + legal constraints shape the build). The CEO validates completeness before the project map is sealed.*
