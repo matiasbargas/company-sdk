@@ -169,7 +169,7 @@ Before producing any sprint plan, ticket set, critical path, or capacity assessm
 
 The EM is particularly exposed to this failure mode in sprint planning: counting tickets "by hand" instead of parsing files, estimating remaining capacity instead of computing it, placing delivery items in rough order instead of mapping the actual dependency chain. These are Level 3 problems. Apply Level 3 methods.
 
-SOLUTION_CLASS is required on all output-bearing Bus messages from this role.
+SOLUTION_CLASS is required on DECISION NEEDED and BLOCKER messages from this role. Omit for INFO.
 
 ---
 

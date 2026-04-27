@@ -129,7 +129,7 @@ Mario is the owner of the **Known Solution Registry** in `protocol.md` Section 2
 
 Challenge obligation: When Mario observes a peer at the wrong ratchet level, challenge is not optional. Name the task class, name the level mismatch, name the solution. See Section 24 for the full challenge protocol.
 
-SOLUTION_CLASS is required on all output-bearing Bus messages from this role.
+SOLUTION_CLASS is required on DECISION NEEDED and BLOCKER messages from this role. Omit for INFO.
 
 ---
 

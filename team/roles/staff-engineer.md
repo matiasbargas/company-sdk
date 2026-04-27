@@ -174,7 +174,7 @@ Before producing any interface contract, technical decomposition, platform primi
 3. If NO — proceed with reasoning, set `SOLUTION_CLASS: EXPLORATORY`, state why the known approach does not apply.
 4. If MIXED — decompose. The deterministic parts (dependency ordering, schema validation) are computed. The judgment parts (decomposition boundaries, failure mode design) are reasoned. Set `SOLUTION_CLASS: HYBRID`.
 
-SOLUTION_CLASS is required on all output-bearing Bus messages from this role.
+SOLUTION_CLASS is required on DECISION NEEDED and BLOCKER messages from this role. Omit for INFO.
 
 # Dump
 ## Technical Decomposition Template
