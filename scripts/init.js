@@ -246,6 +246,7 @@ console.log(`    Release: ${releaseId}\n`);
 ensureDir(outputDir);
 ensureDir(path.join(outputDir, 'sessions', 'temp'));
 ensureDir(path.join(outputDir, 'sessions', 'permanent'));
+ensureDir(path.join(outputDir, 'iterations'));
 
 // Parse --domains "platform:CTO, ncs:CTO, lending:CFO"
 const parsedDomains = [];
@@ -454,7 +455,8 @@ fs.writeFileSync(sdkrcPath, JSON.stringify({
   squad: squadType,
   projectName,
   sdkPath: sdkRoot,
-  type: typeConfig.type
+  type: typeConfig.type,
+  riskTier: 'medium'
 }, null, 2) + '\n', 'utf8');
 console.log(`    ✓  .sdkrc  (release + squad + SDK path persisted)`);
 

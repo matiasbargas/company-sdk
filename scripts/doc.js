@@ -40,7 +40,7 @@ const command = args[0];
 const filePath = args[1];
 
 // spawn, dissolve, manifest, and index take a project-dir as second arg — no file-path requirement for other checks
-const spawnDissolveCommands = ['spawn', 'dissolve', 'manifest', 'index', 'study'];
+const spawnDissolveCommands = ['spawn', 'dissolve', 'manifest', 'index', 'study', 'iteration'];
 
 if (!command || (!filePath && !spawnDissolveCommands.includes(command)) || command === '--help' || command === '-h') {
   printHelp();
@@ -111,6 +111,10 @@ Examples:
   node scripts/doc.js read general-requirements.md --section "## Pending"
   node scripts/doc.js spawn ./my-project --name "Fatima Nairobi" --role CLO --level M3 --activated-by "Soren Aarhus (Coordinator)" --profile "Nairobi's startup energy..." --how "Async-first, writes before talking." --fun-fact "Nairobi has the only national park inside a capital city."
   node scripts/doc.js dissolve ./my-project --name "Fatima Nairobi" --dissolved-by "Lena Tbilisi (EM)" --reason "Mission complete"
+  node scripts/doc.js iteration ./my-project create --loop discovery --guardian "Yuki Osaka"
+  node scripts/doc.js iteration ./my-project review --loop discovery --cycle 1 --verdict iterate --feedback "Target user too broad"
+  node scripts/doc.js iteration ./my-project graduate --loop architecture --cycle 2
+  node scripts/doc.js iteration ./my-project list --loop discovery
 `);
 }
 
@@ -2047,6 +2051,306 @@ Status: OPEN
   }
 }
 
+// ─── Iteration loops (protocol Section 31) ──────────────────────────────────
+
+const VALID_LOOPS = ['discovery', 'architecture', 'implementation'];
+const VALID_STATUSES = ['draft', 'in-review', 'rework', 'graduated'];
+
+const LOOP_EXIT_CRITERIA = {
+  discovery: [
+    'Problem statement is falsifiable (can be proven wrong with evidence)',
+    'Target user is specific enough to exclude someone',
+    'Regulatory constraints are mapped with confidence levels (HIGH/MED/LOW)',
+    'At least one core assumption has been tested, not just stated',
+    'Non-goals are explicit and reasoned (not deferred — excluded with rationale)',
+    'The brief could survive a FRAMING-CHALLENGE without collapsing',
+  ],
+  architecture: [
+    'Architecture serves at 10x current scale without fundamental redesign',
+    'Every irreversible decision has a named alternative and documented rejection reason',
+    'Interface contracts are complete enough for independent pod execution',
+    'Make/buy/partner decisions have cost projections beyond year 1',
+    'Security model satisfies CISO non-negotiables (not deferred)',
+    'The design traces back to the graduated Discovery output (not a drifted version)',
+  ],
+  implementation: [
+    'Deliverables match the spec from the graduated Architecture output',
+    'No security shortcuts taken (auth, data handling, secrets management)',
+    'Code is maintainable by a team that did not write it',
+    'Edge cases from the pre-mortem are handled or explicitly deferred with reason',
+    'Instrumentation covers the friction points PM identified',
+    'The output creates user capability, not dependency (Constraint 1 check)',
+  ],
+};
+
+function cmdIteration() {
+  const projectDir = filePath ? path.resolve(filePath) : process.cwd();
+  const subcommand = args[2]; // create | review | list | graduate
+
+  if (!subcommand || !['create', 'review', 'list', 'graduate'].includes(subcommand)) {
+    console.error('Usage: sdk-doc iteration <project-dir> create|review|list|graduate [options]');
+    console.error('\n  create    --loop <type> [--pod <name>] [--guardian <name>]');
+    console.error('  review    --loop <type> --cycle <N> [--pod <name>] --verdict graduate|iterate --feedback "..."');
+    console.error('  list      [--loop <type>] [--status <status>]');
+    console.error('  graduate  --loop <type> --cycle <N> [--pod <name>]');
+    process.exit(1);
+  }
+
+  const iterOpts = {};
+  for (let i = 3; i < args.length; i++) {
+    if (args[i].startsWith('--') && args[i + 1]) {
+      iterOpts[args[i].slice(2)] = args[++i];
+    }
+  }
+
+  // ── list ──
+  if (subcommand === 'list') {
+    const loopFilter = iterOpts.loop;
+    const statusFilter = iterOpts.status;
+    const iterDir = path.join(projectDir, 'iterations');
+    if (!fs.existsSync(iterDir)) {
+      console.log('No iterations directory found.');
+      return;
+    }
+
+    const loops = loopFilter ? [loopFilter] : VALID_LOOPS;
+    let found = false;
+
+    console.log('\n  Iteration Loops\n');
+    console.log('  ' + 'Loop'.padEnd(18) + 'Cycle'.padEnd(8) + 'Status'.padEnd(14) + 'Guardian'.padEnd(22) + 'Pod');
+    console.log('  ' + '\u2500'.repeat(72));
+
+    for (const loop of loops) {
+      const loopDir = path.join(iterDir, loop);
+      if (!fs.existsSync(loopDir)) continue;
+
+      // For implementation, scan pod subdirs
+      const entries = fs.readdirSync(loopDir);
+      const mdFiles = entries.filter(f => f.endsWith('.md'));
+      const subdirs = entries.filter(f => fs.statSync(path.join(loopDir, f)).isDirectory());
+
+      for (const file of mdFiles) {
+        const content = fs.readFileSync(path.join(loopDir, file), 'utf8');
+        const fm = parseFrontmatter(content);
+        if (statusFilter && fm.status !== statusFilter) continue;
+        found = true;
+        const cycle = fm.cycle || file.replace('iter-', '').replace('.md', '');
+        console.log('  ' + loop.padEnd(18) + String(cycle).padEnd(8) + (fm.status || 'draft').padEnd(14) + (fm.guardian || '\u2014').padEnd(22) + (fm.pod || '\u2014'));
+      }
+
+      for (const sub of subdirs) {
+        const podDir = path.join(loopDir, sub);
+        const podFiles = fs.readdirSync(podDir).filter(f => f.endsWith('.md'));
+        for (const file of podFiles) {
+          const content = fs.readFileSync(path.join(podDir, file), 'utf8');
+          const fm = parseFrontmatter(content);
+          if (statusFilter && fm.status !== statusFilter) continue;
+          found = true;
+          const cycle = fm.cycle || file.replace('iter-', '').replace('.md', '');
+          console.log('  ' + loop.padEnd(18) + String(cycle).padEnd(8) + (fm.status || 'draft').padEnd(14) + (fm.guardian || '\u2014').padEnd(22) + (fm.pod || sub));
+        }
+      }
+    }
+
+    if (!found) console.log('  No iterations found.');
+    console.log('');
+    return;
+  }
+
+  // ── create ──
+  if (subcommand === 'create') {
+    const loop = iterOpts.loop;
+    const pod = iterOpts.pod;
+    const guardian = iterOpts.guardian || 'unassigned';
+
+    if (!loop || !VALID_LOOPS.includes(loop)) {
+      console.error(`--loop is required. Valid: ${VALID_LOOPS.join(', ')}`);
+      process.exit(1);
+    }
+    if (loop === 'implementation' && !pod) {
+      console.error('--pod is required for implementation loop iterations');
+      process.exit(1);
+    }
+
+    const loopDir = pod
+      ? path.join(projectDir, 'iterations', loop, pod.toLowerCase().replace(/[^a-z0-9]+/g, '-'))
+      : path.join(projectDir, 'iterations', loop);
+    fs.mkdirSync(loopDir, { recursive: true });
+
+    // Find next cycle number
+    const existing = fs.existsSync(loopDir)
+      ? fs.readdirSync(loopDir).filter(f => f.match(/^iter-\d+\.md$/))
+      : [];
+    const maxCycle = existing.reduce((max, f) => {
+      const n = parseInt(f.replace('iter-', '').replace('.md', ''), 10);
+      return n > max ? n : max;
+    }, 0);
+    const cycle = maxCycle + 1;
+    const filename = `iter-${String(cycle).padStart(3, '0')}.md`;
+    const today = new Date().toISOString().slice(0, 10);
+
+    const criteria = LOOP_EXIT_CRITERIA[loop];
+    const criteriaBlock = criteria.map(c => `- [ ] ${c}`).join('\n');
+
+    const content = `---
+loop: "${loop}"
+cycle: ${cycle}
+${pod ? `pod: "${pod}"\n` : ''}guardian: "${guardian}"
+status: "draft"
+created: "${today}"
+graduated: ""
+---
+
+## Input
+
+[What the team produced this cycle]
+
+## Guardian Review
+
+[Guardian's assessment \u2014 filled during review]
+
+## Exit Criteria
+
+${criteriaBlock}
+
+## Verdict
+
+[GRADUATE | ITERATE \u2014 reason]
+
+## Feedback
+
+[Specific items to address in next cycle, if ITERATE]
+`;
+
+    const destPath = path.join(loopDir, filename);
+    if (dryRun) {
+      console.log(`[DRY RUN] Would create: ${destPath}`);
+      console.log(content);
+      return;
+    }
+    fs.writeFileSync(destPath, content, 'utf8');
+    console.log(`\u2713  Created iteration: ${path.relative(process.cwd(), destPath)}`);
+    console.log(`   Loop: ${loop} | Cycle: ${cycle} | Guardian: ${guardian}${pod ? ' | Pod: ' + pod : ''}`);
+    return;
+  }
+
+  // ── review ──
+  if (subcommand === 'review') {
+    const loop = iterOpts.loop;
+    const cycle = parseInt(iterOpts.cycle, 10);
+    const pod = iterOpts.pod;
+    const verdict = iterOpts.verdict;
+    const feedback = iterOpts.feedback || '';
+
+    if (!loop || !VALID_LOOPS.includes(loop)) {
+      console.error(`--loop is required. Valid: ${VALID_LOOPS.join(', ')}`);
+      process.exit(1);
+    }
+    if (!cycle || isNaN(cycle)) {
+      console.error('--cycle <N> is required');
+      process.exit(1);
+    }
+    if (!verdict || !['graduate', 'iterate'].includes(verdict)) {
+      console.error('--verdict graduate|iterate is required');
+      process.exit(1);
+    }
+
+    const loopDir = pod
+      ? path.join(projectDir, 'iterations', loop, pod.toLowerCase().replace(/[^a-z0-9]+/g, '-'))
+      : path.join(projectDir, 'iterations', loop);
+    const filename = `iter-${String(cycle).padStart(3, '0')}.md`;
+    const iterPath = path.join(loopDir, filename);
+
+    if (!fs.existsSync(iterPath)) {
+      console.error(`Iteration file not found: ${iterPath}`);
+      process.exit(1);
+    }
+
+    let content = fs.readFileSync(iterPath, 'utf8');
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Update status in frontmatter
+    const newStatus = verdict === 'graduate' ? 'graduated' : 'rework';
+    content = content.replace(/^status:\s*"[^"]*"/m, `status: "${newStatus}"`);
+    if (verdict === 'graduate') {
+      content = content.replace(/^graduated:\s*"[^"]*"/m, `graduated: "${today}"`);
+    }
+
+    // Update verdict section
+    const verdictText = verdict === 'graduate'
+      ? `GRADUATE \u2014 All exit criteria passed. Output ready for canonical docs.`
+      : `ITERATE \u2014 ${feedback}`;
+    content = content.replace(
+      /## Verdict\n\n\[GRADUATE \| ITERATE .+\]/,
+      `## Verdict\n\n${verdictText}`
+    );
+
+    // Update feedback section if iterating
+    if (verdict === 'iterate' && feedback) {
+      content = content.replace(
+        /## Feedback\n\n\[Specific items.+\]/,
+        `## Feedback\n\n- ${feedback}`
+      );
+    }
+
+    if (dryRun) {
+      console.log(`[DRY RUN] Would update: ${iterPath}`);
+      console.log(content);
+      return;
+    }
+
+    fs.writeFileSync(iterPath, content, 'utf8');
+    const icon = verdict === 'graduate' ? '\u2713' : '\u21bb';
+    console.log(`${icon}  Iteration reviewed: ${path.relative(process.cwd(), iterPath)}`);
+    console.log(`   Verdict: ${verdict.toUpperCase()}${feedback ? ' \u2014 ' + feedback : ''}`);
+    return;
+  }
+
+  // ── graduate ──
+  if (subcommand === 'graduate') {
+    const loop = iterOpts.loop;
+    const cycle = parseInt(iterOpts.cycle, 10);
+    const pod = iterOpts.pod;
+
+    if (!loop || !VALID_LOOPS.includes(loop)) {
+      console.error(`--loop is required. Valid: ${VALID_LOOPS.join(', ')}`);
+      process.exit(1);
+    }
+    if (!cycle || isNaN(cycle)) {
+      console.error('--cycle <N> is required');
+      process.exit(1);
+    }
+
+    const loopDir = pod
+      ? path.join(projectDir, 'iterations', loop, pod.toLowerCase().replace(/[^a-z0-9]+/g, '-'))
+      : path.join(projectDir, 'iterations', loop);
+    const filename = `iter-${String(cycle).padStart(3, '0')}.md`;
+    const iterPath = path.join(loopDir, filename);
+
+    if (!fs.existsSync(iterPath)) {
+      console.error(`Iteration file not found: ${iterPath}`);
+      process.exit(1);
+    }
+
+    let content = fs.readFileSync(iterPath, 'utf8');
+    const today = new Date().toISOString().slice(0, 10);
+
+    content = content.replace(/^status:\s*"[^"]*"/m, `status: "graduated"`);
+    content = content.replace(/^graduated:\s*"[^"]*"/m, `graduated: "${today}"`);
+
+    if (dryRun) {
+      console.log(`[DRY RUN] Would graduate: ${iterPath}`);
+      return;
+    }
+
+    fs.writeFileSync(iterPath, content, 'utf8');
+    console.log(`\u2713  Iteration graduated: ${path.relative(process.cwd(), iterPath)}`);
+    console.log(`   Loop: ${loop} | Cycle: ${cycle} | Graduated: ${today}`);
+    console.log(`   Next: Coordinator triggers canonical doc flow (protocol.md Section 31.4)`);
+    return;
+  }
+}
+
 // ─── Dispatch ────────────────────────────────────────────────────────────────
 
 switch (command) {
@@ -2071,6 +2375,7 @@ switch (command) {
   case 'discovery':  cmdDiscovery();  break;
   case 'disagreement': cmdDisagreement(); break;
   case 'history':      cmdHistory();      break;
+  case 'iteration':    cmdIteration();    break;
   default:
     console.error(`Unknown command: "${command}"`);
     printHelp();
