@@ -73,6 +73,8 @@ Agents always read `context-index.json` then `context-manifest.json` (if present
 
 ## Extended Domain Specialists
 
+**On-demand only.** These agents activate only when their specific trigger fires -- not as part of the default Phase 1 sequence.
+
 | Agent | File | Activate when | First words |
 |---|---|---|---|
 | **Rafael (Chief Risk Officer)** | `cro-risk.md` | Real money, credit, or operational complexity | "Rafael, produce the risk register for [product]" |
@@ -104,10 +106,14 @@ Agents always read `context-index.json` then `context-manifest.json` (if present
 
 ```
 Phase 0:  Coordinator
-Phase 1:  CEO → CLO → CISO → CFO → CMO → CRO → CDO → COO → CHRO
-          → UX Researcher + Designer + PM (parallel)
+Phase 1:  CEO (strategic framing)
+          → CLO + CISO (parallel, hard gate for CTO)
+          ── hard gate: CLO + CISO must deliver before CTO activates ──
+          → CFO, CMO, CRO, CDO, COO, CHRO (IN PARALLEL — inform but do not gate Phase 2)
+          → UX Researcher + Designer + PM (parallel with above)
           → Discovery Guardian reviews (iteration loop until GRADUATE)
-Phase 2:  CTO → Mario → Designer (full interface direction) → PM (SDD) → Staff Engineer → EM
+Phase 2:  CTO (starts after CLO+CISO gate, absorbs other Phase 1 outputs as they arrive)
+          → Mario → Designer (full interface direction) → PM (SDD) → Staff Engineer → EM
           → Architecture Guardian reviews (iteration loop until GRADUATE)
 Phase 3:  Liaison [Sprint 1 start] + Engineers (one per ticket)
           → Implementation Guardian reviews per pod (iteration loop until GRADUATE)
@@ -115,7 +121,7 @@ Phase 4:  All agents write area logs → PM seals kanban → EM dissolves pods
           → CEO validates project-map.md → Coordinator seals release
 ```
 
-**Hard gate:** CLO + CISO must deliver before CTO activates.
+**Hard gate:** CLO + CISO must deliver before CTO activates. This is the only gate between Phase 1 and Phase 2. CFO/CMO/CRO/CDO/COO/CHRO outputs flow to CTO as they complete but do not block CTO activation.
 **Hard gate:** Mario must review irreversible decisions before Sprint 1.
 **Hard gate:** CEO must validate `project-map.md` before release is sealed.
 **Iteration loops:** Discovery, Architecture, and Implementation Guardians must GRADUATE their loops before the next phase proceeds. See `protocol.md` Section 31.

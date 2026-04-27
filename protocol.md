@@ -32,7 +32,7 @@ FROM: [Agent name] ([Role])
 TO: [Target agent] | ALL
 RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
 PRIORITY: INFO | DECISION NEEDED | BLOCKER
-SOLUTION_CLASS: KNOWN | EXPLORATORY | HYBRID  (required for CTO, Mario, EM, Staff Eng, Coordinator)
+SOLUTION_CLASS: KNOWN | EXPLORATORY | HYBRID  (required for DECISION NEEDED and BLOCKER only; omit for INFO)
 TAG: [optional — semantic metadata, see defined tags below. Multiple tags comma-separated.]
 MESSAGE:
   [Body -- plain text, no headers inside the message for INFO.
@@ -47,7 +47,7 @@ ESCALATION: [Role that gets this if no response by deadline] (required for DECIS
 - `DECISION NEEDED`: Work will be blocked within N days without a specific decision. The decision must be stated as a question with options.
 - `BLOCKER`: Work has stopped now. Immediate escalation within 4 hours if not resolved.
 
-**SOLUTION_CLASS — required on all output-bearing messages from CTO, Mario, EM, Staff Engineer, and Coordinator:**
+**SOLUTION_CLASS — required on DECISION NEEDED and BLOCKER messages from CTO, Mario, EM, Staff Engineer, and Coordinator. Omit for INFO.**
 
 ```
 SOLUTION_CLASS: KNOWN | EXPLORATORY | HYBRID
@@ -59,16 +59,16 @@ SOLUTION_CLASS: KNOWN | EXPLORATORY | HYBRID
 
 **Why this field exists:** Agents will cheerfully reason through solved problems — indefinitely, with confidence, and without flagging the approach as suboptimal. SOLUTION_CLASS makes the method visible in the transcript. A series of `EXPLORATORY` tags on a known problem class is a health signal. A `KNOWN` tag without naming the solution is incomplete and should be flagged by any agent who receives it.
 
-**COST_SIGNAL and TIME_SIGNAL — optional constraint fields on output-bearing messages:**
+**COST_SIGNAL and TIME_SIGNAL — optional, recommended on DECISION NEEDED and BLOCKER messages only:**
 
 ```
 COST_SIGNAL: LOW | MEDIUM | HIGH | UNKNOWN
 TIME_SIGNAL: [decision age in hours, or "N/A" for new decisions]
 ```
 
-These are forcing functions, not precise measurements. They make agents state, in writing, what a decision costs and how long it has been open. The Coordinator aggregates them in the decision dashboard. Cost and time are constraints every agent carries — not a dedicated agent's domain (see Section 29, Design Principles).
+These are forcing functions, not precise measurements. They make agents state, in writing, what a decision costs and how long it has been open. The Coordinator aggregates them in the decision dashboard. Cost and time are constraints every agent carries — not a dedicated agent's domain (see Section 29, Design Principles). INFO messages should not carry these fields. They add per-message overhead without informing decisions.
 
-**Rule:** An agent that files `EXPLORATORY` on a problem with a well-known solution must be challenged. The challenge is logged. This is not a procedural nicety — it is the protocol's primary defense against the reliability failure mode described in the Halloway Ratchet doctrine (see Section 24).
+**Rule:** An agent that files `EXPLORATORY` on a problem with a well-known solution must be challenged. The challenge is logged. This rule applies to DECISION NEEDED and BLOCKER messages. INFO messages do not carry SOLUTION_CLASS. This is not a procedural nicety — it is the protocol's primary defense against the reliability failure mode described in the Halloway Ratchet doctrine (see Section 24).
 
 **Message format extensions for specific roles:**
 
@@ -1231,7 +1231,7 @@ Before producing substantive output on any task, CTO, Mario, EM, Staff Engineer,
 3. If NO → proceed with reasoning. SOLUTION_CLASS is `EXPLORATORY`. The agent states why the known approach does not apply.
 4. If MIXED → decompose the task. The deterministic parts are handled deterministically. SOLUTION_CLASS is `HYBRID`.
 
-This pre-flight is not surfaced in every message — it is internal operating discipline. It surfaces in the SOLUTION_CLASS field and in the agent's output, which should never show reasoning about *how* to sort, compare, or validate when an algorithm exists.
+This pre-flight is internal operating discipline. It surfaces in the SOLUTION_CLASS field on DECISION NEEDED and BLOCKER messages. INFO messages do not carry SOLUTION_CLASS — the pre-flight still runs, but the classification is not emitted. The agent's output should never show reasoning about *how* to sort, compare, or validate when an algorithm exists.
 
 ### The revision trail signal
 
@@ -1248,7 +1248,7 @@ This pattern indicates the agent is at Level 1 on a problem that belongs at Leve
 **What it scans for:**
 - Any agent producing 3+ messages on the same task in a single session where each message revises the previous one
 - Any agent filing `EXPLORATORY` on a task type that appears in the Known Solution Registry below
-- Any `SOLUTION_CLASS` field omitted on an output-bearing message from CTO, Mario, EM, Staff Engineer, or Coordinator
+- Any `SOLUTION_CLASS` field omitted on a DECISION NEEDED or BLOCKER message from CTO, Mario, EM, Staff Engineer, or Coordinator
 
 **Output format:**
 ```
@@ -1419,9 +1419,10 @@ There are three loops, one per major phase. Each loop has its own Guardian role 
 
 **Discovery Loop (Phase 1)**
 - **What iterates:** Problem understanding, market constraints, regulatory map, user research, scope definition
-- **Participants:** All Phase 1 agents (CLO, CISO, CFO, CMO, CDO, COO, PM, Designer, UX Researcher)
+- **Participants:** All Phase 1 agents (CLO, CISO, CFO, CMO, CRO, CDO, COO, CHRO, PM, Designer, UX Researcher)
 - **Guardian:** Discovery Guardian
 - **Triggers:** Coordinator opens the loop after Phase 1 agents deliver their first outputs. Discovery Guardian reviews. Loop continues until exit criteria pass.
+- **Parallelism:** CLO + CISO run as a hard gate for CTO. CFO, CMO, CRO, CDO, COO, CHRO run in parallel -- their outputs inform Phase 2 but do not gate it. CTO activates once CLO + CISO deliver, absorbing other Phase 1 outputs as they arrive.
 
 **Architecture Loop (Phase 2)**
 - **What iterates:** Technical approach, interface contracts, make/buy/partner, platform design, security model
@@ -1539,9 +1540,11 @@ Iteration loops wrap AROUND existing hard gates — they do not replace them.
 ```
 Phase 1:  [Discovery Loop iterates] → Discovery Guardian GRADUATES
             ↓
-          CLO + CISO hard gate (unchanged)
+          CLO + CISO hard gate (unchanged) ← only gate between Phase 1 and Phase 2
+          CFO, CMO, CRO, CDO, COO, CHRO run in parallel — inform but do not gate Phase 2
             ↓
-Phase 2:  [Architecture Loop iterates] → Architecture Guardian GRADUATES
+Phase 2:  CTO starts after CLO+CISO gate (absorbs other Phase 1 outputs as they arrive)
+          [Architecture Loop iterates] → Architecture Guardian GRADUATES
             ↓
           Mario irreversibility gate (unchanged)
           Sprint 0 gate (unchanged)
@@ -1556,7 +1559,7 @@ Phase 4:  CEO validates project-map.md (unchanged)
           Coordinator seals release (unchanged)
 ```
 
-Hard gates check specific non-negotiable conditions. Iteration loops ensure the QUALITY of the work that reaches those gates. A graduated output can still fail a hard gate — the gate checks different things than the loop.
+Hard gates check specific non-negotiable conditions. Iteration loops ensure the QUALITY of the work that reaches those gates. A graduated output can still fail a hard gate — the gate checks different things than the loop. Phase 2 (CTO) is gated only by CLO + CISO, not by all Phase 1 agents completing. Other Phase 1 domain outputs are consumed by CTO as they become available.
 
 **Risk tier governs which loops activate.** See Section 32. Low-risk projects skip iteration loops entirely — hard gates still apply. The relationship diagram above shows the High-tier flow. Medium and Low tiers remove loops per the Gate Matrix.
 

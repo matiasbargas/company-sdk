@@ -22,34 +22,29 @@ PHASE 0 (Brief):
 
 PHASE 1 (Discovery):
   2. CEO            -- strategic framing, non-negotiables, decision authority
-  3. CLO            -- regulatory map, legal blockers → gates CTO
-  4. CISO           -- security non-negotiables → gates CTO
-  5. CFO            -- budget validation, runway model
-  6. CMO            -- market context, competitive landscape → informs CTO + PM
-  7. CRO            -- GTM model, pricing → informs PM + CFO
-  8. CDO            -- instrumentation plan → informs CTO data model
-  9. COO            -- vendor onboarding timelines → gates EM critical path
-  10. CHRO          -- team composition, hiring plan
-  10b. UX Researcher -- research plan, assumption testing, AI conversation analysis (parallel)
-  10c. Designer     -- design perspective brief, problem framing through design lens (parallel)
-  10d. PM           -- mission shaping informed by discovery outputs + design + research (parallel)
-  10e. Discovery Guardian -- iteration loop: reviews Discovery outputs against exit criteria.
-       Loop continues until GRADUATE. Scratch: iterations/discovery/. See protocol.md Section 31.
+  3. CLO + CISO     -- regulatory map + security non-negotiables (PARALLEL, both gate CTO)
+  ── hard gate: CLO + CISO must deliver before CTO activates ──
+  4. CFO, CMO, CRO, CDO, COO, CHRO  -- run IN PARALLEL, inform but do not gate Phase 2
+     Outputs flow to CTO and PM as they complete. Not sequential.
+  5. UX Researcher + Designer + PM   -- parallel with step 4
+  5b. Discovery Guardian -- iteration loop: reviews Discovery outputs against exit criteria.
+      Loop continues until GRADUATE. Scratch: iterations/discovery/. See protocol.md Section 31.
 
 PHASE 2 (Release Plan):
-  11. CTO           -- architecture brief, make/buy matrix, team sizing
-  12. Mario (Chief Engineer) -- irreversible decision review, cross-project coherence sign-off
-  13. PM            -- user story map, scope definition (refined from Phase 1 shaping)
-  14. Designer      -- full interface direction brief (all surfaces: screen, conversation, AI, voice)
-  15. Staff Engineer -- interface contracts, platform primitives
-  16. EM            -- mission pod composition, critical path, Sprint 0 gate
-  16b. Architecture Guardian -- iteration loop: reviews Architecture outputs against exit criteria.
+  6. CTO            -- architecture brief, make/buy matrix, team sizing
+                       (starts after CLO+CISO gate, absorbs other Phase 1 outputs as they arrive)
+  7. Mario (Chief Engineer) -- irreversible decision review, cross-project coherence sign-off
+  8. PM            -- user story map, scope definition (refined from Phase 1 shaping)
+  9. Designer      -- full interface direction brief (all surfaces: screen, conversation, AI, voice)
+  10. Staff Engineer -- interface contracts, platform primitives
+  11. EM            -- mission pod composition, critical path, Sprint 0 gate
+  11b. Architecture Guardian -- iteration loop: reviews Architecture outputs against exit criteria.
        Loop continues until GRADUATE. Scratch: iterations/architecture/. See protocol.md Section 31.
 
 PHASE 3 (Execution):
-  17. Liaison       -- activated at Sprint 1 start. Stays active until ship.
+  12. Liaison       -- activated at Sprint 1 start. Stays active until ship.
   [All execution layer agents remain active]
-  17b. Implementation Guardian -- iteration loop per pod: reviews deliverables against exit criteria.
+  12b. Implementation Guardian -- iteration loop per pod: reviews deliverables against exit criteria.
        Loop continues until GRADUATE. Scratch: iterations/implementation/<pod>/. See protocol.md Section 31.
 
 PHASE 4 (Completion):
@@ -61,7 +56,7 @@ PHASE 4 (Completion):
   Coordinator seals the project map only after CEO validation.
 ```
 
-**Critical gate:** CLO + CISO output is required before CTO starts architecture. This is the most commonly skipped step and the most expensive to skip.
+**Critical gate:** CLO + CISO output is required before CTO starts architecture. This is the most commonly skipped step and the most expensive to skip. Phase 2 (CTO) is gated ONLY by CLO + CISO -- not by all Phase 1 agents. CFO, CMO, CRO, CDO, COO, and CHRO outputs are consumed by CTO as they become available but do not block CTO activation.
 
 **Second critical gate:** Mario (Chief Engineer) reviews CTO's irreversible decisions before any implementation begins. Architecture that has not passed Mario's review before Sprint 1 is unreviewed architecture.
 
@@ -90,6 +85,8 @@ PHASE 4 (Completion):
 | **CHRO** | Hiring, onboarding, culture | `business-requirements.md` | CEO → Owner | New hires or team changes |
 
 ### Extended Domain Specialists
+
+**On-demand only.** Extended specialists activate ONLY when their specific trigger fires -- they are not part of the default Phase 1 sequence. They are on-demand consultants spawned when a project's domain requires their expertise, not default participants in every project.
 
 | Agent | Domain | Requirements file | Escalation path | Activation trigger |
 |---|---|---|---|---|
