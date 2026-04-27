@@ -1409,4 +1409,226 @@ If the answer to "should every agent think about this?" is yes, it is a constrai
 
 ---
 
-*Protocol v4.2. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, the Halloway Ratchet doctrine, TAG field, Kill Log, Negative Scope, Pre-Mortem gate, and design principles. Every agent references it. No agent duplicates it.*
+## 31. Iteration Loops
+
+The protocol's default flow is single-pass: agents deliver once per phase, gates check once, work advances. Iteration Loops replace that default with a refinement cycle where work circles on an idea until a dedicated Guardian validates it is genuinely ready for the long term.
+
+There are three loops, one per major phase. Each loop has its own Guardian role (a separate agent, not an existing role wearing a hat), an explicit exit criteria checklist, and a scratch space that keeps intermediate work out of canonical project documentation.
+
+### 31.1 The Three Loops
+
+**Discovery Loop (Phase 1)**
+- **What iterates:** Problem understanding, market constraints, regulatory map, user research, scope definition
+- **Participants:** All Phase 1 agents (CLO, CISO, CFO, CMO, CDO, COO, PM, Designer, UX Researcher)
+- **Guardian:** Discovery Guardian
+- **Triggers:** Coordinator opens the loop after Phase 1 agents deliver their first outputs. Discovery Guardian reviews. Loop continues until exit criteria pass.
+
+**Architecture Loop (Phase 2)**
+- **What iterates:** Technical approach, interface contracts, make/buy/partner, platform design, security model
+- **Participants:** CTO, Mario, Staff Engineer, Designer (interface direction), PM (SDD)
+- **Guardian:** Architecture Guardian
+- **Triggers:** Coordinator opens the loop after CTO delivers the architecture brief. Architecture Guardian reviews. Loop continues until exit criteria pass. Existing hard gates (Mario's irreversibility review, Sprint 0 gate, pre-mortem) still apply after graduation.
+
+**Implementation Loop (Phase 3, per pod)**
+- **What iterates:** Build quality, spec conformance, problem-solution fit, long-term maintainability
+- **Participants:** Engineers, EM, Staff Engineer, existing pod Guardian (code quality)
+- **Guardian:** Implementation Guardian (distinct from pod Guardian — checks problem-solution fit and longevity, not code quality)
+- **Triggers:** EM opens the loop after each sprint batch. Implementation Guardian reviews. Loop continues until exit criteria pass. Pod dissolution requires both pod Guardian sign-off (quality) AND Implementation Guardian graduation (fit).
+
+### 31.2 Exit Criteria
+
+Each loop has a checklist. All items must pass for the Guardian to stamp GRADUATE. The Guardian cannot waive checklist items — they can only recommend that the Coordinator escalate to CEO for an exception.
+
+**Discovery Loop exit criteria:**
+- [ ] Problem statement is falsifiable (can be proven wrong with evidence)
+- [ ] Target user is specific enough to exclude someone
+- [ ] Regulatory constraints are mapped with confidence levels (HIGH/MED/LOW)
+- [ ] At least one core assumption has been tested, not just stated
+- [ ] Non-goals are explicit and reasoned (not deferred — excluded with rationale)
+- [ ] The brief could survive a FRAMING-CHALLENGE without collapsing
+
+**Architecture Loop exit criteria:**
+- [ ] Architecture serves at 10x current scale without fundamental redesign
+- [ ] Every irreversible decision has a named alternative and documented rejection reason
+- [ ] Interface contracts are complete enough for independent pod execution
+- [ ] Make/buy/partner decisions have cost projections beyond year 1
+- [ ] Security model satisfies CISO's non-negotiables (not deferred)
+- [ ] The design traces back to the graduated Discovery output (not a drifted version)
+
+**Implementation Loop exit criteria:**
+- [ ] Deliverables match the spec from the graduated Architecture output (not a drifted interpretation)
+- [ ] No security shortcuts taken (auth, data handling, secrets management)
+- [ ] Code is maintainable by a team that did not write it
+- [ ] Edge cases from the pre-mortem are handled or explicitly deferred with reason
+- [ ] Instrumentation covers the friction points PM identified in product-requirements.md
+- [ ] The output creates user capability, not dependency (Constraint 1 check)
+
+### 31.3 Scratch Space
+
+Iteration work lives in `iterations/`, outside canonical project documentation. Only graduated outputs flow into requirements files, area logs, and history.md.
+
+```
+iterations/
+  discovery/
+    iter-001.md         ← first pass
+    iter-002.md         ← guardian feedback incorporated
+    iter-003.md         ← graduated
+  architecture/
+    iter-001.md
+    iter-002.md         ← graduated
+  implementation/
+    pod-auth/
+      iter-001.md
+      iter-002.md       ← graduated
+    pod-payments/
+      iter-001.md
+```
+
+**Iteration file format:**
+
+```markdown
+---
+loop: discovery | architecture | implementation
+cycle: 1
+pod: [pod name — implementation loop only]
+guardian: [Guardian name]
+status: draft | in-review | rework | graduated
+created: YYYY-MM-DD
+graduated: YYYY-MM-DD
+---
+
+## Input
+[What the team produced this cycle]
+
+## Guardian Review
+[Guardian's assessment — filled during review]
+
+## Exit Criteria
+- [x] or [ ] per checklist item from Section 31.2
+
+## Verdict
+GRADUATE | ITERATE — [reason]
+
+## Feedback (if ITERATE)
+- [Specific item to address in next cycle]
+```
+
+**Rules:**
+- Iteration files are append-only. Previous cycles are never edited — new cycles get new files.
+- Agents do NOT load iteration files during normal context loading. They are loaded only during active iteration review (load_when: `iteration-review`).
+- The Guardian's review in each iteration file is the permanent record of what was considered and why.
+- When a Guardian stamps GRADUATE, the Coordinator triggers the flow of final content into canonical docs. The iteration file's `graduated` date is set.
+
+### 31.4 Graduation Process
+
+When a Guardian stamps GRADUATE:
+
+1. Guardian sends a Bus message to Coordinator: `PRIORITY: INFO`, `TAG: ITERATION-GRADUATED`, with the loop type and cycle number.
+2. Coordinator reads the graduated iteration file.
+3. Coordinator routes the final content to the appropriate agents for canonical doc writes:
+   - Discovery graduation → PM updates product-requirements.md, CLO updates discovery-requirements.md, etc.
+   - Architecture graduation → CTO updates engineering-requirements.md, Staff Engineer finalizes contracts
+   - Implementation graduation → EM triggers pod review flow (existing Section 8a)
+4. Coordinator logs the graduation to the relevant area log.
+5. If the graduation represents a consequential decision, the Guardian or Coordinator logs it to history.md.
+
+### 31.5 Relationship to Existing Gates
+
+Iteration loops wrap AROUND existing hard gates — they do not replace them.
+
+```
+Phase 1:  [Discovery Loop iterates] → Discovery Guardian GRADUATES
+            ↓
+          CLO + CISO hard gate (unchanged)
+            ↓
+Phase 2:  [Architecture Loop iterates] → Architecture Guardian GRADUATES
+            ↓
+          Mario irreversibility gate (unchanged)
+          Sprint 0 gate (unchanged)
+          Pre-mortem gate (unchanged)
+            ↓
+Phase 3:  [Implementation Loop iterates per pod] → Implementation Guardian GRADUATES
+            ↓
+          Pod Guardian final gate (unchanged — code quality)
+          Pod dissolution (unchanged)
+            ↓
+Phase 4:  CEO validates project-map.md (unchanged)
+          Coordinator seals release (unchanged)
+```
+
+Hard gates check specific non-negotiable conditions. Iteration loops ensure the QUALITY of the work that reaches those gates. A graduated output can still fail a hard gate — the gate checks different things than the loop.
+
+**Risk tier governs which loops activate.** See Section 32. Low-risk projects skip iteration loops entirely — hard gates still apply. The relationship diagram above shows the High-tier flow. Medium and Low tiers remove loops per the Gate Matrix.
+
+### 31.6 Guardian Authority
+
+- Guardians have REVIEW authority, not WRITE authority over canonical docs. They assess and verdict; they do not directly modify requirements files or area logs.
+- Guardians can open Structured Disagreements (Section 29) against domain agents whose output they believe does not meet exit criteria.
+- Guardians cannot block indefinitely. If a loop has not graduated after 3 cycles, the Guardian must escalate to CEO with a written assessment of what is preventing graduation. The CEO decides: iterate once more, graduate with conditions, or kill the mission.
+- Guardians use standard Bus messages. `TAG: ITERATION-REVIEW` for assessments, `TAG: ITERATION-GRADUATED` for graduation.
+
+### 31.7 CLI Commands
+
+```bash
+# Create a new iteration cycle
+sdk-doc iteration <project-dir> create --loop discovery|architecture|implementation [--pod <pod-name>] [--guardian <name>]
+
+# Record guardian review and verdict
+sdk-doc iteration <project-dir> review --loop <type> --cycle <N> [--pod <pod-name>] --verdict graduate|iterate --feedback "..."
+
+# List iterations with status
+sdk-doc iteration <project-dir> list [--loop <type>] [--status draft|in-review|rework|graduated]
+
+# Graduate an iteration (sets graduated date, triggers canonical doc flow)
+sdk-doc iteration <project-dir> graduate --loop <type> --cycle <N> [--pod <pod-name>]
+```
+
+---
+
+## 32. Risk Tiers
+
+Not every project needs every gate. The Coordinator assigns a risk tier at Phase 0 based on the CEO brief. The tier determines which gates and loops are active.
+
+### Tier Assignment
+
+The Coordinator evaluates:
+- Does the project handle user PII, financial data, or regulated assets? → High
+- Does the project have irreversible infrastructure decisions or multi-year commitments? → High
+- Is the project a new product or a significant pivot? → Medium
+- Is the project a feature increment, internal tool, or low-stakes experiment? → Low
+
+When in doubt, tier up. Downgrading mid-project requires CEO approval logged to history.md.
+
+### Gate Matrix
+
+| Gate | Low | Medium | High |
+|---|---|---|---|
+| CLO + CISO hard gate | Required | Required | Required |
+| Discovery Iteration Loop | Skip | Skip | Required |
+| Architecture Iteration Loop | Skip | Required | Required |
+| Implementation Iteration Loop | Skip | Optional (EM triggers) | Required |
+| Mario irreversibility gate | Required | Required | Required |
+| Sprint 0 gate | Required | Required | Required |
+| Pre-mortem | Optional | Required | Required |
+| CEO release seal gate | Required | Required | Required |
+
+**"Required"** = must pass before the next phase. **"Optional"** = activated if the Coordinator or relevant domain lead judges it necessary. **"Skip"** = not activated unless the tier is upgraded.
+
+### Tier in .sdkrc
+
+The risk tier is persisted in `.sdkrc`:
+```json
+{
+  "riskTier": "low"
+}
+```
+
+`sdk-status` and `sdk-health` display the active tier. `sdk-gate-check` skips gates not active for the current tier.
+
+### Tier Override
+
+Any agent can request a tier upgrade by sending a DECISION NEEDED Bus message to the Coordinator with the reason. The Coordinator upgrades immediately and logs to history.md. Tier downgrades require CEO approval.
+
+---
+
+*Protocol v4.3. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, the Halloway Ratchet doctrine, TAG field, Kill Log, Negative Scope, Pre-Mortem gate, design principles, iteration loops, and risk tiers. Every agent references it. No agent duplicates it.*
