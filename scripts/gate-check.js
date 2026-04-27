@@ -9,7 +9,7 @@
  *   node scripts/gate-check.js <project-dir> --all            # Run all gates
  *
  * Gates:
- *   CLO + CISO gate: discovery-requirements.md must show both Done before CTO activates.
+ *   CLO + CISO gate: compliance-requirements.md must show both Done before CTO activates.
  *   Mario gate:      history.md must contain a Mario sign-off entry before Sprint 1 starts.
  */
 
@@ -28,7 +28,7 @@ Usage:
   node scripts/gate-check.js <project-dir> --all          # All gates
 
 Gates:
-  CLO + CISO    — discovery-requirements.md must show both Done before CTO activates.
+  CLO + CISO    — compliance-requirements.md must show both Done before CTO activates.
   Mario         — history.md must contain a Mario sign-off entry before Sprint 1 starts.
   Neg. Scope    — Explicit Non-Goals section required (checked with discovery + mario gates).
   Pre-mortem    — Pre-mortem section with 3 failure modes, 2 indicators, Owner review.
@@ -43,7 +43,7 @@ const projectDir    = path.resolve(args[0]);
 const runMario      = args.includes('--mario') || args.includes('--all');
 const runPreMortem  = args.includes('--pre-mortem') || args.includes('--all');
 const runDiscovery  = (!args.includes('--mario') && !args.includes('--pre-mortem')) || args.includes('--all');
-const discoveryFile = path.join(projectDir, 'discovery-requirements.md');
+const discoveryFile = path.join(projectDir, 'compliance-requirements.md');
 const historyFile   = path.join(projectDir, 'history.md');
 
 // ─── Load type config for this project ───────────────────────────────────────
@@ -120,7 +120,7 @@ const warnings = [];
 
 if (runDiscovery && (gateRunClo || gateRunCiso)) {
   if (!fs.existsSync(discoveryFile)) {
-    errors.push(`discovery-requirements.md not found in ${projectDir}\n    Has this project been bootstrapped? Run: node scripts/init.js <name>\n    To clear: run sdk-init <project-name> to scaffold the project, or create discovery-requirements.md manually.`);
+    errors.push(`compliance-requirements.md not found in ${projectDir}\n    Has this project been bootstrapped? Run: node scripts/init.js <name>\n    To clear: run sdk-init <project-name> to scaffold the project, or create compliance-requirements.md manually.`);
   } else {
     const content = fs.readFileSync(discoveryFile, 'utf8');
 
@@ -140,21 +140,21 @@ if (runDiscovery && (gateRunClo || gateRunCiso)) {
 
     if (gateRunClo) {
       if (!legalStatus) {
-        errors.push('CLO (Legal) gate status not found in Gate Status table.\n    To clear: activate CLO — "Camila, we need a regulatory map for [project]. Read discovery-requirements.md."');
+        errors.push('CLO (Legal) gate status not found in Gate Status table.\n    To clear: activate CLO — "Camila, we need a regulatory map for [project]. Read compliance-requirements.md."');
       } else if (legalStatus.toLowerCase() !== 'done') {
-        errors.push(`CLO (Legal) gate is "${legalStatus}" — must be "Done" before CTO activates.\n    To clear: activate CLO — "Camila, we need a regulatory map for [project]. Read discovery-requirements.md."`);
+        errors.push(`CLO (Legal) gate is "${legalStatus}" — must be "Done" before CTO activates.\n    To clear: activate CLO — "Camila, we need a regulatory map for [project]. Read compliance-requirements.md."`);
       }
       if (!hasJurisdictions) {
-        errors.push('No jurisdictions declared in discovery-requirements.md.\n    Add a "## Jurisdictions" section listing: incorporation, employee locations, user locations, data processing locations, money handling locations.\n    To clear: add a "## Jurisdictions" section to discovery-requirements.md listing incorporation location, user locations, and data handling locations.');
+        errors.push('No jurisdictions declared in compliance-requirements.md.\n    Add a "## Jurisdictions" section listing: incorporation, employee locations, user locations, data processing locations, money handling locations.\n    To clear: add a "## Jurisdictions" section to compliance-requirements.md listing incorporation location, user locations, and data handling locations.');
       }
       if (hasPendingLegal) warnings.push('CLO section still has pending items. Confirm all are intentionally deferred before marking Done.');
     }
 
     if (gateRunCiso) {
       if (!secStatus) {
-        errors.push('CISO (Security) gate status not found in Gate Status table.\n    To clear: activate CISO — "CISO, run a threat model for [project]. Read security-requirements.md."');
+        errors.push('CISO (Security) gate status not found in Gate Status table.\n    To clear: activate CISO — "CISO, run a threat model for [project]. Read compliance-requirements.md."');
       } else if (secStatus.toLowerCase() !== 'done') {
-        errors.push(`CISO (Security) gate is "${secStatus}" — must be "Done" before CTO activates.\n    To clear: activate CISO — "CISO, run a threat model for [project]. Read security-requirements.md."`);
+        errors.push(`CISO (Security) gate is "${secStatus}" — must be "Done" before CTO activates.\n    To clear: activate CISO — "CISO, run a threat model for [project]. Read compliance-requirements.md."`);
       }
       if (hasPendingSec) warnings.push('CISO section still has pending items. Confirm all are intentionally deferred before marking Done.');
     }
@@ -204,7 +204,7 @@ if (runMario && gateRunMario) {
 
 // ─── Negative Scope Gate ─────────────────────────────────────────────────────
 // Checks for Explicit Non-Goals section with at least 2 top-level items.
-// Applied to discovery-requirements.md (pre-CTO) and product/engineering-requirements.md (pre-Sprint1).
+// Applied to compliance-requirements.md (pre-CTO) and product/engineering-requirements.md (pre-Sprint1).
 
 function checkNegativeScope(filePath, label) {
   if (!fs.existsSync(filePath)) return; // file not present — don't add error for missing file here
@@ -234,7 +234,7 @@ function checkNegativeScope(filePath, label) {
 }
 
 if (runDiscovery) {
-  checkNegativeScope(discoveryFile, 'discovery-requirements.md');
+  checkNegativeScope(discoveryFile, 'compliance-requirements.md');
 }
 
 if (runMario) {

@@ -336,10 +336,10 @@ console.log('\n═══ Intent Resolver ═══\n');
 
   // inferLogFile
   assert('inferLogFile CTO → engineering-log.md', inferLogFile('CTO') === 'engineering-log.md');
-  assert('inferLogFile CLO → operations-log.md', inferLogFile('CLO') === 'operations-log.md');
+  assert('inferLogFile CLO → strategy-log.md', inferLogFile('CLO') === 'strategy-log.md');
   assert('inferLogFile PM → product-log.md', inferLogFile('PM') === 'product-log.md');
   assert('inferLogFile CEO → strategy-log.md', inferLogFile('CEO') === 'strategy-log.md');
-  assert('inferLogFile CHRO → people-log.md', inferLogFile('CHRO') === 'people-log.md');
+  assert('inferLogFile CHRO → product-log.md', inferLogFile('CHRO') === 'product-log.md');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

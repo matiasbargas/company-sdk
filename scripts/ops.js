@@ -144,8 +144,8 @@ registerCheck('decision-needed-age', (projectDir) => {
 
 registerCheck('clo-ciso-gate', (projectDir) => {
   const issues = [], notices = [];
-  const content = safeRead(path.join(projectDir, 'discovery-requirements.md'));
-  if (!content) { notices.push('discovery-requirements.md not found.'); return { name: 'clo-ciso-gate', status: 'pass', issues, notices }; }
+  const content = safeRead(path.join(projectDir, 'compliance-requirements.md'));
+  if (!content) { notices.push('compliance-requirements.md not found.'); return { name: 'clo-ciso-gate', status: 'pass', issues, notices }; }
   const cloMatch = content.match(/CLO.*?:\s*(Done|Pending|In Progress|Blocked)/i);
   const cisoMatch = content.match(/CISO.*?:\s*(Done|Pending|In Progress|Blocked)/i);
   const cloDone = cloMatch && /done/i.test(cloMatch[1]);
@@ -243,7 +243,7 @@ registerCheck('current-status-staleness', (projectDir) => {
 registerCheck('requirements-staleness', (projectDir) => {
   const issues = [], notices = [];
   const reqFiles = [
-    'general-requirements.md', 'discovery-requirements.md', 'security-requirements.md',
+    'general-requirements.md', 'compliance-requirements.md',
     'engineering-requirements.md', 'product-requirements.md', 'design-requirements.md',
     'business-requirements.md', 'research-requirements.md',
   ];
@@ -306,8 +306,8 @@ registerCheck('bu-aggregation-assist', (projectDir) => {
   const buMap = {
     'Engineering':       { reqs: 'engineering-requirements.md', log: 'engineering-log.md' },
     'Product':           { reqs: 'product-requirements.md',     log: 'product-log.md' },
-    'Legal & Security':  { reqs: 'discovery-requirements.md',   log: 'operations-log.md' },
-    'Finance & Revenue': { reqs: 'business-requirements.md',    log: 'operations-log.md' },
+    'Legal & Security':  { reqs: 'compliance-requirements.md',   log: 'strategy-log.md' },
+    'Finance & Revenue': { reqs: 'business-requirements.md',    log: 'strategy-log.md' },
     'Research':          { reqs: 'research-requirements.md',    log: 'research-log.md' },
   };
   for (const [bu, files] of Object.entries(buMap)) {

@@ -125,8 +125,7 @@ const typeConfig = loadTypeConfig(projectType);
 
 // Requirements file name mapping
 const REQUIREMENTS_MAP = {
-  discovery:   'discovery-requirements.md',
-  security:    'security-requirements.md',
+  compliance:  'compliance-requirements.md',
   engineering: 'engineering-requirements.md',
   product:     'product-requirements.md',
   design:      'design-requirements.md',
@@ -139,8 +138,6 @@ const LOGS_MAP = {
   engineering: 'engineering-log.md',
   product:     'product-log.md',
   design:      'design-log.md',
-  operations:  'operations-log.md',
-  people:      'people-log.md',
   strategy:    'strategy-log.md',
 };
 
@@ -246,7 +243,6 @@ console.log(`    Release: ${releaseId}\n`);
 ensureDir(outputDir);
 ensureDir(path.join(outputDir, 'sessions', 'temp'));
 ensureDir(path.join(outputDir, 'sessions', 'permanent'));
-ensureDir(path.join(outputDir, 'iterations'));
 
 // Parse --domains "platform:CTO, ncs:CTO, lending:CFO"
 const parsedDomains = [];
@@ -455,8 +451,7 @@ fs.writeFileSync(sdkrcPath, JSON.stringify({
   squad: squadType,
   projectName,
   sdkPath: sdkRoot,
-  type: typeConfig.type,
-  riskTier: 'medium'
+  type: typeConfig.type
 }, null, 2) + '\n', 'utf8');
 console.log(`    ✓  .sdkrc  (release + squad + SDK path persisted)`);
 

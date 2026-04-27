@@ -50,8 +50,7 @@ const config = {
         'research-backlog-aging',
       ],
       watchFiles: [
-        'discovery-requirements.md',
-        'operations-log.md',
+        'compliance-requirements.md',
       ],
     },
   },
