@@ -94,6 +94,7 @@ sdk-doc study <project-dir> list       # list all studies
 sdk-doc decision history.md --decision "..." --context "..." --made-by [Role]
 sdk-doc log <area-log> --role X --level Y --goal "..." --status completed
 sdk-doc append <file> --section "## Section" --content "..."
+sdk-doc bu-status <project-dir> [--domain X] [--role Y]  # auto-generate BU Status Message
 
 # Gates and quality
 sdk-gate-check <project-dir>           # CLO + CISO gate
