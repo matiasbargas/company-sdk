@@ -76,9 +76,9 @@ Full activation sequence per `AGENTS.md`. Abbreviated here for reference:
 |------|-------|-------|------|
 | Coordinator | M3 | Strategic | Release management, org memory |
 | CEO | M4 | Strategic | Company direction, strategic brief |
-| CLO | M3 | Domain | Legal, `discovery-requirements.md` |
+| CLO | M3 | Domain | Legal, `compliance-requirements.md` |
 | CFO | M3 | Domain | Finance, runway, `business-requirements.md` |
-| CISO | M3 | Domain | Security, threat model, `security-requirements.md` |
+| CISO | M3 | Domain | Security, threat model, `compliance-requirements.md` |
 | CMO | M3 | Domain | Marketing, positioning, `business-requirements.md` |
 | CRO | M3 | Domain | Revenue, GTM, `business-requirements.md` |
 | CDO | M3 | Domain | Data, instrumentation, `business-requirements.md` |
