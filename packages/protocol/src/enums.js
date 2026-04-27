@@ -52,7 +52,7 @@ const KILL_CLASS = Object.freeze({
   EXECUTION_STALLED: 'EXECUTION_STALLED',
 });
 
-/** Roles that MUST include SOLUTION_CLASS on output-bearing messages */
+/** Roles that MUST include SOLUTION_CLASS on DECISION NEEDED and BLOCKER messages */
 const SOLUTION_CLASS_REQUIRED_ROLES = Object.freeze([
   'cto', 'chief engineer', 'mario', 'em', 'staff engineer', 'coordinator',
 ]);

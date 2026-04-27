@@ -156,29 +156,56 @@ console.log('\n  test-validate.js');
   assert(result.valid === false, 'Bad solutionClass: fails');
 }
 
-// ── SOLUTION_CLASS required for CTO ─────────────────────────────────────
+// ── SOLUTION_CLASS NOT required for CTO on INFO ────────────────────────
 {
   const result = validateBusMessage({
     from: 'CTO',
     to: 'ALL',
     release: 'v2026.Q2.2',
     priority: 'INFO',
-    message: 'Missing SC from CTO.',
+    message: 'INFO from CTO without SC is fine.',
   });
-  assert(result.valid === false, 'CTO without SOLUTION_CLASS: fails');
-  assert(result.errors.some(e => e.includes('SOLUTION_CLASS required')), 'CTO without SC: correct error');
+  assert(result.valid === true, 'CTO INFO without SOLUTION_CLASS: passes');
 }
 
-// ── SOLUTION_CLASS required for Mario ───────────────────────────────────
+// ── SOLUTION_CLASS NOT required for Mario on INFO ──────────────────────
 {
   const result = validateBusMessage({
     from: 'Mario (Chief Engineer)',
     to: 'CTO',
     release: 'v2026.Q2.2',
     priority: 'INFO',
-    message: 'Missing SC from Mario.',
+    message: 'INFO from Mario without SC is fine.',
   });
-  assert(result.valid === false, 'Mario without SOLUTION_CLASS: fails');
+  assert(result.valid === true, 'Mario INFO without SOLUTION_CLASS: passes');
+}
+
+// ── SOLUTION_CLASS required for CTO on DECISION NEEDED ─────────────────
+{
+  const result = validateBusMessage({
+    from: 'CTO',
+    to: 'CEO',
+    release: 'v2026.Q2.2',
+    priority: 'DECISION NEEDED',
+    message: 'Missing SC from CTO on decision.',
+    decisionBy: '2026-04-20',
+    escalation: 'CEO',
+  });
+  assert(result.valid === false, 'CTO DECISION NEEDED without SOLUTION_CLASS: fails');
+  assert(result.errors.some(e => e.includes('SOLUTION_CLASS required')), 'CTO DECISION NEEDED without SC: correct error');
+}
+
+// ── SOLUTION_CLASS required for Mario on BLOCKER ───────────────────────
+{
+  const result = validateBusMessage({
+    from: 'Mario (Chief Engineer)',
+    to: 'CTO',
+    release: 'v2026.Q2.2',
+    priority: 'BLOCKER',
+    message: 'Missing SC from Mario on blocker.',
+    escalation: 'CTO',
+  });
+  assert(result.valid === false, 'Mario BLOCKER without SOLUTION_CLASS: fails');
 }
 
 // ── SOLUTION_CLASS NOT required for PM ──────────────────────────────────

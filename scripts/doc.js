@@ -1529,14 +1529,14 @@ function cmdBus() {
     process.exit(1);
   }
 
-  // Enforce SOLUTION_CLASS on output-bearing messages from technical roles
+  // Enforce SOLUTION_CLASS on DECISION NEEDED and BLOCKER messages from technical roles
   const technicalRoles = ['cto', 'mario', 'chief engineer', 'em', 'staff engineer', 'coordinator'];
   const fromLower = (from || '').toLowerCase();
   const isTechnicalRole = technicalRoles.some(r => fromLower.includes(r));
-  const isOutputBearing = priority !== 'INFO' || message.length > 50; // INFO with substantial content is output-bearing
+  const isDecisionOrBlocker = priority === 'DECISION NEEDED' || priority === 'BLOCKER';
 
-  if (isTechnicalRole && isOutputBearing && !solutionClass) {
-    console.error(`Error: SOLUTION_CLASS is required for output-bearing messages from ${from}.`);
+  if (isTechnicalRole && isDecisionOrBlocker && !solutionClass) {
+    console.error(`Error: SOLUTION_CLASS is required on DECISION NEEDED and BLOCKER messages from ${from}.`);
     console.error('Add --solution-class KNOWN|EXPLORATORY|HYBRID');
     process.exit(1);
   }

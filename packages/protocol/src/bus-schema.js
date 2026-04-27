@@ -19,7 +19,7 @@ const BUS_MESSAGE_SCHEMA = {
     to:            { type: 'string', minLength: 1, description: 'Target agent name, Role, or ALL' },
     release:       { type: 'string', pattern: RELEASE_ID_RE.source, description: 'Release ID: vYYYY.QN.N' },
     priority:      { type: 'string', enum: Object.values(PRIORITY) },
-    solutionClass: { type: 'string', enum: Object.values(SOLUTION_CLASS), description: 'Required for CTO, Mario, EM, Staff Eng, Coordinator' },
+    solutionClass: { type: 'string', enum: Object.values(SOLUTION_CLASS), description: 'Required on DECISION NEEDED and BLOCKER from CTO, Mario, EM, Staff Eng, Coordinator' },
     tags:          { type: 'array', items: { type: 'string' }, description: 'Semantic metadata tags' },
     costSignal:    { type: 'string', enum: Object.values(COST_SIGNAL) },
     timeSignal:    { type: 'string', description: 'Decision age in hours, or N/A' },
@@ -48,12 +48,12 @@ function validateBusRules(msg) {
     if (!msg.escalation) errors.push('BLOCKER requires ESCALATION field');
   }
 
-  // SOLUTION_CLASS required for certain roles
-  if (msg.from) {
+  // SOLUTION_CLASS required for DECISION NEEDED and BLOCKER from certain roles (omit for INFO)
+  if (msg.from && msg.priority !== PRIORITY.INFO) {
     const fromLower = msg.from.toLowerCase();
     const requiresSC = SOLUTION_CLASS_REQUIRED_ROLES.some(r => fromLower.includes(r));
     if (requiresSC && !msg.solutionClass) {
-      errors.push(`SOLUTION_CLASS required for messages from ${msg.from}`);
+      errors.push(`SOLUTION_CLASS required on DECISION NEEDED and BLOCKER messages from ${msg.from}`);
     }
   }
 
