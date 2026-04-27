@@ -1,4 +1,4 @@
-<!-- AI BOOTSTRAP — company-sdk v4.0.0 / protocol v4.2 -->
+<!-- AI BOOTSTRAP — company-sdk v6.0.0 / protocol v4.3 -->
 <!-- Read this file first. It is the complete operating context for this project. -->
 <!-- After reading this file, follow the LOAD ORDER below to activate. -->
 
