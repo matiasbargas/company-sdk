@@ -172,6 +172,65 @@
   .phase-header h2 { font-size: 22px; font-weight: 600; }
   .phase-header p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 
+  /* ── Risk Tier Selector ── */
+  .risk-tier-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+    padding: 12px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .risk-tier-bar .label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--text-muted);
+    margin-right: 4px;
+  }
+  .tier-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .tier-btn:hover { background: var(--surface2); color: var(--text); }
+  .tier-btn.active-tier { background: rgba(88,166,255,.15); color: var(--blue); border-color: var(--blue); }
+  .tier-btn[data-tier="low"].active-tier { background: rgba(63,185,80,.15); color: var(--green); border-color: var(--green); }
+  .tier-btn[data-tier="medium"].active-tier { background: rgba(210,153,34,.15); color: var(--orange); border-color: var(--orange); }
+  .tier-btn[data-tier="high"].active-tier { background: rgba(248,81,73,.15); color: var(--red); border-color: var(--red); }
+  .risk-tier-bar .tier-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: auto;
+    font-style: italic;
+  }
+
+  /* Tier-based dimming */
+  .tier-dimmed {
+    opacity: .15;
+    pointer-events: none;
+    filter: grayscale(1);
+    transition: opacity .3s, filter .3s;
+  }
+  .tier-optional {
+    opacity: .4;
+    transition: opacity .3s;
+  }
+  .tier-optional::after {
+    content: ' (optional)';
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
   /* ── Flow Grid ── */
   .flow-row {
     display: flex;
@@ -256,6 +315,34 @@
     font-family: 'SF Mono', Monaco, monospace;
   }
 
+  /* Tier badge on nodes */
+  .tier-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .tier-badge.high-only {
+    background: rgba(248,81,73,.2);
+    color: var(--red);
+    border: 1px solid rgba(248,81,73,.4);
+  }
+  .tier-badge.med-plus {
+    background: rgba(210,153,34,.2);
+    color: var(--orange);
+    border: 1px solid rgba(210,153,34,.4);
+  }
+  .tier-badge.high-opt-med {
+    background: rgba(248,81,73,.15);
+    color: var(--red);
+    border: 1px solid rgba(248,81,73,.3);
+  }
+
   /* Gate label */
   .gate-label {
     display: flex;
@@ -295,6 +382,37 @@
     gap: 12px;
     flex-wrap: wrap;
     justify-content: center;
+  }
+
+  /* Two-track parallel layout */
+  .two-track {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  .track {
+    flex: 1;
+    min-width: 0;
+  }
+  .track-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--border);
+    text-align: center;
+  }
+  .track-note {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: center;
+    font-style: italic;
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: rgba(255,255,255,.02);
+    border-radius: 6px;
   }
 
   /* Sprint loop */
@@ -454,6 +572,7 @@
     .main { margin-left: 0; padding: 24px 16px; }
     .detail-panel { width: 100%; }
     .node { min-width: 140px; max-width: 220px; }
+    .two-track { flex-direction: column; }
   }
 </style>
 </head>
@@ -482,6 +601,15 @@
 
 <!-- Main Content -->
 <div class="main" id="mainContent">
+
+  <!-- Risk Tier Selector -->
+  <div class="risk-tier-bar" id="riskTierBar">
+    <span class="label">Risk Tier:</span>
+    <button class="tier-btn" data-tier="low">Low</button>
+    <button class="tier-btn" data-tier="medium">Medium</button>
+    <button class="tier-btn active-tier" data-tier="high">High</button>
+    <span class="tier-desc" id="tierDesc">All phases and guardians active</span>
+  </div>
 
   <!-- ═══════════════ PHASE 0 ═══════════════ -->
   <section class="phase-section" id="phase0">
@@ -518,7 +646,7 @@
       <div class="node strategic" data-agent="coordinator">
         <div class="role-tag" style="color:var(--blue)">Coordinator</div>
         <div class="node-title">Routes to team</div>
-        <div class="node-sub">Sequences Phase 1 activation. Sets release ID. Opens Bus.</div>
+        <div class="node-sub">Sequences Phase 1 activation. Sets release ID. Opens Bus. Agents load protocol-core.md for routine work.</div>
         <div class="file-badges">
           <span class="file-badge">current-status.md</span>
           <span class="file-badge">.sdkrc</span>
@@ -534,19 +662,20 @@
       <div class="phase-badge" style="background:var(--domain);color:var(--purple)">1</div>
       <div>
         <h2>Discovery</h2>
-        <p>C-suite specialists map constraints. CLO + CISO must clear before CTO.</p>
+        <p>CLO + CISO run in parallel (hard gate). After gate clears: CTO and domain specialists run concurrently.</p>
       </div>
     </div>
 
+    <!-- CLO + CISO parallel hard gate -->
     <div class="parallel-group">
-      <span class="group-label">Legal &amp; Security Track (must clear first)</span>
+      <span class="group-label">CLO + CISO &mdash; parallel, hard gate</span>
       <div class="group-content">
         <div class="node domain" data-agent="clo">
           <div class="role-tag" style="color:var(--purple)">CLO</div>
           <div class="node-title">Camila &mdash; Legal</div>
           <div class="node-sub">Regulatory map, legal structure, liability boundaries</div>
           <div class="file-badges">
-            <span class="file-badge">discovery-requirements.md</span>
+            <span class="file-badge">compliance-requirements.md</span>
           </div>
         </div>
         <div class="node domain" data-agent="ciso">
@@ -554,7 +683,7 @@
           <div class="node-title">Security</div>
           <div class="node-sub">Threat model, security non-negotiables, compliance roadmap</div>
           <div class="file-badges">
-            <span class="file-badge">security-requirements.md</span>
+            <span class="file-badge">compliance-requirements.md</span>
           </div>
         </div>
       </div>
@@ -566,47 +695,57 @@
     </div>
     <div class="arrow-down gate-arrow">&darr;</div>
 
-    <div class="parallel-group" style="margin-bottom: 16px">
-      <span class="group-label">Domain Specialists (parallel)</span>
-      <div class="group-content">
-        <div class="node domain" data-agent="cfo">
-          <div class="role-tag" style="color:var(--purple)">CFO</div>
-          <div class="node-title">Finance</div>
-          <div class="node-sub">Budget, unit economics, burn model</div>
-          <div class="file-badges"><span class="file-badge">business-requirements.md</span></div>
+    <!-- Two parallel tracks after gate clears -->
+    <div class="two-track">
+      <!-- Track A: Domain specialists (inform, do not gate) -->
+      <div class="track">
+        <div class="track-label">Track A &mdash; Domain Specialists (concurrent)</div>
+        <div class="parallel-group" style="margin-bottom: 0">
+          <span class="group-label">Inform CTO &mdash; do not gate Phase 2</span>
+          <div class="group-content">
+            <div class="node domain" data-agent="cfo">
+              <div class="role-tag" style="color:var(--purple)">CFO</div>
+              <div class="node-title">Finance</div>
+              <div class="node-sub">Budget, unit economics, burn model</div>
+              <div class="file-badges"><span class="file-badge">business-requirements.md</span></div>
+            </div>
+            <div class="node domain" data-agent="cmo">
+              <div class="role-tag" style="color:var(--purple)">CMO</div>
+              <div class="node-title">Market</div>
+              <div class="node-sub">Market context, positioning, GTM framing</div>
+              <div class="file-badges"><span class="file-badge">product-log.md</span></div>
+            </div>
+            <div class="node domain" data-agent="cdo">
+              <div class="role-tag" style="color:var(--purple)">CDO</div>
+              <div class="node-title">Data</div>
+              <div class="node-sub">Instrumentation plan, data governance</div>
+              <div class="file-badges"><span class="file-badge">business-requirements.md</span></div>
+            </div>
+            <div class="node domain" data-agent="coo">
+              <div class="role-tag" style="color:var(--purple)">COO</div>
+              <div class="node-title">Operations</div>
+              <div class="node-sub">Vendor timelines, operational runbook</div>
+              <div class="file-badges"><span class="file-badge">business-requirements.md</span></div>
+            </div>
+          </div>
         </div>
-        <div class="node domain" data-agent="cmo">
-          <div class="role-tag" style="color:var(--purple)">CMO</div>
-          <div class="node-title">Market</div>
-          <div class="node-sub">Market context, positioning, GTM framing</div>
-          <div class="file-badges"><span class="file-badge">product-log.md</span></div>
-        </div>
-        <div class="node domain" data-agent="cdo">
-          <div class="role-tag" style="color:var(--purple)">CDO</div>
-          <div class="node-title">Data</div>
-          <div class="node-sub">Instrumentation plan, data governance</div>
-          <div class="file-badges"><span class="file-badge">business-requirements.md</span></div>
-        </div>
-        <div class="node domain" data-agent="coo">
-          <div class="role-tag" style="color:var(--purple)">COO</div>
-          <div class="node-title">Operations</div>
-          <div class="node-sub">Vendor timelines, operational runbook</div>
-          <div class="file-badges"><span class="file-badge">business-requirements.md</span></div>
-        </div>
+        <div class="track-note">CFO / CMO / CDO / COO inform but do not gate Phase 2</div>
       </div>
-    </div>
 
-    <div class="arrow-down">&darr;</div>
-
-    <div class="flow-row centered">
-      <div class="node domain" data-agent="cto-discovery">
-        <div class="role-tag" style="color:var(--purple)">CTO</div>
-        <div class="node-title">Architecture Brief</div>
-        <div class="node-sub">1-page max. Make/buy/partner matrix. Technical feasibility.</div>
-        <div class="file-badges">
-          <span class="file-badge">engineering-requirements.md</span>
-          <span class="file-badge">engineering-log.md</span>
-          <span class="file-badge">history.md</span>
+      <!-- Track B: CTO starts immediately after gate -->
+      <div class="track">
+        <div class="track-label">Track B &mdash; CTO (starts immediately after gate)</div>
+        <div class="flow-row centered">
+          <div class="node domain" data-agent="cto-discovery">
+            <div class="role-tag" style="color:var(--purple)">CTO</div>
+            <div class="node-title">Architecture Brief</div>
+            <div class="node-sub">1-page max. Make/buy/partner matrix. Technical feasibility. Absorbs domain specialist outputs as they arrive.</div>
+            <div class="file-badges">
+              <span class="file-badge">engineering-requirements.md</span>
+              <span class="file-badge">engineering-log.md</span>
+              <span class="file-badge">history.md</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -655,8 +794,8 @@
 
     <div class="arrow-down">&darr;</div>
 
-    <div class="iteration-loop">
-      <span class="loop-label">Discovery Iteration Loop (protocol Section 31)</span>
+    <div class="iteration-loop" data-tier-require="high">
+      <span class="loop-label">Discovery Iteration Loop <span class="tier-badge high-only">High tier only</span></span>
       <div class="flow-row centered" style="margin-top:8px">
         <div class="node iteration-guardian" data-agent="discovery-guardian">
           <div class="role-tag" style="color:var(--cyan)">Discovery Guardian</div>
@@ -738,15 +877,15 @@
         <div class="node-sub">Mission pods (PM + Designer + Engineers). Tickets with acceptance criteria. Max 2 pods per EM.</div>
         <div class="file-badges">
           <span class="file-badge">engineering-log.md</span>
-          <span class="file-badge">people-log.md</span>
+          <span class="file-badge">product-log.md</span>
         </div>
       </div>
     </div>
 
     <div class="arrow-down">&darr;</div>
 
-    <div class="iteration-loop">
-      <span class="loop-label">Architecture Iteration Loop (protocol Section 31)</span>
+    <div class="iteration-loop" data-tier-require="medium">
+      <span class="loop-label">Architecture Iteration Loop <span class="tier-badge med-plus">Medium + High</span></span>
       <div class="flow-row centered" style="margin-top:8px">
         <div class="node iteration-guardian" data-agent="architecture-guardian">
           <div class="role-tag" style="color:var(--cyan)">Architecture Guardian</div>
@@ -775,11 +914,11 @@
 
     <div class="arrow-down gate-arrow">&darr;</div>
 
-    <div class="flow-row centered">
+    <div class="flow-row centered" data-tier-require="optional-medium">
       <div class="node gate" data-agent="pre-mortem">
         <div class="role-tag" style="color:var(--red)">PM + Team + Owner</div>
-        <div class="node-title">Pre-Mortem</div>
-        <div class="node-sub">Top 3 failure modes. Leading indicators. Single falsifiable assumption. Owner can /kill pod here.</div>
+        <div class="node-title">Pre-Mortem <span class="tier-badge med-plus">Med+</span></div>
+        <div class="node-sub">Top 3 failure modes. Leading indicators. Single falsifiable assumption. Owner can /kill pod here. Optional at Low tier.</div>
       </div>
     </div>
   </section>
@@ -799,7 +938,7 @@
         <div class="role-tag" style="color:var(--green)">Liaison</div>
         <div class="node-title">Gabriela &mdash; Communication Bridge</div>
         <div class="node-sub">Inbound: Team &rarr; Leadership. Outbound: Leadership &rarr; Team. Always knows current sprint state.</div>
-        <div class="file-badges"><span class="file-badge">operations-log.md</span></div>
+        <div class="file-badges"><span class="file-badge">strategy-log.md</span></div>
       </div>
     </div>
 
@@ -812,7 +951,7 @@
         <div class="node-sub">sdk-doc spawn for each member. Entries in team.md Active Agents. CHRO logs onboarding.</div>
         <div class="file-badges">
           <span class="file-badge">team.md</span>
-          <span class="file-badge">people-log.md</span>
+          <span class="file-badge">product-log.md</span>
         </div>
       </div>
     </div>
@@ -867,8 +1006,8 @@
 
     <div class="arrow-down">&darr;</div>
 
-    <div class="iteration-loop">
-      <span class="loop-label">Implementation Iteration Loop — per pod (protocol Section 31)</span>
+    <div class="iteration-loop" data-tier-require="high-opt-medium">
+      <span class="loop-label">Implementation Iteration Loop &mdash; per pod <span class="tier-badge high-opt-med">High (optional at Medium)</span></span>
       <div class="flow-row centered" style="margin-top:8px">
         <div class="node iteration-guardian" data-agent="implementation-guardian">
           <div class="role-tag" style="color:var(--cyan)">Implementation Guardian</div>
@@ -921,7 +1060,7 @@
           <div class="node-sub">sdk-doc dissolve per member. Rows &rarr; Dissolved Agents (never deleted).</div>
           <div class="file-badges">
             <span class="file-badge">team.md</span>
-            <span class="file-badge">people-log.md</span>
+            <span class="file-badge">product-log.md</span>
           </div>
         </div>
         <div class="node strategic" data-agent="all-history">
@@ -1051,6 +1190,11 @@ const agents = {
         'context-index.json generation (project routing brain)',
         'context-manifest.json (project snapshot)'
       ]},
+      { title: 'Protocol Split', items: [
+        'Agents load protocol-core.md (Sections 0-13, ~800 lines) for routine work',
+        'protocol-reference.md (Sections 14+) loaded only when the topic requires it',
+        'Both files are generated views of the single protocol.md'
+      ]},
       { title: 'Files Created / Modified', type: 'files', items: [
         { name: 'current-status.md', desc: 'Session continuity \u2014 read every session, always first' },
         { name: '.sdkrc', desc: 'Release ID, squad type, SDK path, project metadata' },
@@ -1072,11 +1216,12 @@ const agents = {
         'Contract templates and compliance requirements'
       ]},
       { title: 'Files Created / Modified', type: 'files', items: [
-        { name: 'discovery-requirements.md', desc: 'CLO + CISO regulatory map and legal blockers \u2014 hard gate for CTO' },
-        { name: 'operations-log.md', desc: 'Legal compliance state changes' }
+        { name: 'compliance-requirements.md', desc: 'CLO legal/regulatory sections \u2014 shared with CISO. Hard gate for CTO.' },
+        { name: 'strategy-log.md', desc: 'Legal compliance state changes' }
       ]},
       { title: 'Gate Authority', items: [
         'HARD GATE: Must deliver before CTO activates',
+        'CLO and CISO run in parallel \u2014 both must clear',
         'If CLO and CISO disagree on scope, Coordinator escalates to CEO'
       ]}
     ]
@@ -1094,8 +1239,8 @@ const agents = {
         'Auth design constraints'
       ]},
       { title: 'Files Created / Modified', type: 'files', items: [
-        { name: 'security-requirements.md', desc: 'Threat model, auth design constraints, security requirements' },
-        { name: 'operations-log.md', desc: 'Security state changes, incident logs' }
+        { name: 'compliance-requirements.md', desc: 'CISO security/threat model sections \u2014 shared with CLO. Hard gate for CTO.' },
+        { name: 'strategy-log.md', desc: 'Security state changes, incident logs' }
       ]},
       { title: 'P0 Security Protocol', items: [
         'P0 = confirmed/suspected breach, credential exposure, unauthorized access',
@@ -1108,7 +1253,7 @@ const agents = {
   cfo: {
     role: 'CFO \u2014 Domain Specialist',
     title: 'CFO \u2014 Finance',
-    desc: 'Budget validation, unit economics, burn model. Finance & Revenue BU.',
+    desc: 'Budget validation, unit economics, burn model. Finance & Revenue BU. Informs CTO but does not gate Phase 2.',
     sections: [
       { title: 'Produces', items: ['Budget validation', 'Unit economics analysis', 'Burn model', 'Runway assessment'] },
       { title: 'Files', type: 'files', items: [
@@ -1119,7 +1264,7 @@ const agents = {
   cmo: {
     role: 'CMO \u2014 Domain Specialist',
     title: 'CMO \u2014 Market',
-    desc: 'Market context, positioning, GTM framing. If CMO positions premium but CRO prices commodity, Coordinator escalates.',
+    desc: 'Market context, positioning, GTM framing. If CMO positions premium but CRO prices commodity, Coordinator escalates. Informs CTO but does not gate Phase 2.',
     sections: [
       { title: 'Produces', items: ['Market context analysis', 'Positioning strategy', 'GTM framing'] },
       { title: 'Files', type: 'files', items: [{ name: 'product-log.md', desc: 'Market positioning entries' }] }
@@ -1128,7 +1273,7 @@ const agents = {
   cdo: {
     role: 'CDO \u2014 Domain Specialist',
     title: 'CDO \u2014 Data',
-    desc: 'Instrumentation plan, data governance, measurement strategy.',
+    desc: 'Instrumentation plan, data governance, measurement strategy. Informs CTO but does not gate Phase 2.',
     sections: [
       { title: 'Produces', items: ['Instrumentation plan', 'Data governance framework', 'Data model review'] },
       { title: 'Files', type: 'files', items: [{ name: 'business-requirements.md', desc: 'Data section' }] }
@@ -1137,7 +1282,7 @@ const agents = {
   coo: {
     role: 'COO \u2014 Domain Specialist',
     title: 'COO \u2014 Operations',
-    desc: 'Vendor timelines, operational runbook, support model.',
+    desc: 'Vendor timelines, operational runbook, support model. Informs CTO but does not gate Phase 2.',
     sections: [
       { title: 'Produces', items: ['Vendor stack mapping', 'Operational runbook', 'Support model design', '4-week vendor lead time tracking'] },
       { title: 'Files', type: 'files', items: [{ name: 'business-requirements.md', desc: 'Operations section' }] }
@@ -1146,7 +1291,7 @@ const agents = {
   'cto-discovery': {
     role: 'CTO \u2014 Domain Specialist',
     title: 'CTO \u2014 Architecture Brief',
-    desc: 'Activated ONLY after CLO + CISO gate clears. Produces a 1-page architecture brief. Technical decision-maker.',
+    desc: 'Activated ONLY after CLO + CISO gate clears. Starts immediately \u2014 runs concurrently with domain specialists (CFO/CMO/CDO/COO), absorbing their outputs as they arrive. Produces a 1-page architecture brief.',
     sections: [
       { title: 'Produces', items: [
         'Architecture brief (1-page maximum)',
@@ -1159,7 +1304,8 @@ const agents = {
         { name: 'engineering-log.md', desc: 'Technical decisions and state changes' },
         { name: 'history.md', desc: 'Consequential architecture decisions' }
       ]},
-      { title: 'SOLUTION_CLASS Required', items: [
+      { title: 'SOLUTION_CLASS', items: [
+        'Required on DECISION NEEDED and BLOCKER messages (not INFO)',
         'KNOWN \u2014 deterministic solution, name it and apply it',
         'EXPLORATORY \u2014 genuinely unknown, state why known approach doesn\'t apply',
         'HYBRID \u2014 decompose which parts are deterministic vs. exploratory'
@@ -1219,6 +1365,91 @@ const agents = {
       { title: 'Files Modified', type: 'files', items: [
         { name: 'general-requirements.md', desc: 'Cross-domain requirements aggregate' },
         { name: 'current-status.md', desc: 'Phase transition, next agent to activate' }
+      ]}
+    ]
+  },
+  'discovery-guardian': {
+    role: 'Discovery Guardian \u2014 Iteration Loop',
+    title: 'Discovery Guardian \u2014 Validates Problem Understanding',
+    desc: 'Reviews all Discovery outputs against 6 exit criteria. Ensures the team understands the RIGHT problem before committing to architecture. Separate role from domain agents \u2014 checks cross-domain coherence and assumption quality. Activated at High risk tier only.',
+    sections: [
+      { title: 'Risk Tier', items: [
+        'High tier only \u2014 skipped at Low and Medium',
+        'At Low/Medium, Discovery outputs flow directly to Phase 2 without iteration review'
+      ]},
+      { title: 'Exit Criteria (all must pass)', items: [
+        'Problem statement is falsifiable (can be proven wrong with evidence)',
+        'Target user is specific enough to exclude someone',
+        'Regulatory constraints are mapped with confidence levels (HIGH/MED/LOW)',
+        'At least one core assumption has been tested, not just stated',
+        'Non-goals are explicit and reasoned (not deferred \u2014 excluded with rationale)',
+        'The brief could survive a FRAMING-CHALLENGE without collapsing'
+      ]},
+      { title: 'Authority', items: [
+        'REVIEW authority only \u2014 does not write to canonical docs',
+        'Can stamp GRADUATE or ITERATE with specific feedback',
+        'Cannot waive exit criteria \u2014 must escalate to CEO for exceptions',
+        'After 3 cycles without graduation: MUST escalate to CEO'
+      ]},
+      { title: 'Scratch Space', type: 'files', items: [
+        { name: 'iterations/discovery/', desc: 'Iteration files (iter-001.md, iter-002.md...). Not loaded by agents unless in active review. Graduated outputs flow to canonical docs.' }
+      ]}
+    ]
+  },
+  'architecture-guardian': {
+    role: 'Architecture Guardian \u2014 Iteration Loop',
+    title: 'Architecture Guardian \u2014 Validates Design Soundness',
+    desc: 'Validates that the architecture solves the problem from the graduated Discovery output and is built for the long term. Sits between problem (Discovery) and solution (Architecture). Checks structural soundness, not style. Activated at Medium and High risk tiers.',
+    sections: [
+      { title: 'Risk Tier', items: [
+        'Medium + High tiers \u2014 skipped at Low',
+        'At Low tier, architecture flows directly to Sprint 0 Gate without iteration review'
+      ]},
+      { title: 'Exit Criteria (all must pass)', items: [
+        'Architecture serves at 10x current scale without fundamental redesign',
+        'Every irreversible decision has a named alternative and documented rejection reason',
+        'Interface contracts are complete enough for independent pod execution',
+        'Make/buy/partner decisions have cost projections beyond year 1',
+        'Security model satisfies CISO non-negotiables (not deferred)',
+        'The design traces back to the graduated Discovery output (not a drifted version)'
+      ]},
+      { title: 'Authority', items: [
+        'REVIEW authority only \u2014 does not make architecture decisions (CTO owns those)',
+        'Does not override Mario\'s irreversibility review \u2014 different scope',
+        'After 3 cycles without graduation: MUST escalate to CEO',
+        'Can kick back to Discovery Guardian if problem definition drifted'
+      ]},
+      { title: 'Scratch Space', type: 'files', items: [
+        { name: 'iterations/architecture/', desc: 'Iteration files. Graduated outputs flow to engineering-requirements.md and interface contracts.' }
+      ]}
+    ]
+  },
+  'implementation-guardian': {
+    role: 'Implementation Guardian \u2014 Iteration Loop',
+    title: 'Implementation Guardian \u2014 Validates Problem-Solution Fit',
+    desc: 'Checks whether what was built actually solves the problem. Distinct from pod Guardian (code quality). Traces deliverables back through Architecture to Discovery. Both must approve before pod can dissolve. Activated at High tier; optional at Medium.',
+    sections: [
+      { title: 'Risk Tier', items: [
+        'High tier \u2014 required',
+        'Medium tier \u2014 optional (team decides)',
+        'Low tier \u2014 skipped'
+      ]},
+      { title: 'Exit Criteria (all must pass)', items: [
+        'Deliverables match the spec from the graduated Architecture output',
+        'No security shortcuts taken (auth, data handling, secrets management)',
+        'Code is maintainable by a team that did not write it',
+        'Edge cases from the pre-mortem are handled or explicitly deferred with reason',
+        'Instrumentation covers the friction points PM identified',
+        'The output creates user capability, not dependency (Constraint 1 check)'
+      ]},
+      { title: 'Pod Guardian vs Implementation Guardian', items: [
+        'Pod Guardian: code quality, invariant enforcement, security patterns',
+        'Implementation Guardian: problem-solution fit, spec conformance, longevity',
+        'Both must approve before pod dissolution',
+        'Implementation Guardian reviews after sprint batches (triggered by EM)'
+      ]},
+      { title: 'Scratch Space', type: 'files', items: [
+        { name: 'iterations/implementation/<pod>/', desc: 'Per-pod iteration files. Graduated outputs trigger pod review flow.' }
       ]}
     ]
   },
@@ -1296,7 +1527,7 @@ const agents = {
       ]},
       { title: 'Files', type: 'files', items: [
         { name: 'engineering-log.md', desc: 'Pod map, sprint entries, transitions' },
-        { name: 'people-log.md', desc: 'Pod formation, onboarding entries' }
+        { name: 'product-log.md', desc: 'Pod formation, onboarding entries' }
       ]},
       { title: 'Constraints', items: ['Max 2 active pods per EM', 'At 3+ pods, add another EM', 'Pod lifecycle: Forming \u2192 Active \u2192 Review \u2192 Dissolved'] }
     ]
@@ -1326,7 +1557,7 @@ const agents = {
   'pre-mortem': {
     role: 'Hard Gate \u2014 PM + Team + Owner',
     title: 'Pre-Mortem (Phase 2.5)',
-    desc: 'The Owner\'s primary challenge surface. If the team can\'t articulate what they\'re choosing NOT to do, they haven\'t scoped the work.',
+    desc: 'The Owner\'s primary challenge surface. If the team can\'t articulate what they\'re choosing NOT to do, they haven\'t scoped the work. Required at Medium and High tiers. Optional at Low.',
     sections: [
       { title: 'Required Outputs', items: [
         'Top 3 failure modes (specific, falsifiable)',
@@ -1352,6 +1583,9 @@ const agents = {
         'State keeper: always knows current sprint health',
         'Decision requests: max 3 sentences (context, decision needed, impact if delayed)'
       ]},
+      { title: 'Files', type: 'files', items: [
+        { name: 'strategy-log.md', desc: 'Communication bridge entries, health updates' }
+      ]},
       { title: 'Health Update Format', type: 'bus', content: 'FROM: Gabriela (Liaison)\nTO: Coordinator\nPRIORITY: INFO\nMESSAGE:\n  Sprint 1 -- 2026-04-28: GREEN\n  [One paragraph: what changed, state, what\'s coming.]\n  Open decisions pending leadership: none' }
     ]
   },
@@ -1363,7 +1597,7 @@ const agents = {
       { title: 'Spawn Process', items: [
         'sdk-doc spawn <project-dir> --name "Name City" --role <role> --level <level> ...',
         'Entry added to team.md Active Agents table',
-        'CHRO logs onboarding entry in people-log.md',
+        'CHRO logs onboarding entry in product-log.md',
         'Agent receives cultural profile that shapes reasoning'
       ]},
       { title: 'Naming Rules', items: [
@@ -1374,7 +1608,7 @@ const agents = {
       ]},
       { title: 'Files Modified', type: 'files', items: [
         { name: 'team.md', desc: 'Active Agents table \u2014 name, role, level, activated by' },
-        { name: 'people-log.md', desc: 'Onboarding entries, agent metrics' }
+        { name: 'product-log.md', desc: 'Onboarding entries, agent metrics' }
       ]}
     ]
   },
@@ -1440,6 +1674,11 @@ const agents = {
         'CEO activates incident response',
         'CLO assesses regulatory obligations (GDPR: 72h window)',
         'Standard ladder runs in parallel'
+      ]},
+      { title: 'Bus Format Note', items: [
+        'SOLUTION_CLASS is required only on DECISION NEEDED and BLOCKER messages from CTO, Mario, EM, Staff Eng, Coordinator',
+        'INFO messages do not require SOLUTION_CLASS',
+        'COST_SIGNAL and TIME_SIGNAL are optional constraint fields on any output-bearing message'
       ]}
     ]
   },
@@ -1518,7 +1757,7 @@ const agents = {
       { title: 'Dissolution Process', items: [
         'sdk-doc dissolve <project-dir> --name "Name City" --dissolved-by "EM Name" --reason "..."',
         'Row moved Active \u2192 Dissolved Agents in team.md (never deleted)',
-        'Area log entry in people-log.md',
+        'Area log entry in product-log.md',
         'Engineering-log.md pod dissolution entry'
       ]}
     ]
@@ -1543,7 +1782,7 @@ const agents = {
     sections: [
       { title: 'Reads', items: [
         'engineering-log.md', 'product-log.md', 'design-log.md',
-        'operations-log.md', 'people-log.md', 'strategy-log.md'
+        'strategy-log.md'
       ]},
       { title: 'Produces', items: [
         'Retro synthesis: what worked, what slowed, what to change',
@@ -1569,78 +1808,6 @@ const agents = {
         'All area logs are current',
         'Retrospective written',
         'current-status.md updated to reflect release close'
-      ]}
-    ]
-  },
-  'discovery-guardian': {
-    role: 'Discovery Guardian \u2014 Iteration Loop',
-    title: 'Discovery Guardian \u2014 Validates Problem Understanding',
-    desc: 'Reviews all Discovery outputs against 6 exit criteria. Ensures the team understands the RIGHT problem before committing to architecture. Separate role from domain agents \u2014 checks cross-domain coherence and assumption quality.',
-    sections: [
-      { title: 'Exit Criteria (all must pass)', items: [
-        'Problem statement is falsifiable (can be proven wrong with evidence)',
-        'Target user is specific enough to exclude someone',
-        'Regulatory constraints are mapped with confidence levels (HIGH/MED/LOW)',
-        'At least one core assumption has been tested, not just stated',
-        'Non-goals are explicit and reasoned (not deferred \u2014 excluded with rationale)',
-        'The brief could survive a FRAMING-CHALLENGE without collapsing'
-      ]},
-      { title: 'Authority', items: [
-        'REVIEW authority only \u2014 does not write to canonical docs',
-        'Can stamp GRADUATE or ITERATE with specific feedback',
-        'Cannot waive exit criteria \u2014 must escalate to CEO for exceptions',
-        'After 3 cycles without graduation: MUST escalate to CEO'
-      ]},
-      { title: 'Scratch Space', type: 'files', items: [
-        { name: 'iterations/discovery/', desc: 'Iteration files (iter-001.md, iter-002.md...). Not loaded by agents unless in active review. Graduated outputs flow to canonical docs.' }
-      ]}
-    ]
-  },
-  'architecture-guardian': {
-    role: 'Architecture Guardian \u2014 Iteration Loop',
-    title: 'Architecture Guardian \u2014 Validates Design Soundness',
-    desc: 'Validates that the architecture solves the problem from the graduated Discovery output and is built for the long term. Sits between problem (Discovery) and solution (Architecture). Checks structural soundness, not style.',
-    sections: [
-      { title: 'Exit Criteria (all must pass)', items: [
-        'Architecture serves at 10x current scale without fundamental redesign',
-        'Every irreversible decision has a named alternative and documented rejection reason',
-        'Interface contracts are complete enough for independent pod execution',
-        'Make/buy/partner decisions have cost projections beyond year 1',
-        'Security model satisfies CISO non-negotiables (not deferred)',
-        'The design traces back to the graduated Discovery output (not a drifted version)'
-      ]},
-      { title: 'Authority', items: [
-        'REVIEW authority only \u2014 does not make architecture decisions (CTO owns those)',
-        'Does not override Mario\'s irreversibility review \u2014 different scope',
-        'After 3 cycles without graduation: MUST escalate to CEO',
-        'Can kick back to Discovery Guardian if problem definition drifted'
-      ]},
-      { title: 'Scratch Space', type: 'files', items: [
-        { name: 'iterations/architecture/', desc: 'Iteration files. Graduated outputs flow to engineering-requirements.md and interface contracts.' }
-      ]}
-    ]
-  },
-  'implementation-guardian': {
-    role: 'Implementation Guardian \u2014 Iteration Loop',
-    title: 'Implementation Guardian \u2014 Validates Problem-Solution Fit',
-    desc: 'Checks whether what was built actually solves the problem. Distinct from pod Guardian (code quality). Traces deliverables back through Architecture to Discovery. Both must approve before pod can dissolve.',
-    sections: [
-      { title: 'Exit Criteria (all must pass)', items: [
-        'Deliverables match the spec from the graduated Architecture output',
-        'No security shortcuts taken (auth, data handling, secrets management)',
-        'Code is maintainable by a team that did not write it',
-        'Edge cases from the pre-mortem are handled or explicitly deferred with reason',
-        'Instrumentation covers the friction points PM identified',
-        'The output creates user capability, not dependency (Constraint 1 check)'
-      ]},
-      { title: 'Pod Guardian vs Implementation Guardian', items: [
-        'Pod Guardian: code quality, invariant enforcement, security patterns',
-        'Implementation Guardian: problem-solution fit, spec conformance, longevity',
-        'Both must approve before pod dissolution',
-        'Implementation Guardian reviews after sprint batches (triggered by EM)'
-      ]},
-      { title: 'Scratch Space', type: 'files', items: [
-        { name: 'iterations/implementation/<pod>/', desc: 'Per-pod iteration files. Graduated outputs trigger pod review flow.' }
       ]}
     ]
   },
@@ -1747,6 +1914,78 @@ const observer = new IntersectionObserver(entries => {
 }, { threshold: 0.3 });
 
 sections.forEach(s => observer.observe(s));
+
+// ── Risk Tier Selector ──
+const tierDescs = {
+  low: 'Iteration loops hidden. Pre-mortem optional.',
+  medium: 'Discovery loop hidden. Implementation loop optional.',
+  high: 'All phases and guardians active'
+};
+
+// Elements that get dimmed/hidden per tier
+// data-tier-require="high" => only visible at high
+// data-tier-require="medium" => visible at medium and high
+// data-tier-require="high-opt-medium" => required at high, optional at medium, hidden at low
+// data-tier-require="optional-medium" => visible at medium+high, optional visual at low
+
+function applyTier(tier) {
+  const tierDesc = document.getElementById('tierDesc');
+  tierDesc.textContent = tierDescs[tier];
+
+  // Update active button
+  document.querySelectorAll('.tier-btn').forEach(btn => {
+    btn.classList.toggle('active-tier', btn.dataset.tier === tier);
+  });
+
+  // Reset all
+  document.querySelectorAll('[data-tier-require]').forEach(el => {
+    el.classList.remove('tier-dimmed', 'tier-optional');
+  });
+
+  if (tier === 'high') {
+    // Everything visible
+    return;
+  }
+
+  if (tier === 'medium') {
+    // Discovery loop hidden
+    document.querySelectorAll('[data-tier-require="high"]').forEach(el => {
+      el.classList.add('tier-dimmed');
+    });
+    // Implementation loop optional
+    document.querySelectorAll('[data-tier-require="high-opt-medium"]').forEach(el => {
+      el.classList.add('tier-optional');
+    });
+    return;
+  }
+
+  if (tier === 'low') {
+    // Discovery loop hidden
+    document.querySelectorAll('[data-tier-require="high"]').forEach(el => {
+      el.classList.add('tier-dimmed');
+    });
+    // Architecture loop hidden
+    document.querySelectorAll('[data-tier-require="medium"]').forEach(el => {
+      el.classList.add('tier-dimmed');
+    });
+    // Implementation loop hidden
+    document.querySelectorAll('[data-tier-require="high-opt-medium"]').forEach(el => {
+      el.classList.add('tier-dimmed');
+    });
+    // Pre-mortem dimmed (optional)
+    document.querySelectorAll('[data-tier-require="optional-medium"]').forEach(el => {
+      el.classList.add('tier-optional');
+    });
+    return;
+  }
+}
+
+document.querySelectorAll('.tier-btn').forEach(btn => {
+  btn.addEventListener('click', () => applyTier(btn.dataset.tier));
+});
+
+// Default to high
+applyTier('high');
 </script>
 </body>
 </html>
