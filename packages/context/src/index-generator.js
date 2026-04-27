@@ -32,64 +32,68 @@ const ORG_DOMAINS = Object.freeze({
 
 /**
  * Static query map — topic → files to read + agent to consult.
+ *
+ * Collapsed to domain-level entries where multiple topics share the same
+ * file set + consult agent. Entries with DIFFERENT consult agents for similar
+ * topics are kept separate (they are genuinely different routes).
+ *
+ * ~30 entries instead of 58. Agents match on the closest topic key.
  */
 const QUERY_MAP_STATIC = Object.freeze({
+  // --- Engineering BU (CTO) ---
   'architecture':          { read: ['engineering-requirements.md'],                                consult: 'CTO' },
   'technical-decision':    { read: ['engineering-requirements.md', 'history.md'],                  consult: 'CTO' },
   'build-vs-buy':          { read: ['engineering-requirements.md', 'business-requirements.md'],    consult: 'CTO' },
   'platform-risk':         { read: ['engineering-requirements.md', 'security-requirements.md'],    consult: 'CTO' },
+  // --- Engineering BU (Mario — different consult than CTO) ---
   'irreversible-decision': { read: ['engineering-requirements.md', 'history.md'],                  consult: 'Mario' },
   'quality-standard':      { read: ['engineering-requirements.md'],                                consult: 'Mario' },
+  // --- Engineering BU (Staff Engineer — different consult) ---
   'interface-contract':    { read: ['engineering-requirements.md'],                                consult: 'Staff Engineer' },
+  // --- Engineering BU (EM — different consult) ---
   'sprint-state':          { read: ['engineering-requirements.md', 'product-requirements.md'],     consult: 'EM' },
   'pod-composition':       { read: ['engineering-requirements.md', 'people-log.md'],               consult: 'EM' },
-  'legal-constraints':     { read: ['discovery-requirements.md'],                                  consult: 'CLO' },
-  'compliance':            { read: ['discovery-requirements.md', 'security-requirements.md'],      consult: 'CLO' },
-  'regulatory':            { read: ['discovery-requirements.md'],                                  consult: 'CLO' },
-  'contracts':             { read: ['discovery-requirements.md', 'history.md'],                    consult: 'CLO' },
-  'security':              { read: ['security-requirements.md'],                                   consult: 'CISO' },
-  'threat-model':          { read: ['security-requirements.md'],                                   consult: 'CISO' },
-  'auth-design':           { read: ['security-requirements.md', 'engineering-requirements.md'],    consult: 'CISO' },
-  'data-protection':       { read: ['security-requirements.md', 'discovery-requirements.md'],      consult: 'CISO' },
-  'product-scope':         { read: ['product-requirements.md'],                                    consult: 'PM' },
-  'user-story':            { read: ['product-requirements.md', 'design-requirements.md'],          consult: 'PM' },
-  'mission-kanban':        { read: ['product-requirements.md', 'product-log.md'],                  consult: 'PM' },
-  'friction-log':          { read: ['product-requirements.md'],                                    consult: 'PM' },
-  'interface-design':      { read: ['design-requirements.md'],                                     consult: 'Designer' },
-  'ux-patterns':           { read: ['design-requirements.md'],                                     consult: 'Designer' },
-  'user-research':         { read: ['research-requirements.md', 'research-log.md'],                consult: 'UX Researcher' },
-  'assumption-validation': { read: ['research-requirements.md', 'product-requirements.md'],        consult: 'UX Researcher' },
-  'study':                 { read: ['research-requirements.md'],                                   consult: 'UX Researcher' },
-  'research-backlog':      { read: ['research-requirements.md'],                                   consult: 'UX Researcher' },
-  'user-evidence':         { read: ['research-requirements.md', 'research-log.md'],                consult: 'UX Researcher' },
-  'budget':                { read: ['business-requirements.md'],                                   consult: 'CFO' },
-  'unit-economics':        { read: ['business-requirements.md'],                                   consult: 'CFO' },
-  'runway':                { read: ['business-requirements.md'],                                   consult: 'CFO' },
-  'revenue-model':         { read: ['business-requirements.md'],                                   consult: 'CRO' },
-  'pricing':               { read: ['business-requirements.md'],                                   consult: 'CRO' },
-  'gtm':                   { read: ['business-requirements.md'],                                   consult: 'CMO' },
-  'positioning':           { read: ['business-requirements.md'],                                   consult: 'CMO' },
-  'vendor':                { read: ['business-requirements.md', 'operations-log.md'],              consult: 'COO' },
-  'operations-runbook':    { read: ['business-requirements.md', 'operations-log.md'],              consult: 'COO' },
-  'data-governance':       { read: ['business-requirements.md', 'engineering-requirements.md'],    consult: 'CDO' },
-  'instrumentation':       { read: ['business-requirements.md', 'product-requirements.md'],        consult: 'CDO' },
-  'ai-strategy':           { read: ['engineering-requirements.md'],                                consult: 'CAIO' },
-  'model-evaluation':      { read: ['engineering-requirements.md'],                                consult: 'CAIO' },
+  // --- Legal (CLO) — collapsed: legal-constraints, compliance, regulatory, contracts ---
+  'legal':                 { read: ['discovery-requirements.md', 'security-requirements.md', 'history.md'], consult: 'CLO' },
+  // --- Security (CISO) — collapsed: security, threat-model, auth-design, data-protection ---
+  'security':              { read: ['security-requirements.md', 'engineering-requirements.md', 'discovery-requirements.md'], consult: 'CISO' },
+  // --- Product (PM) — collapsed: product-scope, user-story, mission-kanban, friction-log ---
+  'product':               { read: ['product-requirements.md', 'design-requirements.md', 'product-log.md'], consult: 'PM' },
+  // --- Design (Designer) — collapsed: interface-design, ux-patterns ---
+  'design':                { read: ['design-requirements.md'],                                     consult: 'Designer' },
+  // --- Research (UX Researcher) — collapsed: user-research, assumption-validation, study, research-backlog, user-evidence ---
+  'research':              { read: ['research-requirements.md', 'research-log.md', 'product-requirements.md'], consult: 'UX Researcher' },
+  // --- Finance (CFO) — collapsed: budget, unit-economics, runway ---
+  'finance':               { read: ['business-requirements.md'],                                   consult: 'CFO' },
+  // --- Revenue (CRO — different consult than CFO for same file) ---
+  'revenue':               { read: ['business-requirements.md'],                                   consult: 'CRO' },
+  // --- Marketing (CMO — different consult) ---
+  'marketing':             { read: ['business-requirements.md'],                                   consult: 'CMO' },
+  // --- Operations (COO — different consult) ---
+  'operations':            { read: ['business-requirements.md', 'operations-log.md'],              consult: 'COO' },
+  // --- Data (CDO — different consult) ---
+  'data':                  { read: ['business-requirements.md', 'engineering-requirements.md', 'product-requirements.md'], consult: 'CDO' },
+  // --- AI (CAIO) ---
+  'ai':                    { read: ['engineering-requirements.md'],                                consult: 'CAIO' },
+  // --- Analytics (CAO) ---
   'analytics':             { read: ['business-requirements.md', 'product-requirements.md'],        consult: 'CAO' },
-  'experimentation':       { read: ['business-requirements.md', 'product-requirements.md'],        consult: 'CAO' },
-  'hiring':                { read: ['people-log.md'],                                              consult: 'CHRO' },
-  'team-composition':      { read: ['team.md', 'people-log.md'],                                   consult: 'CHRO' },
+  // --- People (CHRO) ---
+  'people':                { read: ['team.md', 'people-log.md'],                                   consult: 'CHRO' },
+  // --- Partnerships (CPO Partnerships) — collapsed: partnerships, ecosystem ---
   'partnerships':          { read: ['business-requirements.md'],                                   consult: 'CPO Partnerships' },
-  'ecosystem':             { read: ['business-requirements.md'],                                   consult: 'CPO Partnerships' },
+  // --- Enterprise risk (CRO Risk) ---
   'enterprise-risk':       { read: ['business-requirements.md', 'discovery-requirements.md'],      consult: 'CRO Risk' },
+  // --- Credit (CCO Credit) ---
   'credit-risk':           { read: ['business-requirements.md'],                                   consult: 'CCO Credit' },
+  // --- Customer success (CCO Customer) ---
   'customer-success':      { read: ['business-requirements.md', 'product-requirements.md'],        consult: 'CCO Customer' },
+  // --- Protocol design (CPO Protocol) ---
   'protocol-design':       { read: ['engineering-requirements.md'],                                consult: 'CPO Protocol' },
+  // --- Coordination (Coordinator) — collapsed: decisions, current-state, release-plan ---
   'decisions':             { read: ['history.md'],                                                 consult: 'Coordinator' },
-  'current-state':         { read: ['current-status.md'],                                          consult: 'Coordinator' },
-  'release-plan':          { read: ['current-status.md', 'history.md'],                            consult: 'Coordinator' },
-  'strategy':              { read: ['project.md', 'history.md'],                                   consult: 'CEO' },
-  'vision':                { read: ['project.md', 'idea.md'],                                      consult: 'CEO' },
+  'current-state':         { read: ['current-status.md', 'history.md'],                            consult: 'Coordinator' },
+  // --- Strategy (CEO) — collapsed: strategy, vision ---
+  'strategy':              { read: ['project.md', 'history.md', 'idea.md'],                        consult: 'CEO' },
 });
 
 /**
@@ -217,10 +221,74 @@ function generateIndex(projectDir) {
     }
   }
 
-  // Build queryMap with session entries
+  // Dynamic iteration scanning (protocol Section 31)
+  const iterationsDir = path.join(projectDir, 'iterations');
+  const iterationEntries = [];
+  if (fs.existsSync(iterationsDir)) {
+    const loopTypes = ['discovery', 'architecture', 'implementation'];
+    for (const loop of loopTypes) {
+      const loopDir = path.join(iterationsDir, loop);
+      if (!fs.existsSync(loopDir)) continue;
+
+      const scanDir = (dir, podName) => {
+        const mdFiles = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
+        for (const mf of mdFiles) {
+          const fullPath = path.join(dir, mf);
+          const mtime = fs.statSync(fullPath).mtime;
+          const ageHours = Math.round((now - mtime.getTime()) / 1000 / 60 / 60);
+          const content = fs.readFileSync(fullPath, 'utf8');
+          const fm = parseFrontmatter(content);
+          const relPath = podName
+            ? `iterations/${loop}/${podName}/${mf}`
+            : `iterations/${loop}/${mf}`;
+          const guardianRole = loop === 'discovery' ? 'Discovery Guardian'
+            : loop === 'architecture' ? 'Architecture Guardian'
+            : 'Implementation Guardian';
+
+          files.push({
+            path: relPath,
+            domain: 'engineering',
+            owner: guardianRole,
+            purpose: `Iteration: ${loop} cycle ${fm.cycle || mf.replace('.md', '')}${podName ? ' (pod: ' + podName + ')' : ''} — ${fm.status || 'draft'}`,
+            load_when: ['iteration-review'],
+            exists: true,
+            ageHours,
+            stale: false, // iterations don't go stale — they graduate or get superseded
+          });
+
+          iterationEntries.push({
+            path: relPath,
+            loop,
+            cycle: fm.cycle || parseInt(mf.replace('iter-', '').replace('.md', ''), 10),
+            pod: podName || fm.pod || null,
+            guardian: fm.guardian || null,
+            status: fm.status || 'draft',
+            created: fm.created || null,
+            graduated: fm.graduated || null,
+          });
+        }
+      };
+
+      // Scan direct files (discovery, architecture)
+      scanDir(loopDir, null);
+
+      // Scan pod subdirectories (implementation)
+      const entries = fs.readdirSync(loopDir);
+      for (const entry of entries) {
+        const entryPath = path.join(loopDir, entry);
+        if (fs.statSync(entryPath).isDirectory()) {
+          scanDir(entryPath, entry);
+        }
+      }
+    }
+  }
+
+  // Build queryMap with session and iteration entries
   const queryMap = { ...QUERY_MAP_STATIC };
   queryMap['prior-session'] = { read: sessionEntries.map(s => s.path), consult: 'Coordinator' };
   queryMap['session-context'] = { read: sessionEntries.map(s => s.path), consult: 'Coordinator' };
+  queryMap['iteration-status'] = { read: iterationEntries.map(i => i.path), consult: 'Coordinator' };
+  queryMap['iteration-review'] = { read: iterationEntries.filter(i => i.status !== 'graduated').map(i => i.path), consult: 'Coordinator' };
 
   // Dynamic project domain scanning
   const domainsDir = path.join(projectDir, 'domains');
@@ -309,6 +377,7 @@ function generateIndex(projectDir) {
     opsMap,
     actions: actionsForIndex,
     sessions: sessionEntries,
+    iterations: iterationEntries,
     files,
   };
 }
