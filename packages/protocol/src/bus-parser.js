@@ -9,7 +9,7 @@
 
 /**
  * Parse a raw Bus message string into a structured object.
- * Accepts the standard protocol v4.2 format.
+ * Accepts the standard protocol v4.3 format.
  *
  * @param {string} raw - Raw Bus message text
  * @returns {object} Parsed Bus message with all fields

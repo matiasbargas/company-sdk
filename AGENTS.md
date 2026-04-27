@@ -1,5 +1,5 @@
 # Agent Manifest
-**Version:** 2.5
+**Version:** 3.0
 **Owner:** Coordinator
 
 This file lists every agent in the system, what they own, who they depend on, and when they activate. It is the Coordinator's reference for routing and activation. It is every agent's reference for knowing who else is in the room.

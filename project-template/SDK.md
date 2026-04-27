@@ -1,4 +1,4 @@
-<!-- AI BOOTSTRAP — company-sdk / protocol v4.1 -->
+<!-- AI BOOTSTRAP — company-sdk v6.0.0 / protocol v4.3 -->
 <!-- Read this file first. It is the complete operating context for this project. -->
 <!-- After reading this file, follow the LOAD ORDER below to activate. -->
 
@@ -65,7 +65,7 @@ Hey Greg — here's a new project brief.
 
 ---
 
-## PROTOCOL v4.1
+## PROTOCOL v4.3
 
 Full spec: `protocol.md` (single source of truth — never duplicate it)
 
@@ -494,4 +494,4 @@ Agent manifest: `AGENTS.md`
 
 ---
 
-*company-sdk · protocol v4.1 · MIT*
+*company-sdk · protocol v4.3 · v6.0.0 · MIT*

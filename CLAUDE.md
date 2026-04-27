@@ -14,7 +14,7 @@ The SDK itself — not a project. It contains:
 - `project-template/` — all files a new project gets on bootstrap (7 consolidated requirements files)
 - `team/squads/` — pre-configured team compositions (website, mvp, feature, startup)
 - `scripts/` — CLI tools (init, bootstrap, squad, doc, gate-check, validate, status, version, retro, health, github, ship)
-- `protocol.md` — the shared contract: Bus format, escalation, BU communication, spawning policy (v4.1)
+- `protocol.md` — the shared contract: Bus format, escalation, BU communication, spawning policy (v4.3)
 - `AGENTS.md` — agent manifest: activation sequence, dependency graph, consultation patterns
 - `STRATEGY.md` — corporate strategy layer: 4 success themes, Betting Table rules
 

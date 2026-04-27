@@ -73,7 +73,7 @@ Hey Greg — here's a new project brief.
 
 ---
 
-## PROTOCOL v4.1
+## PROTOCOL v4.3
 
 Full spec: `protocol.md` (single source of truth — never duplicate it)
 
@@ -548,4 +548,4 @@ Agent manifest: `AGENTS.md`
 
 ---
 
-*company-sdk · protocol v4.2 · v4.0.0 · MIT*
+*company-sdk · protocol v4.3 · v6.0.0 · MIT*

@@ -15,7 +15,7 @@ module.exports = function cmdDecision({ filePath, opts, dryRun }) {
   const domain = opts.domain || inferDomain(opts['made-by']);
   const affects = opts.affects || '\u2014';
 
-  // YAML frontmatter structured entry (protocol v4.2)
+  // YAML frontmatter structured entry (protocol v4.3)
   const entry = `
 ### Decision: ${opts.decision}
 
