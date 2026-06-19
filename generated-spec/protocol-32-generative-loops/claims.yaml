@@ -1,0 +1,273 @@
+# Layer B claims — protocol-32-generative-loops
+# Workflow run: 2026-06-14-protocol-32-generative-loops-001
+# Decision: DE-RISK
+# Every claim cites at least one source under intent-spec/protocol-32-generative-loops/
+
+claims:
+  - id: claim-protocol-32-generative-loops-001
+    epic: protocol-32-generative-loops
+    statement: "Before v0.1 of protocol §32 seals, an adversarial-minimum Critique-Revise loop runs against this SDD and a cross-domain reviewer (CISO preferred, CTO fallback) scores whether the good-faith and adversarial constitutional lines are reliably distinguishable."
+    sources:
+      - file: intent-spec/protocol-32-generative-loops/shaped-brief.md
+        lines: 90-110
+      - file: intent-spec/protocol-32-generative-loops/sdd-v2.md
+        lines: 1-50
+    tags:
+      - bu:team-sdk
+      - area:loops
+      - area:protocol
+      - behavior:de-risk-gate
+    confidence: high
+    added_in_workflow_run: 2026-06-14-protocol-32-generative-loops-001
+    provenance_hash_input:
+      pattern: idea-execution-v0.1
+      spawning_agent: coordinator
+      input_idea: "Design protocol §32 — Generative Loops. Spec the Loop Coordinator agent type (ephemeral, per-loop, driver-not-judge), the v0.1 patterns (Critique-Revise + Red-Team only — defer Dialectic to v0.2 with "
+      date: 2026-06-14
+    status: valid
+
+  - id: claim-protocol-32-generative-loops-002
+    epic: protocol-32-generative-loops
+    statement: "Protocol §32 ships with exactly two critique patterns (Critique-Revise and Red-Team) and one ephemeral agent type (Loop Coordinator) — Dialectic is explicitly deferred to v0.2 pending an anonymization layer."
+    sources:
+      - file: intent-spec/protocol-32-generative-loops/shaped-brief.md
+        lines: 32-60
+      - file: intent-spec/protocol-32-generative-loops/sdd-v2.md
+        lines: 30-80
+    tags:
+      - bu:team-sdk
+      - area:loops
+      - area:protocol
+      - behavior:scope-boundary
+    confidence: high
+    added_in_workflow_run: 2026-06-14-protocol-32-generative-loops-001
+    provenance_hash_input:
+      pattern: idea-execution-v0.1
+      spawning_agent: coordinator
+      input_idea: "Design protocol §32 — Generative Loops. Spec the Loop Coordinator agent type (ephemeral, per-loop, driver-not-judge), the v0.1 patterns (Critique-Revise + Red-Team only — defer Dialectic to v0.2 with "
+      date: 2026-06-14
+    status: valid
+
+  - id: claim-protocol-32-generative-loops-003
+    epic: protocol-32-generative-loops
+    statement: "Every §32 loop requires the spawning agent to declare a one-sentence WEAKNESS_HYPOTHESIS on the Open heading of state.md, and the loop does not open if no hypothesis can be articulated."
+    sources:
+      - file: intent-spec/protocol-32-generative-loops/shaped-brief.md
+        lines: 40-66
+      - file: intent-spec/protocol-32-generative-loops/sdd-v2.md
+        lines: 50-100
+    tags:
+      - bu:team-sdk
+      - area:loops
+      - behavior:judgment-gate
+    confidence: high
+    added_in_workflow_run: 2026-06-14-protocol-32-generative-loops-001
+    provenance_hash_input:
+      pattern: idea-execution-v0.1
+      spawning_agent: coordinator
+      input_idea: "Design protocol §32 — Generative Loops. Spec the Loop Coordinator agent type (ephemeral, per-loop, driver-not-judge), the v0.1 patterns (Critique-Revise + Red-Team only — defer Dialectic to v0.2 with "
+      date: 2026-06-14
+    status: valid
+
+  - id: claim-protocol-32-generative-loops-004
+    epic: protocol-32-generative-loops
+    statement: "Loop termination is asymmetric: the spawning agent can early-stop unilaterally, but extending past the declared budget requires countersign by a second agent at peer-or-higher tier per the §1 escalation ladder — and the Loop Coordinator has no extension authority."
+    sources:
+      - file: intent-spec/protocol-32-generative-loops/shaped-brief.md
+        lines: 34-72
+      - file: intent-spec/protocol-32-generative-loops/sdd-v2.md
+        lines: 60-110
+    tags:
+      - bu:team-sdk
+      - area:loops
+      - area:protocol
+      - behavior:termination-contract
+    confidence: high
+    added_in_workflow_run: 2026-06-14-protocol-32-generative-loops-001
+    provenance_hash_input:
+      pattern: idea-execution-v0.1
+      spawning_agent: coordinator
+      input_idea: "Design protocol §32 — Generative Loops. Spec the Loop Coordinator agent type (ephemeral, per-loop, driver-not-judge), the v0.1 patterns (Critique-Revise + Red-Team only — defer Dialectic to v0.2 with "
+      date: 2026-06-14
+    status: valid
+
+  - id: claim-protocol-32-generative-loops-005
+    epic: protocol-32-generative-loops
+    statement: "Every artifact emitted from a §32 loop carries a LOOP-PROVENANCE line containing the loop ID and SHA-256 of the canonicalized artifact body, grep-able by sdk-health, and artifacts without it do not cross gates."
+    sources:
+      - file: intent-spec/protocol-32-generative-loops/shaped-brief.md
+        lines: 36-78
+      - file: intent-spec/protocol-32-generative-loops/sdd-v2.md
+        lines: 80-120
+    tags:
+      - bu:team-sdk
+      - area:loops
+      - area:audit
+      - behavior:provenance
+    confidence: high
+    added_in_workflow_run: 2026-06-14-protocol-32-generative-loops-001
+    provenance_hash_input:
+      pattern: idea-execution-v0.1
+      spawning_agent: coordinator
+      input_idea: "Design protocol §32 — Generative Loops. Spec the Loop Coordinator agent type (ephemeral, per-loop, driver-not-judge), the v0.1 patterns (Critique-Revise + Red-Team only — defer Dialectic to v0.2 with "
+      date: 2026-06-14
+    status: valid
+
+  - id: claim-protocol-32-generative-loops-006
+    epic: protocol-32-generative-loops
+    statement: "If the de-risk test passes, the Periodic Constitutional Line Audit becomes a non-negotiable: gate-check tier samples two completed loops per release cycle and flags boilerplate-shaped constitutional lines."
+    sources:
+      - file: intent-spec/protocol-32-generative-loops/shaped-brief.md
+        lines: 82-128
+    tags:
+      - bu:team-sdk
+      - area:loops
+      - area:audit
+      - behavior:quality-feedback-loop
+    confidence: medium
+    added_in_workflow_run: 2026-06-14-protocol-32-generative-loops-001
+    provenance_hash_input:
+      pattern: idea-execution-v0.1
+      spawning_agent: coordinator
+      input_idea: "Design protocol §32 — Generative Loops. Spec the Loop Coordinator agent type (ephemeral, per-loop, driver-not-judge), the v0.1 patterns (Critique-Revise + Red-Team only — defer Dialectic to v0.2 with "
+      date: 2026-06-14
+    status: invalidated
+    invalidated_at: 2026-06-14
+    invalidation_reason: "Superseded by claim-008 after the de-risk test ran. CISO sharpened the audit spec with numeric thresholds (≤5/15 flag, >25% pivot trigger) and five concrete dimensions. Original claim-006 wording was vague compared to the operational spec CISO produced."
+    superseded_by: [claim-protocol-32-generative-loops-008]
+
+  - id: claim-protocol-32-generative-loops-007
+    epic: protocol-32-generative-loops
+    statement: "If the de-risk test breaks the assumption that good-faith and adversarial constitutional lines are distinguishable, v0.1 pivots to v0.1-minimal (drop anti-sycophancy framing, ship as deliberation-termination protocol) or to v0.1-paired-critic (replace guardrail lines with mandatory cross-domain critic pairing, Appetite extends to L)."
+    sources:
+      - file: intent-spec/protocol-32-generative-loops/shaped-brief.md
+        lines: 108-130
+    tags:
+      - bu:team-sdk
+      - area:loops
+      - area:protocol
+      - behavior:pivot-plan
+    confidence: high
+    added_in_workflow_run: 2026-06-14-protocol-32-generative-loops-001
+    provenance_hash_input:
+      pattern: idea-execution-v0.1
+      spawning_agent: coordinator
+      input_idea: "Design protocol §32 — Generative Loops. Spec the Loop Coordinator agent type (ephemeral, per-loop, driver-not-judge), the v0.1 patterns (Critique-Revise + Red-Team only — defer Dialectic to v0.2 with "
+      date: 2026-06-14
+    status: valid
+
+  - id: claim-protocol-32-generative-loops-008
+    epic: protocol-32-generative-loops
+    statement: "The Periodic Constitutional Line Audit is a quarterly CISO-owned pass that scores emitted `would_have_wrongly_killed:` and `assumption-not-attacked:` lines on five dimensions (specific named strategy, specific critique cited, falsifiable preserved property, contextual concreteness, severity judgment) at 0–3 per dimension. Lines scoring ≤5/15 trigger loop re-open under a different critic. If >25% of sampled lines in a release cycle score ≤5/15, §32 is declared failing its anti-sycophancy contract and v0.2 anonymization work begins ahead of schedule."
+    sources:
+      - file: intent-spec/protocol-32-generative-loops/shaped-brief.md
+        lines: 9-32
+      - file: loops/2026-06-14-critique-revise-adversarial-001/ciso-verdict.md
+        lines: 7-75
+    tags:
+      - bu:team-sdk
+      - area:loops
+      - area:audit
+      - behavior:quality-feedback-loop
+      - behavior:cross-domain-gate
+    confidence: high
+    added_in_workflow_run: 2026-06-14-protocol-32-generative-loops-de-risk-test
+    provenance_hash_input:
+      pattern: critique-revise-adversarial-de-risk-test
+      spawning_agent: coordinator
+      input_idea: "De-risk gate per shaped-brief: adversarial-minimum Critique-Revise + CISO blind comparison to determine whether good-faith and adversarial constitutional lines are reliably distinguishable."
+      date: 2026-06-14
+    status: valid
+
+  - id: claim-protocol-32-generative-loops-009
+    epic: protocol-32-generative-loops
+    statement: "On 2026-06-14, the de-risk test executed: adversarial line scored 1/15, good-faith line scored 15/15, CISO verdict HOLDS. The §32 anti-sycophancy framing has signal — the schema check (`would_have_wrongly_killed:` is present) is necessary but not sufficient, which is why claim-008 audit is added as a Non-Negotiable replacing the original audit clause."
+    sources:
+      - file: loops/2026-06-14-critique-revise-adversarial-001/ciso-verdict.md
+        lines: 5-75
+      - file: intent-spec/protocol-32-generative-loops/shaped-brief.md
+        lines: 6-32
+    tags:
+      - bu:team-sdk
+      - area:loops
+      - area:audit
+      - behavior:test-evidence
+    confidence: high
+    added_in_workflow_run: 2026-06-14-protocol-32-generative-loops-de-risk-test
+    provenance_hash_input:
+      pattern: critique-revise-adversarial-de-risk-test
+      spawning_agent: coordinator
+      input_idea: "Recording the de-risk test execution outcome."
+      date: 2026-06-14
+    status: valid
+
+  - id: claim-protocol-32-generative-loops-010
+    epic: protocol-32-generative-loops
+    statement: "§32 sealed into protocol.md as v4.4 on 2026-06-14. The seal landed the Loop Coordinator role contract, the Critique-Revise and Red-Team v0.1 patterns, the asymmetric termination contract, the LOOP-PROVENANCE hash format, the WEAKNESS_HYPOTHESIS open-gate, the Periodic Constitutional Line Audit Non-Negotiable, and the worked example at loops/2026-06-14-critique-revise-001/."
+    sources:
+      - file: intent-spec/protocol-32-generative-loops/shaped-brief.md
+        lines: 1-30
+      - file: intent-spec/protocol-32-generative-loops/_seal-fix-list.md
+        lines: 1-40
+    tags:
+      - bu:team-sdk
+      - area:loops
+      - area:protocol
+      - behavior:seal-evidence
+    confidence: high
+    added_in_workflow_run: 2026-06-14-protocol-32-seal
+    provenance_hash_input:
+      pattern: protocol-32-seal-v0.1
+      spawning_agent: coordinator
+      input_idea: "Seal §32 into protocol.md as v4.4 after cross-domain review fixes bake in."
+      date: 2026-06-14
+    status: valid
+
+  - id: claim-protocol-32-generative-loops-011
+    epic: protocol-32-generative-loops
+    statement: "Cross-domain review (UXR + Designer + CLO) produced 3 fix bundles, all severity should_be_addressed and none blocks_seal. All three bundles were baked into the sealed §32 text before the v4.4 bump landed in protocol.md."
+    sources:
+      - file: intent-spec/protocol-32-generative-loops/_review-uxr.md
+        lines: 1-80
+      - file: intent-spec/protocol-32-generative-loops/_review-designer.md
+        lines: 1-80
+      - file: intent-spec/protocol-32-generative-loops/_review-clo.md
+        lines: 1-120
+    tags:
+      - bu:team-sdk
+      - area:loops
+      - area:protocol
+      - behavior:cross-domain-review
+      - behavior:seal-evidence
+    confidence: high
+    added_in_workflow_run: 2026-06-14-protocol-32-seal
+    provenance_hash_input:
+      pattern: protocol-32-seal-v0.1
+      spawning_agent: coordinator
+      input_idea: "Cross-domain review verdict synthesis from UXR, Designer, and CLO reviewers."
+      date: 2026-06-14
+    status: valid
+
+  - id: claim-protocol-32-generative-loops-012
+    epic: protocol-32-generative-loops
+    statement: "Owner consciously accepted the CLO Q3 exposure profile — discoverable record + duty-of-care standard + sensitive-content carriage — by approving seal with CLO's three additions (retention policy, PRIVILEGE_SCOPE field on state.md, explicit discoverability acknowledgment in the protocol text) baked into the sealed §32. The acceptance is recorded as a deliberate trade, not an oversight."
+    sources:
+      - file: intent-spec/protocol-32-generative-loops/_seal-fix-list.md
+        lines: 1-60
+      - file: intent-spec/protocol-32-generative-loops/_review-clo.md
+        lines: 1-120
+    tags:
+      - bu:team-sdk
+      - area:loops
+      - area:protocol
+      - area:legal
+      - behavior:owner-acceptance
+      - behavior:exposure-profile
+    confidence: high
+    added_in_workflow_run: 2026-06-14-protocol-32-seal
+    provenance_hash_input:
+      pattern: protocol-32-seal-v0.1
+      spawning_agent: coordinator
+      input_idea: "Recording Owner conscious acceptance of CLO Q3 exposure profile via seal-approval with CLO additions baked in."
+      date: 2026-06-14
+    status: valid

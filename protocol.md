@@ -1,5 +1,5 @@
 # Protocol -- Shared Interface Contract
-**Version:** 4.3
+**Version:** 4.4
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
 
@@ -1411,4 +1411,193 @@ If the answer to "should every agent think about this?" is yes, it is a constrai
 
 ---
 
-*Protocol v4.2. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, the Halloway Ratchet doctrine, TAG field, Kill Log, Negative Scope, Pre-Mortem gate, and design principles. Every agent references it. No agent duplicates it.*
+## 32. Generative Loops
+
+team-sdk agents already disagree, spawn peers, and produce synthesis — but the *quality of dissent* is not load-bearing. Today, when Mario or the CTO says "challenge this," it happens as a one-shot Bus exchange that closes by social default rather than by a declared contract. There is no recorded transition, no provenance on the resulting artifact, and no termination rule beyond "we feel done." Section 32 is the constraint that makes critique mechanical — declared shape, declared termination, declared provenance — without turning it into another agent to please. §32 sits beside §15a (self-improvement loop), §16 (consultation and peer spawning), and §31 (Iteration Guardians). It does not replace them. §15a is how the SDK evolves between releases; §16 is how an agent borrows a peer perspective for synthesis; §31 is the iteration cycle that gates Discovery → Architecture → Implementation. §32 is the surface on which a *specific draft* is stressed against a *specific weakness hypothesis* by a *specific pattern* with a *declared termination rule*. §32 is NOT a new escalation path, NOT a substitute for the Halloway Ratchet (§24), NOT a CLI-invoked workflow in v0.1, and NOT an automatic behavior — every loop is explicitly opened by a spawning agent at one of three named insertion points.
+
+### 32.1 Loop Coordinator
+
+The Loop Coordinator is an ephemeral agent type spawned once per loop and dissolved at termination. It exists only inside the loop. It has no memory file, no consultation mode, no cross-loop state, and no persona reasoning surface. Its full role file is `team/roles/loop-coordinator.md`.
+
+The Loop Coordinator is **driver, not judge**. It coordinates turn order, enforces budget, advances the state machine, and writes loop transitions to the Bus and to `loops/<id>/state.md`. It does not opine on content. A Loop Coordinator that produces a content opinion has violated the load-bearing non-negotiable and the loop's emitted artifacts are void.
+
+**SOLUTION_CLASS contract:**
+- `Level 3 (deterministic state machine)` for all turn coordination, budget enforcement, and termination logic. These are not reasoning surfaces.
+- `Level 1` permitted **only** when the spawning agent explicitly delegates a tie-break in writing on loop open. Absent that delegation, Level 1 reasoning by the Loop Coordinator is a protocol violation.
+
+The Loop Coordinator's consultation mode is **disabled**. It cannot be reached via `/ask`. It only exists inside an open loop.
+
+### 32.2 v0.1 Patterns
+
+v0.1 ships exactly two patterns and no more:
+
+- **Constitutional Critique-Revise** — full spec at `team/roles/loops/critique-revise.md`. One author, one critic, one revision pass. Critic reads against a written constitution (Layer A: Constraints + Soul) and emits structured critiques citing the principle violated. Critic also emits a `would-have-wrongly-killed:` guardrail line on every turn (see §32.3). Convergence: violations resolved, wrongly-killed strategy survives recognizably.
+
+- **Red-Team / Devil's Advocate** — full spec at `team/roles/loops/red-team.md`. Proposer names the load-bearing assumption; Red-Teamer (peer, not judge) names one assumption that, if wrong, breaks the whole thing, with the specific failure path. Proposer decides: revise, accept-with-deferred-risk (logged in `history.md` per §6), or kill. Red-Teamer emits an `assumption-not-attacked:` guardrail line on every turn (see §32.3).
+
+Pattern selection is **Level 3, not Level 1**. Each pattern file declares `TRIGGER_SHAPE` and `NON_TRIGGER_SHAPE`. Spawning agents read both before opening. Freeform "should we use Critique-Revise here?" deliberation on the Bus is itself a ratchet candidate per §24.
+
+**Dialectic is deferred to v0.2** explicitly because named-role critique without author anonymization is a known sycophancy surface. The v0.2 return ticket is owned by PM, target window v2026.Q3, triggered when the anonymization layer design is accepted by CTO + Mario. Dialectic is NOT stubbed in v0.1.
+
+### 32.3 Loop lifecycle and the `WEAKNESS_HYPOTHESIS` rule
+
+A loop has four lifecycle phases: **Open**, **Turns**, **Terminate**, **Dissolve**. The Loop Coordinator drives all four.
+
+Every loop open requires a `WEAKNESS_HYPOTHESIS:` declaration from the spawning agent in one sentence:
+
+```
+WEAKNESS_HYPOTHESIS: [The specific weakness the spawning agent expects this loop to expose.]
+```
+
+Without `WEAKNESS_HYPOTHESIS`, **the loop does not open**. The Loop Coordinator rejects the open. This is the anti-reflex lever: it costs judgment to open a loop, not just a Bus message. If the hypothesis turns out wrong, that is fine — the loop output records the miss and the next loop is better-aimed. If no hypothesis can be articulated, the loop is not the right instrument.
+
+In addition, every critic turn MUST emit its pattern-specific guardrail line:
+- Critique-Revise critic: `would-have-wrongly-killed: <name at least one bold property the critique does not damage>`
+- Red-Team critic: `assumption-not-attacked: <name at least one assumption this pass did not stress-test>`
+
+The loop **fails closed** if either guardrail line is absent on a critic turn. The emitted artifact does not cross any gate.
+
+### 32.4 Termination contract
+
+Termination is **asymmetric** by Mario's design and may not be made symmetric without a §15a protocol change.
+
+| Action | Authority | Countersign required |
+|---|---|---|
+| Declare budget at open | Spawning agent | None |
+| Early-stop (terminate before budget exhausted) | Spawning agent | None — unilateral |
+| Extend budget | Spawning agent + one peer-or-higher tier countersign per §1 ladder | YES |
+
+Cross-domain countersign is explicitly permitted and counts as peer tier — e.g., CISO countersigning an extension on a CTO-spawned loop, or CLO countersigning a PM-spawned loop. The Red-Team pattern requires cross-domain spawning by construction.
+
+**The Loop Coordinator has NO extension authority.** Not even on its own loop. Two signatures to keep talking — that is the anti-sycophancy lever.
+
+The spawning agent's early-stop is unconditional. No agent — including Mario, including the Loop Coordinator — can block an early-stop. This guarantees the spawning agent never loses control of scope inside the loop.
+
+### 32.5 Loop IDs and provenance
+
+Every loop has a unique ID with this format:
+
+```
+LOOP-YYYYMMDD-<pattern>-<seq>
+```
+
+Examples: `LOOP-20260614-critique-revise-001`, `LOOP-20260614-red-team-003`. The Loop Coordinator assigns the ID on Open. Sequence numbers are per-day, per-pattern, monotonic.
+
+Every artifact emitted from a loop carries a provenance line:
+
+```
+LOOP-PROVENANCE: <loop-id> + SHA256(<canonicalized artifact body>)
+```
+
+The loop ID is appended unhashed so the same artifact may legitimately surface from two loops; the binding is loop→artifact, not loop⇔artifact-only. Artifacts without a `LOOP-PROVENANCE:` line do not cross any §31 Guardian gate, Mario's irreversibility review (§28), or the release seal. `sdk-health` greps for `LOOP-2026` (and successor year prefixes) across the project tree and flags orphaned loop IDs.
+
+### 32.6 State persistence
+
+Each loop maintains a state file at `loops/<id>/state.md` with three required headings, in order:
+
+```markdown
+## Open
+WEAKNESS_HYPOTHESIS: <one sentence>
+Pattern: <slug>
+Spawning agent: <role>
+Budget: <turn count or token cap>
+Insertion point: <Phase 0 | Architecture | Implementation>
+Constitution reference (Critique-Revise only): <file path or section>
+
+## Turns
+<every critic and author turn, with timestamps, guardrail lines, and content>
+
+## Terminate
+Termination cause: <budget-exhausted | early-stop | extension-failed | guardrail-failed-closed>
+Final artifact: <path + LOOP-PROVENANCE line>
+Improvement signal: <emitted to metrics/_signals.jsonl, schema per _IMPROVEMENT_SIGNAL.md>
+```
+
+The **Bus Log records transitions only** — loop open, turn boundary, termination, dissolve. Internal turn content lives exclusively in `state.md`. This protects Bus signal-to-noise per §22 and preserves §24 Halloway Ratchet detection (a loop with 12 internal turns must not look like 12 ratchet revisions on the Bus). A Bus message containing internal loop turn content is a protocol violation; the Coordinator routes it back.
+
+### 32.7 Insertion points
+
+There are **exactly three valid insertion points** for a §32 loop. No mid-execution loops; those are reviews, not loops.
+
+1. **Phase 0 — Discovery / Ideation.** A loop opened on a raw problem statement, brief, or framing document during the Ideation Cycle (§15). Owner: PM or any Phase 1 agent. Typical pattern: Critique-Revise against the constitution; Red-Team against the load-bearing market or user assumption.
+
+2. **Architecture — before the Mario gate.** A loop opened on the SDD draft, the CTO architecture brief, or any interface contract before Mario's irreversible decision review (§28). Owner: CTO, Mario, or PM. Typical pattern: Red-Team on the single killing architectural assumption; Critique-Revise against Constraints + Soul before sealing.
+
+3. **Implementation — Test Engineer-owned, edge case generation.** A loop opened by Test Engineer (or by EM on Test Engineer's behalf) to generate adversarial test cases against a Pod's pre-merge artifact. NOT a code review surface — code review remains as defined in §9 and the engineer ladder. Typical pattern: Red-Team on the assumption underlying the test fixture; Critique-Revise on the test plan against the test-coverage constitution.
+
+Insertion outside these three is a violation. The Loop Coordinator rejects opens whose `Insertion point:` field does not match one of the three. Cross-reference §15 cycles: Phase 0 belongs to the Ideation Cycle; Architecture and Implementation belong to the Shipping Cycle.
+
+### 32.8 Periodic Constitutional Line Audit (CISO domain)
+
+The §32 v0.1 anti-sycophancy contract depends on the *quality* of the `would-have-wrongly-killed:` and `assumption-not-attacked:` lines — not their presence. The de-risk test on 2026-06-14 demonstrated that good-faith and adversarial-minimum lines are reliably distinguishable by a cross-domain reviewer scored on five dimensions (verdict: HOLDS, 15/15 vs 1/15). The audit operationalizes that finding into an ongoing check.
+
+CISO runs a quarterly audit pass on a sample of emitted guardrail lines, scoring each against five dimensions on a 0–3 scale (15 max):
+
+1. **Specific named strategy** — does the line name a real, concrete strategy or property, not a category?
+2. **Specific critique cited** — does the line name the critique that would have damaged it?
+3. **Falsifiable preserved property** — is the preserved property testable, not vibes?
+4. **Contextual concreteness** — does the line reference the draft's actual content, not generic best practice?
+5. **Severity judgment** — does the line carry a defensible severity claim?
+
+**Thresholds:**
+- Lines scoring **≤5/15** are flagged as suspected sycophantic-compliance emissions. The loop they came from is re-opened for a single critic-only turn under a *different* critic agent (different role, different city per §14 naming).
+- If **>25% of sampled lines in a release cycle score ≤5/15**, §32 is declared **failing its anti-sycophancy contract**. The v0.2 anonymization work (Dialectic + author-anonymization layer) is accelerated ahead of its scheduled v2026.Q3 window. The decision to accelerate is logged per §6 and broadcast per §15a Step 5.
+
+Audit cadence is quarterly. Sample size is gate-check tier: minimum two completed loops per release cycle, expanding to four when the line population exceeds 50 emissions per quarter. Reference: `metrics/would-have-wrongly-killed-quality.md`.
+
+### 32.9 Cross-domain consumer hooks and return tickets
+
+§32 v0.1 ships with three explicit **return tickets** acknowledging shape limitations surfaced by the cross-domain shape review (Designer, UXR, CLO, CISO, 2026-06-14). Each return ticket carries a named owner and a target window. They are not stubs; they are commitments.
+
+| Return ticket | Owner | Target | Trigger to open |
+|---|---|---|---|
+| **Research-Synthesis-shaped critique pattern** — Critique-Revise as written does not safely cover methodological soundness of research synthesis (evidence chain, sample-frame transparency, negative-space, observation-vs-inference). UXR builds a synthesis-shaped variant. | UX Researcher | v0.2 | When UXR confirms three live research synthesis artifacts would benefit from a shaped pattern |
+| **Craft-constitution work** — Layer A as currently constituted misses design craft (accessibility/WCAG, perceived affordance, form-follows-function, emotional register). Designer treats Layer A as a critic-facing interface and ships a craft layer. | Designer | v0.2 / v0.3 | When Designer ratifies the craft-constitution scope and Mario countersigns |
+| **Typed `constitution: <ref>` argument** — loops on regulated artifacts declare e.g. `constitution: gdpr-art-6+layer-a` and the critic reads against both. Closes the CLO vocabulary gap surfaced at seal. | CLO | v0.2 | When CLO confirms at least one regulated artifact is queued for §32 review |
+
+**Cross-domain consumer hook:** UX Researcher is named **co-consumer of `metrics/_signals.jsonl`** alongside the Coordinator's retrospective ritual cadences. UXR reads the friction-pattern stream on a continuous basis (not gated by retro) and is empowered to open a §15a protocol change proposal when friction patterns recur. This makes the signals stream a research surface, not just an ops surface.
+
+### 32.10 Retention, privilege, and discoverability
+
+CLO domain. Owner-accepted 2026-06-14 with Q3 exposure profile consciously absorbed. These rules are non-negotiable for v0.1.
+
+**Retention policy:**
+- `loops/<id>/state.md` is retained for the **life of the shaped artifact it produced**. If the artifact is deprecated or removed from the project tree, the loop state may be archived but not destroyed within the current release cycle.
+- `metrics/_signals.jsonl` is retained for **two release cycles**.
+- Both are subject to **legal-hold override** which extends retention indefinitely until lifted by CLO. Legal hold is invoked per §6 with `Made by: CLO` and `Reversible: NO`.
+
+**Privilege scope:**
+Loops opened on legal-domain artifacts MUST declare on loop open:
+
+```
+PRIVILEGE_SCOPE: attorney-client-work-product
+```
+
+Without the `PRIVILEGE_SCOPE` header, **the option to assert privilege over the loop record is foreclosed**. The Loop Coordinator does not retroactively add the header; the spawning agent declares it on Open or accepts the foreclosure. CLO reviews any loop carrying `PRIVILEGE_SCOPE: attorney-client-work-product` before it is opened.
+
+**Discoverability acknowledgment (non-negotiable spawning-agent rule):**
+
+> Loop state files and the signals stream are **discoverable records** and create a duty-of-care standard. Loops MUST NOT be opened on artifacts the team is not prepared to have read in adversarial discovery.
+
+This rule is on every loop open by reference. The spawning agent's act of opening a loop constitutes acknowledgment.
+
+### 32.11 Composition and cross-references
+
+§32 composes with adjacent protocol surfaces. It does not modify them.
+
+- **§1 (Bus Message Format)** — Loop transitions use the standard Bus format with `TAG: LOOP-OPEN | LOOP-TURN | LOOP-TERMINATE`. SOLUTION_CLASS is required on Loop Coordinator messages per §1: `Level 3` for coordination, `Level 1` only on delegated tie-breaks.
+- **§6 (Decision Log)** — Termination causes that involve risk acceptance (Red-Team `accept-with-deferred-risk`) are logged per §6 with `Made by: <proposer role>` and the named assumption. The Red-Team `assumption-not-attacked:` line is a process artifact, not a §6 risk acceptance — see the vocabulary clarification in `team/roles/loops/red-team.md`.
+- **§15 (Cycles)** — Loops respect the Ideation / Shipping boundary. Phase 0 loops belong to the Ideation Cycle; Architecture and Implementation loops belong to the Shipping Cycle. Loops do not cross the Betting Table.
+- **§15a (Self-improvement loop)** — §32 is the runtime mechanism for dissent quality on a specific draft. §15a is the between-release mechanism for evolving the protocol itself. A pattern of failed §32 audits (per §32.8) is a §15a proposal trigger.
+- **§16 (Consultation and Spawning Policy)** — A consultation spawn (§16) asks a peer "what do you see?" A §32 loop binds that peer's perspective to a declared pattern, termination contract, and provenance hash. The two are not interchangeable. An agent who needs an off-the-cuff perspective uses §16; an agent who needs auditable adversarial pressure on a draft opens a §32 loop.
+- **§22 (Bus Log)** — Bus Log records only loop transitions, never internal turn content. The intent resolver maps `TAG: LOOP-OPEN | LOOP-TERMINATE` to `doc.log` entries in the spawning agent's area log.
+- **§24 (Halloway Ratchet)** — Pattern selection and Loop Coordinator turn coordination are Level 3. Critic content review is Level 1, which is correct because content review on an unknown draft IS exploratory. Loops are not a ratchet candidate; they are how Level 1 critique gets bounded.
+- **§25 (TAG field)** — New tags introduced by §32: `LOOP-OPEN`, `LOOP-TURN`, `LOOP-TERMINATE`, `LOOP-AUDIT-FLAG` (CISO-only, emitted when a sampled line scores ≤5/15). Adding any further §32 tag requires a protocol version bump per §25.
+- **§28 (Pre-Mortem Gate)** — A Red-Team loop is the recommended preparation for the Pre-Mortem. The Pre-Mortem's "single falsifiable assumption that, if wrong, kills the mission" is the natural artifact of a Red-Team termination.
+- **§29 (Structured Disagreement Log)** — When a critic and an author cannot converge inside a Critique-Revise loop, the spawning agent opens a §29 disagreement on termination. The loop is the surface that *produces* the disagreement cleanly, with both positions named and provenance-hashed. §29 is the long-running record; §32 is the bounded mechanism.
+- **§30 (Design Principles)** — §32 is a constraint mechanism, not a new agent type. The Loop Coordinator is ephemeral on purpose: §30 warns that adding an agent for a constraint creates the illusion that someone else is watching. The Loop Coordinator owns coordination only; the constraint (declared pattern, termination, guardrail line, provenance) is carried by every loop participant.
+- **§31 (Iteration Guardians)** — Discovery, Architecture, and Implementation Guardians may *recommend* opening a §32 loop as part of their GRADUATE / NEEDS-WORK verdict. They do not spawn loops themselves; spawning authority stays with the named insertion-point owners (PM, CTO, Mario, Test Engineer). A Guardian iteration that surfaces a load-bearing assumption is the natural prompt for a Red-Team loop before the next phase advances.
+
+---
+
+*Protocol v4.4. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, the Halloway Ratchet doctrine, TAG field, Kill Log, Negative Scope, Pre-Mortem gate, design principles, and generative loops. Every agent references it. No agent duplicates it.*

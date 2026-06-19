@@ -1,0 +1,1 @@
+2026-06-14 — protocol-32-generative-loops — DE-RISK → HOLDS → PROCEED → SEALED as protocol v4.4 — de-risk test passed (adversarial 1/15, good-faith 15/15), then UXR + Designer + CLO cross-domain review produced 3 should_be_addressed fix bundles, all baked into the sealed §32 text alongside loop-coordinator.md role file and worked example. See _seal-fix-list.md.

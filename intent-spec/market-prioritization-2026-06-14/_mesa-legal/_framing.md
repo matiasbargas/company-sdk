@@ -1,0 +1,32 @@
+# Mesa Legal framing memo (organized by Christensen-disruption lens)
+
+## The disruption-legal coupling
+
+Legal posture matters more for low-end disruption than for direct competition because the incumbent's legal team is the cheapest weapon they can fire without triggering board scrutiny. A devtool incumbent (Linear, Atlassian, Notion, Datadog) will not rationally invest engineering or sales capacity to defend the 15-80 person devtool segment — the margins are too thin, the strategic story too peripheral, and the board will ask why. But General Counsel's existing salary is already a sunk cost. A C&D letter, a patent-infringement claim, an antitrust complaint by proxy, an SOC2 attestation challenge, or a strategic indemnification escalation costs the incumbent essentially zero incremental dollars and zero strategic-narrative pain — while costing the disruptor cash, attention, and the very dogfooding credibility that makes the wedge work. Christensen's theory assumes incumbents make a rational *defensive-investment* decision; the legal channel violates that assumption because it is pre-paid and off-P&L. The legal table's job is not to write generic devtool-startup guardrails. It is to identify the specific legal triggers an incumbent legal team can pull cheaply, and to either disarm them at the contract/architecture level or accept them with eyes open. If we lose the wedge to legal pressure, we lose the entire portfolio: bets #2 and #3 are funded by #1.
+
+## The four questions each panelist must answer through this lens
+
+**Camila (CLO) — contracts that preserve the upmarket move.** What contract language with the FIRST devtool lighthouse — specifically around IP indemnification scope, source-availability clauses, on-prem/BYOC self-host rights, MFN pricing, and most-favored-jurisdiction — either preserves or forecloses the 18-month move into regulated Tier-2 BFSI/health-payer segments? Name the three terms we MUST NOT sign even if the lighthouse asks, and name the one term we MUST insert to keep the regulated bet viable. Generic "standard SaaS MSA" answers are rejected.
+
+**CISO — the security claim that becomes the upmarket lever.** What security or privacy claim, if we make it to win the devtool wedge customer (fast-trust posture, ISO-aligned, "we don't see your code," SOC2 Type I on the roadmap) and then cannot uphold during the move into regulated segments, becomes the lever an incumbent uses — via a single coordinated disclosure, a single benchmark publication, or a single CVE-adjacent finding — to push us out of the regulated tier entirely before we land deal #1 there? Name the claim, the failure mode, and the structural fix that lets the wedge claim and the regulated claim be the same sentence.
+
+**Rafael (CRO-Risk) — discovery surface as strategic asset.** Which operational disclosure native to the open-substrate dogfood model — public `_signals.jsonl` excerpts, customer lighthouse identities, internal Bus messages, §32 Critique-Revise transcripts, incident reports, Halloway Ratchet logs — becomes the litigation-discovery surface that an incumbent (or its proxy plaintiff) will use to model our financial fragility, our customer concentration, or our internal dissent patterns? How do we structurally limit subpoenable surface area WITHOUT killing the dogfood credibility model that makes #1 work? Generic "redact PII" answers are rejected.
+
+**Andrea (CCO-Compliance) — the wedge-to-regulated compliance gap.** If we adopt the compliance posture appropriate to the devtool wedge — light, fast, ISO 27001-aligned, SOC2 Type II at month 9, no industry-vertical certifications — what specific compliance gap appears at the moment we sign Tier-2 BFSI deal #1 (model risk management, SR 11-7, HIPAA, NYDFS Part 500, EU AI Act high-risk classification) that an incumbent can weaponize via a single regulatory complaint, a single ISACA chapter mention, or a single Big-4 audit footnote? Name the gap and the day-one program structure that closes it without burdening the wedge.
+
+## The disruption-specific failure modes the panel must surface
+
+- **Patent-troll exposure** — devtool segment has known NPE activity (collaboration patents, IDE plugin patents, observability schema patents); the substrate's Bus protocol and queryMap are surface area
+- **DPA / GDPR Article 28 liability cascading through devtool customers' end-users** — our lighthouse's customers' data may transit our corpus search; controller-processor chain must be airtight before deal #1
+- **IP indemnification clauses that scale uncontrollably** when the substrate ingests customer source, RFCs, or third-party OSS the lighthouse already runs (the "you indemnify us against your own ingestion" trap)
+- **Open-source license incompatibility with the paid SKU posture** — AGPL / SSPL / BUSL / Elastic License interactions with cross-team benchmark queries and federated corpus search; the CFO's "structurally hard-to-self-host" paid layer must survive license audit
+- **Antitrust posture shift the moment the substrate becomes critical-infrastructure for many teams** — interoperability mandates, mandatory data portability, refusal-to-deal claims; this is the *good* failure mode and we should plan for it
+- **Whistleblower / employment-litigation risk from substrate transparency itself** — published dissent logs, §32 Red-Team transcripts, and Halloway Ratchet records are discoverable in employment actions against the lighthouse and against us; chilling effect on the dogfood model
+- **Trade-secret contamination via the open corpus** — customer's confidential decisions logged into a substrate we host creates joint-custodian exposure; one inadvertent leak via cross-team benchmark surface is an existential breach
+- **Section 230 / DSA / Online Safety Bill scope creep** — if any lighthouse customer's `_signals.jsonl` is reachable through our hosted search, we may be a "hosting service" under EU DSA with content-moderation obligations the devtool wedge cannot afford
+
+## Provenance
+
+- Framed: 2026-06-15
+- Chair: Christensen-disruption framework (organizing lens, not a team member)
+- Inputs: `_recommendation.md`, `alternatives/christensen-disruption__devtool-companies.md`, the kill-log entry for `jobs-to-be-done__regulated-enterprise` (CFO contingent-liability + CRO positioning-calcification + CMO category-misindexing — all three failure shapes have legal-channel analogs the panel must surface)

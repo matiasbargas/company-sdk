@@ -1,7 +1,7 @@
 # Current Status
-**Last updated:** 2026-04-18
-**Updated by:** Greg (CEO) — Tier 1 complete, governance closure
-**Release:** v2026.Q2.3
+**Last updated:** 2026-06-19
+**Updated by:** Greg (CEO) — governance backfill of the generative-loops / continuous-improvement initiative
+**Release:** v2026.Q2.3 · **Protocol:** v4.4 (§32 sealed)
 
 > This is the first file you read when resuming work. It tells you exactly where the team is right now and what the next action is. If this file is out of date, the team is flying blind.
 >
@@ -11,7 +11,11 @@
 
 ## Phase
 
-**Tier 1 Complete.** All 3 missions shipped (Protocol Schema, Knowledge Graph, Consultation Extension). 848 tests, 0 failures. Governance closure in progress. Tier 2 awaits owner direction.
+**Generative-loops layer + continuous-improvement substrate shipped (2026-06-14/16), now mapped and committed.** Protocol §32 sealed (v4.3 → v4.4): two v0.1 loop patterns (Critique-Revise, Red-Team), the ephemeral Loop Coordinator role, per-loop `state.md`, `WEAKNESS_HYPOTHESIS` open requirement, asymmetric termination contract, and `LOOP-PROVENANCE:` hashes. The continuous-improvement substrate (`improvement_signal` → `metrics/_signals.jsonl`, 4-cadence `retrospective.js`, metrics defs, OKR proposals, auto-maintained `_HORIZONS.md`) ships alongside. v0.2 calibration verdict: **HOLDS** with a synthetic-corpus caveat (load-bearing evidence is 3 real lines).
+
+**Governance status:** This initiative was undocumented and uncommitted until the 2026-06-19 Greg audit. History.md backfilled, this file updated, work committed. See `history.md` → "SDK-CHANGE — Protocol §32 Generative Loops + Continuous-Improvement Substrate."
+
+**Prior phase (still true):** Tier 1 of @team-sdk extraction complete — Protocol Schema, Knowledge Graph, Consultation Extension shipped, 848 tests / 0 failures. Tier 2 (cross-project memory, pluggable runtime, squad marketplace) remains BLOCKED awaiting owner direction.
 
 ---
 
@@ -71,7 +75,9 @@ None. All three pre-discovery decisions resolved by Owner on 2026-04-17:
 
 ## Next Agent To Activate
 
-**Tier 1 complete.** All 3 missions shipped. Tier 2 awaits owner direction.
+**Overdue: sprint-cadence retrospective on `protocol-32-generative-loops`.** The 24h trigger gate (per `workflows/README.md`) passed ~5 days ago. Run `retrospective.js --cadence sprint` on that slug to consume the per-loop `improvement_signal` stream and produce the first real signal-to-action data point. This is the substrate consuming its own first cycle. Owed downstream: `_RETRO-INDEX.md` and `intent-spec/idea-execution-v0.2/_audit-log.md` (neither exists yet).
+
+Then: Tier 2 of @team-sdk extraction still awaits owner direction (unchanged).
 
 ---
 
@@ -86,6 +92,10 @@ None. All three pre-discovery decisions resolved by Owner on 2026-04-17:
 2026-04-17 — New discovery cycle initiated by owner. Vision: extract team-sdk's core infrastructure into reusable packages. 6 problems identified in two tiers. CTO feasibility assessment, CLO + CISO gate, Mario gate, PM mission shaping all completed. All 3 Tier 1 missions built and shipped in one session: @team-sdk/protocol (399 tests), @team-sdk/context (180 tests), @team-sdk/cli (152 tests). doc.js reduced by ~400 lines. Zero regressions on existing 117 tests.
 
 2026-04-18 — Governance closure. Greg audit found: project-map unfilled, operations-log empty, Bus unused during Tier 1. Owner decided Bus is mandatory everywhere (dogfood fully). Project-map filled, operations-log backfilled, area logs updated. Bus policy logged to history.md.
+
+2026-06-14/16 — Generative-loops layer + continuous-improvement substrate built and sealed across a ~6h session plus a 2026-06-16 SDLC state-machine follow-on. §32 → protocol v4.4. All work landed in the working tree but was not committed or mapped at the time.
+
+2026-06-19 — Greg audit: the entire June 14/16 initiative was uncommitted, absent from history.md, and current-status.md still read "2026-04-18, Tier 1 complete." Closed the map: history.md backfilled with three decision entries, this file updated, work committed. Next action is the overdue sprint-cadence retro on the §32 slug.
 
 ---
 

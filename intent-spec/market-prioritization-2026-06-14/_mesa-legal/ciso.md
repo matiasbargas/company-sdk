@@ -1,0 +1,27 @@
+# CISO panel input — Mesa Legal (Christensen-disruption lens)
+
+**Focus assigned by chair:** security claims as wedge that becomes liability upmarket
+**Date:** 2026-06-15
+**Author:** CISO (Consultation Mode)
+
+---
+
+## Your one-line guardrail
+
+**No marketing, sales deck, OSS README, conference talk, or lighthouse contract may use the phrase "we don't see your code/data," "zero-knowledge," "customer-isolated corpus," or any cryptographic-isolation claim unless that claim is implemented as customer-held-key BYOK with a written cryptographic-architecture attestation from a named third party before the words ship — and the same sentence must be defensible verbatim under SR 11-7 model-risk examination and NYDFS Part 500 §500.11 third-party diligence.**
+
+## Why this guardrail (your domain prior, channeled through the disruption lens)
+
+The single cheapest weapon an incumbent legal team can fire — at zero incremental cost, with no board scrutiny, against a Christensen disruptor — is a coordinated security-claim disclosure: one CVE-adjacent finding, one benchmark publication, or one customer-isolation contradiction surfaced via a friendly journalist or a competing devtool's "responsible disclosure" tweet thread. Devtool wedge customers buy on fast-trust ("we don't see your code") because their engineers ARE the buyers and the claim is the ergonomic. But the same sentence, when carried into Tier-2 BFSI Model Risk, becomes a regulator-grade representation under SR 11-7 vendor-risk attestation and NYDFS Part 500 §500.11 — at which point a single proof that hosted corpus search, federated benchmark queries, or `_signals.jsonl` cross-team telemetry **does** see the code makes the wedge claim materially false in the regulated-tier representation. That is not a marketing problem. That is a securities-grade misrepresentation that forecloses the entire upmarket move BEFORE deal #1 there closes — exactly the disruption-killing legal failure mode the chair framed. Mismatched claim altitude is how disruptors die before they reach the regulated tier they were funding the wedge to reach.
+
+## The specific cost of NOT having this guardrail
+
+Concrete exposure stack: (a) FTC §5 deception action — devtool customers relied on the isolation claim, $50K-$5M settlement range plus consent decree binding security claims for 20 years (Drizly, SkyMed precedents); (b) regulated Tier-2 deal #1 dies in security questionnaire round two when our SOC2 Type I scope statement contradicts the public claim — single sentence kills $400-650K TCV and the audit-survived-logo asset that funds bets #2 and #3; (c) BFSI customer SR 11-7 attestation includes our representation; their examiner finds the contradiction; a single MRA (Matter Requiring Attention) letter to the customer names us, propagating through ISACA chapter discussion within one quarter — incumbents (Atlassian, Datadog) seed the next three RFPs with "vendor was cited in BFSI examination" language at zero cost to them; (d) class plaintiff's bar reads the FTC consent decree and pulls every lighthouse `_signals.jsonl` excerpt as discovery — the open-substrate dogfood that won us the wedge becomes the evidence corpus against us. Total option-value destruction conservatively $8-15M (lost regulated TCV across deals 1-15) plus 18-month upmarket-window forfeiture, against a guardrail cost of ~$60-90K (BYOK architecture + one cryptographic attestation).
+
+## How to verify the guardrail holds (the artifact)
+
+Three concrete artifacts, signed before the first lighthouse MSA: **(1)** a **Claim Altitude Register** — a versioned document, owned by CISO, listing every public security or privacy claim with three columns: exact phrasing, technical control that implements it, and the highest regulated tier the same sentence survives (devtool wedge / BFSI Tier-2 SR 11-7 / HIPAA / NYDFS Part 500). Any claim that does not survive Tier-2 is flagged red and cannot ship. **(2)** a **Cryptographic Architecture Attestation** from a named third party (Trail of Bits, NCC Group, or Doyensec — not Big-4) confirming BYOK key custody, that the hosted corpus search service cannot decrypt customer-owned segments without customer-presented keys, and that federated benchmark queries operate on encrypted or differentially-private aggregates. Attestation is reissued on every paid-SKU architecture change. **(3)** an MSA clause — "**Representation Altitude Lock**" — stating the security representations in this contract are the ceiling, not the floor, for all public claims; written CISO sign-off required for any marketing claim that exceeds the contracted representation. This last clause is what makes the guardrail self-enforcing: marketing cannot out-promise legal without leaving a paper trail.
+
+## What you would refuse to let the company sign without this guardrail
+
+I would refuse to let the company sign **the first devtool lighthouse MSA or publish the first public `_signals.jsonl` excerpt** while any customer-facing surface (deck, OSS README, landing page, conference abstract, hosted-tier marketing copy) carries a security or privacy claim that has not been entered in the Claim Altitude Register and verified to survive verbatim under SR 11-7 and NYDFS Part 500 attestation — because the moment that contract is countersigned or that excerpt is public, the wedge claim becomes the upmarket representation, and the option to disarm it costs an order of magnitude more than the option to write it correctly the first time.

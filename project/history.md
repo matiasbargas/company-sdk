@@ -303,3 +303,54 @@ Date: 2026-04-18
 Made by: Owner (sdk-version set)
 
 set bump. New release cycle: v2026.Q2.3.
+
+---
+
+## SDK-CHANGE — Protocol §32 Generative Loops + Continuous-Improvement Substrate
+**Date of work:** 2026-06-14 (SDLC state-machine follow-on 2026-06-16)
+**Logged:** 2026-06-19 (governance backfill — Greg audit found this initiative undocumented in history.md and current-status.md)
+**Made by:** PM + CTO + Mario + CISO + CAIO (Pablo), Owner-directed
+**Release:** v2026.Q2.3
+**Tag:** SDK-CHANGE
+**Status:** APPLIED (uncommitted at audit time; committed with this entry)
+
+**What happened:**
+Over a single intensive session on 2026-06-14 (~6 hours of workflow runs), the team designed and sealed a generative-loops layer plus the continuous-improvement substrate that consumes it. The thesis: team-sdk agents already dissent and spawn peers, but the *quality of dissent* was not load-bearing — critique closed "by social default" with no declared shape, termination rule, or provenance. §32 makes critique mechanical without turning it into another agent to please.
+
+DECISION: Seal Protocol §32 (Generative Loops) into protocol.md
+Date: 2026-06-14
+Release: v2026.Q2.3
+Made by: PM (AI-assisted), Owner-directed
+Context: Critique on real teams closes by social default; no recorded transition, provenance, or termination rule. The Halloway Ratchet (§24) made *solution strategy* visible but not *dissent quality*.
+Decision: Add §32 to protocol.md (bumped v4.3 → v4.4). Ships two v0.1 patterns — Constitutional Critique-Revise and Red-Team/Devil's-Advocate — plus an ephemeral Loop Coordinator role (driver-not-judge), per-loop `state.md`, a `WEAKNESS_HYPOTHESIS` open requirement, an asymmetric termination contract (Mario's rule: spawning agent early-stops unilaterally; extension requires peer-or-higher countersign), and `LOOP-PROVENANCE:` SHA-256 hashes on every emitted artifact. Fail-closed guardrail lines: `would-have-wrongly-killed:` (Critique-Revise) and `assumption-not-attacked:` / `red-team-scope-limit:` (Red-Team).
+Alternatives considered: (a) keep critique informal — rejected, the failure mode is invisible and compounding; (b) ship all three patterns including Dialectic — rejected, Dialectic deferred to v0.2 until the author-anonymization layer is designed and CTO + Mario sign off, because named-role debate is itself a sycophancy attack surface (deep-research SOTA 2024–2026); (c) a CLI-invoked workflow — rejected for v0.1, every loop is explicitly opened by a spawning agent at one of three named insertion points.
+Rationale: Declared shape + declared termination + declared provenance makes dissent auditable years later without adding a thirteenth voice to please. Cross-domain review (UXR + Designer + CLO) caught discoverability, dignity, and accessibility gaps baked into the sealed text rather than deferred, on the principle that protocol text ships once and is hard to amend mid-cycle.
+Implications: AGENTS.md registers the Loop Coordinator as an ephemeral per-loop agent. New pattern files live under `team/roles/loops/`. The loop library is deliberately capped — a sixth pattern costs the team forgetting the first five.
+Reversible: YES — §32 is additive; patterns can be retired the same way they were added.
+Affects natural persons: NO
+
+DECISION: Ship the continuous-improvement substrate (improvement_signal + 4-cadence retrospective + metrics + OKR proposals + horizons auto-maintenance)
+Date: 2026-06-14
+Release: v2026.Q2.3
+Made by: PM + CAIO (AI-assisted), Owner-directed
+Context: Owner directive — improvement is continuous through loops AND rituals, not a quarterly retro bolted onto delivery.
+Decision: Every loop close emits a one-line `improvement_signal` (friction + suggested_target) into the append-only `metrics/_signals.jsonl`. `retrospective.js` runs at four cadences (per-loop / sprint / pre-tag / quarterly), each consuming the layer below. `metrics/` holds observation definitions; OKR adoption ships as proposals under `intent-spec/_PROTOCOL_PROPOSALS/`; `_HORIZONS.md` becomes auto-maintained.
+Alternatives considered: ship the five components separately — rejected, the irreducibility note holds (signal without metrics = noise; metrics without OKRs = scoreboard without game; OKRs without rituals = wall art). Any four of five collapses the fifth.
+Rationale: Improvement as default state, not calendar event. The substrate detected and fixed its own false-pass schema bug the same day (`continuous-improvement-substrate-v0.1` → `fix-schema-enforcement-gap-v0.1`), which is the first `_signals.jsonl` entry.
+Implications: Layered Context Architecture lands on disk — `foundation/` (Layer A), `intent-spec/` (Layer C), `generated-spec/` (Layer B). Runnable workflow scripts live in `workflows/`.
+Reversible: YES
+Affects natural persons: NO
+
+DECISION: Accept the v0.2 calibration verdict as HOLDS, with synthetic-corpus caveat
+Date: 2026-06-14
+Release: v2026.Q2.3
+Made by: Coordinator (synthesizer), scored by CISO Amara Lagos + Mario + CISO instance-2 (AI-assisted)
+Context: Red-Team on the v0.2 idea-execution dogfood flagged the CISO 5-dimension anti-sycophancy rubric as the load-bearing assumption; fail-closed-with-no-override is brittle if the rubric has variance or bias. A 20-line calibration test was spec'd to de-risk it.
+Decision: Verdict HOLDS — inter-rater agreement 20/20 (100%, criterion ≥80%), class separation 20/20 clean (criterion ≥17/20). Proceed with the v2 SDD shape unchanged; no-override stance on Addition 4 stands.
+Alternatives considered: declare the rubric validated outright — rejected. 17 of 20 lines were synthetic, constructed to fit the prediction templates; clean separation on those proves only internal consistency, not organic signal. The load-bearing evidence is the 3 real lines (2 reproduce the §32 single-CISO baseline within ≤1 point; the third shows convergent three-scorer reasoning).
+Rationale: Honest weak-evidence acceptance beats false confidence. The caveat is carried forward: the cycle-3 re-test MUST use a freshly-assembled real-line corpus, not a re-run of this synthetic-heavy one, or the drift check measures only synthesis-shape stability.
+Implications: `_audit-log.md` baseline entry owed at v0.2 cycle open (not yet created). Meta-audit cadence (CISO + Mario) pivots to drift-from-baseline at cycle-3.
+Reversible: YES — a failing cycle-3 re-test reopens the rubric.
+Affects natural persons: NO
+
+**Governance note (Greg, 2026-06-19):** This entire initiative shipped to the working tree on 2026-06-14/16 but was never committed, never entered in `history.md`, and `current-status.md` still read "2026-04-18, Tier 1 complete." A release is not done when code ships — it is done when the map is written. This backfill closes that gap. The substrate that emits provenance on every loop had no project-level map of its own; that is the failure mode the substrate exists to prevent, surfacing one level above the substrate.
