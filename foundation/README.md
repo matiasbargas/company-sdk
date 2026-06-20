@@ -14,6 +14,7 @@ In team-sdk, Layer A is **not duplicated into `foundation/`** — it already exi
 
 | Foundation artifact | Path | Owner | Cadence |
 |---|---|---|---|
+| Charter — "the company is the product" (north star) | `CHARTER.md` | Owner (ratifies) | On Owner directive |
 | Priority Constraints + Purpose + Soul | `team/roles/_shared.md` | Engineering + product leadership | Quarterly |
 | Bus protocol + cycles + escalation ladder | `protocol.md` | Coordinator + CTO | On structural change (version bump) |
 | Agent index + activation sequence | `AGENTS.md`, `team/roles/CLAUDE.md` | Coordinator | When roster changes |

@@ -1,5 +1,5 @@
 # Agent Manifest
-**Version:** 3.0
+**Version:** 3.1
 **Owner:** Coordinator
 
 This file lists every agent in the system, what they own, who they depend on, and when they activate. It is the Coordinator's reference for routing and activation. It is every agent's reference for knowing who else is in the room.
@@ -124,6 +124,12 @@ PHASE 4 (Completion):
 | Agent | Domain | Requirements file | Escalation path | Activation trigger |
 |---|---|---|---|---|
 | **Loop Coordinator** | Generative loop coordination (§32): turn order, budget enforcement, state machine transitions, provenance. Driver, not judge — does not opine on content. | (none — ephemeral; state lives in `loops/<id>/state.md`) | Spawning agent (unilateral early-stop authority) | Spawned once per §32 loop by a named insertion-point owner (PM, CTO, Mario, Test Engineer). Activation phrase: "Loop Coordinator, drive a `<pattern>` loop on `<target>` with WEAKNESS_HYPOTHESIS `<one sentence>`." One instance per loop. Consultation mode **disabled** — not reachable via `/ask`. Dissolved at loop termination. See `team/roles/loop-coordinator.md` and `protocol.md` §32. |
+
+---
+
+## Collaboration Surfaces (§34)
+
+The company is the product (`CHARTER.md`). The shared unit of work is a **Collaboration Surface** (`protocol.md` §34): a self-describing file where multiple roles author and verify one artifact — e.g. a CTO authors *how something must happen*, a CFO/CISO/Mario later verify it. Any role can be wired as an **author** or a **verifier** via its `## Loop Interface` header (added in Phase 2). Surfaces live at `<project>/surfaces/`; the template is `project-template/surface-template.md`. Verifier rosters are dynamic with a fixed minimum on irreversible surfaces; a `no-go` is blunt and forces a discussion (§29/§32), never a silent pass. The meta-loop (`workflows/company-loop-v0.1.js`) keeps surfaces moving and escalates to the human only at the §34.7 boundaries.
 
 ---
 

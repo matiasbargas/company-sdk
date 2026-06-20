@@ -2,6 +2,8 @@
 
 These sections are shared across all agents. Loaded once; not duplicated in individual role files.
 
+> **The nature of the project:** the company **is** the product. Every artifact you produce is a commit to the company body, and every role is a real collaborator in it. See the charter at `CHARTER.md` (Layer A north star). The Priority Constraints, Purpose, and Soul below are what that charter is built on.
+
 ---
 
 ## Priority Constraints

@@ -1,5 +1,5 @@
 # Protocol -- Shared Interface Contract
-**Version:** 4.4
+**Version:** 4.5
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
 
@@ -1600,4 +1600,114 @@ This rule is on every loop open by reference. The spawning agent's act of openin
 
 ---
 
-*Protocol v4.4. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, the Halloway Ratchet doctrine, TAG field, Kill Log, Negative Scope, Pre-Mortem gate, design principles, and generative loops. Every agent references it. No agent duplicates it.*
+## 33. Reserved — SDLC State Machine
+
+Reserved for the SDLC State Machine (bet lifecycle: `proposal → committed → WIP → … → ga → sunset`). Currently in draft at `intent-spec/sdlc-state-machine/_protocol-33-draft.md`; not yet sealed into this file. Do not reuse this number.
+
+---
+
+## 34. Collaboration Surfaces
+
+### 34.0 Intent
+
+The company is the product (`CHARTER.md`). The unit of work is therefore not a per-role output that lands in one role's log — it is a **shared artifact that multiple roles contribute to and verify over a project's life**, where each contribution is a provenance-stamped commit to the company body. The team already had four fragments of this — §33 owner-plus-guardrail-signers, §32 author-plus-critic, §6 decision authorship, §17 BU status — but no single, self-describing place where, say, a CTO authors *how something must happen* and a CFO later runs a verification on the same artifact. §34 is that primitive. It generalizes the fragments into one surface every role can commit to.
+
+A Collaboration Surface is the answer to "where does a decision, a flow, or a roadmap live while more than one role is still shaping it?"
+
+### 34.1 What a surface is
+
+A Collaboration Surface is a single self-describing file. It carries machine-readable front-matter and a body of provenance-stamped contributions. Front-matter schema:
+
+```yaml
+surface:
+  id: SURFACE-YYYYMMDD-<slug>-<seq>
+  kind: decision | flow | roadmap
+  title: <one line>
+  author_roles: [<role>, ...]          # who is empowered to author the body
+  verifier_roster: [<role>, ...]       # who must verify before it can reach `verified`
+  depends_on: [<surface-id | file>, ...]
+  produces: <what artifact/decision this surface yields>
+  state: draft | authored | under-verification | reconciling | verified | blocked
+  irreversible: true | false           # high-stakes; changes no-go and roster rules (§34.4, §34.5)
+  evidence: [<path | claim-id>, ...]
+  release: v[YEAR].Q[QUARTER].[INCREMENT]
+```
+
+`id`, `kind`, `title`, `author_roles`, `verifier_roster`, `state`, and `irreversible` are required. A surface missing any required field is malformed and does not advance.
+
+### 34.2 Contribution blocks
+
+The body is append-mostly. Three block types:
+
+- **Author block** — the substance, authored by an `author_roles` member. One or more. Provenance-stamped.
+- **Verification block** — one per verifier in the roster who has acted. Each carries a verdict: `pass | concern | no-go`, the reasoning, and provenance. A `concern` is non-blocking but recorded; a `no-go` triggers §34.5.
+- **Reconciliation block** — written only when a `no-go` fired. Records how the no-go was resolved (author revised, verifier withdrew on new evidence, or the disagreement escalated to §29). A surface cannot reach `verified` with an open `no-go` and no reconciliation block.
+
+Every block ends with a `LOOP-PROVENANCE:` line per §32.5 (loop-id is replaced by the surface-id; format is otherwise identical: `SURFACE-… + SHA256(canonicalized block body)`).
+
+### 34.3 State machine
+
+```
+draft ──► authored ──► under-verification ──► verified
+                            │                    ▲
+                            └──► reconciling ─────┘   (a no-go fired, then resolved)
+                                     │
+                                     └──► blocked       (irreversible surface, no-go unresolved)
+```
+
+- `draft → authored`: an author block exists.
+- `authored → under-verification`: the verifier roster has been notified (Bus, §1).
+- `under-verification → verified`: every roster verifier has a `pass` (or a withdrawn `no-go` recorded in a reconciliation block), and no `no-go` is open.
+- `under-verification → reconciling`: a `no-go` is recorded (§34.5).
+- `reconciling → verified`: the no-go is resolved (reconciliation block written).
+- `reconciling → blocked`: only for `irreversible: true` surfaces whose no-go is unresolved — the surface cannot advance until a human (per §34.7) or a §29 resolution clears it.
+
+### 34.4 Verifier roster — dynamic with a fixed minimum
+
+The roster is chosen **dynamically** by the spawning/authoring agent (or the meta-loop) the same way `/ask` routes: name the roles whose domain input would actually change the artifact. The roster is not a rubber stamp of every C-suite role.
+
+For `irreversible: true` surfaces, a **fixed minimum roster** applies on top of the dynamic choice: at least CFO (cost/runway), CISO (security/threat), and Mario (irreversibility) — plus CLO whenever the surface touches legal exposure or a discoverable artifact. The minimum cannot be removed; it can only be added to.
+
+### 34.5 No-go behavior — blunt, force the discussion
+
+When a verifier records a `no-go`:
+
+- The surface moves to `reconciling`. It is **not** silently passed and **not** marked `verified`.
+- The system is blunt: the no-go and its reasoning are recorded verbatim; the author is required to respond (revise, or contest with evidence).
+- **Default (reversible surfaces):** work elsewhere continues in parallel; the no-go forces a logged discussion but does not freeze unrelated work. If author and verifier cannot converge, the disagreement escalates to a §29 Structured Disagreement Log entry, or a §32 Red-Team / Critique-Revise loop is opened to pressure the artifact.
+- **Irreversible surfaces:** the surface goes to `blocked` and cannot advance until the no-go is reconciled. Bluntness here is also a brake, because the cost of being wrong is not recoverable.
+
+Silence is never a pass. A verifier who cannot find a problem says so explicitly (a `pass` with reasoning); an unacted roster slot keeps the surface in `under-verification`.
+
+### 34.6 Provenance and improvement signal
+
+- Every block carries a `LOOP-PROVENANCE:` line (§32.5 format, surface-id binding).
+- On reaching `verified` or `blocked`, a surface emits one `improvement_signal` per `team/roles/loops/_IMPROVEMENT_SIGNAL.md` into `metrics/_signals.jsonl`. Omission fails the surface's close the same way it fails a loop close.
+
+### 34.7 Autonomy and the human boundary
+
+Agents author, verify, and reconcile **autonomously where it makes sense** — this is the default, per `CHARTER.md`. A human is engaged only at the boundaries that already require one:
+
+- a shift in scope or strategy (CEO escalation triggers, `ceo.md`),
+- a change to Layer A (`CHARTER.md`, `_shared.md`, `STRATEGY.md`, structural `protocol.md`),
+- an `irreversible: true` surface reaching `blocked`,
+- an SDLC forward transition (§33, when sealed),
+- anything pushed to a shared remote (push/merge to `main`).
+
+Everything else — routine decisions, flows, roadmaps, and their verifications — closes agent-to-agent.
+
+### 34.8 Relationship to existing sections
+
+- **§6 (Decision Log):** a `verified` decision-kind surface produces a §6 entry. The surface is the working artifact; §6 is the permanent index. A verifier's `no-go` that is overridden is logged per §6 with the named authority.
+- **§29 (Structured Disagreement):** an unreconciled `no-go` escalates to §29. The surface produces the disagreement cleanly, both positions named and hashed.
+- **§32 (Generative Loops):** a surface may *open* a §32 loop to pressure an author block (Red-Team) or principle-check it (Critique-Revise). The loop's output is a contribution block.
+- **§17 (BU Communication):** surface state changes are reportable via BU status; the Coordinator aggregates open surfaces into `current-status.md`.
+- **§31 (Iteration Guardians):** a Guardian may require a surface (e.g., an Architecture decision surface) before it issues GRADUATE.
+
+### 34.9 File location and naming
+
+Surfaces live at `<project>/surfaces/SURFACE-YYYYMMDD-<slug>-<seq>.md`. For the SDK's own project that is `project/surfaces/`. The template ships at `project-template/surface-template.md`. `sdk-health` flags surfaces stuck in `under-verification` or `reconciling` past a staleness window, the same way it flags orphaned loop state.
+
+---
+
+*Protocol v4.5. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, the Halloway Ratchet doctrine, TAG field, Kill Log, Negative Scope, Pre-Mortem gate, design principles, generative loops, and collaboration surfaces. Every agent references it. No agent duplicates it.*
