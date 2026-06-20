@@ -1,0 +1,80 @@
+claims:
+  - id: claim-retro-protocol-32-generative-loops-001
+    tag: behavior:retrospective
+    statement: >-
+      An irreversible protocol change is trustworthy only when its seal is earned
+      by a falsifiable test that could have failed, run by a scorer blind to the
+      desired outcome, with a pre-written pivot path and declared risk appetite
+      committed before the test runs. The §32 seal held because a blind CISO
+      scoring test (1/15 adversarial vs 15/15 good-faith) gave a defensible
+      PROCEED while a documented v0.1-paired-critic pivot meant a failing result
+      would not have stranded the team.
+    sources:
+      - intent-spec/protocol-32-generative-loops/_retrospective.md
+    added_in_workflow_run: 2026-06-19-protocol-32-generative-loops-retro-001
+
+  - id: claim-retro-protocol-32-generative-loops-002
+    tag: behavior:retrospective
+    statement: >-
+      A green test result on a self-generated or hand-picked corpus measures
+      synthesis-shape stability, not resistance to gaming. The §32 de-risk test
+      (1-vs-15 on one curated pair) and v0.2 calibration (100% inter-rater
+      agreement on a corpus 17/20 synthetic) both produced clean greens that
+      masked the unresolved killing assumption that the protocol enforces the
+      presence of dissent, not its quality. A test corpus should count as
+      gate-clearing only when it is net-new and real and not curated by the agent
+      shaping the spec; otherwise the gate stays open rather than passing on
+      synthetic data.
+    sources:
+      - intent-spec/protocol-32-generative-loops/_retrospective.md
+    added_in_workflow_run: 2026-06-19-protocol-32-generative-loops-retro-001
+
+  - id: claim-retro-protocol-32-generative-loops-003
+    tag: behavior:retrospective
+    statement: >-
+      Protocol text that asserts a script enforces a rule must map to enforcement
+      that actually exists in that release, or the seal ships a contract that
+      lies invisibly. §32.5 claims sdk-health greps for orphaned loops and
+      LOOP-2026 provenance lines, but scripts/health.js contains zero loop
+      references, so "no hash, no gate crossing" is enforced only by convention
+      while the text says otherwise. Every "sdk-health greps X" sentence should
+      map to a grep verified present by running the script at seal, or the clause
+      should be reworded to name the enforcement as convention with a return
+      ticket.
+    sources:
+      - intent-spec/protocol-32-generative-loops/_retrospective.md
+    added_in_workflow_run: 2026-06-19-protocol-32-generative-loops-retro-001
+
+  - id: claim-retro-protocol-32-generative-loops-004
+    tag: behavior:retrospective
+    statement: >-
+      Stated Non-Negotiables and solution-sketch commitments silently lapse
+      unless they are seal-blocking gate items. The §32 worked example shipped
+      only to repo-root loops/ and was never installed into project-template/
+      despite being a Non-Negotiable and solution-sketch item, so new projects
+      bootstrapping from the template never receive the most concrete teaching
+      artifact. Each Non-Negotiable should be a checkbox on the seal-fix-list that
+      the change cannot pass until checked or explicitly downgraded by the owner
+      with a logged reason.
+    sources:
+      - intent-spec/protocol-32-generative-loops/_retrospective.md
+    added_in_workflow_run: 2026-06-19-protocol-32-generative-loops-retro-001
+
+  - id: claim-retro-protocol-32-generative-loops-005
+    tag: behavior:retrospective
+    statement: >-
+      A control identified at shaping as load-bearing must have its concrete spec
+      (dimensions, scale, thresholds, reopen rule) exist as a testable claim
+      before the de-risk gate runs, not after. The §32 periodic constitutional
+      audit, its central anti-sycophancy lever, was discovered during execution
+      (vague claim-006 invalidated and superseded by sharp claim-008 on seal day)
+      rather than specified at shaping, so it was designed last and tested least
+      and its real-world calibration remains unproven at seal. Until such a
+      control has run once against real lines, the sealed protocol should carry a
+      visible "calibration unproven" caveat. Cross-domain review (CLO, UXR,
+      Designer) before seal also catches sealing-blockers such as legal
+      term-of-art collisions and domain-applicability gaps that would be expensive
+      to discover post-seal in a discoverable corpus.
+    sources:
+      - intent-spec/protocol-32-generative-loops/_retrospective.md
+    added_in_workflow_run: 2026-06-19-protocol-32-generative-loops-retro-001
