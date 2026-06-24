@@ -1,0 +1,58 @@
+# The Office — Daily Rituals
+
+> The company is the product (`CHARTER.md`). The office is where the body of work is kept honest, day by day. These rituals are the daily heartbeat: small, recurring loops that move the company body forward and surface what needs a human.
+
+## What this directory is
+
+A **legible operating rhythm**, not a second engine. Each ritual below names its trigger, its owner role, what it consumes, what it produces, the command that runs it, and how it fails. The executable layer already lives in `workflows/` and `scripts/` — these files point at it. No ritual re-implements a workflow. (Per `protocol.md`: every agent references the substrate; no agent duplicates it.)
+
+The rituals exist because the company keeps drifting in the same five places: surfaces stall un-rostered, loop signals never reach the stream, owed retros sit undone, the status file lies, and the digest watchlist goes unread. Each ritual is the standing answer to one of those failures.
+
+## The office day
+
+```
+morning   →  01 Surface Sweep        move §34 Collaboration Surfaces forward; flag stalls
+          →  02 Signal Harvest       pull improvement_signals from closed loops into the stream
+          →  03 Daily Digest         digest the signal stream; produce the watchlist
+midday    →  04 Retro-Trigger Sweep  find shipped slugs owed a sprint retro
+close     →  05 Status Reconcile     make current-status.md match on-disk reality
+```
+
+Run the whole day in one shot:
+
+```js
+Workflow({
+  scriptPath: "/Users/matias.bargas/dev/ai-repos/team-sdk/workflows/office-day-v0.1.js",
+  args: { date: "YYYY-MM-DD" }   // required — workflow scripts cannot read the clock
+})
+```
+
+Or run a single ritual by hand using the command in its file. The orchestrator is a conductor; every phase maps to a ritual file here and is auditable on its own.
+
+## The roster
+
+| # | Ritual | Owner | Cadence | Runs | Fixes the failure |
+|---|---|---|---|---|---|
+| 01 | [Surface Sweep](office/01-surface-sweep.md) | Coordinator | daily, morning | read + report (see note) | surfaces stall un-rostered |
+| 02 | [Signal Harvest](office/02-signal-harvest.md) | Coordinator | daily | `retrospective.js --cadence loop` | loop signals never reach the stream |
+| 03 | [Daily Digest](office/03-daily-digest.md) | Coordinator | daily | `retrospective.js --cadence daily` | watchlist never produced |
+| 04 | [Retro-Trigger Sweep](office/04-retro-trigger-sweep.md) | PM | daily | scan + (on owed) `--cadence sprint` | owed retros sit undone |
+| 05 | [Status Reconcile](office/05-status-reconcile.md) | Coordinator | daily, close | `sdk-health` + `sdk-status` + rewrite | current-status.md drifts from reality |
+
+Per-role daily obligations are in [`by-role/`](by-role/) — each role's short list of what it owns or watches in the daily rhythm.
+
+## How this fits the substrate cadences
+
+The continuous-improvement substrate runs at four cadences (`retrospective.js --cadence loop|daily|sprint|quarterly`). The office rituals operate the **daily-frequency slice**: per-loop signal harvest and the daily digest are direct invocations; the retro-trigger sweep is the daily *watch* for when a **sprint** retro becomes due. **Sprint** retros and the **quarterly** synthesis are not daily rituals — they fire on ship + 24h and once per quarter, respectively. The office day surfaces when they are owed; it does not run them on the daily clock.
+
+## Honest gaps (read before trusting a ritual)
+
+This directory holds itself to the §32 retro's own lesson (proposal #4): *a ritual must not claim an enforcement mechanism that does not exist.*
+
+- **Surface Sweep is read-and-report only.** It reports surface state and flags stalls and open roster slots. It does **not** complete verification blocks — that is the job of the meta-loop `company-loop-v0.1`, which is referenced in `AGENTS.md` / `protocol.md` §34 but **is not built yet**. Until it exists, advancing a surface past `under-verification` is a human/verifier act, not an automated one.
+- **`retrospective.js` has no `pre-tag` cadence.** The substrate docs name a `pre-tag` cadence; the script implements only `loop`, `daily`, `sprint`, `quarterly`. Pre-tag pattern detection is therefore not yet a runnable ritual. It is also not a *daily* ritual, so its absence does not affect the office day.
+- **`retrospective.js` hardcodes `today = '2026-06-14'`.** The office-day orchestrator passes `date` explicitly so digest filenames and trigger checks are correct, but the provenance `ts` written into `metrics/_cadence-runs.jsonl` inherits the stale constant until `retrospective.js` is fixed. Tracked as a substrate cleanup ticket.
+
+## The principle
+
+A ritual that runs only when someone remembers it is not a ritual — it is a hope. The office day exists so the company body is reconciled to truth on a fixed clock, by a named owner, with a command anyone can run and a failure mode anyone can check. We all build our infra.

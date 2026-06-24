@@ -1,7 +1,7 @@
 # Current Status
-**Last updated:** 2026-06-19
-**Updated by:** Greg (CEO) — governance backfill of the generative-loops / continuous-improvement initiative
-**Release:** v2026.Q2.3 · **Protocol:** v4.4 (§32 sealed)
+**Last updated:** 2026-06-24
+**Updated by:** Greg (CEO) — governance backfill of §34 Collaboration Surfaces + CHARTER + the office daily-rituals layer
+**Release:** v2026.Q2.3 · **Protocol:** v4.5 (§32 + §34 sealed; §33 reserved for SDLC state machine, draft)
 
 > This is the first file you read when resuming work. It tells you exactly where the team is right now and what the next action is. If this file is out of date, the team is flying blind.
 >
@@ -11,15 +11,17 @@
 
 ## Phase
 
-**Generative-loops layer + continuous-improvement substrate shipped (2026-06-14/16), now mapped and committed.** Protocol §32 sealed (v4.3 → v4.4): two v0.1 loop patterns (Critique-Revise, Red-Team), the ephemeral Loop Coordinator role, per-loop `state.md`, `WEAKNESS_HYPOTHESIS` open requirement, asymmetric termination contract, and `LOOP-PROVENANCE:` hashes. The continuous-improvement substrate (`improvement_signal` → `metrics/_signals.jsonl`, 4-cadence `retrospective.js`, metrics defs, OKR proposals, auto-maintained `_HORIZONS.md`) ships alongside. v0.2 calibration verdict: **HOLDS** with a synthetic-corpus caveat (load-bearing evidence is 3 real lines).
+**Self-describing team-organism, Phase 1 shipped + mapped (2026-06-20/22).** Protocol §34 sealed (v4.4 → v4.5): **Collaboration Surfaces** — a self-describing shared artifact where multiple roles author and verify one decision/flow/roadmap (front-matter schema, author/verification/reconciliation blocks, state machine, dynamic-plus-fixed-minimum verifier roster, blunt no-go → forced discussion, provenance + `improvement_signal` reuse, human boundary at §34.7). Ships `project-template/surface-template.md` and the first worked surface (`SURFACE-20260620-enforcement-claims-tooling-001`, awaiting its verifier roster). **CHARTER.md** drafted as Layer A ("The Company Is The Product") — **DRAFT, awaiting Owner ratification; not load-bearing until signed.** **The Office** (`team/office/rituals/` + `workflows/office-day-v0.1.js`) adds a legible daily operating rhythm of five rituals that reconcile the company body to truth on a fixed clock.
 
-**Governance status:** This initiative was undocumented and uncommitted until the 2026-06-19 Greg audit. History.md backfilled, this file updated, work committed. See `history.md` → "SDK-CHANGE — Protocol §32 Generative Loops + Continuous-Improvement Substrate."
+**Governance status:** §34 + CHARTER were committed (`b9823b3`) but never entered in `history.md`; the office layer (Jun 22) sat uncommitted. The 2026-06-24 Greg audit closed the map: `history.md` backfilled with two SDK-CHANGE entries, this file reconciled, office layer committed. See `history.md` → "§34 Collaboration Surfaces + CHARTER" and "The Office: Daily Operating Rituals."
 
-**Prior phase (still true):** Tier 1 of @team-sdk extraction complete — Protocol Schema, Knowledge Graph, Consultation Extension shipped, 848 tests / 0 failures. Tier 2 (cross-project memory, pluggable runtime, squad marketplace) remains BLOCKED awaiting owner direction.
+**Prior phases (still true):** §32 generative-loops layer + continuous-improvement substrate sealed (v4.4, 2026-06-14/16) — the overdue sprint retro on `protocol-32-generative-loops` is now **delivered** (`42888b8`; `_RETRO-INDEX.md` + `_cadence-runs.jsonl` exist). Tier 1 of @team-sdk extraction complete — Protocol Schema, Knowledge Graph, Consultation Extension, 848 tests / 0 failures. Tier 2 (cross-project memory, pluggable runtime, squad marketplace) remains BLOCKED awaiting owner direction.
 
 ---
 
 ## Active Missions
+
+No mission is in active execution. The team is between initiatives: §32, §34, and Tier 1 are sealed; Tier 2 is blocked on owner direction. The standing operational work is the **office daily rhythm** (run `office-day-v0.1.js`) plus the open follow-throughs listed under Next Agent.
 
 ### Tier 1 — The Extractable Core (@team-sdk/core)
 
@@ -66,7 +68,9 @@ Nothing. Tier 1 complete. Tier 2 blocked until owner decides to start.
 
 ## Open Decisions
 
-None. All three pre-discovery decisions resolved by Owner on 2026-04-17:
+**OPEN — Owner action owed: ratify `CHARTER.md`.** Layer A is DRAFT and carries no authority until the Owner signs the ratification line. Until then, "The Company Is The Product" is a stated intent, not a binding constitution.
+
+Resolved (pre-discovery, Owner 2026-04-17):
 - ~~Monorepo~~ → **Confirmed.** npm workspaces, single repo.
 - ~~doc.js decomposition~~ → **Audit first.** Before committing timeline.
 - ~~Consultation Mode channel~~ → **Extend agentic environments.** Not a standalone binary. The SDK extends whatever runtime the user is already in (Claude Code, other engines). Slash commands, skills, MCP servers — not a separate tool.
@@ -75,9 +79,15 @@ None. All three pre-discovery decisions resolved by Owner on 2026-04-17:
 
 ## Next Agent To Activate
 
-**Overdue: sprint-cadence retrospective on `protocol-32-generative-loops`.** The 24h trigger gate (per `workflows/README.md`) passed ~5 days ago. Run `retrospective.js --cadence sprint` on that slug to consume the per-loop `improvement_signal` stream and produce the first real signal-to-action data point. This is the substrate consuming its own first cycle. Owed downstream: `_RETRO-INDEX.md` and `intent-spec/idea-execution-v0.2/_audit-log.md` (neither exists yet).
+**Owner decision: ratify or revise `CHARTER.md`.** Everything in §34 and the office layer leans on the "company is the product" thesis; it should be made binding (or amended) before more is built on it.
 
-Then: Tier 2 of @team-sdk extraction still awaits owner direction (unchanged).
+Then, open follow-throughs (none blocking, all owed):
+1. **Run the office day on a clock.** `Workflow({ scriptPath: "workflows/office-day-v0.1.js", args: { date: "YYYY-MM-DD" } })` — its Status Reconcile ritual is the standing fix for the exact drift these two audits keep finding. Wire it to a real cadence so the map stops lagging the tree.
+2. **Build `company-loop-v0.1`** (the meta-loop §34/AGENTS.md reference) so a surface can advance past `under-verification` without a manual act — and roster the first worked surface.
+3. **Substrate cleanup tickets:** add a `pre-tag` cadence to `retrospective.js`; remove the hardcoded `today='2026-06-14'` constant.
+4. **`intent-spec/idea-execution-v0.2/_audit-log.md`** baseline entry still owed (carried from the v0.2 calibration verdict).
+
+Background: Tier 2 of @team-sdk extraction still awaits owner direction (unchanged).
 
 ---
 
@@ -96,6 +106,12 @@ Then: Tier 2 of @team-sdk extraction still awaits owner direction (unchanged).
 2026-06-14/16 — Generative-loops layer + continuous-improvement substrate built and sealed across a ~6h session plus a 2026-06-16 SDLC state-machine follow-on. §32 → protocol v4.4. All work landed in the working tree but was not committed or mapped at the time.
 
 2026-06-19 — Greg audit: the entire June 14/16 initiative was uncommitted, absent from history.md, and current-status.md still read "2026-04-18, Tier 1 complete." Closed the map: history.md backfilled with three decision entries, this file updated, work committed. Next action is the overdue sprint-cadence retro on the §32 slug.
+
+2026-06-20 — Two commits landed: §34 Collaboration Surfaces + CHARTER.md draft (`b9823b3`, protocol v4.4 → v4.5) and the sprint-cadence retro output for `protocol-32-generative-loops` (`42888b8`). Both committed; neither was entered in history.md at the time.
+
+2026-06-22 — The office daily-rituals layer built: `team/office/rituals/` (5 rituals + by-role obligations) and `workflows/office-day-v0.1.js`. Landed in the working tree, uncommitted.
+
+2026-06-24 — Greg audit (same drift, one cycle later): §34 + CHARTER committed but missing from history.md; office layer uncommitted; this file still read "v4.4, §32 sealed." Closed the map: history.md backfilled with two SDK-CHANGE entries, this file reconciled to v4.5 + office layer, office work committed. Open: CHARTER ratification (Owner), and wiring the office day to a real cadence so reconciliation stops being manual.
 
 ---
 

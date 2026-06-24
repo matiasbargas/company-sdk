@@ -354,3 +354,66 @@ Reversible: YES — a failing cycle-3 re-test reopens the rubric.
 Affects natural persons: NO
 
 **Governance note (Greg, 2026-06-19):** This entire initiative shipped to the working tree on 2026-06-14/16 but was never committed, never entered in `history.md`, and `current-status.md` still read "2026-04-18, Tier 1 complete." A release is not done when code ships — it is done when the map is written. This backfill closes that gap. The substrate that emits provenance on every loop had no project-level map of its own; that is the failure mode the substrate exists to prevent, surfacing one level above the substrate.
+
+---
+
+## SDK-CHANGE — Protocol §34 Collaboration Surfaces + CHARTER (Layer A draft)
+**Date of work:** 2026-06-20 (committed `b9823b3`)
+**Logged:** 2026-06-24 (governance backfill — Greg audit found this commit absent from `history.md` and `current-status.md` still reading "v4.4, §32 sealed")
+**Made by:** PM + CTO + Mario + CLO + UXR + Designer, Owner-directed
+**Release:** v2026.Q2.3
+**Tag:** SDK-CHANGE
+**Status:** APPLIED (committed `b9823b3`; documented with this entry)
+
+**What happened:**
+Phase 1 of the self-describing team-organism plan landed. Two things shipped together: a constitutional charter (Layer A) and a new protocol primitive (§34).
+
+DECISION: Draft CHARTER.md — "The Company Is The Product" (Layer A, DRAFT awaiting Owner ratification)
+Date: 2026-06-20
+Release: v2026.Q2.3
+Made by: Claude (drafted), Owner-directed (2026-06-18/20)
+Context: The vision was latent in `intent-spec/_HORIZONS.md` and `team/roles/_shared.md` but never stated constitutionally. The Owner directed that it be written down as Layer A.
+Decision: Add `CHARTER.md`. Thesis: there is no deliverable outside the organization — the protocol, role files, history.md, surfaces, claims, and signals **are** the company body. Three non-negotiable consequences: every artifact is a provenance-stamped commit to the company body; every role is a real collaborator (engineer or not); the information an agent produces is its empowerment. Behavior norms: proactive + blunt, autonomous where sensible, persisted to GitHub. Pointers added in `team/roles/_shared.md` and `foundation/README.md`.
+Alternatives considered: leave the vision implicit in horizons/shared — rejected; a load-bearing constitution must be explicit and human-ratified, not inferred.
+Rationale: Layer A is human-ratified and never silently AI-maintained. It is **not load-bearing until the Owner signs the ratification line at the bottom of CHARTER.md.**
+Reversible: YES — DRAFT; unratified text carries no authority.
+Affects natural persons: NO
+**OPEN — Owner action owed:** ratify or revise CHARTER.md.
+
+DECISION: Seal Protocol §34 (Collaboration Surfaces) into protocol.md
+Date: 2026-06-20
+Release: v2026.Q2.3
+Made by: PM + CTO + Mario (AI-assisted), Owner-directed
+Context: A single decision/flow/roadmap is authored and verified by multiple roles, but there was no shared artifact format — verification closed in conversation with no record of who checked what.
+Decision: Add §34 to protocol.md (bumped v4.4 → v4.5). A Collaboration Surface is a self-describing shared artifact: front-matter schema (id, state, verifier_roster, irreversible), author/verification/reconciliation blocks, a state machine, a dynamic-plus-fixed-minimum verifier roster, blunt no-go → forced discussion (reuses §29/§32), and provenance + `improvement_signal` reuse. Human boundary fixed at §34.7. §33 reserved for the SDLC state machine (still draft). Ships `project-template/surface-template.md` and the first worked surface `project/surfaces/SURFACE-20260620-enforcement-claims-tooling-001.md` (seeded from §32 retro proposal #4, authored and awaiting its verifier roster). AGENTS.md v3.0 → v3.1 registers the surface lifecycle.
+Alternatives considered: keep multi-role verification informal — rejected, same invisible-failure logic as §32.
+Rationale: A surface makes "who authored, who verified, what's unresolved" durable and auditable, consistent with the CHARTER thesis that the artifact is the company.
+Implications: The meta-loop `company-loop-v0.1` that would advance a surface past `under-verification` is referenced in §34 / AGENTS.md but **is not built yet** — until it exists, advancing a surface is a human/verifier act, not automated.
+Reversible: YES — §34 is additive.
+Affects natural persons: NO
+
+**Sprint retro delivered (2026-06-19, committed `42888b8`):** The overdue sprint-cadence retrospective on `protocol-32-generative-loops` ran. Artifacts: `_retrospective.md` (6 surprises, 7 protocol-change proposals), `intent-spec/_RETRO-INDEX.md` (now exists), `claims-retro.yaml` (5 retro claims), and the first `metrics/_cadence-runs.jsonl` provenance line. The 7 proposals seed the meta-loop's first run. This closes the "Next Agent To Activate" action standing since the 2026-06-19 audit.
+
+---
+
+## SDK-CHANGE — The Office: Daily Operating Rituals (office-day workflow)
+**Date of work:** 2026-06-22
+**Logged:** 2026-06-24 (governance backfill — Greg audit found this uncommitted and undocumented)
+**Made by:** Coordinator + PM (AI-assisted), Owner-directed
+**Release:** v2026.Q2.3
+**Tag:** SDK-CHANGE
+**Status:** APPLIED (uncommitted at audit time; committed with this entry)
+
+DECISION: Add `team/office/` daily rituals + `workflows/office-day-v0.1.js` orchestrator
+Date: 2026-06-22
+Release: v2026.Q2.3
+Made by: Coordinator + PM (AI-assisted), Owner-directed
+Context: The company kept drifting in the same five places — surfaces stall un-rostered, loop signals never reach the stream, owed retros sit undone, the status file lies, and the digest watchlist goes unread. These are exactly the failure modes the §32 substrate and §34 surfaces exist to prevent, but nothing ran them on a fixed clock.
+Decision: Add a **legible operating rhythm** (not a second engine) under `team/office/rituals/`: five ritual files (01 Surface Sweep, 02 Signal Harvest, 03 Daily Digest, 04 Retro-Trigger Sweep, 05 Status Reconcile), per-role daily obligations under `by-role/`, and a runnable conductor `workflows/office-day-v0.1.js` that sequences all five. No ritual re-implements a workflow — each points at the existing `workflows/`+`scripts/` substrate. Honesty contract (per §32 retro proposal #4): a ritual must not claim an enforcement mechanism that does not exist.
+Alternatives considered: keep relying on agents remembering to reconcile — rejected; "a ritual that runs only when someone remembers it is not a ritual, it is a hope." The 2026-06-19 and 2026-06-24 audits are the evidence.
+Rationale: Reconcile the company body to truth on a fixed clock, by a named owner, with a command anyone can run and a failure mode anyone can check.
+Implications / declared honest gaps: (a) Surface Sweep is read-and-report only — advancing a surface needs `company-loop-v0.1`, not yet built; (b) `retrospective.js` has no `pre-tag` cadence despite the substrate docs naming one; (c) `retrospective.js` hardcodes `today='2026-06-14'` — the orchestrator passes `date` explicitly so filenames/triggers are correct, but provenance `ts` in `metrics/_cadence-runs.jsonl` inherits the stale constant until fixed. All three tracked as substrate cleanup tickets.
+Reversible: YES — additive; the rituals point at the substrate and can be retired without touching it.
+Affects natural persons: NO
+
+**Governance note (Greg, 2026-06-24):** Same failure mode as the 2026-06-19 audit, one cycle later: §34 + CHARTER were committed but never entered in `history.md`, and the office layer (Jun 22) sat uncommitted and unmapped while `current-status.md` still read "v4.4, §32 sealed." The office layer is itself the standing fix for this exact drift — Status Reconcile (ritual 05) exists so the map stops lagging the tree. Running it on the clock is the open follow-through.
