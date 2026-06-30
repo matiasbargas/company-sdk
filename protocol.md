@@ -1,5 +1,5 @@
 # Protocol -- Shared Interface Contract
-**Version:** 4.5
+**Version:** 4.6
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
 
@@ -1710,4 +1710,44 @@ Surfaces live at `<project>/surfaces/SURFACE-YYYYMMDD-<slug>-<seq>.md`. For the 
 
 ---
 
-*Protocol v4.5. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, the Halloway Ratchet doctrine, TAG field, Kill Log, Negative Scope, Pre-Mortem gate, design principles, generative loops, and collaboration surfaces. Every agent references it. No agent duplicates it.*
+## 35. Document-First Gate
+
+### 35.0 Why this exists
+
+The company is the product (`CHARTER.md`): the protocol, the role files, the decisions in `history.md`, the surfaces — these *are* the company body, not documentation about it. It follows that **the map must never lag the work.** Twice the map did lag — the §32 substrate and then §34 + the office layer both shipped to the tree while `history.md` and `current-status.md` stayed behind, and both took a Greg audit to backfill (see `history.md`, 2026-06-19 and 2026-06-24). The repo already had ample "keep the map current" machinery — the project-map gate (§6/CEO), the Status Reconcile ritual, improvement-signals — but all of it was written norm, and written norm drifted. §35 makes document-first **load-bearing**: a real gate, not another principle to remember.
+
+### 35.1 The rule
+
+A commit that changes a **material** file MUST, in the same commit, either:
+- touch the map — `<project>/current-status.md` and/or `<project>/history.md` (a decision uses the §6 format), or
+- carry `[map-exempt: <reason>]` in the commit message (reason mandatory, non-empty).
+
+Material change → the map travels with it, or the waiver is recorded where the git log keeps it forever. The route is always mapped, or the gap is always named.
+
+### 35.2 What counts as material
+
+The authoritative list is **code, not prose** — `scripts/lib/map-gate-lib.js` (`MATERIAL_RULES` / `EXEMPT_RULES`). This section does not re-enumerate it, because a prose copy would drift from the classifier (the exact failure §35 exists to stop). In summary: **material** = governance docs (`protocol*.md`, `CHARTER.md`, `STRATEGY.md`, `AGENTS.md`, `CLAUDE.md`, `SDK.md`, `README.md`), everything under `team/ workflows/ scripts/ packages/ foundation/ intent-spec/ generated-spec/ loops/ metrics/ project-template/`, and any `.js/.ts/.mjs/.cjs/.json`. **Exempt** (own write-rules or self-describing provenance) = the map files themselves, `surfaces/**` (§34), area logs and `*-requirements.md` (§17), `LOOP.md`, lockfiles, `.gitignore`, `LICENSE`. Exempt wins over material. In any repo without a `current-status.md`, the gate is a no-op.
+
+### 35.3 The escape hatch
+
+`[map-exempt: <reason>]` is the pressure valve that keeps the gate from being a tax: a genuinely trivial change (a typo, a formatting pass) ships with one honest line of reason, permanently auditable in the git log. An empty `[map-exempt:]` is rejected — the waiver is never free of a reason.
+
+### 35.4 Enforcement, and its honest limits
+
+Per the §32 retro's own rule — *a mechanism named here must exist in code* — these are the three layers, each real:
+
+- **Layer 1 — git `commit-msg` hook (hard gate).** `scripts/hooks/commit-msg` → `scripts/hooks/map-gate.js --commit-msg`. Blocks the commit (exit 1) when material files are staged without a map touch or an exempt tag. Catches both Claude's and a human's commits. Installed by `node scripts/install-hooks.js` (`sdk-install-hooks`), which sets `core.hooksPath → scripts/hooks` so the hook is versioned and updates with `git pull`.
+- **Layer 2 — Claude Code `Stop` hook (reminder).** `.claude/settings.json` → `map-gate.js --stop`. At the end of a Claude turn, reminds (stderr) when uncommitted material drift exists; it **never blocks** a turn. Fires only on *uncommitted* drift, so it never double-nags Layer 1.
+- **Layer 3 — `sdk-health` drift check (on-demand backstop).** Counts material commits since the last map update that neither touched the map nor were waived, and flags them.
+
+**Honest limits, stated not hidden:** `git commit --no-verify` bypasses Layer 1 entirely — unpreventable, and nothing logs it; Layer 3 + the Status Reconcile ritual are the only catch afterward. A fresh `git clone` has no active git gate until `sdk-install-hooks` runs (`core.hooksPath` is not set by cloning); `SDK.md` HUMAN SETUP prompts it. Auto-installing the gate in *generated* projects is a known gap, not a shipped feature — those projects reference the SDK by path and carry no `scripts/hooks` of their own, so per-project wiring (a hook that points at the SDK's `map-gate.js` by absolute path, run from `sdk-init`) is an open follow-up. Today §35 is enforced in the SDK's own repo. The gate cannot silently rot: `map-gate.js` and the classifier are themselves material (editing them without a map touch trips the gate), and `scripts/lib/test-map-gate.js` pins the classifier in `npm test`.
+
+### 35.5 Relationship to existing sections
+
+- **§6 (Decision Log):** §35 enforces the *presence* of a map touch on every material commit; §6 governs the *form* of the decision entry that touch should contain. The gate is mechanical and per-commit; §6 is editorial.
+- **§34 (Collaboration Surfaces):** surfaces are exempt from the gate (they carry their own provenance), but a `verified` decision-surface still emits a §6 entry per §34.8 — which is itself a map touch.
+- **Status Reconcile ritual (`team/office/rituals/office/05`):** the daily backstop that rewrites `current-status.md` to on-disk reality. §35 is the per-commit gate; the ritual is the daily sweep; `sdk-health` is the on-demand check. Three cadences, one goal: the map never lags the route.
+
+---
+
+*Protocol v4.6. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, the Halloway Ratchet doctrine, TAG field, Kill Log, Negative Scope, Pre-Mortem gate, design principles, generative loops, collaboration surfaces, and the document-first gate. Every agent references it. No agent duplicates it.*

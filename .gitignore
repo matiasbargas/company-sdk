@@ -1,9 +1,9 @@
 # macOS
 .DS_Store
 
-# Claude Code — local settings are not committed; commands/ (skills) are
+# Claude Code — per-machine permissions are not committed; commands/ (skills) and
+# settings.json (shared hooks, e.g. the §35 document-first Stop hook) ARE committed.
 .claude/settings.local.json
-.claude/settings.json
 
 # Logs
 logs

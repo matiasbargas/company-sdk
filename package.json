@@ -26,6 +26,7 @@
   "homepage": "https://github.com/matiasbargas/company-sdk#readme",
   "files": [
     ".claude/commands/",
+    ".claude/settings.json",
     "team/",
     "project-template/",
     "scripts/",
@@ -56,6 +57,7 @@
     "sdk-validate": "./scripts/validate.js",
     "sdk-pre-tag": "./scripts/pre-tag.js",
     "sdk-version": "./scripts/version.js",
+    "sdk-install-hooks": "./scripts/install-hooks.js",
     "sdk-daemon": "./scripts/daemon.js",
     "sdk-ops": "./scripts/ops.js",
     "sdk-consult": "./scripts/consult.js",
@@ -66,7 +68,7 @@
     "squad": "node scripts/squad.js",
     "doc": "node scripts/doc.js",
     "update": "node scripts/update.js",
-    "test": "node scripts/lib/test-ship.js && node scripts/lib/test-validate.js && node scripts/lib/test-v4.js && node packages/protocol/tests/run.js && node packages/context/tests/run.js && node packages/cli/tests/run.js && node packages/memory/tests/run.js && node packages/runtime/tests/run.js"
+    "test": "node scripts/lib/test-ship.js && node scripts/lib/test-validate.js && node scripts/lib/test-map-gate.js && node scripts/lib/test-v4.js && node packages/protocol/tests/run.js && node packages/context/tests/run.js && node packages/cli/tests/run.js && node packages/memory/tests/run.js && node packages/runtime/tests/run.js"
   },
   "workspaces": [
     "packages/*"

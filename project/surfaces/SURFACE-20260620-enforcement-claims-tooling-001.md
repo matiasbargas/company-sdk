@@ -33,6 +33,15 @@ surface:
 
 LOOP-PROVENANCE: SURFACE-20260620-enforcement-claims-tooling-001 + SHA256(pending-canonicalization)
 
+## Related work — Document-First Gate (§35), 2026-06-30
+
+This surface's rule was practiced in the authoring of **protocol.md §35 (Document-First Gate)**. Per the surface's discipline, §35.4 names only mechanisms that exist in code at the moment the clause ships:
+- `scripts/hooks/commit-msg` → `scripts/hooks/map-gate.js` (Layer 1, the real gate) — present.
+- `.claude/settings.json` Stop hook (Layer 2, reminder) — present.
+- a **real** drift check added to `scripts/health.js` (Layer 3) — present and exercised, directly satisfying this surface's point #3 (no "`sdk-health` does X" sentence without a corresponding check in the script).
+
+This does **not** close the surface: the roster (Mario, CISO, Test Engineer) is still open, and the surface's original targets — the §32.5 loop-provenance grep and the §34.9 stale-surface grep — remain unimplemented return tickets. §35 is corroborating evidence that the proposed rule is workable, not a verdict on it. State stays `under-verification`.
+
 ## Verification — Mario (pending)
 
 **Verdict:** _pending — roster slot open_

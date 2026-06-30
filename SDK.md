@@ -1,4 +1,4 @@
-<!-- AI BOOTSTRAP — company-sdk v6.0.0 / protocol v4.3 -->
+<!-- AI BOOTSTRAP — company-sdk v6.0.0 / protocol v4.6 -->
 <!-- Read this file first. It is the complete operating context for this project. -->
 <!-- After reading this file, follow the LOAD ORDER below to activate. -->
 
@@ -256,6 +256,7 @@ PHASE 4 (Completion)
 | Mario gate | Irreversible decision review | Sprint 1 start |
 | CEO validation | project-map.md Section 11 checklist | Release seal |
 | Doc health gate | sdk-validate passes | sdk-ship |
+| Document-first gate (§35) | material change touches the map or `[map-exempt: <reason>]` | git commit |
 
 ```bash
 sdk-gate-check .          # CLO + CISO gate
@@ -520,6 +521,12 @@ export TEAM_SDK_GITHUB_TOKEN=ghp_...
 sdk-github link . --repo owner/repo
 ```
 
+**3b. Install the document-first gate** (once per clone — protocol.md §35)
+```bash
+node scripts/install-hooks.js   # sets core.hooksPath → scripts/hooks
+```
+Material changes then require a map update (`current-status.md`/`history.md`) or `[map-exempt: <reason>]` at commit time. (Auto-installing this in generated projects is an open follow-up — see §35.4.)
+
 **4. Activate Greg**
 ```
 Hey Greg — here's a new project brief.
@@ -548,4 +555,4 @@ Agent manifest: `AGENTS.md`
 
 ---
 
-*company-sdk · protocol v4.3 · v6.0.0 · MIT*
+*company-sdk · protocol v4.6 · v6.0.0 · MIT*

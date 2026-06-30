@@ -23,7 +23,9 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const { validate } = require('./validate');
+const { classify, hasExemptTag } = require('./lib/map-gate-lib');
 
 const args         = process.argv.slice(2);
 const jsonMode     = args.includes('--json');
@@ -252,6 +254,43 @@ if (checkDrift) {
     }
   }
 }
+
+// 9. Document-first drift (protocol.md §35 backstop)
+//    Counts material-path commits since the last map update that neither touched the map
+//    nor carried [map-exempt: <reason>]. These are the commits that bypassed the gate
+//    (--no-verify) or landed before the hook was installed. This is the on-demand backstop
+//    the §35 enforcement text is allowed to cite — it exists in code here.
+function gitOut(args, cwd) {
+  try { return execSync(`git ${args}`, { cwd, encoding: 'utf8' }); } catch (_) { return null; }
+}
+(function documentFirstDrift() {
+  const root = (gitOut('rev-parse --show-toplevel', projectDir) || '').trim();
+  if (!root) return; // not a git repo → skip silently
+  const relPrefix = path.relative(root, projectDir).replace(/\\/g, '/');
+  const mapDirRel = relPrefix && relPrefix !== '.' ? relPrefix + '/' : '';
+  const mapFiles  = [mapDirRel + 'current-status.md', mapDirRel + 'history.md'];
+
+  // Last commit that touched the map.
+  const lastMap = (gitOut(`log -1 --format=%H -- "${mapFiles[0]}" "${mapFiles[1]}"`, root) || '').trim();
+  const range   = lastMap ? `${lastMap}..HEAD` : 'HEAD';
+  const hashes  = (gitOut(`log ${range} --format=%H`, root) || '').split('\n').map(s => s.trim()).filter(Boolean);
+  if (hashes.length === 0) { notices.push('document-first: map is current with HEAD ✓'); return; }
+
+  let drift = 0;
+  for (const h of hashes) {
+    const files = (gitOut(`show --name-only --format= ${h}`, root) || '').split('\n').map(s => s.trim()).filter(Boolean);
+    const c = classify(files, root, mapDirRel);
+    if (!c.applies || c.materialStaged.length === 0 || c.mapTouched) continue;
+    const msg = gitOut(`log -1 --format=%B ${h}`, root) || '';
+    if (hasExemptTag(msg)) continue; // explicit waiver, not drift
+    drift++;
+  }
+  if (drift > 0) {
+    issues.push(`document-first drift: ${drift} material commit(s) since the last map update bypassed the gate (--no-verify or uninstalled hook) — reconcile the map (run the Status Reconcile ritual) and run \`node scripts/install-hooks.js\``);
+  } else {
+    notices.push(`document-first: ${hashes.length} commit(s) since last map update, all mapped or waived ✓`);
+  }
+})();
 
 // ─── Output ───────────────────────────────────────────────────────────────────
 

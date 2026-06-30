@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+# Document-First Gate — git commit-msg hook (protocol.md §35).
+# Delegates to the shared runner so the hook logic lives in one versioned place.
+# Installed by `node scripts/install-hooks.js` (sets core.hooksPath → scripts/hooks).
+exec node "$(git rev-parse --show-toplevel)/scripts/hooks/map-gate.js" --commit-msg "$1"

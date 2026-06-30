@@ -417,3 +417,24 @@ Reversible: YES — additive; the rituals point at the substrate and can be reti
 Affects natural persons: NO
 
 **Governance note (Greg, 2026-06-24):** Same failure mode as the 2026-06-19 audit, one cycle later: §34 + CHARTER were committed but never entered in `history.md`, and the office layer (Jun 22) sat uncommitted and unmapped while `current-status.md` still read "v4.4, §32 sealed." The office layer is itself the standing fix for this exact drift — Status Reconcile (ritual 05) exists so the map stops lagging the tree. Running it on the clock is the open follow-through.
+
+---
+
+## SDK-CHANGE — Protocol §35 Document-First Gate
+**Date of work:** 2026-06-29/30
+**Made by:** Greg (CEO) + CTO + Mario + Test Engineer (AI-assisted), Owner-directed
+**Release:** v2026.Q2.3
+**Tag:** SDK-CHANGE
+**Status:** APPLIED (committed with this entry — the commit passes its own gate)
+
+DECISION: Seal Protocol §35 (Document-First Gate) — make "the map never lags the work" load-bearing
+Date: 2026-06-30
+Release: v2026.Q2.3
+Made by: Greg (CEO), Owner-directed; built with CTO + Mario + Test Engineer
+Context: Twice in June the map lagged the tree and needed a Greg audit to backfill (2026-06-19 §32; 2026-06-24 §34/CHARTER/office). The repo was full of "keep the map current" machinery (project-map gate, §6, Status Reconcile ritual, improvement-signals) but **all of it was written norm, and written norm drifted.** The Owner directed: make document-first a root-level *enforced* concept — every material change goes through the map first.
+Decision: Add §35 to protocol.md (bumped v4.5 → v4.6). A material change must, in the same commit, touch the map (`project/current-status.md` and/or `history.md`) or carry `[map-exempt: <reason>]`. Enforced by three real layers: (1) a git `commit-msg` hook (`scripts/hooks/commit-msg` → `scripts/hooks/map-gate.js`, hard-block, installed via `sdk-install-hooks` setting `core.hooksPath`); (2) a Claude Code `Stop` hook (`.claude/settings.json`, reminds, never blocks); (3) an `sdk-health` drift check (on-demand backstop). The authoritative material/exempt list lives in code (`scripts/lib/map-gate-lib.js`), pinned by `scripts/lib/test-map-gate.js` in `npm test`, NOT re-enumerated in prose.
+Alternatives considered: (a) principle only — rejected, that is exactly what drifted twice; (b) auto-run the Status Reconcile ritual on a cadence — kept as a complementary backstop, not the primary, because daily reconcile heals drift after the fact while §35 prevents it at commit time; (c) scope = decisions only — rejected, Owner chose everything material including code, since the company *is* the product (CHARTER); (d) anchor in CHARTER only — rejected, CHARTER is unratified, so §35 lives in protocol (load-bearing now) with a CHARTER anchor for the constitutional why.
+Rationale: Per the §32 retro's own rule (and the open surface `SURFACE-20260620-enforcement-claims-tooling-001`), a clause must not claim enforcement that does not exist — so every mechanism §35.4 names was built and verified before the text shipped. Gate verified end-to-end (block on material-only; pass on material+map; pass on `[map-exempt: reason]`; block on empty `[map-exempt:]`; pass on exempt-only; `--no-verify` bypasses as documented).
+Implications: Honest limits, stated in §35: `--no-verify` bypasses Layer 1 and nothing logs it; a fresh clone has no git gate until `sdk-install-hooks` runs (`sdk-init` runs it for new projects). The gate self-gates (its own files are material) and is pinned by `npm test`, so it cannot silently rot. `sdk-init` wiring to auto-install is the one remaining build follow-up.
+Reversible: YES — additive; the hook can be uninstalled (`git config --unset core.hooksPath`) and §35 retired like any protocol section.
+Affects natural persons: NO

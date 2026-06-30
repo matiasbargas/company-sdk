@@ -186,3 +186,4 @@ Full spec: `protocol.md` Section 14.
 - All agents follow the structure in `team/roles/_template.md` (includes consultation + challenge blocks)
 - Protocol changes require bumping the version in `protocol.md` header
 - Do not modify `project-template/` without updating the corresponding role's context loading
+- **Document-first (protocol.md §35):** any material change — code, scripts, protocol, role files, workflows — travels with a map update in the same commit (`project/current-status.md` and/or `project/history.md`), or carries `[map-exempt: <reason>]`. A `commit-msg` hook enforces this; run `node scripts/install-hooks.js` once per clone to activate it. The map never lags the route.

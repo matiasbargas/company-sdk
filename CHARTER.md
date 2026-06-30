@@ -37,6 +37,7 @@ This charter does not replace the foundations. It names what they are *for*.
 Every loop, every workflow, every decision routes through this charter. A bet that does not move the company body forward, or a process that produces output no one can stand on later, is measured against this and found wanting. Concretely:
 
 - Collaboration Surfaces (`protocol.md` §34) are the unit where multiple roles contribute to and verify one shared artifact. They exist because the company is the product.
+- The Document-First Gate (`protocol.md` §35) makes "nothing material lives only in a conversation" enforceable rather than aspirational: a material change cannot land without the map traveling with it, or an explicit logged waiver. It exists because if the body of work is the company, a change that does not update the body is a change that did not fully happen.
 - The meta-loop (`workflows/company-loop-v0.1.js`) keeps the body current and proactive. It exists because the company is eager to stay alive.
 - Roles carry a self-describing `## Loop Interface` header so any role can be wired as author or verifier on any surface. They exist because everyone contributes to the same body.
 

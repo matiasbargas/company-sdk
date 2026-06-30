@@ -1,7 +1,7 @@
 # Current Status
-**Last updated:** 2026-06-24
-**Updated by:** Greg (CEO) — governance backfill of §34 Collaboration Surfaces + CHARTER + the office daily-rituals layer
-**Release:** v2026.Q2.3 · **Protocol:** v4.5 (§32 + §34 sealed; §33 reserved for SDLC state machine, draft)
+**Last updated:** 2026-06-30
+**Updated by:** Greg (CEO) — sealed §35 Document-First Gate
+**Release:** v2026.Q2.3 · **Protocol:** v4.6 (§32 + §34 + §35 sealed; §33 reserved for SDLC state machine, draft)
 
 > This is the first file you read when resuming work. It tells you exactly where the team is right now and what the next action is. If this file is out of date, the team is flying blind.
 >
@@ -10,6 +10,8 @@
 ---
 
 ## Phase
+
+**Document-First Gate sealed (§35, 2026-06-30; protocol v4.5 → v4.6).** "The map never lags the work" is now load-bearing, not norm: a material change must touch the map (`current-status.md`/`history.md`) in the same commit or carry `[map-exempt: <reason>]`. Three real layers — a hard-blocking git `commit-msg` hook (`scripts/hooks/` + `sdk-install-hooks`), a non-blocking Claude Code `Stop` reminder (`.claude/settings.json`), and an `sdk-health` drift backstop. Authoritative material/exempt list lives in code (`scripts/lib/map-gate-lib.js`), pinned by `npm test`. Built under the `SURFACE-20260620-enforcement-claims-tooling-001` discipline: every mechanism the text names was built and verified first. Gate verified end-to-end (6 commit scenarios + Stop hook + health). **Honest open gap:** auto-installing the gate in *generated* projects is a follow-up (they carry no `scripts/hooks`); today §35 is enforced in the SDK's own repo. This is the standing fix for the drift that forced the 2026-06-19 and 2026-06-24 backfills.
 
 **Self-describing team-organism, Phase 1 shipped + mapped (2026-06-20/22).** Protocol §34 sealed (v4.4 → v4.5): **Collaboration Surfaces** — a self-describing shared artifact where multiple roles author and verify one decision/flow/roadmap (front-matter schema, author/verification/reconciliation blocks, state machine, dynamic-plus-fixed-minimum verifier roster, blunt no-go → forced discussion, provenance + `improvement_signal` reuse, human boundary at §34.7). Ships `project-template/surface-template.md` and the first worked surface (`SURFACE-20260620-enforcement-claims-tooling-001`, awaiting its verifier roster). **CHARTER.md** drafted as Layer A ("The Company Is The Product") — **DRAFT, awaiting Owner ratification; not load-bearing until signed.** **The Office** (`team/office/rituals/` + `workflows/office-day-v0.1.js`) adds a legible daily operating rhythm of five rituals that reconcile the company body to truth on a fixed clock.
 
@@ -82,10 +84,11 @@ Resolved (pre-discovery, Owner 2026-04-17):
 **Owner decision: ratify or revise `CHARTER.md`.** Everything in §34 and the office layer leans on the "company is the product" thesis; it should be made binding (or amended) before more is built on it.
 
 Then, open follow-throughs (none blocking, all owed):
-1. **Run the office day on a clock.** `Workflow({ scriptPath: "workflows/office-day-v0.1.js", args: { date: "YYYY-MM-DD" } })` — its Status Reconcile ritual is the standing fix for the exact drift these two audits keep finding. Wire it to a real cadence so the map stops lagging the tree.
-2. **Build `company-loop-v0.1`** (the meta-loop §34/AGENTS.md reference) so a surface can advance past `under-verification` without a manual act — and roster the first worked surface.
-3. **Substrate cleanup tickets:** add a `pre-tag` cadence to `retrospective.js`; remove the hardcoded `today='2026-06-14'` constant.
-4. **`intent-spec/idea-execution-v0.2/_audit-log.md`** baseline entry still owed (carried from the v0.2 calibration verdict).
+1. **Wire §35 into generated projects.** `sdk-init` should install a document-first gate that points at the SDK's `map-gate.js` by absolute path (generated projects carry no `scripts/hooks`). Today the gate is enforced in the SDK's own repo only — the honest gap named in §35.4.
+2. **Run the office day on a clock.** `Workflow({ scriptPath: "workflows/office-day-v0.1.js", args: { date: "YYYY-MM-DD" } })` — its Status Reconcile ritual is the daily backstop complementing §35's per-commit gate. Wire it to a real cadence.
+3. **Build `company-loop-v0.1`** (the meta-loop §34/AGENTS.md reference) so a surface can advance past `under-verification` without a manual act — and roster the first worked surface (incl. `SURFACE-20260620-enforcement-claims-tooling-001`).
+4. **Substrate cleanup tickets:** add a `pre-tag` cadence to `retrospective.js`; remove the hardcoded `today='2026-06-14'` constant.
+5. **`intent-spec/idea-execution-v0.2/_audit-log.md`** baseline entry still owed (carried from the v0.2 calibration verdict).
 
 Background: Tier 2 of @team-sdk extraction still awaits owner direction (unchanged).
 
@@ -112,6 +115,8 @@ Background: Tier 2 of @team-sdk extraction still awaits owner direction (unchang
 2026-06-22 — The office daily-rituals layer built: `team/office/rituals/` (5 rituals + by-role obligations) and `workflows/office-day-v0.1.js`. Landed in the working tree, uncommitted.
 
 2026-06-24 — Greg audit (same drift, one cycle later): §34 + CHARTER committed but missing from history.md; office layer uncommitted; this file still read "v4.4, §32 sealed." Closed the map: history.md backfilled with two SDK-CHANGE entries, this file reconciled to v4.5 + office layer, office work committed. Open: CHARTER ratification (Owner), and wiring the office day to a real cadence so reconciliation stops being manual.
+
+2026-06-30 — Owner directive: make document-first a root-level *enforced* concept (the drift that forced both June audits must stop by construction, not good intentions). Sealed **§35 Document-First Gate** (protocol v4.5 → v4.6): commit-msg hard gate + Stop-hook reminder + sdk-health drift backstop, off one code-authoritative classifier pinned by `npm test`. Built and verified under the enforcement-claims surface's discipline (every named mechanism exists in code first); caught and corrected one over-claim (sdk-init auto-install) before it shipped. This commit passes its own gate.
 
 ---
 
