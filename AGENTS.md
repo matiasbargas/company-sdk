@@ -123,7 +123,7 @@ PHASE 4 (Completion):
 
 | Agent | Domain | Requirements file | Escalation path | Activation trigger |
 |---|---|---|---|---|
-| **Loop Coordinator** | Generative loop coordination (§32): turn order, budget enforcement, state machine transitions, provenance. Driver, not judge — does not opine on content. | (none — ephemeral; state lives in `loops/<id>/state.md`) | Spawning agent (unilateral early-stop authority) | Spawned once per §32 loop by a named insertion-point owner (PM, CTO, Mario, Test Engineer). Activation phrase: "Loop Coordinator, drive a `<pattern>` loop on `<target>` with WEAKNESS_HYPOTHESIS `<one sentence>`." One instance per loop. Consultation mode **disabled** — not reachable via `/ask`. Dissolved at loop termination. See `team/roles/loop-coordinator.md` and `protocol.md` §32. |
+| **Loop Coordinator** | Generative loop coordination (§32): turn order, budget enforcement, state machine transitions, provenance. Driver, not judge — does not opine on content. | (none — ephemeral; state lives in `record/loops/<id>/state.md`) | Spawning agent (unilateral early-stop authority) | Spawned once per §32 loop by a named insertion-point owner (PM, CTO, Mario, Test Engineer). Activation phrase: "Loop Coordinator, drive a `<pattern>` loop on `<target>` with WEAKNESS_HYPOTHESIS `<one sentence>`." One instance per loop. Consultation mode **disabled** — not reachable via `/ask`. Dissolved at loop termination. See `team/roles/loop-coordinator.md` and `protocol.md` §32. |
 
 ---
 

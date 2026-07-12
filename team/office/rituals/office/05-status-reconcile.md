@@ -12,9 +12,9 @@
 
 On-disk reality, compared against what `project/current-status.md` claims:
 
-- `intent-spec/_RETRO-INDEX.md` and `metrics/_cadence-runs.jsonl` — what retros actually ran.
+- `context/intent/_RETRO-INDEX.md` and `record/metrics/_cadence-runs.jsonl` — what retros actually ran.
 - `project/surfaces/*.md` — surface states from the morning sweep.
-- `metrics/_signals.jsonl` + the day's digest — signal-stream state.
+- `record/metrics/_signals.jsonl` + the day's digest — signal-stream state.
 - `git log` HEAD — what was actually committed.
 - The outputs of the day's other four rituals.
 

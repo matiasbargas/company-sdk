@@ -5,13 +5,13 @@ surface:
   title: Enforcement claims in protocol text must map to real tooling
   author_roles: [CTO]
   verifier_roster: [Mario, CISO, Test Engineer]
-  depends_on: [intent-spec/protocol-32-generative-loops/_retrospective.md]
+  depends_on: [project/context/intent/protocol-32-generative-loops/_retrospective.md]
   produces: A protocol rule + seal-checklist item binding every "sdk-health greps X" sentence to a real grep in scripts/health.js
   state: under-verification
   irreversible: false
   evidence:
-    - intent-spec/protocol-32-generative-loops/_retrospective.md
-    - generated-spec/protocol-32-generative-loops/claims-retro.yaml
+    - project/context/intent/protocol-32-generative-loops/_retrospective.md
+    - project/context/spec/protocol-32-generative-loops/claims-retro.yaml
   release: v2026.Q2.3
 ---
 

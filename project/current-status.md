@@ -1,6 +1,6 @@
 # Current Status
-**Last updated:** 2026-06-30
-**Updated by:** Greg (CEO) — sealed §35 Document-First Gate
+**Last updated:** 2026-07-02
+**Updated by:** Greg (CEO) — layered-context consolidation (project vs. machinery)
 **Release:** v2026.Q2.3 · **Protocol:** v4.6 (§32 + §34 + §35 sealed; §33 reserved for SDLC state machine, draft)
 
 > This is the first file you read when resuming work. It tells you exactly where the team is right now and what the next action is. If this file is out of date, the team is flying blind.
@@ -117,6 +117,10 @@ Background: Tier 2 of @team-sdk extraction still awaits owner direction (unchang
 2026-06-24 — Greg audit (same drift, one cycle later): §34 + CHARTER committed but missing from history.md; office layer uncommitted; this file still read "v4.4, §32 sealed." Closed the map: history.md backfilled with two SDK-CHANGE entries, this file reconciled to v4.5 + office layer, office work committed. Open: CHARTER ratification (Owner), and wiring the office day to a real cadence so reconciliation stops being manual.
 
 2026-06-30 — Owner directive: make document-first a root-level *enforced* concept (the drift that forced both June audits must stop by construction, not good intentions). Sealed **§35 Document-First Gate** (protocol v4.5 → v4.6): commit-msg hard gate + Stop-hook reminder + sdk-health drift backstop, off one code-authoritative classifier pinned by `npm test`. Built and verified under the enforcement-claims surface's discipline (every named mechanism exists in code first); caught and corrected one over-claim (sdk-init auto-install) before it shipped. This commit passes its own gate.
+
+---
+
+2026-07-02 — Owner directive: consolidate the repo's sprawl and index it so models load accurately. Divided the repo into two zones: **the SDK machinery** (packages/scripts/team/workflows/project-template + the root law docs — untouched, all 22 bins/workspaces/hooks intact) and **the project** (its building + history under `project/`). Folded the scattered layers in: `intent-spec/→project/context/intent` (C), `generated-spec/→project/context/spec` (B), `foundation/→project/context/foundation` (A), `loops|metrics|specs→project/record/*` (run exhaust). Updated the §35 classifier (one `context/**` material rule + `record/**` exempt) and its pinned test; added `workflows/_paths.js` + inline mirrors in the 3 live workflows; extended the `context-index.json` generator with a tree-scanned `layers` block and regenerated (un-staled it — was 2026-04-18). Added orientation READMEs at `project/context/` and `project/record/`. Then swept the shared machinery: `team/office/rituals/*`, `team/roles/loop-coordinator.md`, `AGENTS.md`, `CHARTER.md`, `office-day-v0.1.js`, and live-workflow prose — resolved the path-form question in favor of **generic project-relative** paths (`context/…`, `record/…`, right for generated projects) plus one authoritative convention note in the rituals README (in team-sdk, project root = `project/`). Fixed live pointers in `protocol.md` (§33 draft path) and the active §34 surface's evidence paths. `npm test` green; `sdk-health` clean; all four live workflows parse. Only sealed historical records (`history.md` prior entries, the ~8 one-shot seal scripts, `_archive`) retain old paths by design. Not yet committed — Owner reviewing.
 
 ---
 

@@ -14,8 +14,8 @@ Core conviction: A loop is a state machine wearing a deliberation costume. If yo
 
 ## Capability
 
-**Answers:** loop state transitions, loop budget status, termination readiness, provenance hash emission, loops/<id>/state.md schema, protocol §32 mechanics
-**Owns:** `loops/<id>/state.md` (per-loop instance only — ephemeral), `LOOP-PROVENANCE:` line emission on every artifact leaving the loop, protocol §32 implementation surface when an active loop is in flight
+**Answers:** loop state transitions, loop budget status, termination readiness, provenance hash emission, record/loops/<id>/state.md schema, protocol §32 mechanics
+**Owns:** `record/loops/<id>/state.md` (per-loop instance only — ephemeral), `LOOP-PROVENANCE:` line emission on every artifact leaving the loop, protocol §32 implementation surface when an active loop is in flight
 **Needs from peers:** spawning agent's declared `TRIGGER_SHAPE`, pattern (Critique-Revise or Red-Team), budget, insertion point, and `WEAKNESS_HYPOTHESIS:` at loop open; named critic and author roles; countersigning peer-or-higher agent for any extension request per §1 escalation ladder
 **Consult me when:** a §32 loop needs to be opened and the spawning agent needs the state.md scaffold; a loop appears stalled and someone needs to know whether the budget has been exhausted or termination has been silently skipped; an artifact is missing its `LOOP-PROVENANCE:` line and the gate is failing closed
 **Do not ask me about:** whether the critique was good, whether the assumption named in `would-have-wrongly-killed:` or `assumption-not-attacked:` is the right one, whether the revised artifact addresses the critique, whether the loop should have been opened in the first place — all content judgments belong to the spawning agent and the named critic/author roles
@@ -42,7 +42,7 @@ The Loop Coordinator's relationship to craft is unusual on this team: the craft 
 |---|---|
 | Scope | One loop instance from open to terminate. No cross-loop memory, no persistence between loops, no consultation surface. |
 | Decides alone | Turn order per the declared pattern; budget enforcement; emitting transition Bus messages; writing state.md updates; computing and appending `LOOP-PROVENANCE:` lines; refusing to advance the state machine when a required field is missing. |
-| Produces | `loops/<id>/state.md` populated under three required headings (Open, Turns, Terminate); Bus transition messages (open, turn boundary, terminate); `LOOP-PROVENANCE:` lines appended to every artifact emitted from the loop. |
+| Produces | `record/loops/<id>/state.md` populated under three required headings (Open, Turns, Terminate); Bus transition messages (open, turn boundary, terminate); `LOOP-PROVENANCE:` lines appended to every artifact emitted from the loop. |
 | Escalates | Any decision that would require Level 1 reasoning on content goes back to the spawning agent. Extension requests go to the spawning agent, who must obtain a peer-or-higher countersign per §1. Coordinator extension authority does not exist. |
 | Communication | Bus transition messages only. Internal turns live in state.md and never appear on the Bus. State.md is updated synchronously with each turn. |
 | Done looks like | state.md has all three headings populated; `WEAKNESS_HYPOTHESIS:` present on Open; required guardrail line (`would-have-wrongly-killed:` for Critique-Revise, `assumption-not-attacked:` for Red-Team) present on each critic turn; Terminate heading records the termination reason; every emitted artifact carries a valid `LOOP-PROVENANCE:` line; a terminate transition Bus message has been sent. |
@@ -93,7 +93,7 @@ If any field is missing, refuse to open the loop. Send one Bus INFO message back
 
 **Step 1 — Create state.md:**
 
-Generate `loops/<LOOP-YYYYMMDD-<pattern>-<seq>>/state.md` with three required headings:
+Generate `record/loops/<LOOP-YYYYMMDD-<pattern>-<seq>>/state.md` with three required headings:
 
 ```
 ## Open
@@ -240,22 +240,22 @@ Agents that only agree are not useful. Agents that disagree without logging are 
 - Full protocol: `protocol.md` — specifically §32 (Generative Loops), §1 (Bus), §22 (Bus Log), §24 (Halloway Ratchet), §29 (Structured Disagreement), §31 (Iteration Guardians)
 - Pattern files: `team/roles/loops/critique-revise.md`, `team/roles/loops/red-team.md`
 - Agent manifest: `AGENTS.md`
-- Per-loop state: `loops/<id>/state.md` — write here every turn, synchronously
+- Per-loop state: `record/loops/<id>/state.md` — write here every turn, synchronously
 
 ## SDK Commands
 ```
 sdk-doc bus . --from "Loop Coordinator (<loop-id>)" --to <spawning-agent> --priority INFO --message "LOOP-OPEN <loop-id>"
 sdk-doc bus . --from "Loop Coordinator (<loop-id>)" --to ALL --priority INFO --message "LOOP-TURN-BOUNDARY <loop-id> turn=<n>"
 sdk-doc bus . --from "Loop Coordinator (<loop-id>)" --to <spawning-agent> --priority INFO --message "LOOP-TERMINATE <loop-id> reason=<budget-exhausted|early-stop|extension-denied>"
-sdk-doc append loops/<id>/state.md --section "## Turns" --content "..."
-sdk-doc append loops/<id>/state.md --section "## Terminate" --content "..."
+sdk-doc append record/loops/<id>/state.md --section "## Turns" --content "..."
+sdk-doc append record/loops/<id>/state.md --section "## Terminate" --content "..."
 sdk-health .                                       # checks for orphaned state.md (Open without Terminate past TTL)
 ```
 
 ## Done Definition
 
 This role's output (for one loop instance) is done when:
-- [ ] `loops/<id>/state.md` exists with all three headings (Open, Turns, Terminate) populated
+- [ ] `record/loops/<id>/state.md` exists with all three headings (Open, Turns, Terminate) populated
 - [ ] `WEAKNESS_HYPOTHESIS:` present on Open and copied verbatim from the spawning agent's message
 - [ ] Each critic turn has its required guardrail line present (`would-have-wrongly-killed:` for Critique-Revise; `assumption-not-attacked:` or `red-team-scope-limit:` for Red-Team) — fails closed if any are absent
 - [ ] Terminate heading records reason (early-stop | budget-exhausted | extension-denied) and the SHA-256 hash of the canonicalized state.md body

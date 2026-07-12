@@ -15,7 +15,7 @@ The workflows here are not human-curated documents. They are **executable substr
 What that means in practice:
 
 - **Self-aware**: each workflow run writes its own foundation snapshot, so we can answer "what constitution was this idea shaped against" later.
-- **Documented contexts**: nothing exists only in chat. Everything material lands in `intent-spec/`, `generated-spec/`, or this directory.
+- **Documented contexts**: nothing exists only in chat. Everything material lands in `project/context/intent/`, `project/context/spec/`, or this directory.
 - **Incremental**: minimum value, one idea at a time. v0.1 ships two loop patterns (Critique-Revise + Red-Team), not five. v0.2 is the next ship, not a year out.
 - **Team accountable**: source attribution per claim is the keystone. Provenance hashes make idea origin grep-able. Kill log is honored — killed ideas archive with reasons.
 - **We all build our infra**: this directory is checked in. The PM, the Designer, the CTO, the CEO — every role's input becomes an artifact in the corpus. No private prompts.
@@ -48,7 +48,7 @@ Workflow({
 **Outputs.** A folder tree:
 
 ```
-intent-spec/<slug>/
+project/context/intent/<slug>/       (Layer C — was intent-spec/)
 ├── sdd.md
 ├── sdd-v2.md
 ├── _foundation-snapshot.md
@@ -56,9 +56,9 @@ intent-spec/<slug>/
 ├── _red-team.md
 ├── shaped-brief.md
 └── _summary.md
-generated-spec/<slug>/
+project/context/spec/<slug>/          (Layer B — was generated-spec/)
 └── claims.yaml
-intent-spec/_INDEX.md   (appended)
+project/context/intent/_INDEX.md      (appended)
 ```
 
 Plus a structured return value with the decision (PROCEED / DE-RISK / REVISE / KILL), file paths, deferred risks, and next action.
@@ -95,7 +95,7 @@ After every major sprint that produces a **shipped** (PROCEED or DE-RISK → HOL
 
 - [ ] Shaped-brief has `Decision: PROCEED` or `DE-RISK → HOLDS → PROCEED`
 - [ ] At least 24 hours have passed since the shipped artifact was deployed (so observable outcomes — not just author confidence — exist to retro against)
-- [ ] No prior retrospective for this slug in `intent-spec/_RETRO-INDEX.md`
+- [ ] No prior retrospective for this slug in `project/context/intent/_RETRO-INDEX.md`
 
 If any box fails, do not run the retro yet. Wait for the 24h window, dedupe against the index, or — for KILL / REVISE outcomes — log the decision in `history.md` instead. KILLs get a different review path (kill-log), not retrospective-v0.1.
 
@@ -112,9 +112,9 @@ Per Owner directive (2026-06-14): *"este loop de improvement deberia ser continu
 
 **The `improvement_signal` field.** Every loop close emits one. It is a one-line, one-action-able friction note plus a `suggested_target` (loop-pattern / layer-A / workflow / protocol / none). Schema and enforcement: [`../team/roles/loops/_IMPROVEMENT_SIGNAL.md`](../team/roles/loops/_IMPROVEMENT_SIGNAL.md). Empty signals are rejected by the same convergence contract that rejects missing `would-have-wrongly-killed`.
 
-**The metrics layer.** Observation of whether the substrate is actually improving — signal volume, friction recurrence, time-to-amendment, cadence latency. See [`../metrics/`](../metrics/). Rituals read these to decide whether their own attention is well-spent.
+**The metrics layer.** Observation of whether the substrate is actually improving — signal volume, friction recurrence, time-to-amendment, cadence latency. See [`../project/record/metrics/`](../project/record/metrics/). Rituals read these to decide whether their own attention is well-spent.
 
-**The OKR adoption proposals.** Quarterly targets for the substrate live as proposals at [`../intent-spec/_PROTOCOL_PROPOSALS/`](../intent-spec/_PROTOCOL_PROPOSALS/). Proposals stand; adoption is the next decision.
+**The OKR adoption proposals.** Quarterly targets for the substrate live as proposals at [`../project/context/intent/_PROTOCOL_PROPOSALS/`](../project/context/intent/_PROTOCOL_PROPOSALS/). Proposals stand; adoption is the next decision.
 
 **Why these five components shipped together.** Per the irreducibility note in `_HORIZONS.md`: improvement signal without metrics is noise; metrics without OKRs is scoreboard without game; OKRs without rituals is wall art; rituals without continuous loop signal are ceremonies that did not earn their attention. Any four of five collapses the fifth. Ship together or ship none.
 
@@ -127,6 +127,6 @@ Every workflow script defines `agent()` schemas that constrain what each spawned
 ## Cross-references
 
 - Layer A foundation → `../foundation/README.md`
-- Layer C task context → `../intent-spec/README.md`
-- Layer B specifications → `../generated-spec/README.md`
+- Layer C task context → `../project/context/intent/README.md`
+- Layer B specifications → `../project/context/spec/README.md`
 - Brain structure source: Sidharta Rezende, Diego Mattos — *A Layered Context Architecture for AI-Assisted Engineering in Nu-Global* (referenced in conversation)

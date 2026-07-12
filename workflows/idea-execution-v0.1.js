@@ -20,8 +20,31 @@ const idea = input.idea
 const slug = input.slug
 const date = input.date
 
-const ideaFolder = `${projectRoot}/intent-spec/${slug}`
-const claimsFolder = `${projectRoot}/generated-spec/${slug}`
+// Consolidated project layout (2026-07). The Workflow runtime has no require(), so this
+// mirrors workflows/_paths.js (canonical for Node scripts) inline. projectRoot nests project/.
+const base = `${projectRoot}/project`
+const P = {
+  context: `${base}/context`, record: `${base}/record`, metrics: `${base}/record/metrics`,
+  foundation: `${base}/context/foundation`,
+  specDir: (s) => `${base}/context/spec/${s}`,
+  intentDir: (s) => `${base}/context/intent/${s}`,
+  intentIndex: `${base}/context/intent/_INDEX.md`,
+  retroIndex: `${base}/context/intent/_RETRO-INDEX.md`,
+  horizons: `${base}/context/intent/_HORIZONS.md`,
+  loopDir: (id) => `${base}/record/loops/${id}`,
+  signals: `${base}/record/metrics/_signals.jsonl`,
+  cadenceRuns: `${base}/record/metrics/_cadence-runs.jsonl`,
+  dailyDigests: `${base}/record/metrics/_daily-digests`,
+  rel: {
+    context: 'project/context',
+    retroIndex: 'project/context/intent/_RETRO-INDEX.md',
+    dailyDigests: 'project/record/metrics/_daily-digests',
+    specDir: (s) => `project/context/spec/${s}`,
+    intentDir: (s) => `project/context/intent/${s}`,
+  },
+}
+const ideaFolder = P.intentDir(slug)
+const claimsFolder = P.specDir(slug)
 
 log(`Starting idea-execution v0.1 — slug="${slug}" date="${date}"`)
 
@@ -299,9 +322,9 @@ Extract 3-7 atomic claims about what the system WILL DO if shipped (or what we L
   epic: ${slug}
   statement: "<one-sentence behavioral fact, present tense, declarative>"
   sources:
-    - file: intent-spec/${slug}/shaped-brief.md
+    - file: ${P.rel.intentDir(slug)}/shaped-brief.md
       lines: <approximate line range, e.g. 12-28>
-    - file: intent-spec/${slug}/sdd-v2.md
+    - file: ${P.rel.intentDir(slug)}/sdd-v2.md
       lines: <approximate line range>
   tags:
     - bu:team-sdk
@@ -317,7 +340,7 @@ Extract 3-7 atomic claims about what the system WILL DO if shipped (or what we L
   status: valid
 \`\`\`
 
-KEYSTONE RULE: every claim MUST cite at least one source under intent-spec/${slug}/. A claim with no source is hallucination and must not be emitted. This is the core defense against the failure mode the brain-structure doc Section 5.3 calls out.
+KEYSTONE RULE: every claim MUST cite at least one source under ${P.rel.intentDir(slug)}/. A claim with no source is hallucination and must not be emitted. This is the core defense against the failure mode the brain-structure doc Section 5.3 calls out.
 
 Run \`mkdir -p ${claimsFolder}\` via Bash, then write the claims to ${claimsFolder}/claims.yaml using Write.
 
@@ -325,8 +348,8 @@ Return ONLY a JSON object:
 
 {
   "decision": "PROCEED|DE-RISK|REVISE|KILL",
-  "shaped_brief_path": "intent-spec/${slug}/shaped-brief.md",
-  "claims_path": "generated-spec/${slug}/claims.yaml",
+  "shaped_brief_path": "${P.rel.intentDir(slug)}/shaped-brief.md",
+  "claims_path": "${P.rel.specDir(slug)}/claims.yaml",
   "claim_count": N,
   "deferred_risk": "..." or null,
   "de_risk_test": "..." or null,
@@ -353,7 +376,7 @@ phase('Index + document')
 
 const indexed = await agent(`Final documentation step — make this run discoverable to the team.
 
-Read ${projectRoot}/intent-spec/_INDEX.md if it exists. If not, create it with this header:
+Read ${P.intentIndex} if it exists. If not, create it with this header:
 
 # Idea Execution Index
 
@@ -364,7 +387,7 @@ Read ${projectRoot}/intent-spec/_INDEX.md if it exists. If not, create it with t
 
 Then prepend (most recent at top, just under the header rule) a new row:
 
-| ${date} | ${slug} | ${synthesis.decision} | [shaped-brief](${slug}/shaped-brief.md) | [claims](../generated-spec/${slug}/claims.yaml) | ${synthesis.next_action} |
+| ${date} | ${slug} | ${synthesis.decision} | [shaped-brief](${slug}/shaped-brief.md) | [claims](../spec/${slug}/claims.yaml) | ${synthesis.next_action} |
 
 Use Edit if the file exists; Write if it does not. Preserve all existing rows.
 
@@ -403,6 +426,6 @@ return {
     shaped_brief: `${ideaFolder}/shaped-brief.md`,
     summary: `${ideaFolder}/_summary.md`,
     claims: `${claimsFolder}/claims.yaml`,
-    index: `${projectRoot}/intent-spec/_INDEX.md`,
+    index: P.intentIndex,
   },
 }

@@ -32,6 +32,8 @@ export const meta = {
 
 const ROOT = '/Users/matias.bargas/dev/ai-repos/team-sdk'
 const RETRO = `${ROOT}/workflows/retrospective.js`
+// Consolidated project layout (2026-07): context/record live under project/ for SDK self-dev.
+const BASE = `${ROOT}/project`   // a generated project would use ROOT directly (no nested project/)
 
 const input = (args && typeof args === 'object') ? args : (typeof args === 'string' ? { date: args } : {})
 const date = input.date
@@ -93,9 +95,9 @@ const discover = await agent(`You are the discovery step of Signal Harvest (team
 
 Goal: find loops that have CLOSED but whose improvement_signal is NOT yet in the stream.
 
-1. List loop ids: \`ls -d ${ROOT}/loops/*/\` → basename each. If none, return empty.
-2. A loop is CLOSED if ${ROOT}/loops/<id>/state.md exists and contains a "## improvement_signal" heading. Use \`grep -l "improvement_signal" ${ROOT}/loops/*/state.md\`.
-3. Read the already-harvested loop ids from ${ROOT}/metrics/_signals.jsonl — each line is JSON that may carry a "loop_id". Use \`grep -o '"loop_id":"[^"]*"' ${ROOT}/metrics/_signals.jsonl\` (file may not exist → treat as none harvested).
+1. List loop ids: \`ls -d ${BASE}/record/loops/*/\` → basename each. If none, return empty.
+2. A loop is CLOSED if ${BASE}/record/loops/<id>/state.md exists and contains a "## improvement_signal" heading. Use \`grep -l "improvement_signal" ${BASE}/record/loops/*/state.md\`.
+3. Read the already-harvested loop ids from ${BASE}/record/metrics/_signals.jsonl — each line is JSON that may carry a "loop_id". Use \`grep -o '"loop_id":"[^"]*"' ${BASE}/record/metrics/_signals.jsonl\` (file may not exist → treat as none harvested).
 4. unharvested = closed loops whose id is NOT already in the signals stream.
 
 Do NOT append anything yourself — the orchestrator composes the harvest. Return ONLY a JSON object.`, {
@@ -143,12 +145,12 @@ phase('Retro-trigger sweep')
 
 const owed = await agent(`You are running the Retro-Trigger Sweep (team/office/rituals/office/04-retro-trigger-sweep.md). REPORT ONLY — do not run any retro, do not write any file.
 
-For every slug directory in ${ROOT}/intent-spec/ (use \`ls -d ${ROOT}/intent-spec/*/\`, skip names starting with "_"):
+For every slug directory in ${BASE}/context/intent/ (use \`ls -d ${BASE}/context/intent/*/\`, skip names starting with "_"):
 
-1. shaped_brief_exists: does ${ROOT}/intent-spec/<slug>/shaped-brief.md exist?
+1. shaped_brief_exists: does ${BASE}/context/intent/<slug>/shaped-brief.md exist?
 2. If it exists, read the **Decision:** line. decision_shippable = true if it is PROCEED, DE-RISK→...→PROCEED, DE-RISK→HOLDS, or REVISE shipped as v2; false for KILL or unresolved REVISE.
-3. has_retro: does ${ROOT}/intent-spec/<slug>/_retrospective.md exist? (objective file check.)
-4. ship date: read shipped_at / date from shaped-brief.md or generated-spec/<slug>/claims.yaml. hours_since_ship: integer hours from that date to ${date} (approximate by day-diff × 24 if only a date is available; null if unknown).
+3. has_retro: does ${BASE}/context/intent/<slug>/_retrospective.md exist? (objective file check.)
+4. ship date: read shipped_at / date from shaped-brief.md or ${BASE}/context/spec/<slug>/claims.yaml. hours_since_ship: integer hours from that date to ${date} (approximate by day-diff × 24 if only a date is available; null if unknown).
 
 A slug is OWED a sprint retro when: shaped_brief_exists AND decision_shippable AND has_retro is false AND hours_since_ship >= 24.
 A slug is UNSWEEPABLE when shaped_brief_exists is false (report it — do not silently skip).
@@ -187,7 +189,7 @@ phase('Status reconcile')
 const reconcile = await agent(`You are running Status Reconcile (team/office/rituals/office/05-status-reconcile.md), the close-of-day ritual. Make ${projectDir}/current-status.md tell the truth.
 
 Gather on-disk reality:
-- ${ROOT}/intent-spec/_RETRO-INDEX.md and ${ROOT}/metrics/_cadence-runs.jsonl — what retros actually ran.
+- ${BASE}/context/intent/_RETRO-INDEX.md and ${BASE}/record/metrics/_cadence-runs.jsonl — what retros actually ran.
 - Today's outputs (passed below as JSON): surface flags, signals harvested, daily digest, owed retros.
 - \`git -C ${ROOT} log --oneline -5\` — what was actually committed (HEAD).
 

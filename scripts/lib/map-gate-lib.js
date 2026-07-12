@@ -35,11 +35,9 @@ const MATERIAL_RULES = [
   { label: 'workflows/**',       test: (p) => p.startsWith('workflows/') },
   { label: 'scripts/**',         test: (p) => p.startsWith('scripts/') },
   { label: 'packages/**',        test: (p) => p.startsWith('packages/') },
-  { label: 'foundation/**',      test: (p) => p.startsWith('foundation/') },
-  { label: 'intent-spec/**',     test: (p) => p.startsWith('intent-spec/') },
-  { label: 'generated-spec/**',  test: (p) => p.startsWith('generated-spec/') },
-  { label: 'loops/**',           test: (p) => p.startsWith('loops/') },
-  { label: 'metrics/**',         test: (p) => p.startsWith('metrics/') },
+  // The context brain (Layer A foundation / Layer B spec / Layer C intent). Relative to the
+  // map dir so it holds for both SDK self-dev (project/context/) and a generated project (context/).
+  { label: 'context/** (A/B/C brain)', test: (p, c) => p.startsWith(c.mapDirRel + 'context/') },
   { label: 'project-template/**',test: (p) => p.includes('project-template/') },
   { label: 'source file',        test: (p, c) => ['.js', '.ts', '.mjs', '.cjs', '.json'].includes(c.ext) },
 ];
@@ -49,6 +47,7 @@ const MATERIAL_RULES = [
 const EXEMPT_RULES = [
   { label: 'the map files',     test: (p, c) => c.mapFiles.includes(p) },
   { label: 'surfaces/**',       test: (p, c) => p.startsWith(c.mapDirRel + 'surfaces/') },
+  { label: 'record/** (run exhaust)', test: (p, c) => p.startsWith(c.mapDirRel + 'record/') },
   { label: 'area log',          test: (p) => /(^|\/)[^/]*-log\.md$/.test(p) || /(^|\/)bus-log\.md$/.test(p) },
   { label: 'requirements file', test: (p) => /(^|\/)[^/]*-requirements\.md$/.test(p) },
   { label: 'LOOP.md',           test: (p, c) => c.base === 'LOOP.md' },

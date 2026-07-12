@@ -1,13 +1,77 @@
 {
   "schemaVersion": "3.0",
-  "indexVersion": 2,
-  "generatedAt": "2026-04-18T13:29:52.586Z",
-  "release": "v2026.Q2.2",
+  "indexVersion": 3,
+  "generatedAt": "2026-06-30T18:05:28.358Z",
+  "release": "v2026.Q2.3 · **Protocol:** v4.6 (§32 + §34 + §35 sealed; §33 reserved for SDLC state machine, draft)",
   "project": {
     "name": "project",
     "type": "product",
     "squad": "startup",
     "summary": ""
+  },
+  "layers": {
+    "note": "Layered context (A/B/C) + run exhaust. context/** is material to §35; record/** is exempt. Generated from the tree.",
+    "brain": {
+      "foundation": {
+        "layer": "A",
+        "path": "context/foundation",
+        "gate": "material",
+        "material_cadence": "rarely",
+        "purpose": "Human-authored stable law (pointer to CHARTER, protocol, STRATEGY)."
+      },
+      "spec": {
+        "layer": "B",
+        "path": "context/spec",
+        "gate": "material",
+        "slugs": [
+          "idea-execution-v0.2",
+          "protocol-32-generative-loops"
+        ],
+        "purpose": "AI-maintained atomic claims about system behavior, per idea slug."
+      },
+      "intent": {
+        "layer": "C",
+        "path": "context/intent",
+        "gate": "material",
+        "slugs": [
+          "idea-execution-v0.2",
+          "market-prioritization-2026-06-14",
+          "protocol-32-generative-loops",
+          "sdlc-state-machine"
+        ],
+        "indexes": [
+          "_INDEX.md",
+          "_RETRO-INDEX.md",
+          "_HORIZONS.md"
+        ],
+        "archived": [],
+        "purpose": "Engineer/agent-supplied task intent, per idea slug."
+      }
+    },
+    "record": {
+      "loops": {
+        "path": "record/loops",
+        "gate": "exempt",
+        "runs": 3
+      },
+      "metrics": {
+        "path": "record/metrics",
+        "gate": "exempt",
+        "streams": [
+          "_cadence-runs.jsonl",
+          "_signals.jsonl"
+        ]
+      },
+      "specs": {
+        "path": "record/specs",
+        "gate": "exempt"
+      }
+    },
+    "loadOrder": [
+      "context/foundation  (Layer A — in full, always)",
+      "context/spec/<slug>/claims.yaml  (Layer B — the slice for your idea/epic)",
+      "context/intent/<slug>/  (Layer C — in full, active task)"
+    ]
   },
   "projectDomains": {},
   "orgDomains": {
@@ -35,14 +99,14 @@
       "lead": "CLO",
       "consult": "CLO",
       "files": [
-        "discovery-requirements.md"
+        "compliance-requirements.md"
       ]
     },
     "security": {
       "lead": "CISO",
       "consult": "CISO",
       "files": [
-        "security-requirements.md"
+        "compliance-requirements.md"
       ]
     },
     "product": {
@@ -66,14 +130,14 @@
       "consult": "CFO",
       "files": [
         "business-requirements.md",
-        "operations-log.md"
+        "strategy-log.md"
       ]
     },
     "people": {
       "lead": "CHRO",
       "consult": "CHRO",
       "files": [
-        "people-log.md",
+        "product-log.md",
         "team.md"
       ]
     },
@@ -110,7 +174,7 @@
     "platform-risk": {
       "read": [
         "engineering-requirements.md",
-        "security-requirements.md"
+        "compliance-requirements.md"
       ],
       "consult": "CTO"
     },
@@ -143,59 +207,57 @@
     "pod-composition": {
       "read": [
         "engineering-requirements.md",
-        "people-log.md"
+        "product-log.md"
       ],
       "consult": "EM"
     },
     "legal-constraints": {
       "read": [
-        "discovery-requirements.md"
+        "compliance-requirements.md"
       ],
       "consult": "CLO"
     },
     "compliance": {
       "read": [
-        "discovery-requirements.md",
-        "security-requirements.md"
+        "compliance-requirements.md"
       ],
       "consult": "CLO"
     },
     "regulatory": {
       "read": [
-        "discovery-requirements.md"
+        "compliance-requirements.md"
       ],
       "consult": "CLO"
     },
     "contracts": {
       "read": [
-        "discovery-requirements.md",
+        "compliance-requirements.md",
         "history.md"
       ],
       "consult": "CLO"
     },
     "security": {
       "read": [
-        "security-requirements.md"
+        "compliance-requirements.md"
       ],
       "consult": "CISO"
     },
     "threat-model": {
       "read": [
-        "security-requirements.md"
+        "compliance-requirements.md"
       ],
       "consult": "CISO"
     },
     "auth-design": {
       "read": [
-        "security-requirements.md",
+        "compliance-requirements.md",
         "engineering-requirements.md"
       ],
       "consult": "CISO"
     },
     "data-protection": {
       "read": [
-        "security-requirements.md",
-        "discovery-requirements.md"
+        "compliance-requirements.md"
       ],
       "consult": "CISO"
     },
@@ -315,14 +377,14 @@
     "vendor": {
       "read": [
         "business-requirements.md",
-        "operations-log.md"
+        "strategy-log.md"
       ],
       "consult": "COO"
     },
     "operations-runbook": {
       "read": [
         "business-requirements.md",
-        "operations-log.md"
+        "strategy-log.md"
       ],
       "consult": "COO"
     },
@@ -368,14 +430,14 @@
     },
     "hiring": {
       "read": [
-        "people-log.md"
+        "product-log.md"
       ],
       "consult": "CHRO"
     },
     "team-composition": {
       "read": [
         "team.md",
-        "people-log.md"
+        "product-log.md"
       ],
       "consult": "CHRO"
     },
@@ -394,7 +456,7 @@
     "enterprise-risk": {
       "read": [
         "business-requirements.md",
-        "discovery-requirements.md"
+        "compliance-requirements.md"
       ],
       "consult": "CRO Risk"
     },
@@ -612,6 +674,31 @@
       "action": "consult",
       "writes": false,
       "description": "Consult an agent role with a domain question"
+    },
+    "ingest-memory": {
+      "fields": [
+        "project-dir"
+      ],
+      "required": [
+        "project-dir"
+      ],
+      "action": "memory.ingest",
+      "writes": true,
+      "description": "Ingest project decisions into cross-project memory"
+    },
+    "query-memory": {
+      "fields": [
+        "question",
+        "project",
+        "type",
+        "domain"
+      ],
+      "required": [
+        "question"
+      ],
+      "action": "memory.query",
+      "writes": false,
+      "description": "Search the cross-project decision corpus"
     }
   },
   "actions": {
@@ -889,6 +976,30 @@
         "role"
       ],
       "description": "Get detailed info about a role"
+    },
+    "memory.ingest": {
+      "writes": true,
+      "requires": [
+        "project-dir"
+      ],
+      "description": "Ingest decisions/kills from a project into cross-project memory"
+    },
+    "memory.query": {
+      "writes": false,
+      "requires": [
+        "question"
+      ],
+      "description": "Search the cross-project decision corpus"
+    },
+    "memory.stats": {
+      "writes": false,
+      "requires": [],
+      "description": "Show cross-project memory corpus statistics"
+    },
+    "memory.list": {
+      "writes": false,
+      "requires": [],
+      "description": "List all projects in the memory corpus"
     }
   },
   "sessions": [],
@@ -902,8 +1013,8 @@
         "session-start"
       ],
       "exists": true,
-      "ageHours": 2,
-      "stale": false
+      "ageHours": 50,
+      "stale": true
     },
     {
       "path": "project.md",
@@ -915,7 +1026,7 @@
         "full-context"
       ],
       "exists": true,
-      "ageHours": 282,
+      "ageHours": 2087,
       "stale": true
     },
     {
@@ -929,8 +1040,8 @@
         "irreversible-decision"
       ],
       "exists": true,
-      "ageHours": 2,
-      "stale": false
+      "ageHours": 50,
+      "stale": true
     },
     {
       "path": "project-map.md",
@@ -942,8 +1053,8 @@
         "ceo-gate"
       ],
       "exists": true,
-      "ageHours": 2,
-      "stale": false
+      "ageHours": 1807,
+      "stale": true
     },
     {
       "path": "idea.md",
@@ -955,20 +1066,7 @@
         "first-session"
       ],
       "exists": true,
-      "ageHours": 278,
-      "stale": true
-    },
-    {
-      "path": "strategy-log.md",
-      "domain": "strategy",
-      "owner": "Coordinator",
-      "purpose": "CEO and Coordinator strategy decisions and retrospectives",
-      "load_when": [
-        "strategy-review",
-        "retro"
-      ],
-      "exists": true,
-      "ageHours": 282,
+      "ageHours": 2083,
       "stale": true
     },
     {
@@ -982,8 +1080,8 @@
         "onboarding"
       ],
       "exists": true,
-      "ageHours": 2,
-      "stale": false
+      "ageHours": 1807,
+      "stale": true
     },
     {
       "path": ".sdkrc",
@@ -995,7 +1093,7 @@
         "config"
       ],
       "exists": true,
-      "ageHours": 228,
+      "ageHours": 1804,
       "stale": true
     },
     {
@@ -1008,7 +1106,7 @@
         "session-start"
       ],
       "exists": true,
-      "ageHours": 282,
+      "ageHours": 2087,
       "stale": true
     },
     {
@@ -1023,7 +1121,7 @@
         "build-vs-buy"
       ],
       "exists": true,
-      "ageHours": 276,
+      "ageHours": 2081,
       "stale": true
     },
     {
@@ -1038,37 +1136,7 @@
         "user-story"
       ],
       "exists": true,
-      "ageHours": 277,
-      "stale": true
-    },
-    {
-      "path": "discovery-requirements.md",
-      "domain": "legal",
-      "owner": "CLO",
-      "purpose": "CLO + CISO regulatory map and legal blockers — hard gate for CTO activation",
-      "load_when": [
-        "legal-review",
-        "before-cto-activation",
-        "compliance-check",
-        "regulatory"
-      ],
-      "exists": true,
-      "ageHours": 282,
-      "stale": true
-    },
-    {
-      "path": "security-requirements.md",
-      "domain": "security",
-      "owner": "CISO",
-      "purpose": "CISO threat model, auth design constraints, security requirements",
-      "load_when": [
-        "security-review",
-        "before-cto-activation",
-        "threat-model",
-        "auth-design"
-      ],
-      "exists": true,
-      "ageHours": 68,
+      "ageHours": 2081,
       "stale": true
     },
     {
@@ -1082,7 +1150,7 @@
         "ux-review"
       ],
       "exists": true,
-      "ageHours": 282,
+      "ageHours": 2087,
       "stale": true
     },
     {
@@ -1097,7 +1165,7 @@
         "unit-economics"
       ],
       "exists": true,
-      "ageHours": 282,
+      "ageHours": 2087,
       "stale": true
     },
     {
@@ -1110,20 +1178,23 @@
         "architecture-review"
       ],
       "exists": true,
-      "ageHours": 277,
+      "ageHours": 2082,
       "stale": true
     },
     {
       "path": "product-log.md",
       "domain": "product",
       "owner": "PM",
-      "purpose": "PM, CMO, CRO, CDO — product and go-to-market state changes",
+      "purpose": "PM, CMO, CRO, CDO — product and go-to-market state changes + CHRO, EM — people and pod changes",
       "load_when": [
         "product-domain",
-        "mission-shaping"
+        "mission-shaping",
+        "people-domain",
+        "pod-management",
+        "hiring"
       ],
       "exists": true,
-      "ageHours": 278,
+      "ageHours": 2082,
       "stale": true
     },
     {
@@ -1136,35 +1207,23 @@
         "interface-design"
       ],
       "exists": true,
-      "ageHours": 2,
-      "stale": false
+      "ageHours": 1807,
+      "stale": true
     },
     {
-      "path": "operations-log.md",
-      "domain": "business",
-      "owner": "COO",
-      "purpose": "COO, CLO, CISO, CFO — operations and compliance state changes",
+      "path": "strategy-log.md",
+      "domain": "strategy",
+      "owner": "Coordinator",
+      "purpose": "CEO and Coordinator strategy decisions + COO, CLO, CISO, CFO operations and compliance state changes",
       "load_when": [
+        "strategy-review",
+        "retro",
         "operations-domain",
         "vendor-review"
       ],
       "exists": true,
-      "ageHours": 2,
-      "stale": false
-    },
-    {
-      "path": "people-log.md",
-      "domain": "people",
-      "owner": "CHRO",
-      "purpose": "CHRO and EM — team changes, pod formation, onboarding entries",
-      "load_when": [
-        "people-domain",
-        "pod-management",
-        "hiring"
-      ],
-      "exists": true,
-      "ageHours": 2,
-      "stale": false
+      "ageHours": 2087,
+      "stale": true
     },
     {
       "path": "context-manifest.json",
@@ -1175,8 +1234,8 @@
         "session-start"
       ],
       "exists": true,
-      "ageHours": 0,
-      "stale": false
+      "ageHours": 1805,
+      "stale": true
     },
     {
       "path": "context-index.json",
@@ -1187,8 +1246,8 @@
         "session-start"
       ],
       "exists": true,
-      "ageHours": 0,
-      "stale": false
+      "ageHours": 1805,
+      "stale": true
     }
   ]
 }

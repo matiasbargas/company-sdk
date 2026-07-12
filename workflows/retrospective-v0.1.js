@@ -13,7 +13,7 @@
 
 export const meta = {
   name: 'retrospective-v0.1',
-  description: 'Post-ship retrospective for a single idea slug. Reads intent-spec/<slug>/ artifacts (shaped-brief, claims, critique, red-team, loops/) and produces an honest outcome assessment, surprises log, keep/change lists, and categorized protocol-change proposals per §15a SDK self-improvement loop. Emits Layer B claims tagged behavior:retrospective so they do not collide with the original idea claims. One slug at a time — no cross-sprint synthesis.',
+  description: 'Post-ship retrospective for a single idea slug. Reads context/intent/<slug>/ artifacts (shaped-brief, claims, critique, red-team) and produces an honest outcome assessment, surprises log, keep/change lists, and categorized protocol-change proposals per §15a SDK self-improvement loop. Emits Layer B claims tagged behavior:retrospective so they do not collide with the original idea claims. One slug at a time — no cross-sprint synthesis.',
   phases: [
     { title: 'Load context' },
     { title: 'Outcome assessment' },
@@ -32,9 +32,32 @@ const input = typeof args === 'string'
 const slug = input.slug
 const date = input.date
 
-const ideaFolder = `${projectRoot}/intent-spec/${slug}`
-const claimsFolder = `${projectRoot}/generated-spec/${slug}`
-const retroIndex = `${projectRoot}/intent-spec/_RETRO-INDEX.md`
+// Consolidated project layout (2026-07). The Workflow runtime has no require(), so this
+// mirrors workflows/_paths.js (canonical for Node scripts) inline. projectRoot nests project/.
+const base = `${projectRoot}/project`
+const P = {
+  context: `${base}/context`, record: `${base}/record`, metrics: `${base}/record/metrics`,
+  foundation: `${base}/context/foundation`,
+  specDir: (s) => `${base}/context/spec/${s}`,
+  intentDir: (s) => `${base}/context/intent/${s}`,
+  intentIndex: `${base}/context/intent/_INDEX.md`,
+  retroIndex: `${base}/context/intent/_RETRO-INDEX.md`,
+  horizons: `${base}/context/intent/_HORIZONS.md`,
+  loopDir: (id) => `${base}/record/loops/${id}`,
+  signals: `${base}/record/metrics/_signals.jsonl`,
+  cadenceRuns: `${base}/record/metrics/_cadence-runs.jsonl`,
+  dailyDigests: `${base}/record/metrics/_daily-digests`,
+  rel: {
+    context: 'project/context',
+    retroIndex: 'project/context/intent/_RETRO-INDEX.md',
+    dailyDigests: 'project/record/metrics/_daily-digests',
+    specDir: (s) => `project/context/spec/${s}`,
+    intentDir: (s) => `project/context/intent/${s}`,
+  },
+}
+const ideaFolder = P.intentDir(slug)
+const claimsFolder = P.specDir(slug)
+const retroIndex = P.retroIndex
 
 log(`Starting retrospective v0.1 — slug="${slug}" date="${date}"`)
 
@@ -402,7 +425,7 @@ Each retro claim follows the SAME Layer B schema as idea-execution but with:
 - id: claim-retro-${slug}-NNN
 - epic: ${slug}
 - tags include "behavior:retrospective" so they do not collide with original idea claims
-- sources cite intent-spec/${slug}/_retrospective.md
+- sources cite ${P.rel.intentDir(slug)}/_retrospective.md
 - added_in_workflow_run: ${date}-${slug}-retro-001
 - provenance_hash_input.pattern: retrospective-v0.1
 - provenance_hash_input.spawning_agent: retrospective-author
@@ -414,9 +437,9 @@ Run \`mkdir -p ${claimsFolder}\` via Bash if needed, then Write the file.
 Return ONLY a JSON object:
 
 {
-  "retro_doc_path": "intent-spec/${slug}/_retrospective.md",
-  "index_path": "intent-spec/_RETRO-INDEX.md",
-  "retro_claims_path": "generated-spec/${slug}/claims-retro.yaml",
+  "retro_doc_path": "${P.rel.intentDir(slug)}/_retrospective.md",
+  "index_path": "${P.rel.retroIndex}",
+  "retro_claims_path": "${P.rel.specDir(slug)}/claims-retro.yaml",
   "retro_claim_count": N
 }`, {
   label: 'write-retro-doc',

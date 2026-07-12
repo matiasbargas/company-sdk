@@ -22,11 +22,34 @@ const cadence = input.cadence
 const VALID = ['loop', 'daily', 'sprint', 'quarterly']
 if (!VALID.includes(cadence)) throw new Error(`cadence must be one of ${VALID.join('|')}, got "${cadence}"`)
 
-const signalsFile = `${projectRoot}/metrics/_signals.jsonl`
-const runsFile = `${projectRoot}/metrics/_cadence-runs.jsonl`
-const dailyDir = `${projectRoot}/metrics/_daily-digests`
-const horizonsFile = `${projectRoot}/_HORIZONS.md`
-const retroIndex = `${projectRoot}/intent-spec/_RETRO-INDEX.md`
+// Consolidated project layout (2026-07). The Workflow runtime has no require(), so this
+// mirrors workflows/_paths.js (canonical for Node scripts) inline. projectRoot nests project/.
+const base = `${projectRoot}/project`
+const P = {
+  context: `${base}/context`, record: `${base}/record`, metrics: `${base}/record/metrics`,
+  foundation: `${base}/context/foundation`,
+  specDir: (s) => `${base}/context/spec/${s}`,
+  intentDir: (s) => `${base}/context/intent/${s}`,
+  intentIndex: `${base}/context/intent/_INDEX.md`,
+  retroIndex: `${base}/context/intent/_RETRO-INDEX.md`,
+  horizons: `${base}/context/intent/_HORIZONS.md`,
+  loopDir: (id) => `${base}/record/loops/${id}`,
+  signals: `${base}/record/metrics/_signals.jsonl`,
+  cadenceRuns: `${base}/record/metrics/_cadence-runs.jsonl`,
+  dailyDigests: `${base}/record/metrics/_daily-digests`,
+  rel: {
+    context: 'project/context',
+    retroIndex: 'project/context/intent/_RETRO-INDEX.md',
+    dailyDigests: 'project/record/metrics/_daily-digests',
+    specDir: (s) => `project/context/spec/${s}`,
+    intentDir: (s) => `project/context/intent/${s}`,
+  },
+}
+const signalsFile = P.signals
+const runsFile = P.cadenceRuns
+const dailyDir = P.dailyDigests
+const horizonsFile = P.horizons          // was stale: projectRoot/_HORIZONS.md; canonical home is Layer C
+const retroIndex = P.retroIndex
 
 log(`Starting retrospective — cadence="${cadence}"`)
 
@@ -39,7 +62,7 @@ if (cadence === 'loop') {
   // --- extract improvement_signal, append to metrics/_signals.jsonl.   ---
   const loopId = input.loop_id
   if (!loopId) throw new Error('cadence=loop requires input.loop_id')
-  const statePath = input.state_path || `${projectRoot}/loops/${loopId}/state.md`
+  const statePath = input.state_path || `${P.loopDir(loopId)}/state.md`
   log(`Loop close: extracting signal from ${statePath}`)
 
   phase('Cadence body')
@@ -131,7 +154,7 @@ ${digest}
 
 Run \`mkdir -p ${dailyDir}\` first. Then Write the file. If the file already exists for today, overwrite it (idempotent re-run).
 
-Return ONLY a JSON object: { "digest_path": "metrics/_daily-digests/${date}.md" }`, {
+Return ONLY a JSON object: { "digest_path": "${P.rel.dailyDigests}/${date}.md" }`, {
     label: 'daily-write',
     phase: 'Cadence body',
     schema: { type: 'object', required: ['digest_path'], properties: { digest_path: { type: 'string' } } },
@@ -146,8 +169,8 @@ if (cadence === 'sprint') {
   const slug = input.slug
   const date = input.date || today
   if (!slug) throw new Error('cadence=sprint requires input.slug')
-  const ideaFolder = `${projectRoot}/intent-spec/${slug}`
-  const claimsFolder = `${projectRoot}/generated-spec/${slug}`
+  const ideaFolder = P.intentDir(slug)
+  const claimsFolder = P.specDir(slug)
 
   // Trigger checklist — PROCEED/HOLDS, 24h wait, not already retroed.
   const trigger = await agent(`You are checking the sprint retro trigger checklist for slug "${slug}" before any retro agents fire.
@@ -214,7 +237,7 @@ Return ONLY a JSON object:
       schema: { type: 'object', required: ['proposals', 'protocol_change_proposal_count'], properties: { proposals: { type: 'array', items: { type: 'object', required: ['source_item', 'category', 'proposal_stub'], properties: { source_item: { type: 'string' }, category: { type: 'string', enum: ['protocol-change-proposal', 'layer-a-foundation-delta', 'project-level-note'] }, proposal_stub: { type: 'string' }, approver: { type: ['string', 'null'] } } } }, protocol_change_proposal_count: { type: 'integer', minimum: 0 } } },
     })
 
-    const written = await agent(`Consolidate and index.\n\nInputs: situation, outcome, surprises, keep/change, proposals (all in this run).\n\nPART 1 — Write ${ideaFolder}/_retrospective.md:\n# Retrospective: ${slug}\n**Date:** ${date}\n**Workflow:** retrospective (cadence=sprint)\n**Overall outcome:** ${outcome.overall}\n## Situation\n(verbatim)\n## Outcome assessment\n**Overall:** ${outcome.overall}\n${outcome.overall_reasoning}\n### Claim-by-claim verdict\n(table)\n## Surprises\n(one subsection per surprise)\n## Keep / Change / Proposals (Protocol / Layer A / Project-level)\n## Honest line\nIf MISSED/ABANDONED, do NOT soften. If DELIVERED/PARTIAL, name the most important thing still owed forward.\n\nPART 2 — Prepend a row to ${retroIndex} (create with header if absent):\n| ${date} | ${slug} | ${outcome.overall} | ${proposals.protocol_change_proposal_count} protocol / ${proposals.proposals.filter(p => p.category === 'layer-a-foundation-delta').length} layer-A | [retro](${slug}/_retrospective.md) |\n\nPART 3 — Emit Layer B retro claims to ${claimsFolder}/claims-retro.yaml. id: claim-retro-${slug}-NNN, tag behavior:retrospective, sources cite intent-spec/${slug}/_retrospective.md, added_in_workflow_run: ${date}-${slug}-retro-001. 2-5 atomic durable learning claims. Skip if ABANDONED with no learning. \`mkdir -p ${claimsFolder}\` first.\n\nInputs (verbatim):\nSituation: """${situation}"""\nOutcome: """${JSON.stringify(outcome, null, 2)}"""\nSurprises: """${JSON.stringify(surprises, null, 2)}"""\nKeep/change: """${JSON.stringify(keepChange, null, 2)}"""\nProposals: """${JSON.stringify(proposals, null, 2)}"""\n\nReturn ONLY: { "retro_doc_path": "...", "index_path": "...", "retro_claims_path": "...", "retro_claim_count": N }`, {
+    const written = await agent(`Consolidate and index.\n\nInputs: situation, outcome, surprises, keep/change, proposals (all in this run).\n\nPART 1 — Write ${ideaFolder}/_retrospective.md:\n# Retrospective: ${slug}\n**Date:** ${date}\n**Workflow:** retrospective (cadence=sprint)\n**Overall outcome:** ${outcome.overall}\n## Situation\n(verbatim)\n## Outcome assessment\n**Overall:** ${outcome.overall}\n${outcome.overall_reasoning}\n### Claim-by-claim verdict\n(table)\n## Surprises\n(one subsection per surprise)\n## Keep / Change / Proposals (Protocol / Layer A / Project-level)\n## Honest line\nIf MISSED/ABANDONED, do NOT soften. If DELIVERED/PARTIAL, name the most important thing still owed forward.\n\nPART 2 — Prepend a row to ${retroIndex} (create with header if absent):\n| ${date} | ${slug} | ${outcome.overall} | ${proposals.protocol_change_proposal_count} protocol / ${proposals.proposals.filter(p => p.category === 'layer-a-foundation-delta').length} layer-A | [retro](${slug}/_retrospective.md) |\n\nPART 3 — Emit Layer B retro claims to ${claimsFolder}/claims-retro.yaml. id: claim-retro-${slug}-NNN, tag behavior:retrospective, sources cite ${P.rel.intentDir(slug)}/_retrospective.md, added_in_workflow_run: ${date}-${slug}-retro-001. 2-5 atomic durable learning claims. Skip if ABANDONED with no learning. \`mkdir -p ${claimsFolder}\` first.\n\nInputs (verbatim):\nSituation: """${situation}"""\nOutcome: """${JSON.stringify(outcome, null, 2)}"""\nSurprises: """${JSON.stringify(surprises, null, 2)}"""\nKeep/change: """${JSON.stringify(keepChange, null, 2)}"""\nProposals: """${JSON.stringify(proposals, null, 2)}"""\n\nReturn ONLY: { "retro_doc_path": "...", "index_path": "...", "retro_claims_path": "...", "retro_claim_count": N }`, {
       label: 'write-retro-doc',
       phase: 'Cadence body',
       schema: { type: 'object', required: ['retro_doc_path', 'index_path', 'retro_claims_path', 'retro_claim_count'], properties: { retro_doc_path: { type: 'string' }, index_path: { type: 'string' }, retro_claims_path: { type: 'string' }, retro_claim_count: { type: 'integer', minimum: 0 } } },
@@ -235,7 +258,7 @@ if (cadence === 'quarterly') {
 
   phase('Cadence body')
 
-  const period = await agent(`Load the full period for quarterly retro ${quarter} (${from} → ${to}).\n\nGather:\n1. All ${projectRoot}/intent-spec/*/_retrospective.md whose Date is in [${from}, ${to}]. Use Bash \`grep -l '**Date:** 2026'\` then filter dates.\n2. All ${projectRoot}/metrics/_daily-digests/*.md in the date range.\n3. The signal stream ${signalsFile} — count by suggested_target for the period.\n4. ${projectRoot}/STRATEGY.md (Betting Table, 4 success themes, KRs).\n5. ${projectRoot}/_HORIZONS.md if it exists.\n\nReturn ≤600 words: ## Sprint retros (count by outcome + slug list with overall), ## Daily-digest themes (recurring watchlist items), ## Signal volume by target, ## KRs as currently stated in STRATEGY.md.\n\nReturn ONLY raw markdown.`, { label: 'quarterly-load-period', phase: 'Cadence body' })
+  const period = await agent(`Load the full period for quarterly retro ${quarter} (${from} → ${to}).\n\nGather:\n1. All ${P.context}/intent/*/_retrospective.md whose Date is in [${from}, ${to}]. Use Bash \`grep -l '**Date:** 2026'\` then filter dates.\n2. All ${P.dailyDigests}/*.md in the date range.\n3. The signal stream ${signalsFile} — count by suggested_target for the period.\n4. ${projectRoot}/STRATEGY.md (Betting Table, 4 success themes, KRs).\n5. ${P.horizons} if it exists.\n\nReturn ≤600 words: ## Sprint retros (count by outcome + slug list with overall), ## Daily-digest themes (recurring watchlist items), ## Signal volume by target, ## KRs as currently stated in STRATEGY.md.\n\nReturn ONLY raw markdown.`, { label: 'quarterly-load-period', phase: 'Cadence body' })
 
   const krAttribution = await agent(`Attribute KR movement this quarter to shipped slugs.\n\nPeriod context:\n"""${period}"""\n\nFor each KR in STRATEGY.md: which shipped slugs (from the retros) materially moved it? Cite the slug + the retro's overall outcome + one-line evidence. Be honest: if no slug moved a KR, say "no attributable movement". Do not stretch.\n\nReturn ONLY: { "attributions": [{ "kr": "...", "movement": "advanced|held|regressed|none", "slugs": ["..."], "evidence": "..." }] }`, {
     label: 'kr-attribution',
@@ -243,7 +266,7 @@ if (cadence === 'quarterly') {
     schema: { type: 'object', required: ['attributions'], properties: { attributions: { type: 'array', items: { type: 'object', required: ['kr', 'movement', 'slugs', 'evidence'], properties: { kr: { type: 'string' }, movement: { type: 'string', enum: ['advanced', 'held', 'regressed', 'none'] }, slugs: { type: 'array', items: { type: 'string' } }, evidence: { type: 'string' } } } } } },
   })
 
-  const layerADeltas = await agent(`Surface Layer A foundation delta candidates accumulated this quarter.\n\nPeriod:\n"""${period}"""\nKR attribution:\n"""${JSON.stringify(krAttribution, null, 2)}"""\n\nAcross the sprint retros, find every proposal categorized as \`layer-a-foundation-delta\`. Use Bash + grep against ${projectRoot}/intent-spec/*/_retrospective.md. Cluster by theme. For each cluster, draft a candidate amendment to the constitutional grounding (Priority Constraints, Purpose substrates, Soul principles, design principles) — one sentence + named approver (Greg / Mario / etc.) + supporting slug count.\n\nReturn ONLY: { "candidates": [{ "theme": "...", "amendment": "...", "approver": "...", "supporting_slugs": ["..."] }] }`, {
+  const layerADeltas = await agent(`Surface Layer A foundation delta candidates accumulated this quarter.\n\nPeriod:\n"""${period}"""\nKR attribution:\n"""${JSON.stringify(krAttribution, null, 2)}"""\n\nAcross the sprint retros, find every proposal categorized as \`layer-a-foundation-delta\`. Use Bash + grep against ${P.context}/intent/*/_retrospective.md. Cluster by theme. For each cluster, draft a candidate amendment to the constitutional grounding (Priority Constraints, Purpose substrates, Soul principles, design principles) — one sentence + named approver (Greg / Mario / etc.) + supporting slug count.\n\nReturn ONLY: { "candidates": [{ "theme": "...", "amendment": "...", "approver": "...", "supporting_slugs": ["..."] }] }`, {
     label: 'layer-a-deltas',
     phase: 'Cadence body',
     schema: { type: 'object', required: ['candidates'], properties: { candidates: { type: 'array', items: { type: 'object', required: ['theme', 'amendment', 'approver', 'supporting_slugs'], properties: { theme: { type: 'string' }, amendment: { type: 'string' }, approver: { type: 'string' }, supporting_slugs: { type: 'array', items: { type: 'string' } } } } } } },
@@ -255,7 +278,7 @@ if (cadence === 'quarterly') {
     schema: { type: 'object', required: ['horizons_path', 'section_added'], properties: { horizons_path: { type: 'string' }, section_added: { type: 'string' } } },
   })
 
-  const memo = await agent(`Write the quarterly memo to ${projectRoot}/intent-spec/_QUARTERLY-${quarter}.md.\n\nInputs:\nPeriod: """${period}"""\nKR: """${JSON.stringify(krAttribution, null, 2)}"""\nLayer A: """${JSON.stringify(layerADeltas, null, 2)}"""\nHorizons section added: ${horizons.section_added}\n\nStructure:\n# Quarterly Retrospective: ${quarter}\n**Period:** ${from} → ${to}\n**Workflow:** retrospective (cadence=quarterly)\n## Headline\n(one paragraph: what this quarter actually was, honestly)\n## KR movement\n(table from attribution)\n## Layer A candidates pending decision\n(list with approvers)\n## What the signal stream told us\n(2-3 paragraphs from period digest themes)\n## What we owe next quarter\n(3-5 specific items, not vibes)\n## Honest line\n(one sentence; if no KR moved, say so plainly)\n\nWrite the file. Return ONLY: { "memo_path": "intent-spec/_QUARTERLY-${quarter}.md" }`, {
+  const memo = await agent(`Write the quarterly memo to ${P.context}/intent/_QUARTERLY-${quarter}.md.\n\nInputs:\nPeriod: """${period}"""\nKR: """${JSON.stringify(krAttribution, null, 2)}"""\nLayer A: """${JSON.stringify(layerADeltas, null, 2)}"""\nHorizons section added: ${horizons.section_added}\n\nStructure:\n# Quarterly Retrospective: ${quarter}\n**Period:** ${from} → ${to}\n**Workflow:** retrospective (cadence=quarterly)\n## Headline\n(one paragraph: what this quarter actually was, honestly)\n## KR movement\n(table from attribution)\n## Layer A candidates pending decision\n(list with approvers)\n## What the signal stream told us\n(2-3 paragraphs from period digest themes)\n## What we owe next quarter\n(3-5 specific items, not vibes)\n## Honest line\n(one sentence; if no KR moved, say so plainly)\n\nWrite the file. Return ONLY: { "memo_path": "${P.rel.context}/intent/_QUARTERLY-${quarter}.md" }`, {
     label: 'quarterly-memo',
     phase: 'Cadence body',
     schema: { type: 'object', required: ['memo_path'], properties: { memo_path: { type: 'string' } } },
@@ -273,7 +296,7 @@ const scope = cadence === 'loop' ? input.loop_id
   : `${input.quarter}:${input.from}..${input.to || today}`
 const provenanceLine = JSON.stringify({ ts: today, cadence, scope, outputs: result })
 
-await agent(`Append exactly ONE line to ${runsFile} (create file + parent dir if missing, append-only — never edit existing lines):\n\n${provenanceLine}\n\nUse Bash: \`mkdir -p ${projectRoot}/metrics && printf '%s\\n' '${provenanceLine.replace(/'/g, "'\\''")}' >> ${runsFile}\`.\n\nReturn ONLY: { "appended": true }`, {
+await agent(`Append exactly ONE line to ${runsFile} (create file + parent dir if missing, append-only — never edit existing lines):\n\n${provenanceLine}\n\nUse Bash: \`mkdir -p ${P.metrics} && printf '%s\\n' '${provenanceLine.replace(/'/g, "'\\''")}' >> ${runsFile}\`.\n\nReturn ONLY: { "appended": true }`, {
   label: 'provenance-append',
   phase: 'Provenance',
   schema: { type: 'object', required: ['appended'], properties: { appended: { type: 'boolean' } } },

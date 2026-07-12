@@ -35,7 +35,9 @@ const MATERIAL = [
   'README.md', 'STRATEGY.md',
   'scripts/health.js', 'scripts/hooks/map-gate.js', 'scripts/hooks/commit-msg',
   'team/roles/ceo.md', 'workflows/office-day-v0.1.js', 'packages/protocol/index.js',
-  'metrics/_signals.jsonl', 'intent-spec/foo/bar.md', 'foundation/README.md',
+  'project/context/intent/foo/bar.md',        // Layer C task intent
+  'project/context/spec/foo/claims.yaml',      // Layer B claims
+  'project/context/foundation/README.md',      // Layer A pointer
   'project-template/surface-template.md', 'lib/anything.ts', 'some/dir/config.json',
   '.claude/settings.json',
 ];
@@ -50,6 +52,9 @@ const EXEMPT = [
   'project/engineering-log.md', 'project/bus-log.md',         // area logs (§17)
   'project/product-requirements.md',                          // requirements files
   'project/LOOP.md',
+  'project/record/metrics/_signals.jsonl',    // run exhaust (was material as metrics/**)
+  'project/record/loops/L1/state.md',          // loop state exhaust
+  'project/record/specs/wave-1/01-kill-log.md',// historical spec records
   'package-lock.json', 'yarn.lock', '.gitignore', 'LICENSE', '.DS_Store',
 ];
 for (const p of EXEMPT) {

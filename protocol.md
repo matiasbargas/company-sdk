@@ -1602,7 +1602,7 @@ This rule is on every loop open by reference. The spawning agent's act of openin
 
 ## 33. Reserved — SDLC State Machine
 
-Reserved for the SDLC State Machine (bet lifecycle: `proposal → committed → WIP → … → ga → sunset`). Currently in draft at `intent-spec/sdlc-state-machine/_protocol-33-draft.md`; not yet sealed into this file. Do not reuse this number.
+Reserved for the SDLC State Machine (bet lifecycle: `proposal → committed → WIP → … → ga → sunset`). Currently in draft at `project/context/intent/sdlc-state-machine/_protocol-33-draft.md`; not yet sealed into this file. Do not reuse this number.
 
 ---
 
@@ -1726,7 +1726,7 @@ Material change → the map travels with it, or the waiver is recorded where the
 
 ### 35.2 What counts as material
 
-The authoritative list is **code, not prose** — `scripts/lib/map-gate-lib.js` (`MATERIAL_RULES` / `EXEMPT_RULES`). This section does not re-enumerate it, because a prose copy would drift from the classifier (the exact failure §35 exists to stop). In summary: **material** = governance docs (`protocol*.md`, `CHARTER.md`, `STRATEGY.md`, `AGENTS.md`, `CLAUDE.md`, `SDK.md`, `README.md`), everything under `team/ workflows/ scripts/ packages/ foundation/ intent-spec/ generated-spec/ loops/ metrics/ project-template/`, and any `.js/.ts/.mjs/.cjs/.json`. **Exempt** (own write-rules or self-describing provenance) = the map files themselves, `surfaces/**` (§34), area logs and `*-requirements.md` (§17), `LOOP.md`, lockfiles, `.gitignore`, `LICENSE`. Exempt wins over material. In any repo without a `current-status.md`, the gate is a no-op.
+The authoritative list is **code, not prose** — `scripts/lib/map-gate-lib.js` (`MATERIAL_RULES` / `EXEMPT_RULES`). This section does not re-enumerate it, because a prose copy would drift from the classifier (the exact failure §35 exists to stop). In summary: **material** = governance docs (`protocol*.md`, `CHARTER.md`, `STRATEGY.md`, `AGENTS.md`, `CLAUDE.md`, `SDK.md`, `README.md`), everything under `team/ workflows/ scripts/ packages/ project-template/`, the context brain (`context/**` — Layer A/B/C), and any `.js/.ts/.mjs/.cjs/.json`. **Exempt** (own write-rules or self-describing provenance) = the map files themselves, `surfaces/**` (§34), `record/**` (run exhaust — loops, metrics, spec records), area logs and `*-requirements.md` (§17), `LOOP.md`, lockfiles, `.gitignore`, `LICENSE`. Exempt wins over material. In any repo without a `current-status.md`, the gate is a no-op.
 
 ### 35.3 The escape hatch
 

@@ -52,5 +52,5 @@ For `Decision: KILL` outcomes, the folder still moves to `_archive/` with the ki
 ## Cross-references
 
 - Layer A foundation → `../foundation/README.md`
-- Layer B specifications → `../generated-spec/README.md`
-- Workflow that produces Layer C → `../workflows/README.md`
+- Layer B specifications → `../spec/README.md`
+- Workflow that produces Layer C → `../../../workflows/README.md`

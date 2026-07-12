@@ -80,5 +80,5 @@ v0.1 has no retrieval layer — `claims.yaml` is read whole by downstream workfl
 ## Cross-references
 
 - Layer A foundation → `../foundation/README.md`
-- Layer C task context → `../intent-spec/README.md`
-- The workflow that produces claims → `../workflows/README.md`
+- Layer C task context → `../intent/README.md`
+- The workflow that produces claims → `../../../workflows/README.md`

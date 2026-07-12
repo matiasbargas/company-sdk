@@ -15,7 +15,7 @@
 
 - **The Bus.** Open `DECISION NEEDED` and `BLOCKER` messages do not roll to a second day without an owner or an escalation.
 - **Escalations.** Anything above a domain lead's authority routes to the right tier (`protocol.md` §2); CEO decisions get logged to `history.md`.
-- **The horizon discipline.** One workflow in flight at a time (`intent-spec/_HORIZONS.md`). If two are running, you have a logged owner override or you have drift.
+- **The horizon discipline.** One workflow in flight at a time (`context/intent/_HORIZONS.md`). If two are running, you have a logged owner override or you have drift.
 
 ## Run the whole day
 

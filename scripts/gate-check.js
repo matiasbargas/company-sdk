@@ -271,7 +271,7 @@ if (runPreMortem) {
   }
 
   if (!preMortemFound) {
-    errors.push('Pre-mortem section not found.\n    A Pre-Mortem section is required before Sprint 1 starts.\n    Add a "## Pre-Mortem" section to product-requirements.md or create pre-mortem.md.\n    See specs/wave-1/03-pre-mortem.md for the template.');
+    errors.push('Pre-mortem section not found.\n    A Pre-Mortem section is required before Sprint 1 starts.\n    Add a "## Pre-Mortem" section to product-requirements.md or create pre-mortem.md.\n    See project/record/specs/wave-1/03-pre-mortem.md for the template.');
   } else {
     // Check structural requirements
     const section1Match = preMortemContent.match(/### 1\.\s+This mission will fail because[\s\S]*?(?=### 2|$)/i);

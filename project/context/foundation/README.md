@@ -25,8 +25,8 @@ If you find yourself wanting to copy Layer A content INTO `foundation/`, stop. F
 
 ## What does NOT live here
 
-- Task-specific intent (that's Layer C → `intent-spec/`)
-- AI-maintained behavioral specs (that's Layer B → `generated-spec/`)
+- Task-specific intent (that's Layer C → `../intent/`)
+- AI-maintained behavioral specs (that's Layer B → `../spec/`)
 - Ephemeral state (loop state, session state, etc.)
 - Project-specific decisions (those go to `project/history.md`)
 
@@ -36,4 +36,4 @@ Quarterly or on a non-negotiable trigger (incident, regulatory change, structura
 
 ## How this layer is consumed
 
-Every workflow run loads a distilled version of Layer A as the constitution. The distillation lives in the workflow output for that run (`intent-spec/<slug>/_foundation-snapshot.md`) so we can audit "what constitution this idea was shaped against" later, when the constitution itself has evolved.
+Every workflow run loads a distilled version of Layer A as the constitution. The distillation lives in the workflow output for that run (`../intent/<slug>/_foundation-snapshot.md`) so we can audit "what constitution this idea was shaped against" later, when the constitution itself has evolved.

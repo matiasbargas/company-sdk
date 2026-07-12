@@ -6,12 +6,12 @@
 |---|---|
 | **Owner** | PM |
 | **Cadence** | Daily |
-| **Trigger** | Daily scan of every shipped slug in `intent-spec/`. |
+| **Trigger** | Daily scan of every shipped slug in `context/intent/`. |
 
 ## What it consumes
 
-- `intent-spec/<slug>/shaped-brief.md` — the `Decision` field and the ship date.
-- `intent-spec/_RETRO-INDEX.md` and `intent-spec/<slug>/_retrospective.md` — to dedupe against retros already run.
+- `context/intent/<slug>/shaped-brief.md` — the `Decision` field and the ship date.
+- `context/intent/_RETRO-INDEX.md` and `context/intent/<slug>/_retrospective.md` — to dedupe against retros already run.
 
 ## The trigger checklist (all three must hold)
 
@@ -19,7 +19,7 @@ A slug is **owed** a sprint retro when:
 
 1. **Decision is shippable** — `PROCEED`, `DE-RISK → HOLDS → PROCEED`, or `REVISE → shipped as v2`. (`KILL` and unresolved `REVISE` go to the kill-log path, not a retro.)
 2. **≥24h since ship** — observable outcomes exist, not just author confidence.
-3. **No retro yet** — `intent-spec/<slug>/_retrospective.md` does not exist and the slug has no row in `_RETRO-INDEX.md`.
+3. **No retro yet** — `context/intent/<slug>/_retrospective.md` does not exist and the slug has no row in `_RETRO-INDEX.md`.
 
 ## What it produces
 

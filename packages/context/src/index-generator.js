@@ -92,6 +92,63 @@ const QUERY_MAP_STATIC = Object.freeze({
   'vision':                { read: ['project.md', 'idea.md'],                                      consult: 'CEO' },
 });
 
+/** List immediate sub-directories of `dir` (sorted, deterministic), or [] if absent. */
+function subdirs(dir) {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir)
+    .filter(d => { try { return fs.statSync(path.join(dir, d)).isDirectory(); } catch (_) { return false; } })
+    .sort();
+}
+
+/**
+ * Scan the consolidated context + record layers and return a structured map.
+ * This is the "brain map" — it tells an AI tool which layer holds what, and the
+ * order to load them in. Generated from the tree, so it cannot drift from disk.
+ *
+ * `context/` = the brain (A/B/C); `record/` = run exhaust. Absent layers are omitted.
+ */
+function buildLayers(projectDir) {
+  const contextDir = path.join(projectDir, 'context');
+  const recordDir  = path.join(projectDir, 'record');
+  if (!fs.existsSync(contextDir) && !fs.existsSync(recordDir)) return undefined;
+
+  const slugs = (layerDir) => subdirs(path.join(contextDir, layerDir)).filter(s => !s.startsWith('_'));
+  const has   = (p) => fs.existsSync(path.join(projectDir, p));
+
+  const brain = {};
+  if (has('context/foundation')) {
+    brain.foundation = { layer: 'A', path: 'context/foundation', gate: 'material', material_cadence: 'rarely',
+      purpose: 'Human-authored stable law (pointer to CHARTER, protocol, STRATEGY).' };
+  }
+  if (has('context/spec')) {
+    brain.spec = { layer: 'B', path: 'context/spec', gate: 'material', slugs: slugs('spec'),
+      purpose: 'AI-maintained atomic claims about system behavior, per idea slug.' };
+  }
+  if (has('context/intent')) {
+    const indexes = ['_INDEX.md', '_RETRO-INDEX.md', '_HORIZONS.md'].filter(f => has(`context/intent/${f}`));
+    brain.intent = { layer: 'C', path: 'context/intent', gate: 'material', slugs: slugs('intent'),
+      indexes, archived: subdirs(path.join(contextDir, 'intent', '_archive')),
+      purpose: 'Engineer/agent-supplied task intent, per idea slug.' };
+  }
+
+  const record = {};
+  if (has('record/loops'))   record.loops   = { path: 'record/loops',   gate: 'exempt', runs: subdirs(path.join(recordDir, 'loops')).length };
+  if (has('record/metrics')) record.metrics = { path: 'record/metrics', gate: 'exempt',
+    streams: (fs.existsSync(path.join(recordDir, 'metrics')) ? fs.readdirSync(path.join(recordDir, 'metrics')).filter(f => f.endsWith('.jsonl')).sort() : []) };
+  if (has('record/specs'))   record.specs   = { path: 'record/specs',   gate: 'exempt' };
+
+  return {
+    note: 'Layered context (A/B/C) + run exhaust. context/** is material to §35; record/** is exempt. Generated from the tree.',
+    brain,
+    record,
+    loadOrder: [
+      'context/foundation  (Layer A — in full, always)',
+      'context/spec/<slug>/claims.yaml  (Layer B — the slice for your idea/epic)',
+      'context/intent/<slug>/  (Layer C — in full, active task)',
+    ],
+  };
+}
+
 /**
  * Generate a context-index object from a project directory.
  * Does NOT write to disk — returns the index object.
@@ -303,6 +360,7 @@ function generateIndex(projectDir) {
     generatedAt: refMtime.toISOString(),
     release,
     project: projectMeta,
+    layers: buildLayers(projectDir),
     projectDomains,
     orgDomains: ORG_DOMAINS,
     queryMap,

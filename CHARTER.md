@@ -1,6 +1,6 @@
 # Charter — The Company Is The Product
 
-> **Status: DRAFT — awaiting Owner ratification.** This is Layer A (constitutional). Layer A is human-ratified, never silently AI-maintained. Claude drafted this from the Owner's directive (2026-06-18/20) and the vision already latent in `intent-spec/_HORIZONS.md` and `team/roles/_shared.md`. It is not load-bearing until the Owner signs the ratification line at the bottom.
+> **Status: DRAFT — awaiting Owner ratification.** This is Layer A (constitutional). Layer A is human-ratified, never silently AI-maintained. Claude drafted this from the Owner's directive (2026-06-18/20) and the vision already latent in `project/context/intent/_HORIZONS.md` and `team/roles/_shared.md`. It is not load-bearing until the Owner signs the ratification line at the bottom.
 
 ---
 
@@ -30,7 +30,7 @@ This charter does not replace the foundations. It names what they are *for*.
 - It is the application of **Constraint 1 (human agency)** to the company's own form: the body of work must leave the humans who read it more capable, never more dependent. A company whose record only its authors can decode is a dependency machine.
 - It is **Purpose** turned inward: the same "leave them more capable than you found them" that we owe users, we owe the next agent and the next human who opens this repo.
 - It is the **infinite game** principle (`team/roles/_shared.md` Soul) given a concrete object: the game is played on the company body, across releases, forever.
-- It is the crystallization of the **Vision** already written in `intent-spec/_HORIZONS.md` — "the simplest faithful representation of what a product team needs," self-aware contexts, improvement as the default substrate — and the creed `we all build our infra`.
+- It is the crystallization of the **Vision** already written in `project/context/intent/_HORIZONS.md` — "the simplest faithful representation of what a product team needs," self-aware contexts, improvement as the default substrate — and the creed `we all build our infra`.
 
 ## What this changes downstream
 

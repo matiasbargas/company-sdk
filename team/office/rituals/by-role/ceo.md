@@ -6,7 +6,7 @@
 
 - **The day report** from the office-day run — specifically the **Surface Sweep** escalations (§34.7 boundaries: an irreversible no-go that needs a human), and the **Status Reconcile** drift list (is the company telling itself the truth?).
 - **The daily digest watchlist** — clusters tagged `layer-A` or `protocol` are yours; they point at the constitution and the contract.
-- **`intent-spec/_HORIZONS.md`** — the bets-in-flight view. One forward transition decision per session (the discipline applies to transitions, not bet-count).
+- **`context/intent/_HORIZONS.md`** — the bets-in-flight view. One forward transition decision per session (the discipline applies to transitions, not bet-count).
 
 ## What only you decide
 

@@ -12,7 +12,7 @@ When a slug is owed, you decide whether to fire its sprint retro today — the s
 
 ## What you also watch
 
-- **The horizon queue.** `intent-spec/_HORIZONS.md` — one ships, one is queued with explicit scope, one is sketched, one is vision-only. When everything is "next sprint," nothing is shippable. You enforce the sequence.
+- **The horizon queue.** `context/intent/_HORIZONS.md` — one ships, one is queued with explicit scope, one is sketched, one is vision-only. When everything is "next sprint," nothing is shippable. You enforce the sequence.
 - **Scope drift.** A mission growing past its shaped boundary is a scope change; >20% routes to CEO (`protocol.md`). The daily check is cheap; the rework from a missed one is not.
 - **The digest watchlist.** A `workflow`- or `protocol`-targeted cluster in the day's digest is often a shaping or scope signal — read it.
 

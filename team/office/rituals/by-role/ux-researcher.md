@@ -4,7 +4,7 @@
 
 ## What you watch daily
 
-- **`metrics/_signals.jsonl`** — the raw `improvement_signal` stream. Per `protocol.md` §32, UXR is a **named co-consumer** of this file alongside the Coordinator's retro cadences. You read it **continuously — not gated by any retro.** The [Daily Digest](../office/03-daily-digest.md) is a convenience view; the stream itself is your primary source.
+- **`record/metrics/_signals.jsonl`** — the raw `improvement_signal` stream. Per `protocol.md` §32, UXR is a **named co-consumer** of this file alongside the Coordinator's retro cadences. You read it **continuously — not gated by any retro.** The [Daily Digest](../office/03-daily-digest.md) is a convenience view; the stream itself is your primary source.
 
 ## What you produce
 

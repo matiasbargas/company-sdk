@@ -438,3 +438,24 @@ Rationale: Per the §32 retro's own rule (and the open surface `SURFACE-20260620
 Implications: Honest limits, stated in §35: `--no-verify` bypasses Layer 1 and nothing logs it; a fresh clone has no git gate until `sdk-install-hooks` runs (`sdk-init` runs it for new projects). The gate self-gates (its own files are material) and is pinned by `npm test`, so it cannot silently rot. `sdk-init` wiring to auto-install is the one remaining build follow-up.
 Reversible: YES — additive; the hook can be uninstalled (`git config --unset core.hooksPath`) and §35 retired like any protocol section.
 Affects natural persons: NO
+
+---
+
+## SDK-CHANGE — Layered-context consolidation (project vs. machinery)
+**Date of work:** 2026-07-01/02
+**Made by:** Greg (CEO), Owner-directed
+**Release:** v2026.Q2.3
+**Tag:** SDK-CHANGE
+**Status:** APPLIED in working tree (uncommitted at time of writing — Owner reviewing)
+
+DECISION: Consolidate the repo's accumulated layers into a two-zone structure and one generated index
+Date: 2026-07-02
+Made by: Greg (CEO), Owner-directed
+Context: The repo had grown four undifferentiated identities flat at the root — the SDK machine (packages/scripts/team/workflows/project-template), the foundational law (protocol*/CHARTER/STRATEGY/…), the dogfood instance (project/ + intent-spec/ + generated-spec/), and process exhaust (loops/ metrics/ specs/). 17 top-level entries; a model opening the repo could not tell the machine from the project running on it. Two competing index schemes (the org-domain `context-index.json`, stale since 2026-04-18, and the hand-authored A/B/C READMEs) gave no single truthful map. Owner directed: divide **the project (building the SDK + its history)** from **the SDK machinery (the tools built)**, simplify the model, and make it generalize so a future generated project stays under control over time.
+Decision: Keep the machinery + law at the repo root (untouched — 22 CLI bins, npm workspaces, git hooks all keep working). Consolidate the project side under `project/`: the three context layers into `project/context/{foundation,spec,intent}` (Layers A/B/C) and run exhaust into `project/record/{loops,metrics,specs}`. Moves: `generated-spec/→context/spec`, `intent-spec/→context/intent`, `foundation/→context/foundation`, `loops|metrics|specs → record/*`. Division = "root is the SDK, project/ is the building-of-it."
+Mechanisms updated in lockstep: (1) §35 classifier `scripts/lib/map-gate-lib.js` — five bare path rules replaced by one map-relative `context/**` (material) rule + a `record/**` exempt rule (record is run exhaust, like area logs); pinned test updated (48 passing). (2) `protocol.md` §35 summary reworded to the new dirs. (3) A shared `workflows/_paths.js` resolver (nested `project/` for SDK self-dev vs. root for a generated project) — canonical for Node scripts; the 3 live workflows (idea-execution-v0.1, retrospective, retrospective-v0.1) carry a compact inline mirror because the Workflow runtime has no `require()`. (4) The `context-index.json` generator extended with a tree-scanned `layers` block (brain A/B/C + record + loadOrder) and regenerated — one index, generated, current. (5) Orientation READMEs added at `project/context/` and `project/record/`; moved layer READMEs' cross-links fixed.
+Alternatives considered: (a) push machinery into `sdk/` — rejected, breaks all 22 bins + workspaces + hooks in one big-bang; (b) logical-only division via the index without moving files — rejected, Owner wanted the tree to actually divide; (c) rewrite the ~7 historical one-shot seal scripts' path prose — rejected, they are sealed run-records and rewriting them falsifies what ran (left as-is).
+Rationale: A generated project needs only the instance shape (context/ + record/ + state + index), never the machine — so defining that shape cleanly both simplifies team-sdk's instance and gives every future project an inheritable, self-tidying structure.
+Implications / still owed: `team/office/rituals/*` and `team/roles/*` still name `metrics/ loops/ intent-spec/` as operative paths; these are SHARED machinery (run in generated projects too) so they need a generic path form, not team-sdk's `project/` prefix — a follow-up sweep pending an Owner decision on path form. Until then agents following those rituals could recreate root dirs; the generated index is the authoritative map that mitigates this. Verification: `npm test` green (all suites); `sdk-health project/` clean; no live code references old top-level dirs.
+Reversible: YES — all moves are `git mv` (rename-tracked); classifier/generator changes are additive and revertible.
+Affects natural persons: NO
