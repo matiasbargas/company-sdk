@@ -224,7 +224,7 @@ CEO decision required: YES / NO
 sdk-doc status [project-dir]
 sdk-doc decision history.md --decision "..." --context "..." --made-by CLO
 sdk-doc log strategy-log.md --role CLO --level M3 --goal "..." --status completed
-sdk-doc read compliance-requirements.md --section "## Legal (CLO)"
+sdk-doc read compliance-requirements.md --section "## Legal & Regulatory (CLO)"
 ```
 
 ## Done Definition

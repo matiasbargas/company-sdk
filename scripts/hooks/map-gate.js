@@ -10,7 +10,9 @@
  *                         map is touched nor [map-exempt: <reason>] is present.
  *
  *   --stop                Layer 2, the in-session reminder. Invoked by the Claude Code
- *                         Stop hook. Reminds (stderr) on uncommitted material drift and
+ *                         Stop hook. Reminds on uncommitted material drift by printing
+ *                         {"systemMessage": ...} JSON to stdout (a Stop hook's stderr on
+ *                         exit 0 is never surfaced, so the old reminder was invisible).
  *                         ALWAYS exits 0 — it never blocks a turn.
  *
  * Honest limits (also stated in §35): `git commit --no-verify` bypasses Layer 1 entirely;
@@ -68,7 +70,7 @@ ${material.map(f => `      • ${f}`).join('\n')}
 
 const reminderMessage = (material, mapFiles) => `
   ↪ map-gate (reminder): material changes in the tree without a map update this session —
-${material.map(f => `      • ${f}`).join('\n')}
+${material.slice(0, 8).map(f => `      • ${f}`).join('\n')}${material.length > 8 ? `\n      … and ${material.length - 8} more` : ''}
     Update ${mapFiles[0]} (and ${mapFiles[1]} if a decision was made) before you finish,
     or the commit-msg gate (§35) will block the commit.
 `;
@@ -97,7 +99,7 @@ function runStop() {
   const root = repoRoot();
   const c = classify(workingTreeFiles(root), root);
   if (c.applies && c.materialStaged.length > 0 && !c.mapTouched) {
-    process.stderr.write(reminderMessage(c.materialStaged, c.mapFiles));
+    process.stdout.write(JSON.stringify({ systemMessage: reminderMessage(c.materialStaged, c.mapFiles).trim() }) + '\n');
   }
   process.exit(0); // Stop hook must never fail the turn.
 }

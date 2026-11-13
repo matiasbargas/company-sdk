@@ -136,7 +136,7 @@ my-project/
 ## Links
 
 - [Interactive Flowchart](docs/flowchart.html) -- visual lifecycle
-- [Protocol](protocol.md) -- the shared contract (v4.3, 30 sections)
+- [Protocol](protocol.md) -- the shared contract (Sections 0-35; version in its header)
 - [Agent Manifest](AGENTS.md) -- who does what, activation sequence, dependency graph
 
 ## License
@@ -145,4 +145,4 @@ MIT
 
 ---
 
-*v6.0.0 -- protocol v4.3 -- 31 agents -- 3 iteration guardians*
+*v6.0.0 -- protocol v4.7 -- 31 agents -- 3 iteration guardians*

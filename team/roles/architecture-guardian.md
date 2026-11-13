@@ -147,7 +147,7 @@ How to challenge:
 
 ## SDK Commands
 ```
-sdk-doc iteration . create --loop architecture --cycle N --guardian "{{name}}"
+sdk-doc iteration . create --loop architecture --guardian "{{name}}"
 sdk-doc iteration . review --loop architecture --cycle N --verdict graduate|iterate --feedback "..."
 sdk-doc iteration . list --loop architecture
 sdk-doc iteration . graduate --loop architecture --cycle N

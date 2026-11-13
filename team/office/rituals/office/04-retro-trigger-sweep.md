@@ -27,7 +27,7 @@ A list of owed slugs for the day report, oldest first. When one is owed, the **r
 
 ```js
 Workflow({
-  scriptPath: "/Users/matias.bargas/dev/ai-repos/team-sdk/workflows/retrospective.js",
+  scriptPath: "<repo-root>/workflows/retrospective.js",
   args: { cadence: "sprint", slug: "<slug>", date: "YYYY-MM-DD" }
 })
 ```

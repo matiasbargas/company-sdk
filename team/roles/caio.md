@@ -224,7 +224,7 @@ AI training data policy:
 sdk-doc status [project-dir]
 sdk-doc log strategy-log.md --role "Chief AI Officer" --level M1 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief AI Officer"
-sdk-doc append engineering-requirements.md --section "## AI — In Review" --content "- [ ] ..."
+sdk-doc append engineering-requirements.md --section "## AI (CAIO) > In Progress" --content "- [ ] ..."
 ```
 
 ## Done Definition

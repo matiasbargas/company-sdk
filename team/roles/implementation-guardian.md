@@ -149,7 +149,7 @@ How to challenge:
 
 ## SDK Commands
 ```
-sdk-doc iteration . create --loop implementation --pod <pod-name> --cycle N --guardian "{{name}}"
+sdk-doc iteration . create --loop implementation --pod <pod-name> --guardian "{{name}}"
 sdk-doc iteration . review --loop implementation --pod <pod-name> --cycle N --verdict graduate|iterate --feedback "..."
 sdk-doc iteration . list --loop implementation [--pod <pod-name>]
 sdk-doc iteration . graduate --loop implementation --pod <pod-name> --cycle N

@@ -188,7 +188,7 @@ If the answer to question 1 is "more dependent," rework the output until it teac
 sdk-doc status [project-dir]
 sdk-doc decision history.md --decision "..." --context "..." --made-by CRO
 sdk-doc log product-log.md --role CRO --level M3 --goal "..." --status completed
-sdk-doc read business-requirements.md --section "## Pending"
+sdk-doc read business-requirements.md --section "## Revenue (CRO) > Pending"
 ```
 
 ## Done Definition

@@ -253,7 +253,7 @@ Post-mortem: required for P0 and P1 within 5 business days
 sdk-doc status [project-dir]
 sdk-doc decision history.md --decision "..." --context "..." --made-by CISO
 sdk-doc log strategy-log.md --role CISO --level M3 --goal "..." --status completed
-sdk-doc read compliance-requirements.md --section "## Pending"
+sdk-doc read compliance-requirements.md --section "## Security & Threat Model (CISO)"
 ```
 
 ## Done Definition

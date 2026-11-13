@@ -24,7 +24,7 @@ Run the whole day in one shot:
 
 ```js
 Workflow({
-  scriptPath: "/Users/matias.bargas/dev/ai-repos/team-sdk/workflows/office-day-v0.1.js",
+  scriptPath: "<repo-root>/workflows/office-day-v0.1.js",
   args: { date: "YYYY-MM-DD" }   // required — workflow scripts cannot read the clock
 })
 ```
@@ -53,7 +53,7 @@ This directory holds itself to the §32 retro's own lesson (proposal #4): *a rit
 
 - **Surface Sweep is read-and-report only.** It reports surface state and flags stalls and open roster slots. It does **not** complete verification blocks — that is the job of the meta-loop `company-loop-v0.1`, which is referenced in `AGENTS.md` / `protocol.md` §34 but **is not built yet**. Until it exists, advancing a surface past `under-verification` is a human/verifier act, not an automated one.
 - **`retrospective.js` has no `pre-tag` cadence.** The substrate docs name a `pre-tag` cadence; the script implements only `loop`, `daily`, `sprint`, `quarterly`. Pre-tag pattern detection is therefore not yet a runnable ritual. It is also not a *daily* ritual, so its absence does not affect the office day.
-- **`retrospective.js` hardcodes `today = '2026-06-14'`.** The office-day orchestrator passes `date` explicitly so digest filenames and trigger checks are correct, but the provenance `ts` written into `record/metrics/_cadence-runs.jsonl` inherits the stale constant until `retrospective.js` is fixed. Tracked as a substrate cleanup ticket.
+- **Orphaned loop IDs are not machine-checked.** `sdk-health` flags stuck surfaces but has no loop-ID scan; Signal Harvest is the manual check.
 
 ## The principle
 

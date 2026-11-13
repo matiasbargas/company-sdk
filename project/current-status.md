@@ -1,7 +1,7 @@
 # Current Status
-**Last updated:** 2026-07-02
-**Updated by:** Greg (CEO) — layered-context consolidation (project vs. machinery)
-**Release:** v2026.Q2.3 · **Protocol:** v4.6 (§32 + §34 + §35 sealed; §33 reserved for SDLC state machine, draft)
+**Last updated:** 2026-11-13
+**Updated by:** Greg (CEO) — harness review, batch 1 (P0 repairs)
+**Release:** v2026.Q2.3 · **Protocol:** v4.7 (§31 restored; §32 + §34 + §35 sealed; §33 reserved for SDLC state machine, draft)
 
 > This is the first file you read when resuming work. It tells you exactly where the team is right now and what the next action is. If this file is out of date, the team is flying blind.
 >
@@ -10,6 +10,8 @@
 ---
 
 ## Phase
+
+**Harness review in progress (2026-11-13), batch 1 of 6 shipped.** A four-agent review of every role, coordination, office, and template file found that several mechanisms the docs claimed were not running. Batch 1 repaired them: §31 Iteration Loops and `sdk-doc iteration` are restored (protocol v4.7), gate-check now sees the real template headings and placeholder jurisdictions, section lookup is level-aware and scoped (`## Finance (CFO) > Pending`), protocol-core/reference are generated and test-pinned, the stale project-template/SDK.md is gone, the §35 Stop reminder is visible, and `sdk-health` flags stalled surfaces. The first thing that check flagged is `SURFACE-20260620-enforcement-claims-tooling-001`, under-verification for 132 days. **Next batches:** (2) configurable limits in `.sdkrc` (default no cap; loops keep a mandatory stop condition) + single-source rules; (3) `_shared.md`/`_guardian.md` extraction + `{{name}}` placeholder sweep; (4) Greg output style + SessionStart hook + docs consistency test; (5) Tier-1 skills + generated `.claude/agents/`; (6) protocol split + frontmatter state. See `history.md` → "Harness review, batch 1".
 
 **Document-First Gate sealed (§35, 2026-06-30; protocol v4.5 → v4.6).** "The map never lags the work" is now load-bearing, not norm: a material change must touch the map (`current-status.md`/`history.md`) in the same commit or carry `[map-exempt: <reason>]`. Three real layers — a hard-blocking git `commit-msg` hook (`scripts/hooks/` + `sdk-install-hooks`), a non-blocking Claude Code `Stop` reminder (`.claude/settings.json`), and an `sdk-health` drift backstop. Authoritative material/exempt list lives in code (`scripts/lib/map-gate-lib.js`), pinned by `npm test`. Built under the `SURFACE-20260620-enforcement-claims-tooling-001` discipline: every mechanism the text names was built and verified first. Gate verified end-to-end (6 commit scenarios + Stop hook + health). **Honest open gap:** auto-installing the gate in *generated* projects is a follow-up (they carry no `scripts/hooks`); today §35 is enforced in the SDK's own repo. This is the standing fix for the drift that forced the 2026-06-19 and 2026-06-24 backfills.
 

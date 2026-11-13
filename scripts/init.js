@@ -325,7 +325,8 @@ if (fs.existsSync(squadSrc)) {
 }
 
 // Shared SDK docs
-for (const extra of ['protocol.md', 'protocol-core.md', 'protocol-reference.md', 'AGENTS.md', 'STRATEGY.md']) {
+// SDK.md comes from the SDK root — the old project-template/SDK.md copy drifted to v4.3.
+for (const extra of ['SDK.md', 'protocol.md', 'protocol-core.md', 'protocol-reference.md', 'AGENTS.md', 'STRATEGY.md', 'CHARTER.md']) {
   const src = path.join(sdkRoot, extra);
   if (fs.existsSync(src)) {
     copyAndProcess(src, path.join(outputDir, extra), vars);
@@ -375,11 +376,11 @@ const claudeSettings = {
   releaseId,
   createdAt: dateStr,
   squad: squadType,
+  // Scoped to the SDK's own scripts. "Bash(node:*)" used to be granted here, which
+  // allowed any node invocation (arbitrary code) without a prompt.
   permissions: {
-    allow: [
-      "Bash(node:*)",
-      "Bash(node scripts/doc.js:*)"
-    ]
+    allow: ['doc', 'consult', 'status', 'gate-check', 'validate', 'health', 'next', 'resume']
+      .map(name => `Bash(node ${path.join(sdkRoot, 'scripts', name + '.js')}:*)`)
   }
 };
 

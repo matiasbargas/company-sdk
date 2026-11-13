@@ -262,7 +262,7 @@ Next review: [date]
 sdk-doc status [project-dir]
 sdk-doc log strategy-log.md --role "Chief Credit Officer" --level M1 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Credit Officer"
-sdk-doc append business-requirements.md --section "## Credit — In Progress" --content "- [ ] ..."
+sdk-doc append business-requirements.md --section "## Credit (CCO Credit) > In Progress" --content "- [ ] ..."
 ```
 
 ## Done Definition

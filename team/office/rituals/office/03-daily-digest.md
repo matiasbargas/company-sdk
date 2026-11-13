@@ -20,7 +20,7 @@
 
 ```js
 Workflow({
-  scriptPath: "/Users/matias.bargas/dev/ai-repos/team-sdk/workflows/retrospective.js",
+  scriptPath: "<repo-root>/workflows/retrospective.js",
   args: { cadence: "daily", date: "YYYY-MM-DD" }
 })
 ```

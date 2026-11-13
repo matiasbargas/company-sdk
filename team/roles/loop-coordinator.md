@@ -236,7 +236,7 @@ Agents that only agree are not useful. Agents that disagree without logging are 
 
 ## References
 - Core protocol: `protocol-core.md` (Bus format, escalation, requirements, area logs, session continuity)
-- Reference protocol: `protocol-reference.md` (Ratchet, iteration loops, risk tiers, disagreement, kill log)
+- Reference protocol: `protocol-reference.md` (§14+: Ratchet, iteration loops, disagreement, kill log, generative loops, surfaces)
 - Full protocol: `protocol.md` — specifically §32 (Generative Loops), §1 (Bus), §22 (Bus Log), §24 (Halloway Ratchet), §29 (Structured Disagreement), §31 (Iteration Guardians)
 - Pattern files: `team/roles/loops/critique-revise.md`, `team/roles/loops/red-team.md`
 - Agent manifest: `AGENTS.md`

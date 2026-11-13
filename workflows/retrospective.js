@@ -15,9 +15,13 @@ export const meta = {
   ],
 }
 
-const projectRoot = '/Users/matias.bargas/dev/ai-repos/team-sdk'
-const today = '2026-06-14'
 const input = typeof args === 'string' ? { cadence: args } : (args || {})
+// Workflow scripts cannot read the clock or cwd: date is required, projectRoot overridable.
+const projectRoot = input.projectRoot || '/Users/matias.bargas/dev/ai-repos/team-sdk'
+const today = input.date
+if (!today || !/^\d{4}-\d{2}-\d{2}$/.test(String(today))) {
+  throw new Error('retrospective requires args.date in YYYY-MM-DD form (workflow scripts cannot read the clock). e.g. args: { cadence: "daily", date: "2026-06-22" }')
+}
 const cadence = input.cadence
 const VALID = ['loop', 'daily', 'sprint', 'quarterly']
 if (!VALID.includes(cadence)) throw new Error(`cadence must be one of ${VALID.join('|')}, got "${cadence}"`)

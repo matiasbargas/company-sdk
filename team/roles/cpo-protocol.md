@@ -210,7 +210,7 @@ Emergency pause:
 sdk-doc status [project-dir]
 sdk-doc log strategy-log.md --role "Chief Protocol Officer" --level M1 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Protocol Officer"
-sdk-doc append engineering-requirements.md --section "## Protocol — Token Design" --content "..."
+sdk-doc append engineering-requirements.md --section "## Protocol (CPO Protocol) > In Progress" --content "..."
 ```
 
 ## Done Definition

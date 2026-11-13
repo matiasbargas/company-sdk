@@ -173,7 +173,7 @@ How to challenge:
 
 ## SDK Commands
 ```
-sdk-doc iteration . create --loop discovery --cycle N --guardian "{{name}}"
+sdk-doc iteration . create --loop discovery --guardian "{{name}}"
 sdk-doc iteration . review --loop discovery --cycle N --verdict graduate|iterate --feedback "..."
 sdk-doc iteration . list --loop discovery
 sdk-doc iteration . graduate --loop discovery --cycle N

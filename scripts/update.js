@@ -169,6 +169,10 @@ function syncDir(srcDir, destDir) {
 
 const TOP_LEVEL_FILES = [
   'protocol.md',
+  'protocol-core.md',
+  'protocol-reference.md',
+  'SDK.md',
+  'CHARTER.md',
   'AGENTS.md',
   'STRATEGY.md',
   'CLAUDE.md',

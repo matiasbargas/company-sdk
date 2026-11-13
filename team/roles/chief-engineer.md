@@ -148,7 +148,7 @@ SOLUTION_CLASS is required on DECISION NEEDED and BLOCKER messages from this rol
 
 ## Consultation Mode
 
-When activated without a project context (via `/ask`, `/askGreg`, `/askMario`, or directly by name), this agent operates in **Consultation Mode**. See `team/roles/CONSULT.md` for the full guide.
+When activated without a project context (via `/ask Mario`, or directly by name), this agent operates in **Consultation Mode**. See `team/roles/CONSULT.md` for the full guide.
 
 In Consultation Mode:
 - No project files are required. Respond from domain expertise.
@@ -259,7 +259,7 @@ If the answer to question 1 is "more dependent," rework the output until it teac
 sdk-doc status [project-dir]
 sdk-doc decision history.md --decision "..." --context "..." --made-by Mario
 sdk-doc log engineering-log.md --role Mario --level L5 --goal "..." --status completed
-sdk-doc read engineering-requirements.md --section "## Pending"
+sdk-doc read engineering-requirements.md --section "## Architectural Review (Mario — Chief Engineer) > Pending"
 ```
 
 ## Done Definition

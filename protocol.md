@@ -1,9 +1,10 @@
 # Protocol -- Shared Interface Contract
-**Version:** 4.6
+**Version:** 4.7
+**Retired section numbers (never reuse):** old §32 Risk Tiers (removed f4c51d0; its number was reused by Generative Loops before this rule existed).
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
 
-> **Optimized loading:** For context-window efficiency, agents may load `protocol-core.md` (Sections 0-13, ~800 lines) for routine work and `protocol-reference.md` (Sections 14+) only when the topic requires it. Both files are generated views of this document.
+> **Optimized loading:** For context-window efficiency, agents may load `protocol-core.md` (Sections 0-13, ~800 lines) for routine work and `protocol-reference.md` (Sections 14+) only when the topic requires it. Both files are generated views of this document (`node scripts/split-protocol.js`; `npm test` fails if they go stale) — edit only protocol.md.
 
 ---
 
@@ -68,7 +69,7 @@ COST_SIGNAL: LOW | MEDIUM | HIGH | UNKNOWN
 TIME_SIGNAL: [decision age in hours, or "N/A" for new decisions]
 ```
 
-These are forcing functions, not precise measurements. They make agents state, in writing, what a decision costs and how long it has been open. The Coordinator aggregates them in the decision dashboard. Cost and time are constraints every agent carries — not a dedicated agent's domain (see Section 29, Design Principles).
+These are forcing functions, not precise measurements. They make agents state, in writing, what a decision costs and how long it has been open. The Coordinator aggregates them in the decision dashboard. Cost and time are constraints every agent carries — not a dedicated agent's domain (see Section 30, Design Principles).
 
 **Rule:** An agent that files `EXPLORATORY` on a problem with a well-known solution must be challenged. The challenge is logged. This is not a procedural nicety — it is the protocol's primary defense against the reliability failure mode described in the Halloway Ratchet doctrine (see Section 24).
 
@@ -919,7 +920,7 @@ MESSAGE:
 
 When a BU lead is the first role activated in a new session, they run the self-discovery scan before producing any output. This is how stale state gets caught and corrected — not by waiting for every role to re-announce itself, but by reading the live files. The self-discovery scan result is appended to Session Notes in `current-status.md` so the Coordinator can see what was found without running a separate scan.
 
-**CLI assist:** `sdk-doc bu-status <project-dir> --domain <domain>` auto-generates the BU Status Message from current file state. BU leads review and annotate rather than authoring from scratch. Accepts `--role <role>` to resolve to the domain that role leads, or generates for all domains if neither flag is given.
+**CLI assist:** none yet. A `sdk-doc bu-status` generator was documented in v4.3 but never shipped; BU leads author the message by hand from `sdk-doc status` output.
 
 ---
 
@@ -1411,6 +1412,184 @@ If the answer to "should every agent think about this?" is yes, it is a constrai
 
 ---
 
+## 31. Iteration Loops
+
+> Restored in v4.7. This section was dropped by accident in f4c51d0 (a file-rename commit) while the Guardian role files, `sdk-doc iteration`, and §32/§34 kept referencing it. The exit criteria in §31.2 are mirrored in `scripts/commands/iteration.js` — change both together.
+
+The protocol's default flow is single-pass: agents deliver once per phase, gates check once, work advances. Iteration Loops replace that default with a refinement cycle where work circles on an idea until a dedicated Guardian validates it is genuinely ready for the long term.
+
+There are three loops, one per major phase. Each loop has its own Guardian role (a separate agent, not an existing role wearing a hat), an explicit exit criteria checklist, and a scratch space that keeps intermediate work out of canonical project documentation.
+
+### 31.1 The Three Loops
+
+**Discovery Loop (Phase 1)**
+- **What iterates:** Problem understanding, market constraints, regulatory map, user research, scope definition
+- **Participants:** All Phase 1 agents (CLO, CISO, CFO, CMO, CDO, COO, PM, Designer, UX Researcher)
+- **Guardian:** Discovery Guardian
+- **Triggers:** Coordinator opens the loop after Phase 1 agents deliver their first outputs. Discovery Guardian reviews. Loop continues until exit criteria pass.
+
+**Architecture Loop (Phase 2)**
+- **What iterates:** Technical approach, interface contracts, make/buy/partner, platform design, security model
+- **Participants:** CTO, Mario, Staff Engineer, Designer (interface direction), PM (SDD)
+- **Guardian:** Architecture Guardian
+- **Triggers:** Coordinator opens the loop after CTO delivers the architecture brief. Architecture Guardian reviews. Loop continues until exit criteria pass. Existing hard gates (Mario's irreversibility review, Sprint 0 gate, pre-mortem) still apply after graduation.
+
+**Implementation Loop (Phase 3, per pod)**
+- **What iterates:** Build quality, spec conformance, problem-solution fit, long-term maintainability
+- **Participants:** Engineers, EM, Staff Engineer, existing pod Guardian (code quality)
+- **Guardian:** Implementation Guardian (distinct from pod Guardian — checks problem-solution fit and longevity, not code quality)
+- **Triggers:** EM opens the loop after each sprint batch. Implementation Guardian reviews. Loop continues until exit criteria pass. Pod dissolution requires both pod Guardian sign-off (quality) AND Implementation Guardian graduation (fit).
+
+### 31.2 Exit Criteria
+
+Each loop has a checklist. All items must pass for the Guardian to stamp GRADUATE. The Guardian cannot waive checklist items — they can only recommend that the Coordinator escalate to CEO for an exception.
+
+**Discovery Loop exit criteria:**
+- [ ] Problem statement is falsifiable (can be proven wrong with evidence)
+- [ ] Target user is specific enough to exclude someone
+- [ ] Regulatory constraints are mapped with confidence levels (HIGH/MED/LOW)
+- [ ] At least one core assumption has been tested, not just stated
+- [ ] Non-goals are explicit and reasoned (not deferred — excluded with rationale)
+- [ ] The brief could survive a FRAMING-CHALLENGE without collapsing
+
+**Architecture Loop exit criteria:**
+- [ ] Architecture serves at 10x current scale without fundamental redesign
+- [ ] Every irreversible decision has a named alternative and documented rejection reason
+- [ ] Interface contracts are complete enough for independent pod execution
+- [ ] Make/buy/partner decisions have cost projections beyond year 1
+- [ ] Security model satisfies CISO's non-negotiables (not deferred)
+- [ ] The design traces back to the graduated Discovery output (not a drifted version)
+
+**Implementation Loop exit criteria:**
+- [ ] Deliverables match the spec from the graduated Architecture output (not a drifted interpretation)
+- [ ] No security shortcuts taken (auth, data handling, secrets management)
+- [ ] Code is maintainable by a team that did not write it
+- [ ] Edge cases from the pre-mortem are handled or explicitly deferred with reason
+- [ ] Instrumentation covers the friction points PM identified in product-requirements.md
+- [ ] The output creates user capability, not dependency (Constraint 1 check)
+
+### 31.3 Scratch Space
+
+Iteration work lives in `iterations/`, outside canonical project documentation. Only graduated outputs flow into requirements files, area logs, and history.md.
+
+```
+iterations/
+  discovery/
+    iter-001.md         ← first pass
+    iter-002.md         ← guardian feedback incorporated
+    iter-003.md         ← graduated
+  architecture/
+    iter-001.md
+    iter-002.md         ← graduated
+  implementation/
+    pod-auth/
+      iter-001.md
+      iter-002.md       ← graduated
+    pod-payments/
+      iter-001.md
+```
+
+**Iteration file format:**
+
+```markdown
+---
+loop: discovery | architecture | implementation
+cycle: 1
+pod: [pod name — implementation loop only]
+guardian: [Guardian name]
+status: draft | in-review | rework | graduated
+created: YYYY-MM-DD
+graduated: YYYY-MM-DD
+---
+
+## Input
+[What the team produced this cycle]
+
+## Guardian Review
+[Guardian's assessment — filled during review]
+
+## Exit Criteria
+- [x] or [ ] per checklist item from Section 31.2
+
+## Verdict
+GRADUATE | ITERATE — [reason]
+
+## Feedback (if ITERATE)
+- [Specific item to address in next cycle]
+```
+
+**Rules:**
+- Iteration files are append-only. Previous cycles are never edited — new cycles get new files.
+- Agents do NOT load iteration files during normal context loading. They are loaded only during active iteration review (load_when: `iteration-review`).
+- The Guardian's review in each iteration file is the permanent record of what was considered and why.
+- When a Guardian stamps GRADUATE, the Coordinator triggers the flow of final content into canonical docs. The iteration file's `graduated` date is set.
+
+### 31.4 Graduation Process
+
+When a Guardian stamps GRADUATE:
+
+1. Guardian sends a Bus message to Coordinator: `PRIORITY: INFO`, `TAG: ITERATION-GRADUATED`, with the loop type and cycle number.
+2. Coordinator reads the graduated iteration file.
+3. Coordinator routes the final content to the appropriate agents for canonical doc writes:
+   - Discovery graduation → PM updates product-requirements.md, CLO updates discovery-requirements.md, etc.
+   - Architecture graduation → CTO updates engineering-requirements.md, Staff Engineer finalizes contracts
+   - Implementation graduation → EM triggers pod review flow (existing Section 8a)
+4. Coordinator logs the graduation to the relevant area log.
+5. If the graduation represents a consequential decision, the Guardian or Coordinator logs it to history.md.
+
+### 31.5 Relationship to Existing Gates
+
+Iteration loops wrap AROUND existing hard gates — they do not replace them.
+
+```
+Phase 1:  [Discovery Loop iterates] → Discovery Guardian GRADUATES
+            ↓
+          CLO + CISO hard gate (unchanged)
+            ↓
+Phase 2:  [Architecture Loop iterates] → Architecture Guardian GRADUATES
+            ↓
+          Mario irreversibility gate (unchanged)
+          Sprint 0 gate (unchanged)
+          Pre-mortem gate (unchanged)
+            ↓
+Phase 3:  [Implementation Loop iterates per pod] → Implementation Guardian GRADUATES
+            ↓
+          Pod Guardian final gate (unchanged — code quality)
+          Pod dissolution (unchanged)
+            ↓
+Phase 4:  CEO validates project-map.md (unchanged)
+          Coordinator seals release (unchanged)
+```
+
+Hard gates check specific non-negotiable conditions. Iteration loops ensure the QUALITY of the work that reaches those gates. A graduated output can still fail a hard gate — the gate checks different things than the loop.
+
+**All three loops are active by default.** The Coordinator may skip a loop for a low-stakes increment (feature work, internal tooling, experiments) by logging the skip and its reason to history.md; hard gates still apply. The Discovery and Architecture loops are not skipped when the project handles PII, financial data, regulated assets, or irreversible infrastructure. (Old §32 Risk Tiers formalized this as a gate matrix; it was retired in f4c51d0 — see the retired-numbers note in the header.)
+
+### 31.6 Guardian Authority
+
+- Guardians have REVIEW authority, not WRITE authority over canonical docs. They assess and verdict; they do not directly modify requirements files or area logs.
+- Guardians can open Structured Disagreements (Section 29) against domain agents whose output they believe does not meet exit criteria.
+- Guardians cannot block indefinitely. If a loop has not graduated after 3 cycles, the Guardian must escalate to CEO with a written assessment of what is preventing graduation. The CEO decides: iterate once more, graduate with conditions, or kill the mission.
+- Guardians use standard Bus messages. `TAG: ITERATION-REVIEW` for assessments, `TAG: ITERATION-GRADUATED` for graduation.
+
+### 31.7 CLI Commands
+
+```bash
+# Create a new iteration cycle
+sdk-doc iteration <project-dir> create --loop discovery|architecture|implementation [--pod <pod-name>] [--guardian <name>]   # cycle number is assigned automatically
+
+# Record guardian review and verdict
+sdk-doc iteration <project-dir> review --loop <type> --cycle <N> [--pod <pod-name>] --verdict graduate|iterate --feedback "..."
+
+# List iterations with status
+sdk-doc iteration <project-dir> list [--loop <type>] [--status draft|in-review|rework|graduated]
+
+# Graduate an iteration (sets graduated date, triggers canonical doc flow)
+sdk-doc iteration <project-dir> graduate --loop <type> --cycle <N> [--pod <pod-name>]
+```
+
+---
+
 ## 32. Generative Loops
 
 team-sdk agents already disagree, spawn peers, and produce synthesis — but the *quality of dissent* is not load-bearing. Today, when Mario or the CTO says "challenge this," it happens as a one-shot Bus exchange that closes by social default rather than by a declared contract. There is no recorded transition, no provenance on the resulting artifact, and no termination rule beyond "we feel done." Section 32 is the constraint that makes critique mechanical — declared shape, declared termination, declared provenance — without turning it into another agent to please. §32 sits beside §15a (self-improvement loop), §16 (consultation and peer spawning), and §31 (Iteration Guardians). It does not replace them. §15a is how the SDK evolves between releases; §16 is how an agent borrows a peer perspective for synthesis; §31 is the iteration cycle that gates Discovery → Architecture → Implementation. §32 is the surface on which a *specific draft* is stressed against a *specific weakness hypothesis* by a *specific pattern* with a *declared termination rule*. §32 is NOT a new escalation path, NOT a substitute for the Halloway Ratchet (§24), NOT a CLI-invoked workflow in v0.1, and NOT an automatic behavior — every loop is explicitly opened by a spawning agent at one of three named insertion points.
@@ -1489,7 +1668,7 @@ Every artifact emitted from a loop carries a provenance line:
 LOOP-PROVENANCE: <loop-id> + SHA256(<canonicalized artifact body>)
 ```
 
-The loop ID is appended unhashed so the same artifact may legitimately surface from two loops; the binding is loop→artifact, not loop⇔artifact-only. Artifacts without a `LOOP-PROVENANCE:` line do not cross any §31 Guardian gate, Mario's irreversibility review (§28), or the release seal. `sdk-health` greps for `LOOP-2026` (and successor year prefixes) across the project tree and flags orphaned loop IDs.
+The loop ID is appended unhashed so the same artifact may legitimately surface from two loops; the binding is loop→artifact, not loop⇔artifact-only. Artifacts without a `LOOP-PROVENANCE:` line do not cross any §31 Guardian gate, Mario's irreversibility review (the Chief Engineer gate that precedes §28), or the release seal. Orphaned loop IDs are not yet machine-checked: `sdk-health` has no loop-ID scan (honest gap; the Signal Harvest ritual is the manual check).
 
 ### 32.6 State persistence
 
@@ -1521,7 +1700,7 @@ There are **exactly three valid insertion points** for a §32 loop. No mid-execu
 
 1. **Phase 0 — Discovery / Ideation.** A loop opened on a raw problem statement, brief, or framing document during the Ideation Cycle (§15). Owner: PM or any Phase 1 agent. Typical pattern: Critique-Revise against the constitution; Red-Team against the load-bearing market or user assumption.
 
-2. **Architecture — before the Mario gate.** A loop opened on the SDD draft, the CTO architecture brief, or any interface contract before Mario's irreversible decision review (§28). Owner: CTO, Mario, or PM. Typical pattern: Red-Team on the single killing architectural assumption; Critique-Revise against Constraints + Soul before sealing.
+2. **Architecture — before the Mario gate.** A loop opened on the SDD draft, the CTO architecture brief, or any interface contract before Mario's irreversible decision review (the gate that precedes §28). Owner: CTO, Mario, or PM. Typical pattern: Red-Team on the single killing architectural assumption; Critique-Revise against Constraints + Soul before sealing.
 
 3. **Implementation — Test Engineer-owned, edge case generation.** A loop opened by Test Engineer (or by EM on Test Engineer's behalf) to generate adversarial test cases against a Pod's pre-merge artifact. NOT a code review surface — code review remains as defined in §9 and the engineer ladder. Typical pattern: Red-Team on the assumption underlying the test fixture; Critique-Revise on the test plan against the test-coverage constitution.
 
@@ -1596,7 +1775,7 @@ This rule is on every loop open by reference. The spawning agent's act of openin
 - **§28 (Pre-Mortem Gate)** — A Red-Team loop is the recommended preparation for the Pre-Mortem. The Pre-Mortem's "single falsifiable assumption that, if wrong, kills the mission" is the natural artifact of a Red-Team termination.
 - **§29 (Structured Disagreement Log)** — When a critic and an author cannot converge inside a Critique-Revise loop, the spawning agent opens a §29 disagreement on termination. The loop is the surface that *produces* the disagreement cleanly, with both positions named and provenance-hashed. §29 is the long-running record; §32 is the bounded mechanism.
 - **§30 (Design Principles)** — §32 is a constraint mechanism, not a new agent type. The Loop Coordinator is ephemeral on purpose: §30 warns that adding an agent for a constraint creates the illusion that someone else is watching. The Loop Coordinator owns coordination only; the constraint (declared pattern, termination, guardrail line, provenance) is carried by every loop participant.
-- **§31 (Iteration Guardians)** — Discovery, Architecture, and Implementation Guardians may *recommend* opening a §32 loop as part of their GRADUATE / NEEDS-WORK verdict. They do not spawn loops themselves; spawning authority stays with the named insertion-point owners (PM, CTO, Mario, Test Engineer). A Guardian iteration that surfaces a load-bearing assumption is the natural prompt for a Red-Team loop before the next phase advances.
+- **§31 (Iteration Guardians)** — Discovery, Architecture, and Implementation Guardians may *recommend* opening a §32 loop as part of their GRADUATE / ITERATE verdict. They do not spawn loops themselves; spawning authority stays with the named insertion-point owners (PM, CTO, Mario, Test Engineer). A Guardian iteration that surfaces a load-bearing assumption is the natural prompt for a Red-Team loop before the next phase advances.
 
 ---
 
@@ -1610,7 +1789,7 @@ Reserved for the SDLC State Machine (bet lifecycle: `proposal → committed → 
 
 ### 34.0 Intent
 
-The company is the product (`CHARTER.md`). The unit of work is therefore not a per-role output that lands in one role's log — it is a **shared artifact that multiple roles contribute to and verify over a project's life**, where each contribution is a provenance-stamped commit to the company body. The team already had four fragments of this — §33 owner-plus-guardrail-signers, §32 author-plus-critic, §6 decision authorship, §17 BU status — but no single, self-describing place where, say, a CTO authors *how something must happen* and a CFO later runs a verification on the same artifact. §34 is that primitive. It generalizes the fragments into one surface every role can commit to.
+The company is the product (`CHARTER.md`). The unit of work is therefore not a per-role output that lands in one role's log — it is a **shared artifact that multiple roles contribute to and verify over a project's life**, where each contribution is a provenance-stamped commit to the company body. The team already had four fragments of this — the draft §33 owner-plus-guardrail-signers model, §32 author-plus-critic, §6 decision authorship, §17 BU status — but no single, self-describing place where, say, a CTO authors *how something must happen* and a CFO later runs a verification on the same artifact. §34 is that primitive. It generalizes the fragments into one surface every role can commit to.
 
 A Collaboration Surface is the answer to "where does a decision, a flow, or a roadmap live while more than one role is still shaping it?"
 
@@ -1706,7 +1885,7 @@ Everything else — routine decisions, flows, roadmaps, and their verifications 
 
 ### 34.9 File location and naming
 
-Surfaces live at `<project>/surfaces/SURFACE-YYYYMMDD-<slug>-<seq>.md`. For the SDK's own project that is `project/surfaces/`. The template ships at `project-template/surface-template.md`. `sdk-health` flags surfaces stuck in `under-verification` or `reconciling` past a staleness window, the same way it flags orphaned loop state.
+Surfaces live at `<project>/surfaces/SURFACE-YYYYMMDD-<slug>-<seq>.md`. For the SDK's own project that is `project/surfaces/`. The template ships at `project-template/surface-template.md`. `sdk-health` flags surfaces stuck in `under-verification` or `reconciling` past a staleness window (`.sdkrc` `surfaceStaleDays`, default 3).
 
 ---
 
@@ -1750,4 +1929,4 @@ Per the §32 retro's own rule — *a mechanism named here must exist in code* �
 
 ---
 
-*Protocol v4.6. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, the Halloway Ratchet doctrine, TAG field, Kill Log, Negative Scope, Pre-Mortem gate, design principles, generative loops, collaboration surfaces, and the document-first gate. Every agent references it. No agent duplicates it.*
+*Protocol v4.7. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, the Halloway Ratchet doctrine, TAG field, Kill Log, Negative Scope, Pre-Mortem gate, design principles, iteration loops, generative loops, collaboration surfaces, and the document-first gate. Every agent references it. No agent duplicates it.*

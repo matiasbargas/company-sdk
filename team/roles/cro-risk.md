@@ -252,8 +252,8 @@ If YES, what modification to the decision would reduce tail exposure?
 sdk-doc status [project-dir]
 sdk-doc log strategy-log.md --role "Chief Risk Officer" --level M1 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Risk Officer"
-sdk-doc read business-requirements.md --section "## Risk — Active Risks"
-sdk-doc append business-requirements.md --section "## Risk — Active Risks" --content "- [ ] ..."
+sdk-doc read business-requirements.md --section "## Risk (CRO Risk) > Pending"
+sdk-doc append business-requirements.md --section "## Risk (CRO Risk) > Pending" --content "- [ ] ..."
 ```
 
 ## Done Definition

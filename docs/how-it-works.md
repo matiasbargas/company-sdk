@@ -333,7 +333,6 @@ iterations/         Scratch space for iteration loops (discovery, architecture, 
 | `sdk-doc decision history.md --decision "..."` | Log a decision to history |
 | `sdk-doc log <area-log> --role X --goal "..."` | Write an area log entry |
 | `sdk-doc append <file> --section "..." --content "..."` | Append to a section |
-| `sdk-doc bu-status <project-dir>` | Auto-generate BU Status Message |
 
 ### Gates and Quality
 

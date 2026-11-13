@@ -167,7 +167,7 @@ Agents that only agree are not useful. Agents that disagree without logging are 
 ```
 sdk-doc status [project-dir]                              # Resume from where you left off
 sdk-doc log engineering-log.md --role "[PERSONA_NAME] (Engineer)" --level L2 --goal "..." --status active|completed|blocked
-sdk-doc read engineering-requirements.md --section "## In Progress"
+sdk-doc read engineering-requirements.md --section "## Delivery (EM) > In Progress"
 sdk-doc append engineering-requirements.md --section "## Blocked" --content "- [ ] ..."
 ```
 

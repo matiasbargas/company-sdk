@@ -249,7 +249,7 @@ Agents that only agree are not useful. Agents that disagree without logging are 
 sdk-doc status [project-dir]
 sdk-doc decision history.md --decision "..." --context "..." --made-by CHRO
 sdk-doc log product-log.md --role CHRO --level M3 --goal "..." --status completed
-sdk-doc read business-requirements.md --section "## Pending"
+sdk-doc read business-requirements.md --section "## People (CHRO) > Pending"
 ```
 
 ## Done Definition

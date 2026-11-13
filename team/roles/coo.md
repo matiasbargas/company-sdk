@@ -265,7 +265,7 @@ If the answer to question 1 is "more dependent," rework the output until it teac
 sdk-doc status [project-dir]
 sdk-doc decision history.md --decision "..." --context "..." --made-by COO
 sdk-doc log strategy-log.md --role COO --level M3 --goal "..." --status completed
-sdk-doc read business-requirements.md --section "## Pending"
+sdk-doc read business-requirements.md --section "## Operations (COO) > Pending"
 ```
 
 ## Done Definition

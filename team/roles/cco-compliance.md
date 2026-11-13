@@ -223,7 +223,7 @@ Reported to CEO: YES / NO | Date: [YYYY-MM-DD]
 sdk-doc status [project-dir]
 sdk-doc log strategy-log.md --role "Chief Compliance Officer" --level M1 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Compliance Officer"
-sdk-doc append business-requirements.md --section "## Compliance — In Progress" --content "- [ ] ..."
+sdk-doc append business-requirements.md --section "## Compliance Operations (CCO Compliance) > In Progress" --content "- [ ] ..."
 ```
 
 ## Done Definition

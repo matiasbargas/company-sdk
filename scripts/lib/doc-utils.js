@@ -63,17 +63,71 @@ function writeFile(filePath, content, dryRun) {
 }
 
 /**
- * Find a section heading index in a lines array (case-insensitive, ignores # prefix).
+ * Find a section heading index in a lines array (case-insensitive).
+ *
+ * - "Pending"            → first heading with that text, any level (legacy behaviour)
+ * - "## Pending"         → only an H2 named Pending. A "### Pending" no longer
+ *                          satisfies it — that silently returned another role's section.
+ * - "## Finance (CFO) > Pending"
+ *                        → "Pending" searched only inside "## Finance (CFO)".
  */
 function findSectionIndex(lines, heading) {
-  const normalizedHeading = heading.toLowerCase().replace(/^#+\s*/, '').trim();
-  for (let i = 0; i < lines.length; i++) {
-    const lineNorm = lines[i].toLowerCase().replace(/^#+\s*/, '').trim();
-    if (lineNorm === normalizedHeading) {
-      return i;
-    }
+  const parts = String(heading).split(/\s+>\s+/);
+  let from = 0;
+  let to = lines.length;
+  let idx = -1;
+  for (const part of parts) {
+    idx = findHeadingInRange(lines, part, from, to);
+    if (idx === -1) return -1;
+    from = idx + 1;
+    to = findSectionEnd(lines, idx);
+  }
+  return idx;
+}
+
+function findHeadingInRange(lines, heading, from, to) {
+  const hashes = heading.trim().match(/^(#+)\s/);
+  const wantLevel = hashes ? hashes[1].length : 0;
+  const wantText = heading.toLowerCase().replace(/^#+\s*/, '').trim();
+  for (let i = from; i < to; i++) {
+    const level = getSectionLevel(lines[i]);
+    if (level === 0) continue;
+    if (wantLevel && level !== wantLevel) continue;
+    if (lines[i].toLowerCase().replace(/^#+\s*/, '').trim() === wantText) return i;
   }
   return -1;
+}
+
+/**
+ * For a missing "## Parent > Child" path: ensure the parent exists (scaffolded with the
+ * standard Pending / In Progress / Done / Blocked children) and return the updated lines.
+ * Returns null when the heading is not a path, so callers keep their legacy behaviour.
+ */
+const STATUS_HEADINGS = ['Pending', 'In Progress', 'Done', 'Blocked'];
+
+function scaffoldSectionPath(lines, heading) {
+  const parts = String(heading).split(/\s+>\s+/);
+  if (parts.length !== 2) return null;
+  const [parent, child] = parts;
+  const parentLevel = (parent.trim().match(/^(#+)\s/) || [, '##'])[1].length;
+  const parentLine = '#'.repeat(parentLevel) + ' ' + parent.replace(/^#+\s*/, '').trim();
+  const childText = child.replace(/^#+\s*/, '').trim();
+  const childLine = '#'.repeat(parentLevel + 1) + ' ';
+
+  const out = lines.slice();
+  let pIdx = findHeadingInRange(out, parentLine, 0, out.length);
+  if (pIdx === -1) {
+    while (out.length && out[out.length - 1].trim() === '') out.pop();
+    const children = STATUS_HEADINGS.some(h => h.toLowerCase() === childText.toLowerCase())
+      ? STATUS_HEADINGS : [childText];
+    out.push('', parentLine, '');
+    for (const h of children) out.push(childLine + h, '');
+    return out;
+  }
+  // Parent exists, child missing: add the child at the end of the parent.
+  const end = findSectionEnd(out, pIdx);
+  out.splice(end, 0, childLine + childText, '');
+  return out;
 }
 
 /**
@@ -118,6 +172,7 @@ module.exports = {
   readFile,
   writeFile,
   findSectionIndex,
+  scaffoldSectionPath,
   getSectionLevel,
   findSectionEnd,
   updateTeamMetric,

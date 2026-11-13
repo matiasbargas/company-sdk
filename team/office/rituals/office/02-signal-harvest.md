@@ -23,7 +23,7 @@ Once per unharvested loop:
 
 ```js
 Workflow({
-  scriptPath: "/Users/matias.bargas/dev/ai-repos/team-sdk/workflows/retrospective.js",
+  scriptPath: "<repo-root>/workflows/retrospective.js",
   args: { cadence: "loop", loop_id: "<loop-id>", date: "YYYY-MM-DD" }
 })
 ```

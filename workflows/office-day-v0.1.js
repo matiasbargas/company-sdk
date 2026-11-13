@@ -12,8 +12,7 @@
 // mechanism that does not exist):
 //   - Surface sweep does NOT advance state. That is company-loop-v0.1's job, and it is not built.
 //   - Retro-trigger sweep does NOT fire sprint retros. Firing is a deliberate PM/owner act.
-//   - retrospective.js hardcodes today=2026-06-14; we pass `date` so filenames/triggers are
-//     correct, but the provenance ts it writes inherits the stale constant until that is fixed.
+//   - retrospective.js used to hardcode today=2026-06-14; it now requires args.date, which we pass.
 //
 // Workflow scripts cannot read the clock — pass args.date (YYYY-MM-DD).
 

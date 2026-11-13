@@ -244,7 +244,7 @@ Any component that checks YES on any of these requires CTO review before impleme
 sdk-doc status [project-dir]
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Staff Engineer"
 sdk-doc log engineering-log.md --role "Staff Engineer" --level L4 --goal "..." --status completed
-sdk-doc read engineering-requirements.md --section "## Pending"
+sdk-doc read engineering-requirements.md --section "## Interface Contracts (Staff Engineer) > Pending"
 ```
 
 ## Done Definition

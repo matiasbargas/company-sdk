@@ -1,5 +1,7 @@
 # /ask — Consult any agent, or route to the best one
 
+> **`$SDK`** = the `sdkPath` value in `./.sdkrc` (generated projects), or `.` when working inside the SDK repo itself. Substitute it in the commands below; `scripts/` is not copied into projects.
+
 **Usage:**
 - `/ask [question]` — Coordinator routes to the best agent(s) and synthesizes
 - `/ask [role] [question]` — Goes directly to that agent; they can spawn peers
@@ -13,20 +15,20 @@
 Parse `$ARGUMENTS`:
 
 **If the first word matches a recognized role name or title:**
-1. Run `node scripts/consult.js --role-info <role>` to get the role's capability, domain, and file path from the @team-sdk/protocol ROLES data structure
+1. Run `node "$SDK/scripts/consult.js" --role-info <role>` to get the role's capability, domain, and file path from the @team-sdk/protocol ROLES data structure
 2. Load that agent's role file from the path returned
 3. Respond as that agent in Consultation Mode (read `team/roles/CONSULT.md`)
 4. The rest of `$ARGUMENTS` is the question
 
 **If no role is specified (open question):**
-1. Run `node scripts/consult.js --suggest "$ARGUMENTS"` to get the recommended role from the @team-sdk/cli keyword router
-2. Use the suggested role. Also run `node scripts/consult.js --role-info <suggested-role>` to get capabilities.
+1. Run `node "$SDK/scripts/consult.js" --suggest "$ARGUMENTS"` to get the recommended role from the @team-sdk/cli keyword router
+2. Use the suggested role. Also run `node "$SDK/scripts/consult.js" --role-info <suggested-role>` to get capabilities.
 3. Load the primary agent's role file. You are the **Coordinator** synthesizing.
 
 ## Step 2: Consult
 
 **If project context exists** (current working directory has `context-index.json`):
-Run `node scripts/consult.js --role <role> --question "$ARGUMENTS" --project .` to get relevant files for the role's domain.
+Run `node "$SDK/scripts/consult.js" --role <role> --question "$ARGUMENTS" --project .` to get relevant files for the role's domain.
 
 **Consultation Mode rules:**
 - Prioritize **depth of understanding** over speed
@@ -37,7 +39,7 @@ Run `node scripts/consult.js --role <role> --question "$ARGUMENTS" --project .` 
 
 ## Spawning policy
 
-Use the routing table from `node scripts/consult.js --list-roles` for the full role catalog. Spawn via Agent tool:
+Use the routing table from `node "$SDK/scripts/consult.js" --list-roles` for the full role catalog. Spawn via Agent tool:
 
 | Question type | Primary agent | Likely peers |
 |---|---|---|
@@ -63,7 +65,7 @@ Rules:
 ## Step 3: Bus trace
 
 After synthesis, if peer agents were spawned, log Bus traces to `bus-log.md` (if project context exists):
-1. Run `node scripts/consult.js --role <role> --question "$ARGUMENTS"` — the `busTrace` field in the response is the formatted Bus message
+1. Run `node "$SDK/scripts/consult.js" --role <role> --question "$ARGUMENTS"` — the `busTrace` field in the response is the formatted Bus message
 2. For each spawned peer, generate an additional Bus trace: `FROM: <primary role> TO: <peer role> ... TAG: CONSULTATION`
 3. Append all traces to `bus-log.md` using `sdk-doc append bus-log.md --section "## Consultation Log" --content "<traces>"`
 

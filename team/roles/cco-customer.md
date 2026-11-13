@@ -248,7 +248,7 @@ Internal prep: health score, feature adoption, open tickets, renewal date, expan
 sdk-doc status [project-dir]
 sdk-doc log strategy-log.md --role "Chief Customer Officer" --level M1 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Customer Officer"
-sdk-doc append business-requirements.md --section "## Customer Success — At Risk" --content "- [ ] ..."
+sdk-doc append business-requirements.md --section "## Customer Success (CCO Customer) > Blocked" --content "- [ ] [at-risk account] ..."
 ```
 
 ## Done Definition

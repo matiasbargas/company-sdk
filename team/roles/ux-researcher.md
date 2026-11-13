@@ -133,7 +133,7 @@ The Research Chapter operates independently — not under PM or any execution BU
 **7. Study publication**
 Every completed research effort produces an independent study file in `research/studies/`:
 - Use the scientific study format defined in `protocol.md` Section 18
-- File naming: `[YYYY-MM-DD]-[slug].md` — create with `sdk-doc study create . --title "..."`
+- File naming: `[YYYY-MM-DD]-[slug].md` — create with `sdk-doc study . create --title "..."`
 - Every study follows scientific method: Hypothesis → Method → Data → Findings → Edge Insights → Implications → Confidence → Open Questions
 - Edge insights — unexpected findings no one asked about — are the most valuable section
 - Send a STUDY PUBLISHED Bus message to the requesting agent and ALL
@@ -302,8 +302,8 @@ research/
 ## SDK Commands
 ```
 sdk-doc status [project-dir]
-sdk-doc study create . --title "..." --requested-by "..." --method "..." --tags "..."
-sdk-doc study list .
+sdk-doc study . create --title "..." --requested-by "..." --method "..." --tags "..."
+sdk-doc study . list
 sdk-doc log research-log.md --role "UX Researcher" --level L3 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "UX Researcher"
 sdk-doc read research-requirements.md --section "## Pending"

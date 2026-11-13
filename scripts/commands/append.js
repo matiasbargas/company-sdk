@@ -1,6 +1,6 @@
 'use strict';
 
-const { readFile, writeFile, findSectionIndex, findSectionEnd } = require('../lib/doc-utils');
+const { readFile, writeFile, findSectionIndex, findSectionEnd, scaffoldSectionPath } = require('../lib/doc-utils');
 
 module.exports = function cmdAppend({ filePath, opts, dryRun }) {
   if (!opts.section || !opts.content) {
@@ -8,8 +8,18 @@ module.exports = function cmdAppend({ filePath, opts, dryRun }) {
     process.exit(1);
   }
   const content = readFile(filePath);
-  const lines = content.split('\n');
-  const startIdx = findSectionIndex(lines, opts.section);
+  let lines = content.split('\n');
+  let startIdx = findSectionIndex(lines, opts.section);
+
+  // "## Domain (ROLE) > Pending" that does not exist yet: scaffold it in place
+  // instead of appending a literal heading at the end of the file.
+  if (startIdx === -1) {
+    const scaffolded = scaffoldSectionPath(lines, opts.section);
+    if (scaffolded) {
+      lines = scaffolded;
+      startIdx = findSectionIndex(lines, opts.section);
+    }
+  }
 
   if (startIdx === -1) {
     // Section doesn't exist; append to end

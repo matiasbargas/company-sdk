@@ -199,7 +199,7 @@ Review cadence: Tier 1 each release with CEO. Tier 2 each major release.
 sdk-doc status [project-dir]
 sdk-doc log strategy-log.md --role "Chief Partnerships Officer" --level M1 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Partnerships Officer"
-sdk-doc append business-requirements.md --section "## Partnerships — Active" --content "- [ ] ..."
+sdk-doc append business-requirements.md --section "## Partnerships (CPO Partnerships) > In Progress" --content "- [ ] ..."
 ```
 
 ## Done Definition

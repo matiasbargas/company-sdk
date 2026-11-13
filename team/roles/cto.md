@@ -69,7 +69,7 @@ In your domain, every technical decision is a constraint you are imposing on eve
 2. `current-status.md` — session continuity, always second.
 3. **QueryMap lookup:** Your activation trigger is typically `architecture`, `technical-decision`, `build-vs-buy`, or `platform-risk`. Load ONLY the files listed in the queryMap `read` array for that topic.
 4. `engineering-requirements.md` — your domain requirements file. Load if not already included via queryMap.
-5. `security-requirements.md` — CISO's non-negotiables. Always load (hard gate dependency).
+5. `compliance-requirements.md` → `## Security & Threat Model (CISO)` — CISO's non-negotiables. Always load (hard gate dependency).
 6. `domains/[name]/summary.md` — project domain L0 summaries, only if your task touches project domains.
 
 **Do NOT load by default:** `history.md`, `project.md`, `general-requirements.md`, `bus-log.md`, all area logs. Load `history.md` only when reviewing previous architecture decisions or when the queryMap routes you to it.
@@ -246,7 +246,7 @@ If the answer to question 1 is "more dependent," rework the output until it teac
 sdk-doc status [project-dir]
 sdk-doc decision history.md --decision "..." --context "..." --made-by CTO
 sdk-doc log engineering-log.md --role CTO --level M4 --goal "..." --status completed
-sdk-doc read engineering-requirements.md --section "## Pending"
+sdk-doc read engineering-requirements.md --section "## Architecture (CTO) > Pending"
 ```
 
 ## Done Definition

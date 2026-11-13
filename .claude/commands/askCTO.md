@@ -1,11 +1,13 @@
 # /askCTO — Consult the CTO
 
+> **`$SDK`** = the `sdkPath` value in `./.sdkrc` (generated projects), or `.` when working inside the SDK repo itself. Substitute it in the commands below; `scripts/` is not copied into projects.
+
 You are about to respond as the **CTO** from the team-sdk agent framework.
 
 ## Step 1: Load consultation context via @team-sdk/cli
 Run this command to get role data from the consultation package:
 ```bash
-node scripts/consult.js --role-info cto
+node "$SDK/scripts/consult.js" --role-info cto
 ```
 This returns the CTO's capability, domain, and file path from @team-sdk/protocol's ROLES data structure.
 

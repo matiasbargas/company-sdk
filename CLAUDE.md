@@ -14,7 +14,7 @@ The SDK itself — not a project. It contains:
 - `project-template/` — all files a new project gets on bootstrap (7 consolidated requirements files)
 - `team/squads/` — pre-configured team compositions (website, mvp, feature, startup)
 - `scripts/` — CLI tools (init, bootstrap, squad, doc, gate-check, validate, status, version, retro, health, github, ship)
-- `protocol.md` — the shared contract: Bus format, escalation, BU communication, spawning policy (v4.3)
+- `protocol.md` — the shared contract: Bus format, escalation, BU communication, spawning policy (version in its header)
 - `AGENTS.md` — agent manifest: activation sequence, dependency graph, consultation patterns
 - `STRATEGY.md` — corporate strategy layer: 4 success themes, Betting Table rules
 
@@ -93,8 +93,8 @@ sdk-doc study <project-dir> create --title "..." --requested-by "..."  # create 
 sdk-doc study <project-dir> list       # list all studies
 sdk-doc decision history.md --decision "..." --context "..." --made-by [Role]
 sdk-doc log <area-log> --role X --level Y --goal "..." --status completed
-sdk-doc append <file> --section "## Section" --content "..."
-sdk-doc bu-status <project-dir> [--domain X] [--role Y]  # auto-generate BU Status Message
+sdk-doc append <file> --section "## Section" --content "..."   # scope with "## Finance (CFO) > Pending"
+sdk-doc iteration <project-dir> create|review|list|graduate --loop <type>  # Iteration Loops (§31)
 
 # Gates and quality
 sdk-gate-check <project-dir>           # CLO + CISO gate

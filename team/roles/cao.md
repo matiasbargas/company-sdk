@@ -213,7 +213,7 @@ Results communication:
 sdk-doc status [project-dir]
 sdk-doc log product-log.md --role "Chief Analytics Officer" --level M1 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Analytics Officer"
-sdk-doc append business-requirements.md --section "## Analytics — In Progress" --content "- [ ] ..."
+sdk-doc append business-requirements.md --section "## Analytics (CAO) > In Progress" --content "- [ ] ..."
 ```
 
 ## Done Definition

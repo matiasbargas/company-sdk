@@ -292,6 +292,24 @@ function gitOut(args, cwd) {
   }
 })();
 
+// 10. Collaboration Surfaces stuck mid-verification (protocol.md §34)
+//     A surface sitting in under-verification / reconciling past the window is a stalled
+//     multi-role decision. Window: .sdkrc "surfaceStaleDays" (default 3).
+(function stuckSurfaces() {
+  const surfacesDir = path.join(projectDir, 'surfaces');
+  if (!fs.existsSync(surfacesDir)) return;
+  const windowDays = Number(sdkrcForDomains.surfaceStaleDays) > 0 ? Number(sdkrcForDomains.surfaceStaleDays) : 3;
+  for (const f of fs.readdirSync(surfacesDir).filter(n => n.endsWith('.md') && !n.startsWith('_'))) {
+    const file = path.join(surfacesDir, f);
+    const state = (fs.readFileSync(file, 'utf8').match(/^\s*state:\s*([a-z-]+)/m) || [])[1];
+    if (state !== 'under-verification' && state !== 'reconciling') continue;
+    const ageDays = (Date.now() - fs.statSync(file).mtimeMs) / 86400000;
+    if (ageDays > windowDays) {
+      issues.push(`surface ${f} has been "${state}" for ${Math.floor(ageDays)}d (window: ${windowDays}d) — chase the open verifier slots or resolve the no-go (§34)`);
+    }
+  }
+})();
+
 // ─── Output ───────────────────────────────────────────────────────────────────
 
 const healthy = issues.length === 0;

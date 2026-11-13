@@ -129,23 +129,34 @@ if (runDiscovery && (gateRunClo || gateRunCiso)) {
     const legalStatus    = gateTableMatch ? gateTableMatch[1].trim() : null;
     const secStatus      = secTableMatch  ? secTableMatch[1].trim()  : null;
 
-    const hasJurisdictions = /## Jurisdictions/i.test(content) ||
-                             /\*\*Jurisdictions declared\*\*/i.test(content) ||
-                             /Jurisdiction.*:/i.test(content);
+    // Body of an H2 section, matched by heading prefix so "## Legal & Regulatory (CLO)"
+    // and a future rename to "## Legal (CLO)" both resolve.
+    const h2Body = (prefix) => {
+      const m = content.match(new RegExp(`^## ${prefix}[^\\n]*\\n([\\s\\S]*?)(?=^## |(?![\\s\\S]))`, 'm'));
+      return m ? m[1] : null;
+    };
 
-    const legalPending    = (content.match(/## Legal \(CLO\)[\s\S]*?### Pending([\s\S]*?)### In Progress/i) || [])[1] || '';
-    const hasPendingLegal = /- \[ \]/.test(legalPending);
-    const secPending      = (content.match(/## Security \(CISO\)[\s\S]*?### Pending([\s\S]*?)### In Progress/i) || [])[1] || '';
-    const hasPendingSec   = /- \[ \]/.test(secPending);
+    // Jurisdictions must exist AND be filled in — the template ships the section
+    // with "[Countries]" placeholders, which previously passed this check.
+    const jurisdictions      = h2Body('Jurisdictions');
+    const answerCells        = jurisdictions ? [...jurisdictions.matchAll(/^\|[^|\n]*\?\s*\|\s*([^|\n]*)\|/gm)].map(m => m[1].trim()) : [];
+    const hasJurisdictions   = jurisdictions !== null;
+    const jurisdictionsFilled = answerCells.length > 0 && answerCells.every(a => a && !/^\[.*\]$/.test(a));
+
+    // Any unchecked item anywhere in the owner's H2 (CISO nests Pending under ###/####).
+    const hasPendingLegal = /- \[ \]/.test(h2Body('Legal[^\\n]*\\(CLO\\)') || '');
+    const hasPendingSec   = /- \[ \]/.test(h2Body('Security[^\\n]*\\(CISO\\)') || '');
 
     if (gateRunClo) {
       if (!legalStatus) {
-        errors.push('CLO (Legal) gate status not found in Gate Status table.\n    To clear: activate CLO — "Camila, we need a regulatory map for [project]. Read compliance-requirements.md."');
+        errors.push('CLO (Legal) gate status not found in Gate Status table.\n    To clear: activate CLO — "CLO, we need a regulatory map for [project]. Read compliance-requirements.md."');
       } else if (legalStatus.toLowerCase() !== 'done') {
-        errors.push(`CLO (Legal) gate is "${legalStatus}" — must be "Done" before CTO activates.\n    To clear: activate CLO — "Camila, we need a regulatory map for [project]. Read compliance-requirements.md."`);
+        errors.push(`CLO (Legal) gate is "${legalStatus}" — must be "Done" before CTO activates.\n    To clear: activate CLO — "CLO, we need a regulatory map for [project]. Read compliance-requirements.md."`);
       }
       if (!hasJurisdictions) {
         errors.push('No jurisdictions declared in compliance-requirements.md.\n    Add a "## Jurisdictions" section listing: incorporation, employee locations, user locations, data processing locations, money handling locations.\n    To clear: add a "## Jurisdictions" section to compliance-requirements.md listing incorporation location, user locations, and data handling locations.');
+      } else if (!jurisdictionsFilled) {
+        errors.push('Jurisdictions table in compliance-requirements.md still has unanswered "[...]" placeholders.\n    To clear: answer every row (use "N/A" where a question does not apply).');
       }
       if (hasPendingLegal) warnings.push('CLO section still has pending items. Confirm all are intentionally deferred before marking Done.');
     }

@@ -195,7 +195,7 @@ Agents that only agree are not useful. Agents that disagree without logging are 
 
 ## References
 - Core protocol: `protocol-core.md` (Bus format, escalation, requirements, pods, area logs, session continuity)
-- Reference protocol: `protocol-reference.md` (Ratchet, iteration loops, risk tiers, disagreement, kill log, pre-mortem)
+- Reference protocol: `protocol-reference.md` (§14+: Ratchet, iteration loops, disagreement, kill log, pre-mortem, generative loops, surfaces)
 - Full protocol: `protocol.md` (complete -- load when you need the full picture)
 - Agent manifest: `AGENTS.md` (who is active, activation sequence, dependency graph, peer integration map)
 - Requirements format: `protocol.md` Section 4

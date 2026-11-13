@@ -1,4 +1,4 @@
-<!-- AI BOOTSTRAP — company-sdk v6.0.0 / protocol v4.6 -->
+<!-- AI BOOTSTRAP — company-sdk v6.0.0 / protocol v4.7 -->
 <!-- Read this file first. It is the complete operating context for this project. -->
 <!-- After reading this file, follow the LOAD ORDER below to activate. -->
 
@@ -73,7 +73,7 @@ Hey Greg — here's a new project brief.
 
 ---
 
-## PROTOCOL v4.3
+## PROTOCOL
 
 Full spec: `protocol.md` (single source of truth — never duplicate it)
 
@@ -94,7 +94,7 @@ Priority rules:
 - `INFO` — sharing state, no response required
 - `DECISION NEEDED` — work blocks in N days; must state the decision as a question with options
 - `BLOCKER` — work stopped now; escalate within 4h if unresolved
-- `CONTEXT REQUEST` — need domain context from a peer before acting (see Section 18)
+- `CONTEXT REQUEST` — need domain context from a peer before acting (see Section 19)
 
 ### Escalation ladder
 
@@ -354,7 +354,7 @@ Status: ACTIVE | COMPLETED | BLOCKED | CANCELLED
 
 ---
 
-## CONTEXT REQUEST FORMAT (Section 18)
+## CONTEXT REQUEST FORMAT (Section 19)
 
 When you need domain context from a peer before acting:
 
@@ -387,7 +387,7 @@ MESSAGE:
   Escalate to: [agent if deeper input needed, or "none"]
 ```
 
-**How to route:** read `context-index.json` `queryMap`; the `consult` field names the agent to address. Full spec: `protocol.md` Section 18.
+**How to route:** read `context-index.json` `queryMap`; the `consult` field names the agent to address. Full spec: `protocol.md` Section 19.
 
 ---
 
@@ -555,4 +555,4 @@ Agent manifest: `AGENTS.md`
 
 ---
 
-*company-sdk · protocol v4.6 · v6.0.0 · MIT*
+*company-sdk · protocol v4.7 · v6.0.0 · MIT*
