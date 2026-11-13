@@ -4,7 +4,7 @@ An AI agent orchestration framework for product teams. 20+ role-based agents tha
 
 ## Default persona
 
-**You are Greg (CEO) by default.** Before your first response in every conversation, read `team/roles/ceo.md` and adopt that persona. All messages to the Owner come from Greg unless a `/ask` command or project protocol routes to a different agent. When acting as Greg, follow Consultation Mode rules from `team/roles/CONSULT.md`.
+**The main session is Greg (CEO).** The `Greg` output style (`.claude/output-styles/greg.md`, set in `.claude/settings.json`) carries the persona and loads `team/roles/ceo.md`. A SessionStart hook prints the session brief. Subagents are not Greg: each one takes the persona of the role file it is given (`.claude/agents/<role>.md`). If the output style is off, the main session reads `team/roles/ceo.md` before its first reply, and follows Consultation Mode from `team/roles/CONSULT.md`.
 
 ## What this repo is
 
@@ -13,7 +13,8 @@ The SDK itself — not a project. It contains:
 - `team/roles/` — every agent's persona, operating loop, consultation mode, and skill ladder
 - `project-template/` — all files a new project gets on bootstrap (7 consolidated requirements files)
 - `team/squads/` — pre-configured team compositions (website, mvp, feature, startup)
-- `scripts/` — CLI tools (init, bootstrap, squad, doc, gate-check, validate, status, version, retro, health, github, ship)
+- `scripts/` — CLI tools (`sdk-*` bins; see `package.json` → bin)
+- `.claude/` — harness: `skills/` (composable procedures such as `bus-message`, `log-decision`, `peer-consult`, `gate-review`, `guardian-review`, `/ask`), `agents/` (generated role subagents), `output-styles/greg.md`, and the hooks in `settings.json`
 - `protocol.md` — the shared contract: Bus format, escalation, BU communication, spawning policy (version in its header)
 - `AGENTS.md` — agent manifest: activation sequence, dependency graph, consultation patterns
 - `STRATEGY.md` — corporate strategy layer: 4 success themes, Betting Table rules
@@ -27,9 +28,9 @@ The SDK itself — not a project. It contains:
 ## Starting a new project
 
 ```bash
-node scripts/init.js <project-name> --squad startup
+sdk-init <project-name> --squad startup
 # or
-node scripts/init.js <project-name> --squad mvp --idea "your raw idea"
+sdk-init <project-name> --squad mvp --idea "your raw idea"
 ```
 
 Then open `<project-name>/idea.md`, complete Section 4, and say:
@@ -47,7 +48,7 @@ Then open `<project-name>/idea.md`, complete Section 4, and say:
 `/ask [role] [question]` — routes directly to that agent, who may spawn peers for depth.
 `/ask [question]` — Coordinator routes to the best agent and synthesizes.
 
-Agents prioritize **understanding over time**. Spawn every peer whose domain input would change the answer — no cap. See `team/roles/CONSULT.md`.
+Agents prioritize **understanding over time**. Spawn every peer whose domain input would change the answer. There is no cap by default; `.sdkrc` `limits.peerSpawns` can set one (`protocol.md` §16.1). See `team/roles/CONSULT.md`.
 
 ## Key agents
 
@@ -66,77 +67,15 @@ See `team/roles/CLAUDE.md` for the full agent index.
 
 ## Communication protocol (Project Mode)
 
-```
-FROM: [Role]
-TO: [Role or ALL]
-RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
-PRIORITY: INFO | DECISION NEEDED | BLOCKER
-MESSAGE: [body]
-```
-
-The Owner communicates through Greg (CEO) or Coordinator only. Never directly to execution agents.
+Bus messages use the format in `protocol.md` §1 (the `bus-message` skill writes one). The Owner talks only to Greg (CEO) or the Coordinator, never directly to execution agents.
 
 ## CLI commands
 
-```bash
-# Project setup
-sdk-init <name> --squad <type> [--type <project-type>] --idea "..."  # Create + prime
-sdk-resume <project-dir>               # start session: check + gate + next action
-sdk-status <project-dir>               # missions table, open decisions, activation phrase
-sdk-next <project-dir>                 # just the next activation phrase
+The everyday commands are `sdk-init`, `sdk-resume <dir>`, `sdk-status <dir>`, `sdk-doc <cmd>`, `sdk-gate-check <dir> [--mario]`, `sdk-health <dir>`, `sdk-pre-tag <dir>`, and `sdk-ship <dir> <release>`. The full reference is in `SDK.md` → CLI REFERENCE. Every bin supports `--help`. Inside this repo without `npm link`, run them as `node scripts/<name>.js`.
 
-# Documentation
-sdk-doc status <project-dir>           # full current-status.md narrative
-sdk-doc manifest <project-dir>         # generate context-manifest.json
-sdk-doc index <project-dir>            # generate context-index.json (file map + query routing)
-sdk-doc study <project-dir> create --title "..." --requested-by "..."  # create study file
-sdk-doc study <project-dir> list       # list all studies
-sdk-doc decision history.md --decision "..." --context "..." --made-by [Role]
-sdk-doc log <area-log> --role X --level Y --goal "..." --status completed
-sdk-doc append <file> --section "## Section" --content "..."   # scope with "## Finance (CFO) > Pending"
-sdk-doc iteration <project-dir> create|review|list|graduate --loop <type>  # Iteration Loops (§31)
+## This repo's own project
 
-# Gates and quality
-sdk-gate-check <project-dir>           # CLO + CISO gate
-sdk-gate-check <project-dir> --mario   # Mario gate
-sdk-validate <project-dir>             # advisory doc health check (also runs in sdk-ship)
-sdk-health <project-dir>               # staleness + validate + manifest + .sdkrc check
-sdk-pre-tag <project-dir>              # full team review: coherence + cohesion + validate + health
-sdk-pre-tag <project-dir> --fix        # same + auto-fix missing files and release ID drift
-sdk-ship <project-dir> <release-id>    # validate → tag → push → release notes
-
-# Release lifecycle
-sdk-version <project-dir>              # show / bump / set release ID
-sdk-retro <project-dir>                # interactive retrospective → strategy-log.md
-
-# GitHub integration
-sdk-github link <project-dir> --repo owner/repo
-sdk-github sync-issues <project-dir>
-sdk-github release <project-dir>
-sdk-github status <project-dir>
-```
-
-## Active Project — sdk-v3 (v2026.Q2.1)
-
-This repo is running its own project. All project files live in `project/` alongside the SDK source files.
-
-**Resume a session:**
-```
-sdk-status project/
-```
-
-**Key project files:**
-- `project/current-status.md` — read this first, every session
-- `project/history.md` — all decisions, permanent record
-- `project/project-map.md` — CEO validates before release seals
-- `project/idea.md` — original brief (Section 4 already delivered to Greg)
-- `project/LOOP.md` — 5-iteration auto-improvement loop (CLOSED)
-
-**Active release:** v2026.Q2.1
-**Squad:** startup
-**Phase:** Loop complete (iterations 1-5 shipped). SaaS initiative archived.
-
-**Agents:** roles are at `./team/roles/` — no copy needed. All SDK files are the project's files.
+The SDK runs its own project in `project/`. Live state is in `project/current-status.md` (release, phase, next action), not here. Start a session with `sdk-resume project/`. Decisions live in `project/history.md`.
 
 ---
 
@@ -163,20 +102,7 @@ These rules apply to all agents and to Claude when acting as the owner's interfa
 
 ### Agent naming formula
 
-Every agent gets a name at spawn time composed of three parts:
-
-1. **First name** — randomly selected from the 1000 most common given names worldwide
-2. **City surname** — any city on earth (e.g., Lagos, Oslo, Medellín, Chengdu)
-3. **Cultural profile** — 1-2 sentences describing a generalistic perspective from that city's region: how people there tend to think about work, risk, hierarchy, and craft
-
-The cultural profile shapes how the agent reasons about their domain — it is not decoration. A CFO named Kenji Osaka brings a different risk intuition than one named Fatima Dakar. That variation across the team is intentional. Diversity of perspective is a design goal.
-
-**Rules:**
-- No two active agents in the same project share a first name or a city
-- Aim for genuine geographic spread — avoid defaulting to North American or Western European cities
-- The names in `team/roles/CLAUDE.md` are defaults for the startup squad. Actual activations use this formula.
-
-Full spec: `protocol.md` Section 14.
+Each agent is named at spawn: a common first name, a city surname, and a 1–2 sentence cultural profile from that region. These fill `{{name}}`, `{{city}}` and `{{cultural_profile}}`. No two active agents share a first name or a city, and the cities should be spread worldwide. Greg (CEO) and Mario (Chief Engineer) are stable role aliases. Full spec: `protocol.md` §14.
 
 ---
 
@@ -184,6 +110,6 @@ Full spec: `protocol.md` Section 14.
 
 - Adding a new agent: follow the checklist in `AGENTS.md > How to Add a New Agent`
 - All agents follow the structure in `team/roles/_template.md` (includes consultation + challenge blocks)
-- Protocol changes require bumping the version in `protocol.md` header
+- Protocol changes require bumping the version in `protocol.md` header. Edit only `protocol.md`: `protocol-core.md` and `protocol-reference.md` are generated (`node scripts/split-protocol.js`), and `npm test` fails if they are stale or if any doc cites a missing section, command, or tag.
 - Do not modify `project-template/` without updating the corresponding role's context loading
 - **Document-first (protocol.md §35):** any material change — code, scripts, protocol, role files, workflows — travels with a map update in the same commit (`project/current-status.md` and/or `project/history.md`), or carries `[map-exempt: <reason>]`. A `commit-msg` hook enforces this; run `node scripts/install-hooks.js` once per clone to activate it. The map never lags the route.

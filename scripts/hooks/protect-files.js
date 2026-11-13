@@ -1,0 +1,30 @@
+#!/usr/bin/env node
+
+/**
+ * protect-files.js — Claude Code PreToolUse hook (Edit|Write).
+ *
+ *   CHARTER.md                       Layer A — changes only by Owner ratification (see the CHARTER.md header).
+ *   protocol-core.md / -reference.md generated from protocol.md by scripts/split-protocol.js.
+ *
+ * Denies with a reason Claude can act on; anything else passes through (exit 0, no output).
+ */
+
+'use strict';
+
+let input = '';
+process.stdin.on('data', c => { input += c; });
+process.stdin.on('end', () => {
+  let filePath = '';
+  try { filePath = (JSON.parse(input).tool_input || {}).file_path || ''; } catch (_) { process.exit(0); }
+  const base = filePath.split('/').pop();
+  const rules = {
+    'CHARTER.md': 'CHARTER.md is Layer A and changes only by Owner ratification. Propose the change to the Owner (via Greg) instead of editing it.',
+    'protocol-core.md': 'protocol-core.md is generated. Edit protocol.md, then run `node scripts/split-protocol.js`.',
+    'protocol-reference.md': 'protocol-reference.md is generated. Edit protocol.md, then run `node scripts/split-protocol.js`.',
+  };
+  if (!rules[base]) process.exit(0);
+  process.stdout.write(JSON.stringify({
+    hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: rules[base] },
+  }) + '\n');
+  process.exit(0);
+});

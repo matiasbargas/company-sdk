@@ -1,6 +1,46 @@
 {
-  "$comment": "Committed, shared Claude Code settings. Per-machine permissions live in the gitignored settings.local.json. This file carries only the Document-First Gate Stop hook (protocol.md §35), which reminds — never blocks — when material changes sit in the tree without a map update. The hard gate is the git commit-msg hook installed via `node scripts/install-hooks.js`.",
+  "$comment": "Committed, shared Claude Code settings. Per-machine permissions live in the gitignored settings.local.json. outputStyle 'Greg' makes the main session speak as the CEO (subagents keep their role personas). Hooks: SessionStart prints a compact session brief; PreToolUse protects CHARTER.md and the generated protocol views; Stop runs the Document-First Gate reminder (protocol.md §35, never blocks — the hard gate is the git commit-msg hook from `node scripts/install-hooks.js`).",
+  "outputStyle": "Greg",
+  "permissions": {
+    "allow": [
+      "Bash(node scripts/doc.js:*)",
+      "Bash(node scripts/consult.js:*)",
+      "Bash(node scripts/status.js:*)",
+      "Bash(node scripts/resume.js:*)",
+      "Bash(node scripts/health.js:*)",
+      "Bash(node scripts/gate-check.js:*)",
+      "Bash(node scripts/validate.js:*)",
+      "Bash(node scripts/squad.js:*)",
+      "Bash(npm test)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)"
+    ]
+  },
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/hooks/session-start.js\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/hooks/protect-files.js\""
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

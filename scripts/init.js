@@ -374,12 +374,14 @@ const settingsPath   = path.join(claudeDir, 'settings.json');
 
 ensureDir(claudeDir);
 
-// Copy .claude/commands/ — slash commands (/ask, /askGreg, /askCTO)
-const sdkCommandsSrc  = path.join(sdkRoot, '.claude', 'commands');
-const sdkCommandsDest = path.join(claudeDir, 'commands');
-if (fs.existsSync(sdkCommandsSrc)) {
-  copyDir(sdkCommandsSrc, sdkCommandsDest);
-  console.log(`    ✓  .claude/commands/  (/ask, /askGreg, /askCTO)`);
+// Copy the harness: skills (incl. /ask), generated role subagents, Greg output style.
+// .claude/commands/ is legacy (commands are skills now) but still copied if an SDK fork has it.
+for (const sub of ['skills', 'agents', 'output-styles', 'commands']) {
+  const src = path.join(sdkRoot, '.claude', sub);
+  if (fs.existsSync(src)) {
+    copyDir(src, path.join(claudeDir, sub));
+    console.log(`    ✓  .claude/${sub}/`);
+  }
 }
 
 const claudeSettings = {
@@ -392,6 +394,13 @@ const claudeSettings = {
   permissions: {
     allow: ['doc', 'consult', 'status', 'gate-check', 'validate', 'health', 'next', 'resume']
       .map(name => `Bash(node ${path.join(sdkRoot, 'scripts', name + '.js')}:*)`)
+  },
+  // Main session speaks as Greg; subagents keep their role personas (.claude/agents/).
+  outputStyle: 'Greg',
+  // Projects carry no scripts/, so hooks run the SDK's copies by absolute path.
+  hooks: {
+    SessionStart: [{ matcher: 'startup|resume|clear|compact', hooks: [{ type: 'command', command: `node "${path.join(sdkRoot, 'scripts', 'hooks', 'session-start.js')}"` }] }],
+    PreToolUse: [{ matcher: 'Edit|Write', hooks: [{ type: 'command', command: `node "${path.join(sdkRoot, 'scripts', 'hooks', 'protect-files.js')}"` }] }],
   }
 };
 

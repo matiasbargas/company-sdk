@@ -336,7 +336,7 @@ MESSAGE:
 
 When a BU lead is the first role activated in a new session, they run the self-discovery scan before producing any output. This is how stale state gets caught and corrected — not by waiting for every role to re-announce itself, but by reading the live files. The self-discovery scan result is appended to Session Notes in `current-status.md` so the Coordinator can see what was found without running a separate scan.
 
-**CLI assist:** none yet. A `sdk-doc bu-status` generator was documented in v4.3 but never shipped; BU leads author the message by hand from `sdk-doc status` output.
+**CLI assist:** none yet. A bu-status generator was documented in v4.3 but never shipped; BU leads author the message by hand from `sdk-doc status` output.
 
 ---
 

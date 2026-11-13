@@ -189,7 +189,7 @@ const DIRECTORIES = [
 
 // ─── Run ─────────────────────────────────────────────────────────────────────
 
-// Sync .claude/commands/ from source SDK → project/.claude/commands/
+// Legacy .claude/commands/ paths (commands are skills now; see the harness sync below)
 // (these live at the project root, not inside team-sdk/)
 const sourceCommandsDir = path.join(sourcePath, '.claude', 'commands');
 const destCommandsDir   = path.join(projectDir, '.claude', 'commands');
@@ -219,12 +219,15 @@ for (const dir of DIRECTORIES) {
   allResults.push(...results);
 }
 
-// Sync .claude/commands/ into the project root (not inside team-sdk/)
-if (fs.existsSync(sourceCommandsDir)) {
-  const commandResults = syncDir(sourceCommandsDir, destCommandsDir);
-  // Re-label paths relative to projectDir for clarity
-  for (const r of commandResults) {
-    r.file = path.join('.claude', 'commands', path.basename(r.file));
+// Sync the .claude harness into the project root (not inside team-sdk/):
+// skills (incl. /ask), generated agents, output styles, and legacy commands if present.
+for (const sub of ['skills', 'agents', 'output-styles', 'commands']) {
+  const srcDir = sub === 'commands' ? sourceCommandsDir : path.join(sourcePath, '.claude', sub);
+  const dstDir = sub === 'commands' ? destCommandsDir : path.join(projectDir, '.claude', sub);
+  if (!fs.existsSync(srcDir)) continue;
+  for (const r of syncDir(srcDir, dstDir)) {
+    // syncDir labels files relative to targetSdk; relabel them relative to .claude/<sub>.
+    r.file = path.join('.claude', sub, path.relative(path.relative(targetSdk, dstDir), r.file));
     allResults.push(r);
   }
 }

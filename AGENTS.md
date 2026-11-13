@@ -279,13 +279,13 @@ Any agent can operate in **Consultation Mode** — answering standalone domain q
 
 ### Activating an agent in Consultation Mode
 
-Use the skills in `.claude/commands/`:
+Use the skills in `.claude/skills/` (peers are spawned as the generated, read-only subagents in `.claude/agents/`):
 - `/askGreg [question]` — consult the CEO on strategy, direction, or cross-domain tradeoffs
 - `/askCTO [question]` — consult the CTO on architecture, systems, or technical decisions
 - `/ask [question]` — routes to the most qualified agent and synthesizes perspectives
 
 Or address any agent directly by name in a conversation:
-> "Camila, what does GDPR actually require for a product that stores behavioral data?"
+> "CLO, what does GDPR actually require for a product that stores behavioral data?"
 > "Hey Mario, is this architecture decision reversible?"
 > "CAIO, what evaluation framework should I use for this language model?"
 

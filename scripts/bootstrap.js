@@ -186,13 +186,14 @@ if (fs.existsSync(teamSrc)) {
   count++;
 }
 
-// .claude/commands/ — slash commands (/ask, /askGreg, /askCTO)
-const sdkCommandsSrc  = path.join(sdkRoot, '.claude', 'commands');
-const sdkCommandsDest = path.join(outputDir, '.claude', 'commands');
-if (fs.existsSync(sdkCommandsSrc)) {
-  copyDir(sdkCommandsSrc, sdkCommandsDest);
-  console.log(`  ✓ .claude/commands/  (/ask, /askGreg, /askCTO)`);
-  count++;
+// .claude harness — skills (incl. /ask), generated role subagents, Greg output style
+for (const sub of ['skills', 'agents', 'output-styles', 'commands']) {
+  const src = path.join(sdkRoot, '.claude', sub);
+  if (fs.existsSync(src)) {
+    copyDir(src, path.join(outputDir, '.claude', sub));
+    console.log(`  ✓ .claude/${sub}/`);
+    count++;
+  }
 }
 
 // Write .sdkrc — persists SDK source path for sdk-update

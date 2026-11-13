@@ -26,7 +26,7 @@ function scan(file, today, minDate) {
         // Nearest preceding MESSAGE/heading line gives the reader something to search for.
         let ctx = '';
         for (let j = i; j >= Math.max(0, i - 12); j--) {
-          if (/^(MESSAGE:|#+ |- )/.test(lines[j].trim())) { ctx = lines[j].trim().replace(/^MESSAGE:\s*/, ''); break; }
+          if (/^(MESSAGE:|\[\d{4}-|#+ |- )/.test(lines[j].trim())) { ctx = lines[j].trim().replace(/^MESSAGE:\s*/, ''); break; }
         }
         out.push({ file: path.basename(file), line: i + 1, due, context: ctx.slice(0, 90) });
       }

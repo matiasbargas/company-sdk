@@ -5,7 +5,7 @@
  * consult.js — CLI wrapper for @team-sdk/cli consultation.
  *
  * Dogfooding: this script uses createConsultant() from the cli package
- * to prepare consultation payloads. The .claude/commands/ slash commands
+ * to prepare consultation payloads. The .claude/skills/ask skills (/ask, /askCTO, /askGreg)
  * call this to get structured role and context data.
  *
  * Usage:

@@ -169,8 +169,15 @@ Assessment:
 [ ] Engineer inheriting this in two years will understand it
 [ ] No cross-project implications unaccounted for
 
+Named alternative: [The option not taken] -- Rejected because: [reason]
+Reversal cost / trigger: [What reversing would cost, and what would force it]
+
 Concerns raised:
 [If any -- specific. "It concerns me that X because Y" not "this might be an issue."]
+
+Near Misses (required, at least one):
+- Investigated: [concern examined]
+  Dismissed because: [why it is not a real risk here]
 
 Sign-off: APPROVED | APPROVED WITH CONDITIONS | NOT APPROVED
 Conditions (if applicable): [What must change or be confirmed before implementation begins]
