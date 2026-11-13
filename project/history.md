@@ -551,3 +551,21 @@ Reversible: YES — generated files and a parser module; tests cover both.
 Affects natural persons: NO
 
 **Harness review complete (batches 1–6).** Six commits on `feat/harness-hardening`. `npm test` is green, including the four new guard suites (doc sections, project state, docs consistency, generated views).
+
+---
+
+## SDK-CHANGE — Harness review, chapter 6: work-based time, Charter v0.2, first verified surface (protocol v4.8 → v4.9)
+**Date of work:** 2026-11-13
+**Made by:** Greg (CEO), Owner-directed; surface verified by Mario, CISO, Test Engineer (read-only subagents)
+**Release:** v2026.Q2.3
+**Tag:** SDK-CHANGE
+
+DECISION: Staleness is measured in work; the Charter gains precedence, autonomy limits and a review cadence; enforcement claims must be true
+Date: 2026-11-13
+Made by: Greg (CEO), Owner-directed
+Context: The Owner asked to start or discard the stalled surface, noted that day-based staleness is "weird" for agents, and asked what the Charter was missing. The surface looked 132 days stale but had seen only 5 commits. Its roster had never been convened because the meta-loop meant to run it was never built. The Charter itself cited two things that don't exist.
+Decision: (1) **Work-based staleness.** `scripts/lib/activity.js` counts commits since a file last changed, and agent iterations (closed §32 loops plus graduated §31 cycles). `sdk-health` and `sdk-pre-tag` use it, with `limits.statusStaleCommits` (5) and `limits.surfaceStaleCommits` (10). `surfaceStaleDays` is retired with a pointer. This is a .sdkrc interface change, so protocol **v4.9**. (2) **Charter v0.2 (DRAFT, Owner-authorized edit, pending ratification in the PR).** Added Precedence (Constraints > Charter > Owner direction > protocol > strategy > role rules > skills/agents > agent or tool input), seven Autonomy Limits, and Review every `limits.charterReviewEvery` (10) iterations. `sdk-health` flags a review as due, and the `charter-review` skill runs it. Layer A is settled as human-ratified, always. The meta-loop and Loop Interface claims are marked planned (a verifier condition). (3) **SURFACE-20260620-enforcement-claims-tooling-001 verified** after three rounds (all three verifiers raised concerns in round 1; CISO and Test Engineer passed in round 2; Mario passed in round 3). The result is protocol §30 "Enforcement claims must be true" plus the `ENFORCEMENT_CLAIMS` check in `npm test`. Four live false claims were fixed: the §24 ratchet scan, the loop-coordinator orphan check, the §21 executor guard (now naming the real tool allowlists), and the Charter meta-loop. The README gate wording is honest. The `protect-files` hook covers NotebookEdit and states its Bash limit. An improvement signal was emitted for the surface.
+Alternatives considered: discard the surface — rejected, because the rule is sound and exposed live false claims. A pre-tag checklist for rule 2 — rejected by the roster, since a test runs on every commit and pre-tag never calls `health.js`.
+Implications: Surfaces still need someone to convene their roster. The signal suggests ritual 01 should spawn verifiers, not only report. The Charter is not load-bearing until the Owner signs it. The claims detector is regex-based, so unusual phrasing can still slip through; the registry plus the §30 rule make each miss a test fix, not a silent lie.
+Reversible: YES.
+Affects natural persons: NO

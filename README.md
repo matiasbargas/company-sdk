@@ -18,7 +18,7 @@ claude my-project
 
 You talk to Greg. Greg is the CEO. He takes your brief, identifies whether the standard team covers the domain or whether the project needs specialists (an Argentine tax accountant, a DeFi protocol economist, a supply chain analyst), creates those profiles, and kicks off discovery.
 
-Discovery runs in parallel. Legal and security review at the same time as finance, market, and operations. A UX researcher tests assumptions. A designer frames the problem through interface thinking. A PM shapes missions. But here is the constraint: the CTO cannot start architecture until the CLO and CISO have delivered. That gate is enforced, not suggested. A Discovery Guardian reviews the combined output and either graduates it to the next phase or sends it back with specific feedback.
+Discovery runs in parallel. Legal and security review at the same time as finance, market, and operations. A UX researcher tests assumptions. A designer frames the problem through interface thinking. A PM shapes missions. But here is the constraint: the CTO cannot start architecture until the CLO and CISO have delivered. That gate is checked, not suggested: `sdk-gate-check` fails until both have delivered, and `sdk-resume` runs it. It is a check the team runs, not a lock: nothing stops someone from spawning the CTO by hand, so the Coordinator holds the line. A Discovery Guardian reviews the combined output and either graduates it to the next phase or sends it back with specific feedback.
 
 Once architecture starts, Mario (Chief Engineer) reviews every irreversible decision before anyone writes code. An Architecture Guardian validates that the design actually solves the graduated problem. The team writes a pre-mortem -- the post-mortem for the failure case -- before execution begins. The Owner reads it and either proceeds or kills the pod. During implementation, an Implementation Guardian checks that what was built matches what was designed, which matches what was discovered.
 
@@ -54,7 +54,7 @@ Each agent gets a name at spawn: a globally common first name, a city surname, a
 
 - **Dissent is required, not optional.** Agents do not agree to avoid friction. When something is wrong, the agent names it -- specific concern, specific alternative -- then defers after logging. Agreement without examination is abdication.
 
-- **Hard gates that cannot be skipped.** CLO + CISO must deliver before CTO activates. Mario reviews irreversible decisions before Sprint 1. CEO validates the project map before the release seals. No exceptions.
+- **Hard gates, checked by tooling.** CLO + CISO must deliver before CTO activates (`sdk-gate-check`). Mario reviews irreversible decisions before Sprint 1 (`sdk-gate-check --mario`). CEO validates the project map before the release seals. The tools fail loudly; the Coordinator is responsible for not routing around them.
 
 - **Iteration loops with dedicated guardians.** Discovery, Architecture, and Implementation each have a guardian who reviews the output against exit criteria and either graduates it or sends it back. No phase proceeds until its guardian says it is ready.
 
@@ -145,4 +145,4 @@ MIT
 
 ---
 
-*v6.0.0 -- protocol v4.8 -- 31 agents -- 3 iteration guardians*
+*v6.0.0 -- protocol v4.9 -- 31 agents -- 3 iteration guardians*

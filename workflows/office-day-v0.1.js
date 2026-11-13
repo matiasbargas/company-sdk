@@ -56,7 +56,7 @@ Classify each surface and DO NOT modify any file. A surface is:
 - "open_roster" if state is under-verification AND at least one rostered verifier has no recorded verdict (pending).
 - "reconciling" if any verification block carries a no-go (§34.5).
 - "blocked" if irreversible:true AND has an unresolved no-go.
-- "stalled" if under-verification with all-pending verdicts and the file mtime is older than 2 days before ${date} (use \`ls -la\` / stat; approximate is fine).
+- "stalled" if under-verification with all-pending verdicts and more than 10 commits have landed since the file last changed (`git rev-list --count $(git log -1 --format=%H -- <file>)..HEAD`; the threshold is .sdkrc limits.surfaceStaleCommits). Calendar age does not count: agents do not experience days.
 - "terminal" if state is verified, superseded, or archived.
 
 Return ONLY a JSON object.`, {

@@ -22,9 +22,18 @@ const DEFAULT_LIMITS = {
   loopIterations: null,
   // §31.6: Guardian cycles without GRADUATE before the CEO escalation fires. Escalation trigger, not a cap.
   guardianCyclesBeforeEscalation: 3,
-  // §34: days a surface may sit in under-verification / reconciling before sdk-health flags it.
-  surfaceStaleDays: 3,
+  // §34: commits that may land while a surface sits in under-verification / reconciling before
+  // sdk-health flags it. Work-based, not calendar-based (§2 timing): a quiet repo never goes stale.
+  surfaceStaleCommits: 10,
+  // Commits that may land without current-status.md changing before sdk-health flags it.
+  statusStaleCommits: 5,
+  // CHARTER review cadence: agent iterations (closed §32 loops + graduated §31 cycles) between
+  // reviews. sdk-health flags a review as due; the charter-review skill runs it.
+  charterReviewEvery: 10,
 };
+
+// Renamed keys still accepted with a pointer to the new name.
+const DEPRECATED = { surfaceStaleDays: 'surfaceStaleCommits (staleness is measured in commits now, §2 timing)' };
 
 const NULLABLE = new Set(['peerSpawns', 'discoveryRounds', 'loopIterations']);
 
@@ -36,6 +45,10 @@ function validateLimits(limits) {
     return ['"limits" must be an object'];
   }
   for (const [key, value] of Object.entries(limits)) {
+    if (key in DEPRECATED) {
+      problems.push(`limits.${key} is retired — use ${DEPRECATED[key]}`);
+      continue;
+    }
     if (!(key in DEFAULT_LIMITS)) {
       problems.push(`unknown limit "${key}" (known: ${Object.keys(DEFAULT_LIMITS).join(', ')})`);
       continue;
@@ -55,8 +68,6 @@ function readLimits(projectDir) {
   try { sdkrc = JSON.parse(fs.readFileSync(sdkrcPath, 'utf8')); } catch (_) { /* defaults */ }
   const configured = (sdkrc && typeof sdkrc.limits === 'object' && sdkrc.limits) || {};
   const out = { ...DEFAULT_LIMITS };
-  // Back-compat: surfaceStaleDays used to live at the top level of .sdkrc.
-  if (Number.isInteger(sdkrc.surfaceStaleDays) && sdkrc.surfaceStaleDays > 0) out.surfaceStaleDays = sdkrc.surfaceStaleDays;
   for (const key of Object.keys(DEFAULT_LIMITS)) {
     if (!(key in configured)) continue;
     if (validateLimits({ [key]: configured[key] }).length === 0) out[key] = configured[key];

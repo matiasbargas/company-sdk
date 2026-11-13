@@ -369,19 +369,19 @@ function checkValidate(projectDir) {
 /**
  * Health checks — staleness, manifest, .sdkrc
  */
-function checkHealth(projectDir, staleHours = 48) {
+function checkHealth(projectDir) {
   const issues = [];
 
-  // Staleness: current-status.md
+  // Staleness: current-status.md, measured in commits since it last changed (§2 timing)
   const statusPath = path.join(projectDir, 'current-status.md');
   if (fs.existsSync(statusPath)) {
-    const stat = fs.statSync(statusPath);
-    const ageH = (Date.now() - stat.mtimeMs) / (1000 * 60 * 60);
-    if (ageH > staleHours) {
+    const behind = require('./lib/activity').commitsSince(statusPath);
+    const threshold = require('./lib/limits').readLimits(projectDir).statusStaleCommits;
+    if (behind !== null && behind > threshold) {
       issues.push(issue(
         'health', 'current-status.md',
-        `current-status.md is ${Math.round(ageH)}h stale (threshold: ${staleHours}h). ` +
-        `Coordinator must update it to reflect current team state before tagging.`
+        `current-status.md is ${behind} commits behind (threshold: ${threshold}). ` +
+        `Coordinator must reconcile it to the current team state before tagging.`
       ));
     }
   }
@@ -567,10 +567,6 @@ function printReport({ projectDir, allIssues, fixedIssues, releaseId, jsonMode }
 const args       = process.argv.slice(2);
 const fixMode    = args.includes('--fix');
 const jsonMode   = args.includes('--json');
-const staleFlag  = (() => {
-  const idx = args.indexOf('--stale-hours');
-  return idx !== -1 ? +args[idx + 1] : 48;
-})();
 const releaseFlag = (() => {
   const idx = args.indexOf('--release-id');
   return idx !== -1 ? args[idx + 1] : null;
@@ -583,7 +579,7 @@ Usage:
   sdk-pre-tag <project-dir>                      # full review — report only
   sdk-pre-tag <project-dir> --fix                # review + auto-fix safe issues
   sdk-pre-tag <project-dir> --release-id v2026.Q2.1  # assert release ID
-  sdk-pre-tag <project-dir> --stale-hours 72     # custom staleness threshold (default: 48h)
+  (staleness threshold: .sdkrc limits.statusStaleCommits — measured in commits)
   sdk-pre-tag <project-dir> --json               # machine-readable output
 
 Checks:
@@ -631,7 +627,7 @@ const allIssues = [
   ...checkCoherence(projectDir),
   ...checkCohesion(projectDir),
   ...checkValidate(projectDir),
-  ...checkHealth(projectDir, staleFlag),
+  ...checkHealth(projectDir),
 ];
 
 // Apply fixes if requested

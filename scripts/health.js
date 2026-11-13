@@ -11,7 +11,7 @@
  *
  * Usage:
  *   sdk-health [project-dir]           # defaults to current directory
- *   sdk-health [project-dir] --stale-hours 48   # custom staleness threshold (default: 24h)
+ *   sdk-health [project-dir] --stale-commits 8  # current-status.md threshold (default: limits.statusStaleCommits)
  *   sdk-health [project-dir] --json    # machine-readable output
  *
  * Exit codes:
@@ -27,11 +27,11 @@ const { execSync } = require('child_process');
 const { validate } = require('./validate');
 const { classify, hasExemptTag } = require('./lib/map-gate-lib');
 const { validateLimits, readLimits } = require('./lib/limits');
+const { commitsSince, countIterations, lastCharterReviewAt } = require('./lib/activity');
 
 const args         = process.argv.slice(2);
 const jsonMode     = args.includes('--json');
-const staleHoursArg = args.find((a, i) => args[i - 1] === '--stale-hours');
-const staleHours   = staleHoursArg ? +staleHoursArg : 24;
+const staleCommitsArg = args.find((a, i) => args[i - 1] === '--stale-commits');
 const projectArg   = args.find(a => !a.startsWith('--'));
 const projectDir   = path.resolve(projectArg || process.cwd());
 
@@ -39,7 +39,7 @@ if (args.includes('--help') || args.includes('-h')) {
   console.log(`
 Usage:
   sdk-health [project-dir]
-  sdk-health [project-dir] --stale-hours 48
+  sdk-health [project-dir] --stale-commits 8
   sdk-health [project-dir] --json
 
 Checks project file health: staleness, missing files, placeholders, manifest freshness.
@@ -58,12 +58,15 @@ const statusFile = path.join(projectDir, 'current-status.md');
 if (!fs.existsSync(statusFile)) {
   issues.push('current-status.md is missing — run sdk-init or sdk-doc to create it');
 } else {
-  const stat = fs.statSync(statusFile);
-  const ageH  = (Date.now() - stat.mtimeMs) / (1000 * 60 * 60);
-  if (ageH > staleHours) {
-    issues.push(`current-status.md is stale (${Math.round(ageH)}h since last update, threshold: ${staleHours}h) — ask the Coordinator to update it`);
+  // Work-based staleness (§2 timing): commits that landed since the file last changed.
+  const threshold = staleCommitsArg ? +staleCommitsArg : readLimits(projectDir).statusStaleCommits;
+  const behind = commitsSince(statusFile);
+  if (behind === null) {
+    notices.push('current-status.md: not tracked by git — staleness not measured');
+  } else if (behind > threshold) {
+    issues.push(`current-status.md is ${behind} commits behind (threshold: ${threshold}) — ask the Coordinator to reconcile it`);
   } else {
-    notices.push(`current-status.md updated ${Math.round(ageH)}h ago ✓`);
+    notices.push(`current-status.md is ${behind} commit(s) behind ✓`);
   }
 }
 
@@ -82,13 +85,11 @@ const manifestFile = path.join(projectDir, 'context-manifest.json');
 if (!fs.existsSync(manifestFile)) {
   notices.push('context-manifest.json not found — run sdk-doc manifest to generate');
 } else {
-  const stat = fs.statSync(manifestFile);
-  const ageH = (Date.now() - stat.mtimeMs) / (1000 * 60 * 60);
-  if (ageH > staleHours * 2) {
-    notices.push(`context-manifest.json is ${Math.round(ageH)}h old — consider regenerating with sdk-doc manifest`);
-  } else {
-    notices.push(`context-manifest.json fresh (${Math.round(ageH)}h old) ✓`);
-  }
+  const behind = commitsSince(manifestFile);
+  const generatedAt = (() => { try { return JSON.parse(fs.readFileSync(manifestFile, 'utf8')).generatedAt || null; } catch (_) { return null; } })();
+  notices.push(behind === null
+    ? `context-manifest.json present${generatedAt ? ` (generated ${generatedAt})` : ''} — regenerate with sdk-doc manifest after material changes`
+    : `context-manifest.json is ${behind} commit(s) behind${behind > 0 ? ' — consider sdk-doc manifest' : ' ✓'}`);
 }
 
 // 4. Domain health
@@ -186,7 +187,7 @@ if (!fs.existsSync(sdkrcPath)) {
 }
 
 // 8. Framing drift detection (--framing-drift or included in default checks)
-const checkDrift = args.includes('--framing-drift') || !args.some(a => a.startsWith('--') && a !== '--json' && a !== '--stale-hours');
+const checkDrift = args.includes('--framing-drift') || !args.some(a => a.startsWith('--') && a !== '--json' && a !== '--stale-commits');
 
 if (checkDrift) {
   const ideaPath = path.join(projectDir, 'idea.md');
@@ -295,20 +296,35 @@ function gitOut(args, cwd) {
 })();
 
 // 10. Collaboration Surfaces stuck mid-verification (protocol.md §34)
-//     A surface sitting in under-verification / reconciling past the window is a stalled
-//     multi-role decision. Window: .sdkrc limits.surfaceStaleDays (default 3).
+//     A surface sitting in under-verification / reconciling while the repo moved on is a stalled
+//     multi-role decision. Measured in commits since the surface last changed (§2 timing).
 (function stuckSurfaces() {
   const surfacesDir = path.join(projectDir, 'surfaces');
   if (!fs.existsSync(surfacesDir)) return;
-  const windowDays = readLimits(projectDir).surfaceStaleDays;
+  const window = readLimits(projectDir).surfaceStaleCommits;
   for (const f of fs.readdirSync(surfacesDir).filter(n => n.endsWith('.md') && !n.startsWith('_'))) {
     const file = path.join(surfacesDir, f);
     const state = (fs.readFileSync(file, 'utf8').match(/^\s*state:\s*([a-z-]+)/m) || [])[1];
     if (state !== 'under-verification' && state !== 'reconciling') continue;
-    const ageDays = (Date.now() - fs.statSync(file).mtimeMs) / 86400000;
-    if (ageDays > windowDays) {
-      issues.push(`surface ${f} has been "${state}" for ${Math.floor(ageDays)}d (window: ${windowDays}d) — chase the open verifier slots or resolve the no-go (§34)`);
+    const behind = commitsSince(file);
+    if (behind !== null && behind > window) {
+      issues.push(`surface ${f} has been "${state}" for ${behind} commits (window: ${window}) — chase the open verifier slots or resolve the no-go (§34)`);
     }
+  }
+})();
+
+// 11. CHARTER review cadence — every limits.charterReviewEvery agent iterations
+//     (closed §32 loops + graduated §31 cycles). Review log lives in CHARTER.md.
+(function charterReviewDue() {
+  const charter = [path.join(projectDir, 'CHARTER.md'), path.join(projectDir, '..', 'CHARTER.md')].find(p => fs.existsSync(p));
+  if (!charter) return;
+  const every = readLimits(projectDir).charterReviewEvery;
+  const { total, loops, cycles } = countIterations(projectDir);
+  const since = total - (lastCharterReviewAt(charter) || 0);
+  if (since >= every) {
+    issues.push(`CHARTER review due: ${since} agent iterations since the last review (every ${every}; ${loops} loops + ${cycles} cycles total) — run the charter-review skill`);
+  } else {
+    notices.push(`CHARTER review: ${since}/${every} iterations since last review ✓`);
   }
 })();
 

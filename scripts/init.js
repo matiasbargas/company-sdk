@@ -408,7 +408,7 @@ const claudeSettings = {
   // Projects carry no scripts/, so hooks run the SDK's copies by absolute path.
   hooks: {
     SessionStart: [{ matcher: 'startup|resume|clear|compact', hooks: [{ type: 'command', command: `node "${path.join(sdkRoot, 'scripts', 'hooks', 'session-start.js')}"` }] }],
-    PreToolUse: [{ matcher: 'Edit|Write', hooks: [{ type: 'command', command: `node "${path.join(sdkRoot, 'scripts', 'hooks', 'protect-files.js')}"` }] }],
+    PreToolUse: [{ matcher: 'Edit|Write|NotebookEdit', hooks: [{ type: 'command', command: `node "${path.join(sdkRoot, 'scripts', 'hooks', 'protect-files.js')}"` }] }],
   }
 };
 

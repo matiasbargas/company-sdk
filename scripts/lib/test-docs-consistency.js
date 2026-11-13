@@ -13,6 +13,11 @@
  *   4. Tags: every `TAG: X` used in harness docs is defined in protocol.md §25.
  *   5. Placeholders: role files use {{name}} / {{company}}, never [PERSONA_NAME] / [COMPANY].
  *   6. Bus format: SDK.md's Bus block carries every field of protocol.md §1.
+ *   7. Rituals: frontmatter present, owner is a real role, listed in the README.
+ *   8. Enforcement claims: every "`sdk-x` flags/checks/enforces/blocks …" or "enforced by `path`"
+ *      sentence either carries an honest-gap marker or maps to real code via ENFORCEMENT_CLAIMS.
+ *      (SURFACE-20260620-enforcement-claims-tooling-001: a protocol must not claim enforcement
+ *      it does not have.)
  */
 
 'use strict';
@@ -149,6 +154,46 @@ for (const file of walk('team/office/rituals/office')) {
   check(!!get('id') && !!order && !!owner, `${file} frontmatter has id, order, owner`);
   check(roleFiles.has(ROLE_SLUG[owner] || String(owner).toLowerCase()), `${file} owner "${owner}" is a real role`);
   check(new RegExp(`\\b0?${order} `).test(ritualsReadme), `${file} (order ${order}) is listed in the rituals README`);
+}
+
+// ── 8. Enforcement claims ──────────────────────────────────────────────────────
+// A claim is a sentence asserting that a tool enforces something. It passes if it carries an
+// explicit gap marker, or if a registry entry below maps it to code that exists. New claims fail
+// until registered; registered claims fail when their backing code disappears.
+const CLAIM = /`?\b(sdk-[a-z-]+)(?: [a-z-]+)?`?[^.;\n]{0,80}?\b(flags|greps|checks|scans|enforces|blocks|rejects|denies|detects|validates|catches|warns|fails|includes an? [^.;\n]{0,30}?(?:scan|check))\b|\b(?:is|are) enforced\b|\benforced (?:by|at) `[^`]+`/i;
+const GAP = /honest gap|not (?:yet )?(?:built|machine-checked|implemented)|return ticket|by convention|\bplanned\b|is not built|does not (?:produce|run|enforce)/i;
+// Gap markers are sentence-scoped: one "planned" must not exempt a real claim elsewhere on the line.
+const sentences = (line) => line.split(/(?<=[.;])\s+(?=[A-Z*`(])/);
+const ENFORCEMENT_CLAIMS = [
+  { id: 'solution-class-schema', claim: /SOLUTION_CLASS[^\n]*enforced by `packages\/protocol`/, file: 'packages/protocol/src/bus-schema.js', code: /SOLUTION_CLASS/ },
+  { id: 'stale-surfaces', claim: /surfaceStaleCommits|sits in verification before `sdk-health`|`sdk-health` flags surfaces/, file: 'scripts/health.js', code: /function stuckSurfaces/ },
+  { id: 'stale-status', claim: /statusStaleCommits/, file: 'scripts/health.js', code: /statusStaleCommits/ },
+  { id: 'charter-review-due', claim: /charterReviewEvery|CHARTER review/, file: 'scripts/health.js', code: /function charterReviewDue/ },
+  { id: 'negative-scope-gate', claim: /Negative Scope blocks the gate|Minimum 2 items required to pass gate/, file: 'scripts/gate-check.js', code: /Explicit Non-Goals/ },
+  { id: 'pre-mortem-gate', claim: /--pre-mortem` enforces/, file: 'scripts/gate-check.js', code: /pre-mortem/i },
+  { id: 'health-issues-reported', claim: /`sdk-health` flags are ignored/, file: 'scripts/health.js', code: /issues\.push/ },
+  { id: 'limits-validated', claim: /`sdk-health` validates them/, file: 'scripts/health.js', code: /validateLimits\(/ },
+  { id: 'charter-review-flag', claim: /flags a review as due/, file: 'scripts/health.js', code: /function charterReviewDue/ },
+  { id: 'bus-field-rules', claim: /`sdk-doc bus` rejects/, file: 'scripts/commands/bus.js', code: /SOLUTION_CLASS is required/ },
+  { id: 'document-first-gate', claim: /§35 is enforced/, file: 'scripts/hooks/map-gate.js', code: /--commit-msg/ },
+  { id: 'gate-check-blocks', claim: /`sdk-gate-check`(?: --[a-z-]+)? (?:enforces this|fails until)|compliance gates are enforced/, file: 'scripts/gate-check.js', code: /GATE BLOCKED/ },
+  { id: 'claims-rule-itself', claim: /for example "`sdk-health` flags X"/, file: 'scripts/lib/test-docs-consistency.js', code: /ENFORCEMENT_CLAIMS/ },
+];
+const claimHits = new Map(ENFORCEMENT_CLAIMS.map(c => [c.id, 0]));
+for (const file of HARNESS) {
+  read(file).split('\n').forEach((line, i) => {
+    for (const sentence of sentences(line)) {
+      if (!CLAIM.test(sentence) || GAP.test(sentence)) continue;
+      const entry = ENFORCEMENT_CLAIMS.find(c => c.claim.test(sentence));
+      check(!!entry, `${file}:${i + 1} enforcement claim is registered in ENFORCEMENT_CLAIMS or marked as a gap`, sentence.trim().slice(0, 160));
+      if (entry) claimHits.set(entry.id, claimHits.get(entry.id) + 1);
+    }
+  });
+}
+for (const c of ENFORCEMENT_CLAIMS) {
+  const src = fs.existsSync(path.join(root, c.file)) ? read(c.file) : '';
+  check(c.code.test(src), `enforcement claim "${c.id}" is backed by ${c.file}`);
+  if (claimHits.get(c.id) === 0) console.log(`  ·  enforcement claim "${c.id}" no longer appears in the docs (dead registry entry?)`);
 }
 
 // ── Report ─────────────────────────────────────────────────────────────────────

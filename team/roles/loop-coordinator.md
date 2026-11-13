@@ -149,7 +149,7 @@ Every artifact emitted from this loop must carry exactly one `LOOP-PROVENANCE:` 
 LOOP-PROVENANCE: <LOOP-YYYYMMDD-<pattern>-<seq>> + SHA256(<canonicalized artifact body>)
 ```
 
-The loop ID is appended unhashed so the same artifact may surface from multiple loops; binding is loop→artifact. Grep-able by `sdk-health` and any future audit pass. Artifacts without this line do not cross gates — that is the spawning agent's gate to enforce, but you are responsible for emitting the line.
+The loop ID is appended unhashed so the same artifact may surface from multiple loops; binding is loop→artifact. Grep-able by an audit pass (`sdk-health` has no loop-ID scan yet; §32.5 honest gap). Artifacts without this line do not cross gates — that is the spawning agent's gate to enforce, but you are responsible for emitting the line.
 
 After Step 4, the instance dissolves. No persistence. No memory file. If the same spawning agent opens another loop, a new Loop Coordinator instance is spawned with no awareness of prior loops.
 
@@ -250,7 +250,7 @@ sdk-doc bus . --from "Loop Coordinator (<loop-id>)" --to ALL --priority INFO --m
 sdk-doc bus . --from "Loop Coordinator (<loop-id>)" --to <spawning-agent> --priority INFO --message "LOOP-TERMINATE <loop-id> reason=<budget-exhausted|early-stop|extension-denied>"
 sdk-doc append record/loops/<id>/state.md --section "## Turns" --content "..."
 sdk-doc append record/loops/<id>/state.md --section "## Terminate" --content "..."
-sdk-health .                                       # checks for orphaned state.md (Open without Terminate past TTL)
+sdk-health .                                       # general health; orphaned-loop detection is NOT built (§32.5 honest gap) — check Open-without-Terminate by hand
 ```
 
 ## Done Definition
@@ -263,7 +263,7 @@ This role's output (for one loop instance) is done when:
 - [ ] Every artifact emitted from the loop carries a valid `LOOP-PROVENANCE:` line
 - [ ] Bus transition messages sent: LOOP-OPEN, one LOOP-TURN-BOUNDARY per turn, LOOP-TERMINATE — and zero Bus messages contain internal turn content
 - [ ] No content judgments emitted by this role at any point during the loop (driver-not-judge non-negotiable holds)
-- [ ] `sdk-health .` passes — no orphaned loop flagged
+- [ ] `state.md` has Open, Turns, and Terminate filled (no orphaned loop; this is a manual check until the §32.5 loop-ID scan ships)
 
 The Loop Coordinator does not send a Domain Close message to a BU lead because it does not belong to a BU. The spawning agent owns the durable record and forwards loop outcomes through their normal reporting line.
 

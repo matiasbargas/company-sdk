@@ -1,6 +1,6 @@
 # Rostered Verifiers — Daily
 
-> For every role that can sit on a Collaboration Surface verifier roster: Mario, CISO, CTO, CLO, CFO, Test Engineer, and any role wired as a verifier via its `## Loop Interface`.
+> For every role that can sit on a Collaboration Surface verifier roster: Mario, CISO, CTO, CLO, CFO, Test Engineer, and any other role named on a surface's `verifier_roster` (the `## Loop Interface` role header is planned, not built).
 
 ## What you check daily
 

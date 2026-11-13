@@ -10,7 +10,7 @@ Rules: `team/roles/_shared.md` → Logging consequential decisions; format: `pro
 ## Steps
 1. **Is it consequential?** Yes if any of these hold: irreversible; crosses a domain boundary; changes scope, budget, or timeline; affects natural persons. If none hold, a line in your area log is enough. Stop here.
 2. Gather **context, the decision, alternatives considered, rationale, implications, `Reversible: YES|NO`, and `Affects natural persons: YES|NO`.**
-3. Write it: `sdk-doc decision history.md --decision "..." --context "..." --made-by "<Role>"` (see `sdk-doc decision --help` for alternatives and flags).
+3. Write it: `sdk-doc decision history.md --decision "..." --context "..." --made-by "<Role>"` (see `sdk-doc decision --help` for alternatives and other options).
 4. If it is irreversible, attach any §29 disagreement record and route it to Mario for the irreversibility gate.
 5. **Map:** in the same commit, update `current-status.md` if the phase, missions, or next action changed (§35). The commit-msg hook blocks material commits without a map touch.
 

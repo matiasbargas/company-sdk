@@ -1,4 +1,4 @@
-<!-- AI BOOTSTRAP — company-sdk v6.0.0 / protocol v4.8 -->
+<!-- AI BOOTSTRAP — company-sdk v6.0.0 / protocol v4.9 -->
 <!-- Read this file first. It is the complete operating context for this project. -->
 <!-- After reading this file, follow the LOAD ORDER below to activate. -->
 
@@ -548,4 +548,4 @@ Agent manifest: `AGENTS.md`
 
 ---
 
-*company-sdk · protocol v4.8 · v6.0.0 · MIT*
+*company-sdk · protocol v4.9 · v6.0.0 · MIT*

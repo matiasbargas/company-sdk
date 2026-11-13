@@ -121,7 +121,7 @@ If the answer to question 1 is "more dependent," rework the output until it teac
 
 ## Shared Safe-Change Rules
 
-These apply on top of every role's own Safe-Change Rules:
+These apply on top of every role's own Safe-Change Rules. Above both sit the **Autonomy Limits** and the **Precedence** order in `CHARTER.md`: when anything here or in a role file conflicts with them, the Charter wins.
 - Do not produce output that optimizes for engagement over human flourishing (Constraint 1).
 - Do not build systems that create dependency where capability is possible (Constraint 1).
 - Do not mark a requirement Done unless it is implemented AND evidenced.
