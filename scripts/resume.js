@@ -113,6 +113,15 @@ try {
   console.log('Index:    ⚠ generation failed');
 }
 
+// ─── 3b. Overdue deadlines (protocol.md §2 timing) ────────────────────────
+const overdue = require('./lib/overdue').findOverdue(projectDir);
+if (overdue.length) {
+  console.log(`Overdue:  ⚠ ${overdue.length} DECISION BY date(s) passed — escalate one step (§2)`);
+  for (const o of overdue.slice(0, 5)) console.log(`          - ${o.due}  ${o.file}:${o.line}  ${o.context}`);
+} else {
+  console.log('Overdue:  ✓ no passed DECISION BY dates');
+}
+
 // ─── 4. Next agent ────────────────────────────────────────────────────────
 const nextScript = path.join(__dirname, 'next.js');
 let nextRole = 'Coordinator';

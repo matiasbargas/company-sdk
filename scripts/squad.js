@@ -3,6 +3,9 @@
 /**
  * squad.js — Display squad roster and activation sequence
  *
+ * Rosters, levels, and sequences are parsed from team/squads/<type>.md
+ * (## Role Roster and ## Activation Sequence). Edit the .md, not this file.
+ *
  * Usage:
  *   node scripts/squad.js <squad-type>
  *   node scripts/squad.js list
@@ -11,7 +14,7 @@
  *   website   — Marketing site, landing page, docs site (3–10 days, 5–7 roles)
  *   mvp       — Minimum viable product (1–3 weeks, 8–12 roles)
  *   feature   — Single feature delivery (1–5 days, 3–5 roles)
- *   startup   — Full company bootstrap (3–6 weeks, 16 roles)
+ *   startup   — Full company bootstrap (3–6 weeks, 18+ roles)
  *
  * Example:
  *   node scripts/squad.js website
@@ -21,113 +24,36 @@
 const fs = require('fs');
 const path = require('path');
 
-const SQUADS = {
-  website: {
-    name: 'Website',
-    duration: '3–10 days',
-    description: 'Marketing site, landing page, documentation site, or portfolio.',
-    roles: [
-      { role: 'Coordinator', level: 'M3', required: true, owns: 'Release management, project.md, history.md' },
-      { role: 'PM', level: 'L3/M1', required: true, owns: 'Scope document, page map, acceptance criteria' },
-      { role: 'CTO', level: 'M4', required: true, owns: 'Tech stack, product-engineering-requirements.md' },
-      { role: 'Staff Engineer', level: 'L4', required: true, owns: 'Interface contracts, component standards' },
-      { role: 'EM', level: 'M1', required: true, owns: 'Sprint delivery, cell management' },
-      { role: 'Liaison', level: 'L3', required: true, owns: 'Daily communication, liaison-log.md' },
-      { role: 'CMO', level: 'M3', required: false, owns: 'Positioning, brand voice, copy review' },
-      { role: 'CISO', level: 'M3', required: false, owns: 'Auth requirements, data handling (if user data)' },
-      { role: 'CLO', level: 'M3', required: false, owns: 'Legal review (if regulated content)' },
-    ],
-    sequence: [
-      'Coordinator (brief)',
-      'PM (scope document)',
-      'CTO (tech stack)',
-      'CMO [optional] + CISO [if user data]',
-      'Staff Engineer (contracts)',
-      'EM (sprint plan)',
-      'Liaison (active until ship)',
-    ],
-  },
-  mvp: {
-    name: 'MVP',
-    duration: '1–3 weeks',
-    description: 'Minimum viable product for validating a hypothesis.',
-    roles: [
-      { role: 'Coordinator', level: 'M3', required: true, owns: 'Release management' },
-      { role: 'CEO', level: 'M4', required: true, owns: 'Hypothesis, strategic framing' },
-      { role: 'CLO', level: 'M3', required: true, owns: 'Regulatory blockers (abbreviated)' },
-      { role: 'CISO', level: 'M3', required: true, owns: 'Security non-negotiables (abbreviated)' },
-      { role: 'CFO', level: 'M3', required: true, owns: 'Budget validation (1-scenario)' },
-      { role: 'CTO', level: 'M4', required: true, owns: 'Architecture brief' },
-      { role: 'Mario (Chief Engineer)', level: 'L5', required: true, owns: 'Irreversible decision review' },
-      { role: 'PM', level: 'L3', required: true, owns: 'MVP scope, user stories' },
-      { role: 'Staff Engineer', level: 'L4', required: true, owns: 'Interface contracts' },
-      { role: 'EM', level: 'M1', required: true, owns: 'Sprint delivery' },
-      { role: 'Liaison', level: 'L3', required: true, owns: 'Communication' },
-      { role: 'CMO', level: 'M3', required: false, owns: 'Positioning (if public launch)' },
-    ],
-    sequence: [
-      'Coordinator (brief) + CEO (hypothesis)',
-      'CLO + CISO + CFO (compressed discovery, same day)',
-      'CTO (architecture) → Mario (review)',
-      'PM (MVP scope) + Staff Engineer (contracts)',
-      'EM (sprint plan)',
-      'Liaison (active until ship)',
-    ],
-  },
-  feature: {
-    name: 'Feature',
-    duration: '1–5 days',
-    description: 'Single, well-scoped feature delivery.',
-    roles: [
-      { role: 'PM', level: 'L3', required: true, owns: 'Feature scope, acceptance criteria' },
-      { role: 'EM', level: 'M1', required: true, owns: 'Sprint delivery, task breakdown' },
-      { role: 'Liaison', level: 'L3', required: true, owns: 'Communication, liaison-log.md' },
-      { role: 'Staff Engineer', level: 'L4', required: false, owns: 'Interface contract (if platform touch)' },
-      { role: 'Coordinator', level: 'M3', required: false, owns: 'Decision logging (if consequential decisions made)' },
-    ],
-    sequence: [
-      'PM (feature brief)',
-      'Staff Engineer [if platform touch]',
-      'EM (sprint plan)',
-      'Liaison (active until ship)',
-    ],
-  },
-  startup: {
-    name: 'Startup / Company Bootstrap',
-    duration: '3–6 weeks',
-    description: 'Full company-sdk activation for a new product or company.',
-    roles: [
-      { role: 'Coordinator', level: 'M3', required: true, owns: 'Release management, org memory' },
-      { role: 'CEO', level: 'M4', required: true, owns: 'Company direction, strategic brief' },
-      { role: 'CLO', level: 'M3', required: true, owns: 'Legal, legal-requirements.md' },
-      { role: 'CFO', level: 'M3/M4', required: true, owns: 'Finance, runway, finance-requirements.md' },
-      { role: 'CISO', level: 'M3', required: true, owns: 'Security, threat model' },
-      { role: 'CMO', level: 'M3', required: true, owns: 'Marketing, positioning' },
-      { role: 'CRO', level: 'M3', required: true, owns: 'Revenue, GTM, pricing' },
-      { role: 'CDO', level: 'M3', required: true, owns: 'Data, instrumentation' },
-      { role: 'COO', level: 'M3', required: true, owns: 'Operations, vendors' },
-      { role: 'CHRO', level: 'M3', required: true, owns: 'People, hiring, culture' },
-      { role: 'CTO', level: 'M4', required: true, owns: 'Architecture' },
-      { role: 'Mario (Chief Engineer)', level: 'L5', required: true, owns: 'Quality floor, irreversible decisions' },
-      { role: 'PM', level: 'L3/M1', required: true, owns: 'Scope, user stories' },
-      { role: 'Staff Engineer', level: 'L4', required: true, owns: 'Interface contracts, platform' },
-      { role: 'EM', level: 'M1', required: true, owns: 'Sprint delivery, cells' },
-      { role: 'Liaison', level: 'L3', required: true, owns: 'Communication bridge' },
-    ],
-    sequence: [
-      'Coordinator (brief)',
-      'CEO (strategic frame)',
-      'CLO → CISO → CFO → CMO → CRO → CDO → COO → CHRO (discovery, can parallelize)',
-      '→ Sprint 0 Gate ←',
-      'CTO (architecture)',
-      'Mario (irreversible review)',
-      'PM (scope) + Staff Engineer (contracts)',
-      'EM (sprint plan)',
-      'Liaison (active until ship)',
-      'Coordinator (retro + history.md)',
-    ],
-  },
-};
+const { listSquads } = require('../packages/cli/src/squad-loader');
+
+// Single source of truth: team/squads/*.md (Role Roster + Activation Sequence).
+const SDK_ROOT = path.resolve(__dirname, '..');
+
+function toView(parsed) {
+  const firstSentence = (parsed.purpose.match(/^.*?[.!?](\s|$)/) || [parsed.purpose])[0].trim();
+  return {
+    name: parsed.name,
+    duration: parsed.duration || parsed.size,
+    description: firstSentence || parsed.useWhen,
+    roles: parsed.roles.map(r => ({
+      role: r.role,
+      level: r.level,
+      required: r.required !== false,
+      owns: r.condition ? `${r.owns} (${r.condition})` : r.owns,
+    })),
+    sequence: (parsed.sequence || []).map(p => `${p.phase}: ${p.roles.join(', ')}`),
+  };
+}
+
+function loadAll() {
+  const out = {};
+  for (const s of listSquads({ sdkRoot: SDK_ROOT })) {
+    out[path.basename(s.filePath, '.md')] = toView(s);
+  }
+  return out;
+}
+
+const SQUADS = loadAll();
 
 // ─── Parse args ──────────────────────────────────────────────────────────────
 
@@ -140,11 +66,8 @@ Usage:
   node scripts/squad.js <squad-type>
   node scripts/squad.js list
 
-Squad types:
-  website   Marketing site, landing page, docs site (3–10 days, 5–7 roles)
-  mvp       Minimum viable product (1–3 weeks, 8–12 roles)
-  feature   Single feature delivery (1–5 days, 3–5 roles)
-  startup   Full company bootstrap (3–6 weeks, 16 roles)
+Squad types (from team/squads/*.md):
+${Object.entries(SQUADS).map(([k, q]) => `  ${k.padEnd(9)} ${q.description} (${q.duration}, ${q.roles.length} roles)`).join('\n')}
 `);
   process.exit(0);
 }

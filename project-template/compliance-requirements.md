@@ -3,7 +3,7 @@
 **Last updated:** [YYYY-MM-DD HH:MM]
 **Release:** [RELEASE]
 
-> Gate file. CTO cannot start architecture until both CLO and CISO sections reach "Done" **and** jurisdictions are declared. Run `node scripts/gate-check.js <project-dir>` to verify. This is the most expensive step to skip.
+> Gate file. CTO cannot start architecture until both CLO and CISO sections reach "Done" **and** jurisdictions are declared. Run `sdk-gate-check .` to verify. This is the most expensive step to skip.
 >
 > See `DISCLAIMER.md` — agent outputs in this file are AI-generated analysis prompts, not legal or security certifications. Outside counsel must validate legal findings for your jurisdiction.
 

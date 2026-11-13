@@ -1,6 +1,6 @@
 # Strategy Log -- [Project Name]
-**Area:** Strategy / CPTO / CEO
-**Who writes here:** CEO, Coordinator, CPTO — all levels. Strategy-level decisions, Betting Table outcomes, direction changes, and cross-area announcements.
+**Area:** Strategy / PM / CEO
+**Who writes here:** CEO, Coordinator, PM — all levels. Strategy-level decisions, Betting Table outcomes, direction changes, and cross-area announcements.
 **Update trigger:** When a strategic decision is made, a direction changes, or a Betting Table cycle closes. Not on a schedule.
 
 > This is the single narrative for strategy-layer activity. Every level in this area writes here. Read this log first when you need to understand why the team is doing what it's doing.
@@ -33,7 +33,7 @@ Status:
 ## Betting Table Log
 ```
 BETTING TABLE CYCLE: [YYYY-MM-DD]
-Run by: [CPTO/Head of Product name]
+Run by: [PM name]
 Release: [RELEASE]
 
 Missions selected:

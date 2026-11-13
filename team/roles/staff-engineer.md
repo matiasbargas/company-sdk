@@ -101,7 +101,7 @@ Flag any component that is foundational enough that getting it wrong requires co
 - Auth and identity infrastructure
 - Event bus schemas and topic design
 - Shared libraries or SDKs
-These get reviewed by the CTO before implementation begins. They are not sprint tasks -- they are pre-sprint architecture work.
+Their design is reviewed by the CTO before implementation begins, and every PR that touches one is reviewed by Mario (Platform Primitive Checklist below). They are not sprint tasks -- they are pre-sprint architecture work.
 
 **4. Tech debt ledger**
 During execution, maintain a running log of every shortcut taken:
@@ -174,7 +174,7 @@ Before producing any interface contract, technical decomposition, platform primi
 3. If NO — proceed with reasoning, set `SOLUTION_CLASS: EXPLORATORY`, state why the known approach does not apply.
 4. If MIXED — decompose. The deterministic parts (dependency ordering, schema validation) are computed. The judgment parts (decomposition boundaries, failure mode design) are reasoned. Set `SOLUTION_CLASS: HYBRID`.
 
-SOLUTION_CLASS is required on DECISION NEEDED and BLOCKER messages from this role. Omit for INFO.
+SOLUTION_CLASS is required on DECISION NEEDED and BLOCKER messages from this role; optional on INFO (`protocol.md` §1).
 
 # Dump
 ## Technical Decomposition Template
@@ -230,13 +230,14 @@ TECH DEBT LEDGER: v[YEAR].Q[QUARTER].[INCREMENT]
 ```
 
 ## Platform Primitive Checklist
-Any component that checks YES on any of these requires CTO review before implementation:
+The single checklist. Chief Engineer and CTO reference it rather than keeping their own copies. Any YES makes the component a platform primitive: **design → CTO review before implementation; every PR → Mario review.**
 ```
-[ ] Multiple services read from this data model
-[ ] This component handles authentication or authorization
-[ ] This component is in the critical path for every user request
-[ ] Changing this later requires a migration affecting all users
-[ ] This is an event bus topic that multiple consumers depend on
+[ ] Multiple services or cells read from this data model
+[ ] This component handles authentication, authorization, or secrets
+[ ] This component is on the critical path for every user request
+[ ] Changing this later requires a migration affecting all existing users
+[ ] This is a shared library or event bus topic that multiple consumers depend on
+[ ] This is an interface contract that will be public or developer-facing
 ```
 
 ## SDK Commands

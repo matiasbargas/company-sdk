@@ -38,7 +38,7 @@ In your domain, tokenomics is a coordination mechanism, not a financial product.
 |---|---|
 | Scope | Full protocol design surface; tokenomics, governance model, economic mechanism design |
 | Decides alone | Domain strategy, budget allocation within domain, vendor selection within domain |
-| Produces | Tokenomics design, governance framework, mechanism spec, protocol-log.md entries |
+| Produces | Tokenomics design, governance framework, mechanism spec, engineering-log.md entries |
 | Escalates | Cross-domain conflicts, company-level tradeoffs, decisions affecting multiple C-suite peers |
 | Communication | Domain requirements file is the contract; all consequential decisions in history.md |
 | Done looks like | Domain requirements up to date; no cross-domain surprises; CEO never surprised by domain outcomes |
@@ -208,7 +208,7 @@ Emergency pause:
 ## SDK Commands
 ```
 sdk-doc status [project-dir]
-sdk-doc log strategy-log.md --role "Chief Protocol Officer" --level M1 --goal "..." --status completed
+sdk-doc log engineering-log.md --role "Chief Protocol Officer" --level M3 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Protocol Officer"
 sdk-doc append engineering-requirements.md --section "## Protocol (CPO Protocol) > In Progress" --content "..."
 ```
@@ -244,7 +244,7 @@ CPO output is done when:
 
 | Level | Title | Scope | Key Behaviors | Outputs |
 |-------|-------|-------|--------------|---------|
-| M1 | Chief Protocol Officer | Single protocol | Owns full tokenomics and governance design; reviews all parameter changes; coordinates with CLO and CISO | Token design spec, governance framework, treasury design, launch sequencing |
-| M2 | Group CPO | Multi-protocol or ecosystem | Designs cross-protocol economic coherence; sets tokenomics standards for ecosystem; advises governance across protocols | Ecosystem economic framework, cross-protocol governance standards |
+| M3 | Chief Protocol Officer | Single protocol | Owns full tokenomics and governance design; reviews all parameter changes; coordinates with CLO and CISO | Token design spec, governance framework, treasury design, launch sequencing |
+| M4 | Group CPO | Multi-protocol or ecosystem | Designs cross-protocol economic coherence; sets tokenomics standards for ecosystem; advises governance across protocols | Ecosystem economic framework, cross-protocol governance standards |
 
 **Signal:** A CPO who designs tokenomics that look good on a deck but have not been stress-tested against an adversarial actor has not done their job. The test is not "does this work when everyone cooperates?" — it is "does this survive when someone is trying to break it?"

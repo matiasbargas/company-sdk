@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { parseFrontmatter } = require('../lib/frontmatter');
+const { readLimits } = require('../lib/limits');
 
 /**
  * cmdIteration — Iteration Loop cycles in iterations/ (protocol.md Section 31).
@@ -181,7 +182,8 @@ ${LOOP_EXIT_CRITERIA[o.loop].map(c => `- [ ] ${c}`).join('\n')}
   fs.writeFileSync(destPath, content, 'utf8');
   console.log(`✓  Created iteration: ${path.relative(process.cwd(), destPath)}`);
   console.log(`   Loop: ${o.loop} | Cycle: ${cycle} | Guardian: ${guardian}${o.pod ? ' | Pod: ' + o.pod : ''}`);
-  if (cycle > 3) console.log(`   ⚠  Cycle ${cycle}: past 3 cycles without graduation — Guardian escalates to CEO (protocol.md §31.6).`);
+  const escalateAt = readLimits(projectDir).guardianCyclesBeforeEscalation;
+  if (cycle > escalateAt) console.log(`   ⚠  Cycle ${cycle}: past ${escalateAt} cycles without graduation — Guardian escalates to CEO (protocol.md §31.6).`);
 }
 
 function reviewIteration(projectDir, o, dryRun) {
@@ -206,7 +208,7 @@ function reviewIteration(projectDir, o, dryRun) {
   fs.writeFileSync(iterPath, content, 'utf8');
   console.log(`${o.verdict === 'graduate' ? '✓' : '↻'}  Iteration reviewed: ${path.relative(process.cwd(), iterPath)}`);
   console.log(`   Verdict: ${o.verdict.toUpperCase()}${o.feedback ? ' — ' + o.feedback : ''}`);
-  if (o.verdict === 'iterate' && cycle >= 3) {
+  if (o.verdict === 'iterate' && cycle >= readLimits(projectDir).guardianCyclesBeforeEscalation) {
     console.log(`   ⚠  Cycle ${cycle} did not graduate — Guardian escalates to CEO before cycle ${cycle + 1} (protocol.md §31.6).`);
   }
 }

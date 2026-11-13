@@ -12,10 +12,19 @@ Teams produce drafts that drift from stated principles — Constraints + Soul li
 ## Mechanism — the simplest turn structure
 
 1. **Author** — produces a draft (proposal, plan, mission, memo).
-2. **Critic** — reads against the fixed constitution (Layer A: Constraints + Soul). Emits structured critiques, each citing the principle violated.
-3. **Critic (guardrail turn)** — emits `would-have-wrongly-killed`: names one bold strategy this pass would have rejected and the critique that would have killed it. **Required.**
-4. **Author** — revises ONCE. Not a negotiation. One pass.
-5. **Constitution-as-judge** — convergence: violations resolved, wrongly-killed strategy survives.
+2. **Critic** — reads against the fixed constitution (Layer A: Constraints + Soul). Emits structured critiques, one record each: `{clause_id, quote_from_draft, violation, proposed_fix, severity}`. A record missing `clause_id` or `quote_from_draft` is unsourced and rejected.
+3. **Critic (guardrail turn)** — emits, per §32.3 verbatim: `would-have-wrongly-killed: <name at least one bold property the critique does not damage>`. **Required** — the loop fails closed without it.
+4. **Author** — revises ONCE. Not a negotiation. One pass is the pattern's shape, not a budget: the `Budget:` field is ignored for this pattern; extension = open a new loop.
+5. **Constitution-as-judge** — a fresh-context judge agent, distinct from the critic, spawned by the spawning agent. Rubric: each cited violation → resolved / partially / unresolved; would-have-wrongly-killed property preserved → yes / no. Ship only if every violation is resolved AND preserved = yes.
+
+## Inputs at open
+
+Missing any field = Loop Coordinator refuses to open (Step 0, [`../loop-coordinator.md`](../loop-coordinator.md)):
+- `Pattern: critique-revise` · `Target:` artifact path · `Constitution:` file path or section (Layer A default)
+- `Author:` role · `Critic:` role (different role from author)
+- `Budget:` ignored — one pass by construction · `Terminate when:` judge rubric passes, or spawning-agent early-stop
+- `WEAKNESS_HYPOTHESIS:` one sentence · `Insertion point:` Phase 0 | Architecture | Implementation
+- Output carries `LOOP-PROVENANCE:`. ID `LOOP-YYYYMMDD-critique-revise-<seq>` (§32.5) lives in state.md; folder `record/loops/<YYYY-MM-DD>-critique-revise-<seq>/`.
 
 ## TRIGGER_SHAPE — when to use
 
@@ -26,23 +35,23 @@ Teams produce drafts that drift from stated principles — Constraints + Soul li
 
 ## NON_TRIGGER_SHAPE — when NOT to use
 
-- No draft yet — use Red-Team or Dialectic to generate first.
+- No draft yet — produce one first (Dialectic would generate, but is v0.2, not shipped).
 - Constitution is vague or absent — critique collapses to opinion.
 - Question is exploratory, not artifact review.
-- Stakes require multiple rounds with new evidence — use Iterative Refinement.
+- Stakes require multiple rounds with new evidence — open a fresh loop per round (no Iterative Refinement pattern is shipped).
 - Design craft review (accessibility/WCAG, perceived affordance, form-follows-function, emotional register) — craft standards live outside Layer A; constitutional critique will silently miss them. Source: Designer cross-domain review 2026-06-14.
 - Research synthesis methodology (evidence chain, sample-frame transparency, negative-space discipline, observation-vs-inference) — methodological soundness is not a Layer A clause; the `would-have-wrongly-killed` guardrail is shaped against timidity and will systematically preserve over-confident inferences. Source: UXR cross-domain review 2026-06-14.
 
 ## Convergence contract
 
-The constitution judges: ship when cited violations are resolved AND the wrongly-killed strategy survives recognizably. Artifact: revised draft + critique log + wrongly-killed line. Bypassing the guardrail collapses the loop to presence-not-quality theater — CISO scored that 0/15 in the §32 de-risk test.
+The judge rubric (Mechanism step 5) decides. Artifact: revised draft + critique log + wrongly-killed line. Bypassing the guardrail is presence-not-quality theater (CISO: 0/15, §32 de-risk test).
 
 ## Failure modes + guardrails
 
-- **Presence-not-quality theater** — critiques don't cite principles. *Guardrail:* every critique names a violated clause; unsourced ones rejected.
+- **Presence-not-quality theater** — critiques don't cite principles. *Guardrail:* every critique record carries `clause_id` + `quote_from_draft`; unsourced ones rejected.
 - **Timidity-creep / boldness flattening** — critic prefers safer revisions. *Guardrail:* mandatory `would-have-wrongly-killed` line.
 - **Sycophancy** — critic softens to match author. *Guardrail:* critic spawns from a different role; forbid agreement-without-citation.
-- **Loop drift into negotiation** — author and critic ping-pong. *Guardrail:* ONE pass, hard stop. New issues open a new loop.
+- **Loop drift into negotiation** — author and critic ping-pong. *Guardrail:* ONE pass, hard stop (pattern shape; `Budget:` ignored). New issues open a new loop.
 - **Constitution-as-decoration** — principles quoted but not load-bearing. *Guardrail:* if no critique cites a specific clause, loop is invalid; escalate to Mario.
 
 ## Composition
@@ -57,4 +66,4 @@ Nests inside Dialectic (harden each thesis before synthesis). Chains after Red-T
 
 ## Improvement signal emission
 
-On close, this loop MUST emit an `improvement_signal` per `_IMPROVEMENT_SIGNAL.md` schema. The `friction` line ties to this pattern's most prone failure mode: **presence-not-quality of the `would-have-wrongly-killed` line** — if the guardrail line read as boilerplate, name it here so the next ritual sharpens the constitution or the critic's spawn rule. Explicit `suggested_target: none` is valid; omission fails the convergence contract.
+On close, this loop MUST emit an `improvement_signal` per `_IMPROVEMENT_SIGNAL.md` schema. The `friction` line ties to this pattern's most prone failure mode: **presence-not-quality of the `would-have-wrongly-killed` line** — if the guardrail line read as boilerplate, say so, so the next ritual sharpens the constitution or critic spawn rule. Explicit `suggested_target: none` is valid; omission fails the convergence contract.

@@ -42,6 +42,52 @@ const sdkRoot = path.resolve(__dirname, '../../../');
   assert(roleNames.includes('Designer'), 'startup has Designer role');
 }
 
+// Roster parsing is header-aware: Required column + Layer column, duration, sequence
+{
+  const { readFileSync } = require('fs');
+  const startup = parseSquadFile(readFileSync(path.join(sdkRoot, 'team/squads/startup.md'), 'utf8'), 'startup.md');
+  const by = Object.fromEntries(startup.roles.map(r => [r.role, r]));
+  eq(by['PM'].level, 'L4', 'startup PM level from .md');
+  eq(by['Liaison'].level, 'L4', 'startup Liaison level from .md');
+  eq(by['CEO'].required, true, 'startup CEO required');
+  eq(by['Test Engineer'].required, false, 'startup Test Engineer optional');
+  eq(by['CTO'].layer, 'Execution', 'startup layer column parsed');
+  assert(by['UX Researcher'] && by['Designer'], 'startup has UX Researcher and Designer');
+  eq(startup.duration, '3–6 weeks', 'startup duration parsed');
+  assert(startup.sequence.length >= 4, 'startup sequence has phases');
+
+  const website = parseSquadFile(readFileSync(path.join(sdkRoot, 'team/squads/website.md'), 'utf8'), 'website.md');
+  const w = Object.fromEntries(website.roles.map(r => [r.role, r]));
+  eq(w['CISO'].required, false, 'website CISO conditional');
+  eq(w['CISO'].condition, 'if user data', 'website CISO condition parsed');
+  eq(w['CTO'].owns.includes('engineering-requirements.md'), true, 'website CTO owns column parsed');
+  assert(w['Designer'], 'website has Designer');
+}
+
+// Squad .md files only reference files that exist in project-template/
+{
+  const { readFileSync, readdirSync, existsSync } = require('fs');
+  for (const f of readdirSync(path.join(sdkRoot, 'team/squads'))) {
+    if (!f.endsWith('.md')) continue;
+    const content = readFileSync(path.join(sdkRoot, 'team/squads', f), 'utf8');
+    for (const m of content.matchAll(/`([a-z-]+\.md)`/g)) {
+      const ok = existsSync(path.join(sdkRoot, 'project-template', m[1])) || existsSync(path.join(sdkRoot, m[1]));
+      assert(ok, `${f} references existing ${m[1]}`);
+    }
+  }
+}
+
+// scripts/squad.js reads rosters from the .md files
+{
+  const { execFileSync } = require('child_process');
+  const out = execFileSync('node', [path.join(sdkRoot, 'scripts/squad.js'), 'startup'], { encoding: 'utf8' });
+  assert(/PM\s+\[L4\]/.test(out), 'squad.js shows PM at L4 from startup.md');
+  assert(out.includes('Designer') && out.includes('UX Researcher'), 'squad.js startup shows Designer + UX Researcher');
+  assert(!/legal-requirements|finance-requirements|product-engineering-requirements/.test(out), 'squad.js no stale file refs');
+  const list = execFileSync('node', [path.join(sdkRoot, 'scripts/squad.js'), 'list'], { encoding: 'utf8' });
+  for (const n of ['website', 'mvp', 'feature', 'startup']) assert(list.includes(n), `squad.js list includes ${n}`);
+}
+
 // Parse template (empty roles)
 {
   const { readFileSync } = require('fs');

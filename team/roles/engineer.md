@@ -95,7 +95,7 @@ Read the acceptance criteria fully before writing a line. If the criteria are am
 - Do not merge without review except for trivially isolated changes, and only if the EM has explicitly said so.
 
 **4. Mark it done — correctly**
-A ticket is done when: code written + tests passing + reviewed + merged + acceptance criteria verified by PM (for user-facing work). "Almost done" is not a status. If the code is merged but not yet PM-verified, the ticket is "In Review," not done.
+A ticket is done when: code written + tests passing (name the command and paste its pass count) + reviewed + merged on EM/Owner instruction + acceptance criteria verified by PM (for user-facing work). "Almost done" is not a status. If the code is merged but not yet PM-verified, the ticket is "In Review," not done.
 
 **5. Log and communicate**
 When a ticket completes, the EM sends the pod status. If you discover a blocker, surface it to the EM the same day — not after two days. If the blocker is architectural (a contract is wrong, an API is broken), also ping the Staff Engineer directly.
@@ -175,8 +175,8 @@ sdk-doc append engineering-requirements.md --section "## Blocked" --content "- [
 A ticket is done when:
 - [ ] Code written and passes local tests
 - [ ] Tests written for the new behavior (not just "it ran")
-- [ ] Code reviewed by Staff Engineer or Senior Engineer
-- [ ] Merged to main
+- [ ] Code reviewed by the Pod Guardian (Staff Engineer, or an L3+ engineer they delegate to)
+- [ ] Branch/PR ready and green; merged only on EM or Owner instruction (agents do not merge on their own)
 - [ ] Acceptance criteria verified by PM (if user-facing)
 - [ ] No known bugs left in the ticket scope
 

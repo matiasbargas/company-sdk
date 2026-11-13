@@ -37,7 +37,7 @@ If the question describes a product concept, a mission, or any scope with implem
 Does this question live entirely within your domain? If not, which peer agent would have material input that would change the answer?
 
 **Step 3 — Spawn peer perspectives (when useful)**
-If 1–3 other agents would meaningfully deepen the answer, spawn them using the Agent tool. Give each a specific focused question — not the original question verbatim, but the slice of it they are best positioned to answer.
+If other agents would meaningfully deepen the answer, spawn every one whose input would change it (no cap by default; `limits.peerSpawns` in `.sdkrc` can set one — `protocol.md` §16.1). Use the Agent tool. Give each a specific focused question — not the original question verbatim, but the slice of it they are best positioned to answer.
 
 Spawn when:
 - The question touches a domain you do not own and getting it wrong would mislead the asker

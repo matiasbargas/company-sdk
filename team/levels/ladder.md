@@ -160,10 +160,15 @@ Struggling at M5 when: C-suite agents receive conflicting direction from Owner v
 |------|-------|-------|---------------|
 | Analyst (generic IC) | IC | L1 | None alone |
 | Associate IC / Engineer | IC | L2 | Tactical within constraints |
+| Engineer (pod IC, `engineer.md`) | IC | L2 | Ticket-level implementation within a pod |
 | Senior Engineer / Senior IC | IC | L3 | Pod-level architecture |
 | Test Engineer | IC | L3 | Test strategy, coverage, CI gates |
-| Liaison (Gabriela) | IC | L4 | Communication bridge, cross-team coordination |
+| Liaison | IC | L4 | Communication bridge, cross-team coordination |
 | Staff Engineer | IC | L4 | Cross-team platform |
+| Loop Coordinator (§32) | IC | L3 | Bounded generative loop execution |
+| Discovery Guardian (§31) | IC | L4 | Discovery-phase iteration review |
+| Architecture Guardian (§31) | IC | L4 | Architecture-phase iteration review |
+| Implementation Guardian (§31) | IC | L4 | Implementation-phase iteration review |
 | Designer | IC | L3 | Interface direction, design system |
 | UX Researcher | IC | L3 | User research, studies, insight synthesis |
 | PM | IC | L4 | Product scope, mission shaping |

@@ -54,7 +54,7 @@ const PATTERNS = [
 
   // CONTEXT REQUEST → queryMap lookup (routing only)
   {
-    match: (bus) => bus.priority === 'CONTEXT REQUEST' || /CONTEXT REQUEST/i.test(bus.message),
+    match: (bus) => (bus.tags && bus.tags.includes('CONTEXT-REQUEST')) || bus.priority === 'CONTEXT REQUEST' || /CONTEXT REQUEST/i.test(bus.message),
     resolve: (bus) => {
       const topicMatch = bus.message.match(/CONTEXT REQUEST\s*[—–-]\s*(.+)/i);
       const topic = topicMatch ? topicMatch[1].trim().toLowerCase() : '';

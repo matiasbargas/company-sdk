@@ -6,7 +6,7 @@
 
 A **pattern library** of generative loops — turn structures the team uses when one agent's draft is not enough and a multi-turn structure is required to reach quality. Each pattern is a written contract: what it does, when to fire it, when not to fire it, how it converges, and how it fails.
 
-Patterns are owned by the team, not by any one role. PM, CTO, Coordinator, Designer — any spawning agent picks a pattern from this library. The library is **deliberately small**. Every file is **300–500 words by design**: a loop pattern that cannot be summarized in 500 words is too complex to compose with other patterns, and composition is the point. New patterns ship under §32 versioning and require Mario sign-off — the cost of adding a sixth pattern is the team forgetting when to use the first five.
+Patterns are owned by the team, not by any one role. PM, CTO, Coordinator, Designer — any spawning agent picks a pattern from this library. The library is **deliberately small**. Every pattern file is **≤800 words** (`wc -w`): a loop pattern that cannot be summarized in 800 words is too complex to compose with other patterns, and composition is the point. New patterns ship under §32 versioning and require Mario sign-off — the cost of adding a sixth pattern is the team forgetting when to use the first five.
 
 The patterns are also the **substrate** for `../../../workflows/idea-execution-v0.1.js` and its successors. A workflow run is a sequence of pattern firings. The pattern files here are the canonical contract; the workflow scripts are the executable orchestration.
 
@@ -26,7 +26,9 @@ Per Mario's rule: **pattern selection is a pre-flight checklist, not a vibe call
 
 The pre-flight is logged. The shaped-brief / decision artifact must name which pattern fired and which TRIGGER clause it matched. A loop fired without a logged trigger match is treated as **presence-not-quality theater** and rejected by the convergence contract.
 
-Defaults are sticky: one critique + one revision (Critique-Revise), one pass / one assumption (Red-Team). Overrides require a logged reason — see `../../../workflows/README.md > Defaults baked in`.
+Defaults are sticky: one critique + one revision (Critique-Revise), one pass / one assumption (Red-Team) — these are pattern shapes, not budgets; more passes = a new loop. Patterns with rounds (Dialectic, v0.2) cap at `limits.loopIterations` when set (protocol §16.1). Overrides require a logged reason — see `../../../workflows/README.md > Defaults baked in`.
+
+**Loop IDs and folders.** ID: `LOOP-YYYYMMDD-<pattern>-<seq>` (protocol §32.5), written in `state.md`. Folder: `record/loops/<YYYY-MM-DD>-<pattern>-<seq>/`. Every pattern file's `## Inputs at open` block lists what the Loop Coordinator requires to open.
 
 ## Cross-references
 

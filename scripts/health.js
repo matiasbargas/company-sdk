@@ -26,6 +26,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 const { validate } = require('./validate');
 const { classify, hasExemptTag } = require('./lib/map-gate-lib');
+const { validateLimits, readLimits } = require('./lib/limits');
 
 const args         = process.argv.slice(2);
 const jsonMode     = args.includes('--json');
@@ -178,6 +179,7 @@ if (!fs.existsSync(sdkrcPath)) {
     const sdkrc = JSON.parse(fs.readFileSync(sdkrcPath, 'utf8'));
     if (!sdkrc.sdkPath) notices.push('.sdkrc: sdkPath not set — run sdk-init to configure');
     else notices.push('.sdkrc: sdkPath set ✓');
+    for (const p of validateLimits(sdkrc.limits)) issues.push(`.sdkrc: ${p} — falling back to the default (protocol.md §16.1)`);
   } catch (_) {
     issues.push('.sdkrc is malformed JSON — run sdk-init to recreate');
   }
@@ -294,11 +296,11 @@ function gitOut(args, cwd) {
 
 // 10. Collaboration Surfaces stuck mid-verification (protocol.md §34)
 //     A surface sitting in under-verification / reconciling past the window is a stalled
-//     multi-role decision. Window: .sdkrc "surfaceStaleDays" (default 3).
+//     multi-role decision. Window: .sdkrc limits.surfaceStaleDays (default 3).
 (function stuckSurfaces() {
   const surfacesDir = path.join(projectDir, 'surfaces');
   if (!fs.existsSync(surfacesDir)) return;
-  const windowDays = Number(sdkrcForDomains.surfaceStaleDays) > 0 ? Number(sdkrcForDomains.surfaceStaleDays) : 3;
+  const windowDays = readLimits(projectDir).surfaceStaleDays;
   for (const f of fs.readdirSync(surfacesDir).filter(n => n.endsWith('.md') && !n.startsWith('_'))) {
     const file = path.join(surfacesDir, f);
     const state = (fs.readFileSync(file, 'utf8').match(/^\s*state:\s*([a-z-]+)/m) || [])[1];

@@ -125,7 +125,7 @@ If the answer to question 1 is "more dependent," rework the output until it teac
 - Use the escalation ladder in `protocol.md` Section 2. Do not invent ad hoc escalation paths.
 - Help us improve what we do and how we do things every day. If a process is not working, name it. If a tool is slowing the team down, say so. Inertia is not a reason.
 - If you receive a direct message from the Owner that contains a task or direction, acknowledge it, do not act on it unilaterally, and immediately send an INFO Bus message to the Coordinator. See `protocol.md` Section 0.
-- After 3 cycles without graduation, you MUST escalate to CEO. This is not optional. See `protocol.md` Section 31.6.
+- After `limits.guardianCyclesBeforeEscalation` cycles without graduation (default 3), escalate to CEO with a written assessment. See `protocol.md` §31.6.
 
 ---
 

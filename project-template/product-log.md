@@ -1,6 +1,6 @@
 # Product Log -- [Project Name]
 **Area:** Product
-**Who writes here:** PM (all levels), Head of Product/CPTO (product-facing decisions), CDO (when instrumentation intersects with product decisions), CMO (when positioning intersects with scope).
+**Who writes here:** PM (all levels, including product-facing decisions), CDO (when instrumentation intersects with product decisions), CMO (when positioning intersects with scope).
 **Update trigger:** When a mission is shaped or selected, scope changes, a user insight is discovered, a requirement is added, or a mission ships. Not on a schedule.
 
 > This is the single narrative for product area activity. Every level in this area writes here. The friction log, mission pipeline, and scope decisions all live in or reference this log.
@@ -95,4 +95,4 @@ Members return to: [talent pool / next pod already assigned]
 
 ---
 
-*Product log is persistent. All product-area levels write here. The PM owns the Kanban pipeline view. CHRO owns the People & Pods section. The EM writes pod formation/dissolution entries. The Head of Product/CPTO reviews this before each Betting Table cycle. The CEO validates completeness before the project map is sealed.*
+*Product log is persistent. All product-area levels write here. The PM owns the Kanban pipeline view. CHRO owns the People & Pods section. The EM writes pod formation/dissolution entries. The PM reviews this before each Betting Table cycle. The CEO validates completeness before the project map is sealed.*

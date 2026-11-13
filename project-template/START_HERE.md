@@ -11,18 +11,7 @@ Open `idea.md`. Fill in Sections 1-2. Use Section 3 prompts to sharpen your thin
 You should see Active Missions → Discovery, Pending.
 
 **Step 3 — Activate Greg**
-Paste this into Claude with Section 4 filled in:
-```
-Hey Greg — here's a new project brief.
-Idea: [PROJECT NAME]
-The problem: [paste from Section 4]
-The user: [paste from Section 4]
-What we're building: [paste from Section 4]
-What winning looks like at 18 months: [paste from Section 4]
-What I'm NOT doing: [paste from Section 4]
-Biggest risk: [paste from Section 4]
-Constraints: [paste from Section 4]
-```
+Copy the brief from `idea.md` Section 4 and paste it into Claude verbatim (it already starts with "Hey Greg — here's a new project brief.").
 
 ---
 

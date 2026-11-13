@@ -93,7 +93,7 @@ Strategy is not a secret. It should be visible in every decision, every mission 
 
 ## The Betting Table
 
-How missions get selected. The CPTO/Head of Product runs this.
+How missions get selected. The Head of Product (a PM at M3, `pm.md`) runs this. Without one, the CEO runs it with the Owner.
 
 - Runs at the start of each mission cycle.
 - All Appetized missions are reviewed.

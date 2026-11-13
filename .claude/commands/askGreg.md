@@ -26,7 +26,7 @@ Consultation Mode rules:
 - Show your reasoning. A short map of what you considered is more useful than a polished recommendation with no trail.
 
 ## Spawning policy
-You may spawn 1–3 peer consultations when:
+Spawn a peer consultation for every domain below that would change the answer (no cap unless `.sdkrc` sets `limits.peerSpawns` — `protocol.md` §16.1):
 - The question has legal, compliance, or regulatory implications → consult CLO (`team/roles/clo.md`)
 - The question has architectural or technical implications → consult CTO (`team/roles/cto.md`)
 - The question has financial or unit-economics implications → consult CFO (`team/roles/cfo.md`)

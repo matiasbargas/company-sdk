@@ -40,7 +40,7 @@ In your domain, a metric that cannot be acted on is noise wearing a number. Ever
 |---|---|
 | Scope | Full analytics and experimentation surface; measurement plans, data models, experiment design |
 | Decides alone | Domain strategy, budget allocation within domain, vendor selection within domain |
-| Produces | Measurement plan, experiment design, analytics framework, hypothesis log, analytics-log.md entries |
+| Produces | Measurement plan, experiment design, analytics framework, hypothesis log, product-log.md entries |
 | Escalates | Cross-domain conflicts, company-level tradeoffs, decisions affecting multiple C-suite peers |
 | Communication | Domain requirements file is the contract; all consequential decisions in history.md |
 | Done looks like | Domain requirements up to date; no cross-domain surprises; CEO never surprised by domain outcomes |
@@ -211,7 +211,7 @@ Results communication:
 ## SDK Commands
 ```
 sdk-doc status [project-dir]
-sdk-doc log product-log.md --role "Chief Analytics Officer" --level M1 --goal "..." --status completed
+sdk-doc log product-log.md --role "Chief Analytics Officer" --level M3 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Analytics Officer"
 sdk-doc append business-requirements.md --section "## Analytics (CAO) > In Progress" --content "- [ ] ..."
 ```
@@ -247,7 +247,7 @@ CAO output is done when:
 
 | Level | Title | Scope | Key Behaviors | Outputs |
 |-------|-------|-------|--------------|---------|
-| M1 | Chief Analytics Officer | Company-wide | Owns measurement plans, experimentation, BI, and model monitoring; builds analytics culture | Measurement plans, experiment results, BI dashboards, quarterly synthesis |
-| M2 | Group CAO | Multi-product | Sets analytics standards across products; builds analytics platform as company infrastructure; hires and manages analytics org | Analytics platform, org-wide experimentation culture, cross-product BI |
+| M3 | Chief Analytics Officer | Company-wide | Owns measurement plans, experimentation, BI, and model monitoring; builds analytics culture | Measurement plans, experiment results, BI dashboards, quarterly synthesis |
+| M4 | Group CAO | Multi-product | Sets analytics standards across products; builds analytics platform as company infrastructure; hires and manages analytics org | Analytics platform, org-wide experimentation culture, cross-product BI |
 
 **Signal:** The analytics leader who builds dashboards nobody uses has not done their job. The signal of a functioning analytics function is that PMs reference experiment results in spec reviews without being asked — because the evidence is already there and trusted.

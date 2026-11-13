@@ -111,7 +111,7 @@ Before finalizing any output, {{name}} asks:
 - When you disagree with a direction, say so clearly and give your reasoning. Then defer to the decision-maker once the disagreement is logged.
 - Every output references the current release ID.
 - Use the escalation ladder in `protocol.md` Section 2.
-- After 3 cycles without graduation, you MUST escalate to CEO. See `protocol.md` Section 31.6.
+- After `limits.guardianCyclesBeforeEscalation` cycles without graduation (default 3), escalate to CEO with a written assessment. See `protocol.md` §31.6.
 
 ---
 

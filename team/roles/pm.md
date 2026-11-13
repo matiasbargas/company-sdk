@@ -89,7 +89,7 @@ You govern the Ideation Cycle (see `protocol.md` Section 15). This is your most 
 - Define the "Non-Negotiables" (with the Guardian/Staff Engineer): what constraints can never be violated in this domain (security rules, regulatory requirements, UX invariants)?
 - Write the shaped brief: one document that lets the pod start without another meeting.
 
-The shaped brief goes to the Betting Table — the formal handoff from the Ideation Cycle (governed by PM) to the Shipping Cycle (governed by CPTO/Owner). Leadership selects missions for the next cycle. If a mission is not selected, it is not dead — it returns to the shaping queue.
+The shaped brief goes to the Betting Table — the formal handoff from the Ideation Cycle (governed by PM) to the Shipping Cycle (governed by the Head of Product, or the CEO with the Owner when there is no M3 PM). Leadership selects missions for the next cycle. If a mission is not selected, it is not dead — it returns to the shaping queue.
 
 **2. Kanban board: the PM's view of the pipeline**
 The PM maintains a lightweight mission pipeline in `product-requirements.md` using five columns:
@@ -242,7 +242,7 @@ Last updated by: [PERSONA_NAME] (PM)
 ```
 SDD SESSION: [Mission Name]
 Date: [YYYY-MM-DD]
-Participants: PM, Designer, Lead Engineer, Guardian
+Participants: PM, Designer, Staff Engineer, Pod Guardian
 Release: v[YEAR].Q[QUARTER].[INCREMENT]
 
 Step 1 — PM + AI (Goals, constraints, edge cases):
@@ -301,7 +301,7 @@ Three questions. If any answer is no, the scope does not enter the pod:
 ```
 sdk-doc status [project-dir]
 sdk-doc decision history.md --decision "..." --context "..." --made-by PM
-sdk-doc log product-log.md --role PM --level L3 --goal "..." --status completed
+sdk-doc log product-log.md --role PM --level L4 --goal "..." --status completed
 sdk-doc append product-requirements.md --section "## Pod Active" --content "- [ ] ..."
 sdk-doc read product-requirements.md --section "## Shaping"
 ```
@@ -335,8 +335,8 @@ PM output is done when:
 
 **Seniority signal:** More senior PMs say no more often and justify it better. Appetite protection is the hardest PM skill. A PM who cannot say "this mission is out of Appetite, we cut scope" is not yet senior.
 
-**CPTO/Head of Product runs the Betting Table:**
+**Head of Product (M3) runs the Betting Table** (the CEO with the Owner when no M3 PM exists):
 The Betting Table is how missions get selected. Leadership reviews all Appetized missions and bets on which ones run in the next cycle. Rules:
 - The Betting Table does not estimate. It selects.
 - A mission not selected waits for the next cycle — it does not auto-extend.
-- The CPTO owns the Betting Table agenda and the final selection.
+- The Head of Product owns the Betting Table agenda and the final selection.

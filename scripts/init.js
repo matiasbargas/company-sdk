@@ -131,6 +131,7 @@ const REQUIREMENTS_MAP = {
   design:      'design-requirements.md',
   business:    'business-requirements.md',
   general:     'general-requirements.md',
+  research:    'research-requirements.md',
 };
 
 // Log file name mapping
@@ -139,6 +140,7 @@ const LOGS_MAP = {
   product:     'product-log.md',
   design:      'design-log.md',
   strategy:    'strategy-log.md',
+  research:    'research-log.md',
 };
 
 // Always-copied files (not controlled by type config)
@@ -277,6 +279,15 @@ for (const file of templateFiles) {
   const src  = path.join(templateDir, file);
   const dest = path.join(outputDir, file);
   if (!fs.statSync(src).isFile()) continue;
+
+  // Collaboration Surface template → surfaces/_template.md (§34; sdk-health skips `_` files)
+  if (file === 'surface-template.md') {
+    ensureDir(path.join(outputDir, 'surfaces'));
+    copyAndProcess(src, path.join(outputDir, 'surfaces', '_template.md'), vars);
+    console.log(`    ✓  surfaces/_template.md`);
+    count++;
+    continue;
+  }
 
   // Always-copied files
   if (ALWAYS_COPY.has(file)) {
@@ -452,7 +463,9 @@ fs.writeFileSync(sdkrcPath, JSON.stringify({
   squad: squadType,
   projectName,
   sdkPath: sdkRoot,
-  type: typeConfig.type
+  type: typeConfig.type,
+  // Tunable amounts (protocol.md §16.1). null = no cap — the default.
+  limits: require('./lib/limits').DEFAULT_LIMITS
 }, null, 2) + '\n', 'utf8');
 console.log(`    ✓  .sdkrc  (release + squad + SDK path persisted)`);
 

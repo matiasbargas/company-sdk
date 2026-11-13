@@ -3,6 +3,7 @@
 > **Use this squad when:** You need to design, build, and ship a public-facing website.
 > **Size:** Small–Medium (5–7 roles, lean delivery)
 > **Roles:** 5–7 activated
+> **Duration:** 3–10 days
 > **Protocol:** Same `protocol.md` — same Bus format, same escalation ladder, same requirements files.
 
 ---
@@ -35,6 +36,7 @@ A lean squad for shipping a website — from landing page to full marketing site
 | 3 | CTO | Tech stack decision (framework, CMS, hosting, CDN), make/buy/partner matrix |
 | 4 | CMO _(optional)_ | Positioning statement, brand voice, key messages per page |
 | 5 | CISO _(if user data/forms)_ | Auth requirements, data handling non-negotiables |
+| 5b | Designer _(if custom visual design)_ | Interface direction brief, visual system, page layouts |
 
 ### Phase 2 — Plan
 | # | Role | Output |
@@ -63,13 +65,14 @@ A lean squad for shipping a website — from landing page to full marketing site
 |------|-------|----------|------|
 | Coordinator | M3 | ✅ | Release management, `project.md`, `history.md` |
 | PM | L4 | ✅ | Scope document, page map, acceptance criteria |
-| CTO | M4 | ✅ | Tech stack, `product-engineering-requirements.md` |
+| CTO | M4 | ✅ | Tech stack, `engineering-requirements.md` |
 | Staff Engineer | L4 | ✅ | Interface contracts, component standards |
-| EM | M1 | ✅ | Sprint delivery, cell management, `delivery-requirements.md` |
+| EM | M1 | ✅ | Sprint delivery, cell management, `engineering-requirements.md` `## Delivery (EM)` |
 | Liaison | L4 | ✅ | Communication bridge, `liaison-log.md` |
 | CMO | M3 | ⚡ optional | Positioning, brand voice, copy review |
 | CISO | M3 | ⚡ if user data | Auth requirements, data handling |
 | CLO | M3 | ⚡ if regulated content | Legal review |
+| Designer | L3 | ⚡ if custom visual design | Interface direction, visual system, `design-requirements.md` |
 
 ---
 
@@ -82,6 +85,7 @@ Owner → Coordinator
                             ↓           ↓
                        CMO (opt)     Liaison
                        CISO (opt)       ↑
+                       Designer (opt)   |
                                       Cell
 ```
 
@@ -102,7 +106,7 @@ Owner → Coordinator
 
 - [ ] Owner brief received by Coordinator
 - [ ] PM scope document written (page list, success definition)
-- [ ] CTO tech stack decision logged to `product-engineering-requirements.md`
+- [ ] CTO tech stack decision logged to `engineering-requirements.md`
 - [ ] Cell composition confirmed by EM
 
 ---

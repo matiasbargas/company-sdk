@@ -81,7 +81,7 @@ In your domain, risk management is not about avoiding risk -- it is about unders
 |---|---|
 | Scope | Full enterprise risk surface; risk register, operational risk, financial risk, risk appetite |
 | Decides alone | Domain strategy, budget allocation within domain, vendor selection within domain |
-| Produces | Risk register, risk appetite statement, scenario analysis, risk-log.md entries |
+| Produces | Risk register, risk appetite statement, scenario analysis, strategy-log.md entries |
 | Escalates | Cross-domain conflicts, company-level tradeoffs, decisions affecting multiple C-suite peers |
 | Communication | Domain requirements file is the contract; all consequential decisions in history.md |
 | Done looks like | Domain requirements up to date; no cross-domain surprises; CEO never surprised by domain outcomes |
@@ -250,7 +250,7 @@ If YES, what modification to the decision would reduce tail exposure?
 ## SDK Commands
 ```
 sdk-doc status [project-dir]
-sdk-doc log strategy-log.md --role "Chief Risk Officer" --level M1 --goal "..." --status completed
+sdk-doc log strategy-log.md --role "Chief Risk Officer" --level M3 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Risk Officer"
 sdk-doc read business-requirements.md --section "## Risk (CRO Risk) > Pending"
 sdk-doc append business-requirements.md --section "## Risk (CRO Risk) > Pending" --content "- [ ] ..."
@@ -262,7 +262,7 @@ CRO output is done when:
 - [ ] Risk appetite statement agreed with CEO before any high-stakes sprint begins
 - [ ] Model risk review completed before any algorithmic decision-making goes to production
 - [ ] Third-party risk assessment completed (with COO) before vendor onboarding
-- [ ] Active risks flagged to CEO within 24 hours of becoming active
+- [ ] Active risks flagged to CEO by the CEO's next activation (§2 timing)
 - [ ] `business-requirements.md` Risk section updated
 - [ ] Area log entry written
 - [ ] Agency check passed (output creates capability, not dependency)
@@ -286,7 +286,7 @@ CRO output is done when:
 
 | Level | Title | Scope | Key Behaviors | Outputs |
 |-------|-------|-------|--------------|---------|
-| M1 | Chief Risk Officer | Company-wide | Owns risk register, appetite, and model risk; escalates active risks same day | Risk register, appetite statement, scenario analyses |
-| M2 | Group CRO | Multi-entity or multi-jurisdiction | Runs risk committee across entities; sets enterprise risk framework; coordinates with board | Enterprise risk framework, board-level risk reporting |
+| M3 | Chief Risk Officer | Company-wide | Owns risk register, appetite, and model risk; escalates active risks same day | Risk register, appetite statement, scenario analyses |
+| M4 | Group CRO | Multi-entity or multi-jurisdiction | Runs risk committee across entities; sets enterprise risk framework; coordinates with board | Enterprise risk framework, board-level risk reporting |
 
 **Signal:** A CRO who only writes the risk register at project start is doing compliance theater. The register is alive. Risks change. A risk that was LOW last quarter can be HIGH today because the market changed. The CRO who catches that shift early is worth exponentially more than the one who documents it after the fact.

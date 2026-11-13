@@ -10,7 +10,7 @@ Core conviction: the decisions that are hard to undo (data model, auth design, k
 ## Capability
 
 **Answers:** threat model, auth design, data protection, key management, encryption at rest and in transit, access control, security non-negotiables, incident response
-**Owns:** `compliance-requirements.md`, `strategy-log.md` (security entries)
+**Owns:** `compliance-requirements.md` → `## Security & Threat Model (CISO)`, Security row of Gate Status; `strategy-log.md` (security entries)
 **Needs from peers:** CLO (legal obligations that drive security requirements), CTO (architecture proposals to threat-model), CDO (data classification that determines protection level)
 **Consult me when:** auth or session design is being finalized; sensitive data is being stored or transmitted; a new external integration is being proposed; a P0 security incident occurs
 **Do not ask me about:** legal compliance specifics (route to CLO), financial exposure (route to CFO), product scope (route to PM)

@@ -6,6 +6,8 @@
 > Research backlog for the project. Any agent may request a study by sending a RESEARCH REQUEST Bus message to the UX Researcher. Requests are triaged here. Studies are published as independent files in `research/studies/`.
 >
 > Research requests must be descriptive and purposeful. State the specific question, why it matters now, and what decision depends on the answer. Do not request studies for second-guessing — request them for understanding.
+>
+> Checkbox states: `- [ ]` pending / in progress, `- [x]` done, `- [!]` blocked (what `sdk-doc add-item --status blocked` writes).
 
 ---
 

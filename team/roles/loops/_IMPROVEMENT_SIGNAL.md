@@ -14,7 +14,7 @@ The Owner directive is that improvement is continuous through loops AND rituals 
 improvement_signal:
   friction: "<one sentence — what was hard, what guardrail would have helped, or what part of the constitution was unclear>"
   suggested_target: loop-pattern | layer-A | workflow | protocol | none
-  evidence_link: "<optional: path to artifact, e.g. loops/2026-06-14-mission-revise/state.md>"
+  evidence_link: "<optional: path to artifact, e.g. record/loops/2026-06-14-critique-revise-001/state.md>"
 ```
 
 `friction` and `suggested_target` are **required**. `evidence_link` is optional but recommended when the artifact path is non-obvious.
@@ -23,12 +23,20 @@ improvement_signal:
 
 Two writes, both atomic with loop close:
 
-1. **Per-loop:** appended to `loops/<id>/state.md` under a `## improvement_signal` heading.
-2. **Stream:** appended as one JSONL line to `metrics/_signals.jsonl`. This file is **append-only, never edited.** Rituals read the tail; corrections ship as new lines, not rewrites.
+1. **Per-loop:** appended to `record/loops/<YYYY-MM-DD>-<pattern>-<seq>/state.md` under a `## improvement_signal` heading. (Loop ID `LOOP-YYYYMMDD-<pattern>-<seq>` per protocol §32.5 lives inside state.md; the folder uses the dated form.)
+2. **Stream:** appended as one JSONL line to `record/metrics/_signals.jsonl` by `workflows/retrospective.js` (cadence=loop). This file is **append-only, never edited.** Rituals read the tail; corrections ship as new lines, not rewrites.
+
+Line schema (exactly what `retrospective.js` writes):
+
+```json
+{"ts":"YYYY-MM-DD","loop_id":"<id>","friction":"...","suggested_target":"...","evidence_link":"..."}
+```
+
+`ts` and `loop_id` are **required** on every line (`ts` = close date; `loop_id` = the value passed to the workflow — today it doubles as the folder name under `record/loops/` unless `state_path` is passed). `friction` and `suggested_target` are required as above; `evidence_link` may be empty.
 
 ## Schema enforcement
 
-Empty or omitted signals are rejected by the same schema mechanism that rejects missing `would-have-wrongly-killed`. `suggested_target: none` is valid — some loops genuinely produce no signal, and forcing a fabricated target degrades the stream more than admitting silence does. But `none` must be **explicit**, not omitted. A missing field fails the loop's convergence contract; an explicit `none` passes.
+Enforcement is the extraction step in `workflows/retrospective.js` (cadence=loop): it returns `verdict: missing | malformed` and does not append when the field is absent. Honest gap: that step is an LLM instruction, not a deterministic validator — nothing machine-checks `state.md` or `_signals.jsonl` lines yet (the Loop Coordinator's fail-closed check covers guardrail lines only). `suggested_target: none` is valid — some loops genuinely produce no signal, and forcing a fabricated target degrades the stream more than admitting silence does. But `none` must be **explicit**, not omitted. A missing field fails the loop's convergence contract; an explicit `none` passes.
 
 ## What this is NOT
 

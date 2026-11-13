@@ -15,6 +15,8 @@
 |---|---|---|---|---|
 | [Mission name] | [PM name] | [N weeks] | Active / Blocked / Paused | [Specific next step with owner] |
 
+> Status maps onto the 4-state model (Pending / In Progress / Done / Blocked): **Active** = In Progress; **Paused** = Blocked with a reason (state the reason in Next action). Use Pending before work starts.
+
 ---
 
 ## Waiting On

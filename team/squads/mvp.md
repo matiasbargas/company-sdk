@@ -3,6 +3,7 @@
 > **Use this squad when:** You need to ship a minimum viable product without full org activation.
 > **Size:** Medium (8–12 roles, compressed discovery)
 > **Roles:** 8–12 activated
+> **Duration:** 1–3 weeks
 > **Protocol:** Same `protocol.md` — same Bus format, same escalation ladder, same requirements files.
 
 ---
@@ -46,6 +47,7 @@ A compressed version of the Startup squad. Runs abbreviated discovery (CEO + CIS
 | 9 | PM | User story map (MVP scope only; ruthless prioritization) |
 | 10 | Staff Engineer | Interface contracts for MVP scope only |
 | 11 | EM | Cell composition, sprint plan |
+| 11b | Test Engineer _(optional)_ | Test strategy, CI gates for MVP scope |
 
 ### Phase 3 — Execution
 | # | Role | Output |
@@ -77,6 +79,7 @@ A compressed version of the Startup squad. Runs abbreviated discovery (CEO + CIS
 | EM | M1 | ✅ | Sprint delivery |
 | Liaison | L4 | ✅ | Communication |
 | CMO | M3 | ⚡ if public launch | Positioning |
+| Test Engineer | L3 | ⚡ optional | Test strategy, coverage, CI gates |
 
 ---
 
@@ -93,6 +96,22 @@ These domain specialists are NOT activated in MVP mode. Activate them when the M
 
 ---
 
+## Dependency Graph
+
+```
+Owner → Coordinator + CEO
+           ↓
+   CLO + CISO + CFO (compressed discovery, same day)
+           ↓
+          CTO → Mario
+           ↓
+   PM + Staff Engineer → EM → Cell (+ Test Engineer opt)
+                          ↓
+                       Liaison
+```
+
+---
+
 ## Success Criteria
 
 - [ ] MVP ships within timeline
@@ -101,6 +120,15 @@ These domain specialists are NOT activated in MVP mode. Activate them when the M
 - [ ] Regulatory blockers (CLO) cleared
 - [ ] At least 10 users have tried the MVP
 - [ ] `history.md` entry written
+
+---
+
+## Gate: Ready to Start
+
+- [ ] Owner brief received by Coordinator
+- [ ] CEO hypothesis and MVP boundary written
+- [ ] CLO regulatory blockers and CISO non-negotiables documented
+- [ ] CTO architecture brief reviewed by Mario
 
 ---
 

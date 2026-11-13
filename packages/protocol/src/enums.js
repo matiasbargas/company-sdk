@@ -43,6 +43,10 @@ const TAGS = Object.freeze({
   RATCHET_CANDIDATE: 'RATCHET-CANDIDATE',
   SDK_CHANGE: 'SDK-CHANGE',
   CONSULTATION: 'CONSULTATION',
+  CONTEXT_REQUEST: 'CONTEXT-REQUEST',
+  ITERATION_REVIEW: 'ITERATION-REVIEW',
+  ITERATION_GRADUATED: 'ITERATION-GRADUATED',
+  LOOP_OPEN: 'LOOP-OPEN',
 });
 
 const KILL_CLASS = Object.freeze({
@@ -61,6 +65,7 @@ const SOLUTION_CLASS_REQUIRED_ROLES = Object.freeze([
 const TAG_PRIORITY_RULES = Object.freeze({
   'FRAMING-CHALLENGE': { forbidden: ['INFO'] },
   'RATCHET-CANDIDATE': { required: ['INFO'] },
+  'CONTEXT-REQUEST': { required: ['INFO'] },
 });
 
 const RELEASE_ID_RE = /^v\d{4}\.Q[1-4]\.\d+$/;

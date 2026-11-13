@@ -1,5 +1,5 @@
 # Protocol -- Shared Interface Contract
-**Version:** 4.7
+**Version:** 4.8
 **Retired section numbers (never reuse):** old §32 Risk Tiers (removed f4c51d0; its number was reused by Generative Loops before this rule existed).
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
@@ -35,7 +35,7 @@ FROM: [Agent name] ([Role])
 TO: [Target agent] | ALL
 RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
 PRIORITY: INFO | DECISION NEEDED | BLOCKER
-SOLUTION_CLASS: KNOWN | EXPLORATORY | HYBRID  (required for CTO, Mario, EM, Staff Eng, Coordinator)
+SOLUTION_CLASS: KNOWN | EXPLORATORY | HYBRID  (required on DECISION NEEDED and BLOCKER from CTO, Mario, EM, Staff Eng, Coordinator; optional on INFO)
 TAG: [optional — semantic metadata, see defined tags below. Multiple tags comma-separated.]
 MESSAGE:
   [Body -- plain text, no headers inside the message for INFO.
@@ -50,7 +50,7 @@ ESCALATION: [Role that gets this if no response by deadline] (required for DECIS
 - `DECISION NEEDED`: Work will be blocked within N days without a specific decision. The decision must be stated as a question with options.
 - `BLOCKER`: Work has stopped now. Immediate escalation within 4 hours if not resolved.
 
-**SOLUTION_CLASS — required on all output-bearing messages from CTO, Mario, EM, Staff Engineer, and Coordinator:**
+**SOLUTION_CLASS — required on DECISION NEEDED and BLOCKER messages from CTO, Mario, EM, Staff Engineer, and Coordinator (optional on INFO; enforced by `packages/protocol` bus-schema):**
 
 ```
 SOLUTION_CLASS: KNOWN | EXPLORATORY | HYBRID
@@ -150,7 +150,7 @@ One path. No exceptions. Every agent uses this ladder. Do not invent ad hoc esca
 ```
 Step 1: Direct to the owning agent (the person whose domain this falls in)
          ↓ if no response in 24 hours
-Step 2: Coordinator (Nova or equivalent)
+Step 2: Coordinator
          ↓ if no resolution in 48 hours
 Step 3: Relevant C-suite agent (CEO for strategy, CTO for architecture, CLO for legal, etc.)
          ↓ if C-suite cannot resolve without Owner input
@@ -177,6 +177,19 @@ P0 protocol:
 4. Standard escalation ladder runs in parallel — P0 does not replace it, it runs ahead of it
 
 A P0 that sits at Step 1 for 4 hours while waiting for the owning agent to respond is not a P0 being handled — it is a P0 being buried. CISO owns the call on what constitutes a P0.
+
+### Timing for session-bound agents
+
+Agents do not experience time passing between sessions, so every hour-based deadline in this protocol and in role files means an **event**, not a clock reading:
+
+| Written as | Means |
+|---|---|
+| "1 hour" / "immediately" | In the same turn. Do not end the turn holding it. |
+| "4 hours" | Before the current session ends. |
+| "24 hours" | At the next activation of the target agent. That session opens with the item, ahead of anything else. |
+| "48 hours" | Two activations with no resolution, or one full Bus round-trip with no reply. |
+
+Each escalation carries a `DECISION BY:` date, and `sdk-status` / `sdk-resume` surface overdue ones at session start, so the event model still gets a calendar backstop. **External legal clocks stay wall-clock** (e.g. the GDPR 72-hour window): they run in the real world whether or not an agent is active, so the CLO converts them to a date the moment they start.
 
 ---
 
@@ -299,24 +312,35 @@ In regulated contexts and for all decisions affecting natural persons, the minim
 
 ## 7. Context Loading Protocol
 
-When an agent is activated mid-project (not at project start), they must load context before producing any output.
+The one load order. Role files, `AGENTS.md`, and `SDK.md` point here and do not restate it.
 
-**Mandatory reads before first output:**
-1. `project.md` -- the full conversation record and release plan
-2. `history.md` -- what was decided, when, and why
-3. `[own-domain]-requirements.md` -- the current state of their domain's tasks
-4. `general-requirements.md` -- the aggregate view of all domains
-5. `protocol.md` -- this file (if the agent has not read it before)
+**1. Preferred:** `sdk-doc cockpit . --role <role>`. One command returns state, domains, context gaps, ops, and Bus activity for that role.
 
-**Mandatory reads for specific roles:**
-- CTO: also reads the architecture brief or discovery document
-- Chief Engineer (Mario): also reads the CTO's architecture brief, all active interface contracts, and the tech debt ledger
-- EM: also reads the current sprint's open tickets and the critical path
-- Liaison: also reads the liaison log from the current sprint
-- PM: also reads the user story map and friction log
-- Staff Engineer: also reads all interface contracts and the tech debt ledger
+**2. Fallback, when cockpit is unavailable**, in this order:
+1. `context-index.json` — file map, domain routing, `queryMap`, project domains. Use it to decide what else to load.
+2. `context-manifest.json` if present, otherwise `current-status.md` — where the team is right now.
+3. Your role file `team/roles/<role>.md`.
+4. **QueryMap lookup.** Find your activation topic in `context-index.json → queryMap` and load only the files in its `read` array.
+5. Your own `<domain>-requirements.md`, if the queryMap did not already include it.
+6. `domains/<name>/summary.md`, only if your task touches a project domain.
+7. Protocol: `protocol-core.md` (§0–13). Load later sections from `protocol-reference.md` only by number, when the topic needs them.
 
-An agent who produces output without reading their context files is working with stale assumptions. Stale assumptions cause rework.
+**Do not load by default:** `history.md` (query it with `sdk-doc history . --search <term>`), `project.md`, `general-requirements.md`, `bus-log.md`, area logs, `iterations/`, or the full `protocol.md`. Load them only when the queryMap routes you there or the task needs decision history.
+
+**Full-context exceptions:** the Coordinator at session open and close, and the CEO for gate reviews and strategic review.
+
+**Role-specific additions** (on top of the order above):
+- CTO: the architecture brief or discovery document
+- Chief Engineer (Mario): the CTO's architecture brief, all active interface contracts, the tech debt ledger
+- EM: current sprint tickets, critical path, mission pod map
+- Liaison: `liaison-log.md`
+- PM: user story map, friction log
+- Staff Engineer: all interface contracts, the tech debt ledger
+- Guardians: the active `iterations/<loop>/` files
+
+**BU leads** (CTO, PM, CLO, CFO, CMO, CDO, COO), on the first activation of a session, run the §17 self-discovery scan before sending any Bus message.
+
+If a file does not exist yet (you are the first agent activated), note it and proceed. An agent who produces output without loading context is working on stale assumptions, and stale assumptions cause rework.
 
 ---
 
@@ -364,6 +388,8 @@ Lead/Staff Engineers and PMs who remain fixed in specific business domains. Whil
 ---
 
 ## 8a. Mission Pod Lifecycle
+
+**Pod Guardian** is a seat, not a role file. It is the code-quality gate for one pod, held by the pod's Staff Engineer, or by Mario when the pod has none. It is distinct from the Implementation Guardian (§31), who judges problem-solution fit. EM names the Pod Guardian when the pod forms.
 
 A mission pod moves through four states. Each transition has a defined owner and a required write to `team.md`. Pod state is never inferred — it is always written.
 
@@ -819,6 +845,20 @@ A consultation-spawned agent that writes to project state without the spawning a
 
 The spawning agent must log what was spawned, the sub-question asked, and the key insight returned — before incorporating it into synthesis.
 
+### 16.1 Limits — configurable, uncapped by default
+
+Every amount or limit in this protocol is a key under `"limits"` in the project's `.sdkrc` (the defaults live in `scripts/lib/limits.js`; `sdk-health` validates them). Prose refers to the key, never to a hardcoded number.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `peerSpawns` | `null` | Peers one consultation may spawn. `null` = spawn every peer whose input would change the answer. |
+| `discoveryRounds` | `null` | Coordinator ↔ CEO rounds in Phase 0. `null` = until the five Phase 0 questions are answered. |
+| `loopIterations` | `null` | Ceiling on any §32 loop's declared budget. `null` = the loop's own declared budget. |
+| `guardianCyclesBeforeEscalation` | `3` | §31.6 escalation trigger. Not a cap: work continues once the CEO decides. |
+| `surfaceStaleDays` | `3` | §34 staleness window for `sdk-health`. |
+
+**`null` removes the count, never the stop condition.** An uncapped consultation still stops when another peer would not change the answer. An uncapped discovery stops when the five questions are answered, or when the Owner says proceed. An uncapped loop still declares `Budget:` and `Terminate when:` at open (§32.4). A rule with neither a count nor a stop condition is malformed.
+
 ### Synthesis standard
 
 A consultation answer that relays raw peer output has failed. The goal is synthesis: a single coherent answer that integrates perspectives, names the tradeoffs, and leaves the asker with better judgment — not just an answer.
@@ -1025,7 +1065,8 @@ Do not send CONTEXT REQUEST to ALL. Route to the specific domain lead.
 FROM: [Role]
 TO: [Role]
 RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
-PRIORITY: CONTEXT REQUEST
+PRIORITY: INFO
+TAG: CONTEXT-REQUEST
 MESSAGE:
   CONTEXT REQUEST — [topic]
   Working on: [task in one sentence]
@@ -1176,7 +1217,7 @@ The intent resolver (`scripts/lib/intent-resolver.js`) matches Bus message patte
 |---|---|
 | `PRIORITY: BLOCKER` | `doc.pod-update` (status → Blocked) + area log entry |
 | `MESSAGE: DOMAIN CLOSE` | `doc.log` (completed entry in area log) |
-| `PRIORITY: CONTEXT REQUEST` | queryMap lookup (routing, no script) |
+| `TAG: CONTEXT-REQUEST` | queryMap lookup (routing, no script) |
 | `PRIORITY: DECISION NEEDED` | `doc.log` (blocked entry in area log) |
 | `PRIORITY: INFO` | No action (pure communication) |
 
@@ -1312,6 +1353,16 @@ Tags express semantic intent without adding new message types. The intent resolv
 - Resolution logged to `history.md`
 
 **RATCHET-CANDIDATE** — A Halloway Ratchet signal. An agent has observed exploratory reasoning on a known-solution task class (see Section 24). Requires `PRIORITY: INFO`.
+
+**CONTEXT-REQUEST** — Asks a domain lead for context before acting (Section 19). Sent as `PRIORITY: INFO`. It is a message type carried as a tag, not a fourth priority.
+
+**SDK-CHANGE** — A change to the SDK itself (protocol, roles, scripts). Used on §15a proposals and on `history.md` SDK-CHANGE entries.
+
+**CONSULTATION** — The trace of a Consultation Mode answer (§16), so the synthesis is auditable.
+
+**ITERATION-REVIEW** / **ITERATION-GRADUATED** — A Guardian's §31 assessment, and its graduation notice to the Coordinator.
+
+**LOOP-OPEN** — The Loop Coordinator announcing a §32 loop at Open, carrying the loop ID.
 
 Tags are extensible. New tags require a protocol version bump and an entry in this section. Do not invent ad-hoc tags.
 
@@ -1569,7 +1620,7 @@ Hard gates check specific non-negotiable conditions. Iteration loops ensure the 
 
 - Guardians have REVIEW authority, not WRITE authority over canonical docs. They assess and verdict; they do not directly modify requirements files or area logs.
 - Guardians can open Structured Disagreements (Section 29) against domain agents whose output they believe does not meet exit criteria.
-- Guardians cannot block indefinitely. If a loop has not graduated after 3 cycles, the Guardian must escalate to CEO with a written assessment of what is preventing graduation. The CEO decides: iterate once more, graduate with conditions, or kill the mission.
+- Guardians cannot block indefinitely. If a loop has not graduated after `limits.guardianCyclesBeforeEscalation` cycles (default 3, §16.1), the Guardian must escalate to CEO with a written assessment of what is preventing graduation. The CEO decides: iterate once more, graduate with conditions, or kill the mission.
 - Guardians use standard Bus messages. `TAG: ITERATION-REVIEW` for assessments, `TAG: ITERATION-GRADUATED` for graduation.
 
 ### 31.7 CLI Commands
@@ -1598,7 +1649,7 @@ team-sdk agents already disagree, spawn peers, and produce synthesis — but the
 
 The Loop Coordinator is an ephemeral agent type spawned once per loop and dissolved at termination. It exists only inside the loop. It has no memory file, no consultation mode, no cross-loop state, and no persona reasoning surface. Its full role file is `team/roles/loop-coordinator.md`.
 
-The Loop Coordinator is **driver, not judge**. It coordinates turn order, enforces budget, advances the state machine, and writes loop transitions to the Bus and to `loops/<id>/state.md`. It does not opine on content. A Loop Coordinator that produces a content opinion has violated the load-bearing non-negotiable and the loop's emitted artifacts are void.
+The Loop Coordinator is **driver, not judge**. It coordinates turn order, enforces budget, advances the state machine, and writes loop transitions to the Bus and to `record/loops/<YYYY-MM-DD>-<pattern>-<seq>/state.md`. It does not opine on content. A Loop Coordinator that produces a content opinion has violated the load-bearing non-negotiable and the loop's emitted artifacts are void.
 
 **SOLUTION_CLASS contract:**
 - `Level 3 (deterministic state machine)` for all turn coordination, budget enforcement, and termination logic. These are not reasoning surfaces.
@@ -1616,7 +1667,7 @@ v0.1 ships exactly two patterns and no more:
 
 Pattern selection is **Level 3, not Level 1**. Each pattern file declares `TRIGGER_SHAPE` and `NON_TRIGGER_SHAPE`. Spawning agents read both before opening. Freeform "should we use Critique-Revise here?" deliberation on the Bus is itself a ratchet candidate per §24.
 
-**Dialectic is deferred to v0.2** explicitly because named-role critique without author anonymization is a known sycophancy surface. The v0.2 return ticket is owned by PM, target window v2026.Q3, triggered when the anonymization layer design is accepted by CTO + Mario. Dialectic is NOT stubbed in v0.1.
+**Dialectic is deferred to v0.2** explicitly because named-role critique without author anonymization is a known sycophancy surface. The v0.2 return ticket is owned by PM, target window v2026.Q3, triggered when the anonymization layer design is accepted by CTO + Mario. Dialectic is documented (`team/roles/loops/dialectic.md`, v0.2) but not openable in v0.1; the Loop Coordinator rejects it.
 
 ### 32.3 Loop lifecycle and the `WEAKNESS_HYPOTHESIS` rule
 
@@ -1642,7 +1693,7 @@ Termination is **asymmetric** by Mario's design and may not be made symmetric wi
 
 | Action | Authority | Countersign required |
 |---|---|---|
-| Declare budget at open | Spawning agent | None |
+| Declare budget at open (≤ `limits.loopIterations` when set, §16.1) | Spawning agent | None |
 | Early-stop (terminate before budget exhausted) | Spawning agent | None — unilateral |
 | Extend budget | Spawning agent + one peer-or-higher tier countersign per §1 ladder | YES |
 
@@ -1660,7 +1711,7 @@ Every loop has a unique ID with this format:
 LOOP-YYYYMMDD-<pattern>-<seq>
 ```
 
-Examples: `LOOP-20260614-critique-revise-001`, `LOOP-20260614-red-team-003`. The Loop Coordinator assigns the ID on Open. Sequence numbers are per-day, per-pattern, monotonic.
+Examples: `LOOP-20260614-critique-revise-001`, `LOOP-20260614-red-team-003`. The Loop Coordinator assigns the ID on Open. Sequence numbers are per-day, per-pattern, monotonic. The loop folder is `record/loops/<YYYY-MM-DD>-<pattern>-<seq>/` (same date, pattern and seq, without the `LOOP-` prefix); the full loop ID is written on the state.md title line and in every `LOOP-PROVENANCE:` line.
 
 Every artifact emitted from a loop carries a provenance line:
 
@@ -1672,14 +1723,14 @@ The loop ID is appended unhashed so the same artifact may legitimately surface f
 
 ### 32.6 State persistence
 
-Each loop maintains a state file at `loops/<id>/state.md` with three required headings, in order:
+Each loop maintains a state file at `record/loops/<YYYY-MM-DD>-<pattern>-<seq>/state.md` with three required headings, in order:
 
 ```markdown
 ## Open
 WEAKNESS_HYPOTHESIS: <one sentence>
 Pattern: <slug>
 Spawning agent: <role>
-Budget: <turn count or token cap>
+Budget: <turn count or token cap; ≤ limits.loopIterations when set (§16.1); ignored by one-pass patterns>
 Insertion point: <Phase 0 | Architecture | Implementation>
 Constitution reference (Critique-Revise only): <file path or section>
 
@@ -1689,7 +1740,7 @@ Constitution reference (Critique-Revise only): <file path or section>
 ## Terminate
 Termination cause: <budget-exhausted | early-stop | extension-failed | guardrail-failed-closed>
 Final artifact: <path + LOOP-PROVENANCE line>
-Improvement signal: <emitted to metrics/_signals.jsonl, schema per _IMPROVEMENT_SIGNAL.md>
+Improvement signal: <emitted to record/metrics/_signals.jsonl, schema per _IMPROVEMENT_SIGNAL.md>
 ```
 
 The **Bus Log records transitions only** — loop open, turn boundary, termination, dissolve. Internal turn content lives exclusively in `state.md`. This protects Bus signal-to-noise per §22 and preserves §24 Halloway Ratchet detection (a loop with 12 internal turns must not look like 12 ratchet revisions on the Bus). A Bus message containing internal loop turn content is a protocol violation; the Coordinator routes it back.
@@ -1734,15 +1785,15 @@ Audit cadence is quarterly. Sample size is gate-check tier: minimum two complete
 | **Craft-constitution work** — Layer A as currently constituted misses design craft (accessibility/WCAG, perceived affordance, form-follows-function, emotional register). Designer treats Layer A as a critic-facing interface and ships a craft layer. | Designer | v0.2 / v0.3 | When Designer ratifies the craft-constitution scope and Mario countersigns |
 | **Typed `constitution: <ref>` argument** — loops on regulated artifacts declare e.g. `constitution: gdpr-art-6+layer-a` and the critic reads against both. Closes the CLO vocabulary gap surfaced at seal. | CLO | v0.2 | When CLO confirms at least one regulated artifact is queued for §32 review |
 
-**Cross-domain consumer hook:** UX Researcher is named **co-consumer of `metrics/_signals.jsonl`** alongside the Coordinator's retrospective ritual cadences. UXR reads the friction-pattern stream on a continuous basis (not gated by retro) and is empowered to open a §15a protocol change proposal when friction patterns recur. This makes the signals stream a research surface, not just an ops surface.
+**Cross-domain consumer hook:** UX Researcher is named **co-consumer of `record/metrics/_signals.jsonl`** alongside the Coordinator's retrospective ritual cadences. UXR reads the friction-pattern stream on a continuous basis (not gated by retro) and is empowered to open a §15a protocol change proposal when friction patterns recur. This makes the signals stream a research surface, not just an ops surface.
 
 ### 32.10 Retention, privilege, and discoverability
 
 CLO domain. Owner-accepted 2026-06-14 with Q3 exposure profile consciously absorbed. These rules are non-negotiable for v0.1.
 
 **Retention policy:**
-- `loops/<id>/state.md` is retained for the **life of the shaped artifact it produced**. If the artifact is deprecated or removed from the project tree, the loop state may be archived but not destroyed within the current release cycle.
-- `metrics/_signals.jsonl` is retained for **two release cycles**.
+- `record/loops/<YYYY-MM-DD>-<pattern>-<seq>/state.md` is retained for the **life of the shaped artifact it produced**. If the artifact is deprecated or removed from the project tree, the loop state may be archived but not destroyed within the current release cycle.
+- `record/metrics/_signals.jsonl` is retained for **two release cycles**.
 - Both are subject to **legal-hold override** which extends retention indefinitely until lifted by CLO. Legal hold is invoked per §6 with `Made by: CLO` and `Reversible: NO`.
 
 **Privilege scope:**
@@ -1861,7 +1912,7 @@ Silence is never a pass. A verifier who cannot find a problem says so explicitly
 ### 34.6 Provenance and improvement signal
 
 - Every block carries a `LOOP-PROVENANCE:` line (§32.5 format, surface-id binding).
-- On reaching `verified` or `blocked`, a surface emits one `improvement_signal` per `team/roles/loops/_IMPROVEMENT_SIGNAL.md` into `metrics/_signals.jsonl`. Omission fails the surface's close the same way it fails a loop close.
+- On reaching `verified` or `blocked`, a surface emits one `improvement_signal` per `team/roles/loops/_IMPROVEMENT_SIGNAL.md` into `record/metrics/_signals.jsonl`. Omission fails the surface's close the same way it fails a loop close.
 
 ### 34.7 Autonomy and the human boundary
 
@@ -1929,4 +1980,4 @@ Per the §32 retro's own rule — *a mechanism named here must exist in code* �
 
 ---
 
-*Protocol v4.7. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, the Halloway Ratchet doctrine, TAG field, Kill Log, Negative Scope, Pre-Mortem gate, design principles, iteration loops, generative loops, collaboration surfaces, and the document-first gate. Every agent references it. No agent duplicates it.*
+*Protocol v4.8. This file is the single source of truth for inter-agent communication, escalation, requirements tracking, organizational structure, strategy alignment, area logs, session continuity, sub-role creation, mission pod lifecycle, ideation and shipping cycles, SDK self-improvement, consultation mode, BU communication, research chapter protocol, context request routing, project domain architecture, operations map, Bus log, session memory, the Halloway Ratchet doctrine, TAG field, Kill Log, Negative Scope, Pre-Mortem gate, design principles, iteration loops, generative loops, collaboration surfaces, and the document-first gate. Every agent references it. No agent duplicates it.*

@@ -7,7 +7,7 @@ surface:
   verifier_roster: [<role>] # who must verify before `verified`; dynamic + fixed minimum for irreversible (§34.4)
   depends_on: []            # surface-ids or file paths
   produces: <what this surface yields when verified>
-  state: draft              # draft | authored | under-verification | reconciling | verified | blocked
+  state: draft              # draft | authored | under-verification | reconciling | verified | blocked | superseded | archived (last two terminal)
   irreversible: false
   evidence: []              # paths or claim-ids
   release: v[YEAR].Q[QUARTER].[INCREMENT]

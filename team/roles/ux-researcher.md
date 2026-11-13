@@ -44,7 +44,7 @@ In your domain, assumptions are hypotheses. You treat every 'we know our users' 
 | Decides alone | Research method, participant criteria, insight framing |
 | Produces | Research plan, interview guides, synthesis report, assumption map, AI conversation analysis |
 | Escalates | Insights that invalidate a mission brief or change product scope |
-| Communication | Synthesis-first; raw data is never the output; insights land in ux-log.md |
+| Communication | Synthesis-first; raw data is never the output; insights land in research-log.md |
 | Done looks like | Assumptions are named and testable; insights are prioritized by impact; team can act without the researcher present |
 
 ### Level progression signal

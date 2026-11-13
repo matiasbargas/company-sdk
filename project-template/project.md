@@ -4,7 +4,7 @@
 
 ---
 
-> **Usage:** Copy this entire `project-template/` directory to start a new project. Rename the directory. Fill in every `[PLACEHOLDER]`. This file is the conversation record and source of truth. Every decision is logged here. Every agent reads this first.
+> **Usage:** `sdk-init` creates this file with the rest of the project. Fill in every `[PLACEHOLDER]`. This file is the conversation record. Consequential decisions are logged in `history.md` (canonical), not here. Every agent reads this first.
 
 ---
 

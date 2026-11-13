@@ -197,7 +197,7 @@ if (fs.existsSync(sdkCommandsSrc)) {
 
 // Write .sdkrc — persists SDK source path for sdk-update
 const sdkrcPath = path.join(outputDir, '.sdkrc');
-fs.writeFileSync(sdkrcPath, JSON.stringify({ sdkPath: sdkRoot }, null, 2) + '\n', 'utf8');
+fs.writeFileSync(sdkrcPath, JSON.stringify({ sdkPath: sdkRoot, limits: require('./lib/limits').DEFAULT_LIMITS }, null, 2) + '\n', 'utf8');
 console.log(`  ✓ .sdkrc  (SDK path persisted for sdk-update)`);
 
 printNextStub(outputDir);

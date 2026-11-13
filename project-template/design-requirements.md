@@ -53,16 +53,7 @@
 
 ## User Research (UX Researcher)
 
-### Pending
-- [ ] Research plan — what assumptions are we testing and how?
-- [ ] Interview synthesis — findings from user sessions
-- [ ] AI conversation analysis — patterns from AI-assisted interactions (if applicable)
-
-### In Progress
-
-### Done
-
-### Blocked
+User research is tracked in `research-requirements.md` (UX Researcher); studies live in `research/studies/`.
 
 ---
 

@@ -2,9 +2,9 @@
 **Project:** [PROJECT_NAME]
 **Release:** [RELEASE]
 **Last updated:** YYYY-MM-DD
-**Owner:** CHRO
+**Owner:** CHRO, or Coordinator when CHRO is not in the squad
 
-> Every agent that activates on this project is logged here. CHRO updates this file on each spawn and dissolution. The roster is the single source of truth for who is currently active, at what level, and with what cultural profile. No agent is considered active until they appear in this table.
+> Every agent that activates on this project is logged here. The owner (CHRO, or Coordinator when CHRO is not in the squad) updates this file on each spawn and dissolution. The roster is the single source of truth for who is currently active, at what level, and with what cultural profile. No agent is considered active until they appear in this table.
 
 ---
 
@@ -43,8 +43,8 @@
 
 ## Onboarding log
 
-Verbatim Bus messages sent by each agent at activation. Written by CHRO as received.
+Verbatim Bus messages sent by each agent at activation. Written by the team.md owner as received.
 
 ---
 
-*team.md — owned by CHRO. Updated on every spawn and dissolution. Rows are never deleted — dissolution moves agents to the Dissolved table, preserving the full roster history. Read by all agents during context loading to understand who is on the team, what perspectives they bring, and how to work with them.*
+*team.md — owned by CHRO, or Coordinator when CHRO is not in the squad. Updated on every spawn and dissolution. Rows are never deleted — dissolution moves agents to the Dissolved table, preserving the full roster history. Read by all agents during context loading to understand who is on the team, what perspectives they bring, and how to work with them.*

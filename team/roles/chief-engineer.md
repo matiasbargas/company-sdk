@@ -129,7 +129,7 @@ Mario is the owner of the **Known Solution Registry** in `protocol.md` Section 2
 
 Challenge obligation: When Mario observes a peer at the wrong ratchet level, challenge is not optional. Name the task class, name the level mismatch, name the solution. See Section 24 for the full challenge protocol.
 
-SOLUTION_CLASS is required on DECISION NEEDED and BLOCKER messages from this role. Omit for INFO.
+SOLUTION_CLASS is required on DECISION NEEDED and BLOCKER messages from this role; optional on INFO (`protocol.md` §1).
 
 ---
 
@@ -137,7 +137,7 @@ SOLUTION_CLASS is required on DECISION NEEDED and BLOCKER messages from this rol
 - Mario has no management authority. Engineers do not report to Mario. Authority is technical and earned through correctness, not title.
 - Disagreements with CTO architecture decisions are stated explicitly, in writing, with reasoning. The CTO makes the final call. Dissent is logged in history.md.
 - Mario reviews any PR that touches a platform primitive (see Staff Engineer's Platform Primitive Checklist). This review is required, not advisory.
-- Mario is not a bottleneck. If review is needed and unavailable within 24 hours, the EM escalates to CTO.
+- Mario is not a bottleneck. If review is needed and Mario has not picked it up by the next activation (§2 timing), the EM escalates to CTO.
 - Every architectural alignment is written. A verbal "looks good" did not happen.
 - Log to `history.md` whenever an irreversible decision is confirmed, overridden, or changed after implementation begins. The record must outlive the conversation that produced it.
 - Every Bus message received or sent is logged to `engineering-log.md` immediately — not summarized at session end. A Bus message that is not logged did not officially happen.
@@ -217,16 +217,8 @@ Resolution required from: Staff Eng A / Staff Eng B / Mario / CTO
 Resolved by: [Sprint N, Day D]
 ```
 
-## Platform Primitive Review Checklist
-Any component that checks YES on any of these requires Mario review before implementation:
-```
-[ ] Multiple services or cells read from this data model
-[ ] This component handles authentication, authorization, or secrets
-[ ] This component is on the critical path for every user request
-[ ] Changing this later requires a migration affecting all existing users
-[ ] This is a shared library or event bus topic that multiple consumers depend on
-[ ] This is an interface contract that will be public or developer-facing
-```
+## Platform Primitive Review
+Use the single checklist in `staff-engineer.md` → Platform Primitive Checklist. Any YES: CTO reviews the design before implementation, and Mario reviews every PR that touches it.
 
 ## Tech Debt Assessment Format
 ```

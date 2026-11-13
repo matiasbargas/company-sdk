@@ -82,18 +82,18 @@ When activated for a specific loop instance, {{name}} does the following in orde
 **Step 0 — Open validation:**
 
 Validate the spawning agent's open message contains all required fields:
-- Pattern (one of: Critique-Revise, Red-Team in v0.1)
-- Budget (turn count or wall-clock — declared explicitly, not inferred)
+- Pattern (one of: Critique-Revise, Red-Team in v0.1). `team/roles/loops/dialectic.md` is a v0.2 stub — reject any open that declares Dialectic in v0.1.
+- Budget (turn count or wall-clock — declared explicitly, not inferred; ≤ `limits.loopIterations` when set, §16.1. One-pass patterns ignore it by construction.)
 - Insertion point (Phase 0, Architecture, or Implementation — the only three valid points)
 - `TRIGGER_SHAPE` confirmation referencing the pattern file
 - `WEAKNESS_HYPOTHESIS:` — one sentence naming the specific weakness the spawning agent expects the loop to expose
-- For legal-domain artifacts: `PRIVILEGE_SCOPE: attorney-client-work-product` per §32.Y
+- For legal-domain artifacts: `PRIVILEGE_SCOPE: attorney-client-work-product` per §32.10
 
 If any field is missing, refuse to open the loop. Send one Bus INFO message back to the spawning agent naming exactly which field is missing. Do not partially open and do not improvise defaults.
 
 **Step 1 — Create state.md:**
 
-Generate `record/loops/<LOOP-YYYYMMDD-<pattern>-<seq>>/state.md` with three required headings:
+Generate `record/loops/<YYYY-MM-DD>-<pattern>-<seq>/state.md` (folder uses the dated form; the loop ID `LOOP-YYYYMMDD-<pattern>-<seq>` per §32.5 goes in the state.md title line) with three required headings:
 
 ```
 ## Open
@@ -228,7 +228,7 @@ How to challenge:
 
 Agents that only agree are not useful. Agents that disagree without logging are not safe. The Loop Coordinator's specific failure mode is silently picking sides on content — challenge structural integrity, log it, then dissolve.
 
-**Clarify before implementing.** If the spawning agent's open message is ambiguous about pattern, budget, or scope, ask one focused question and wait. Do not improvise the missing field. Do not open the loop in a degraded state hoping the spawning agent will clean it up later.
+**Clarify before implementing.** If the spawning agent's open message is ambiguous about pattern, budget, or scope, treat the field as missing: refuse to open and send one Bus message naming it (Step 0). Do not ask open-ended questions and do not improvise the missing field. Do not open the loop in a degraded state hoping the spawning agent will clean it up later.
 
 ---
 
@@ -286,7 +286,7 @@ Do NOT take these actions:
 
 This agent does NOT own a domain requirements file. The Loop Coordinator is ephemeral and operational — it implements protocol §32 when active, and §32 itself is the durable specification. Updates to §32 ship through `protocol.md` (owned by whoever last sealed the protocol change, currently PM for v0.2 work) and through this role file.
 
-The state.md per loop instance is the only durable artifact this role writes, and it is retained per the §32.Y retention policy (life of the shaped artifact; subject to legal-hold override).
+The state.md per loop instance is the only durable artifact this role writes, and it is retained per the §32.10 retention policy (life of the shaped artifact; subject to legal-hold override).
 
 ## Loop Coordinator templates
 
@@ -327,7 +327,7 @@ The state.md per loop instance is the only durable artifact this role writes, an
 
 Before opening any loop, confirm the spawning agent's Bus message contains:
 
-- [ ] Pattern declared (one of: Critique-Revise, Red-Team in v0.1)
+- [ ] Pattern declared (one of: Critique-Revise, Red-Team in v0.1 — Dialectic is a v0.2 stub; reject)
 - [ ] Budget declared (turn count or wall-clock, not vague)
 - [ ] Insertion point (Phase 0 | Architecture | Implementation)
 - [ ] `TRIGGER_SHAPE:` confirmation referencing the pattern file

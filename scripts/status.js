@@ -357,6 +357,15 @@ if (openDec) {
   openDec.split('\n').filter(Boolean).forEach(l => console.log(`    ${l.trim()}`));
 }
 
+
+// Overdue DECISION BY deadlines (protocol.md §2 timing) — calendar backstop for session-bound agents
+const overdue = require('./lib/overdue').findOverdue(projectDir);
+if (overdue.length) {
+  console.log('');
+  console.log(`  OVERDUE (${overdue.length}) — DECISION BY date has passed; escalate one step (§2)`);
+  for (const o of overdue) console.log(`    ${o.due}  ${o.file}:${o.line}  ${o.context}`);
+}
+
 // ─── 4. NEXT ACTION ─────────────────────────────────────────────────────────
 
 console.log('');

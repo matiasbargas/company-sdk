@@ -32,30 +32,69 @@ function parseSquadFile(content, filePath) {
     if (sizeMatch) metadata.size = sizeMatch[1].trim();
     const rolesMatch = line.match(/\*\*Roles:\*\*\s*(.+)/);
     if (rolesMatch) metadata.rolesDescription = rolesMatch[1].trim();
+    const durMatch = line.match(/\*\*Duration:\*\*\s*(.+)/);
+    if (durMatch) metadata.duration = durMatch[1].trim();
   }
 
-  // Extract role roster
+  // Extract role roster (header-aware: columns are located by name, so
+  // `Role | Level | Required | Owns` and `Role | Level | Layer | Owns` both work)
   const roles = [];
   let inRoster = false;
+  let header = null;
   let headerPassed = false;
+  const splitRow = (line) => line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
   for (const line of lines) {
     if (/^##\s+Role Roster/.test(line)) { inRoster = true; continue; }
     if (inRoster && /^##\s/.test(line) && !/Role Roster/.test(line)) break;
     if (inRoster && line.startsWith('|')) {
       if (!headerPassed) {
-        // Skip header row and separator
-        if (line.includes('---')) { headerPassed = true; }
+        if (/^\|[\s|:-]+\|?\s*$/.test(line)) { headerPassed = true; continue; }
+        header = splitRow(line).map(h => h.toLowerCase());
         continue;
       }
-      const cells = line.split('|').map(c => c.trim()).filter(Boolean);
-      if (cells.length >= 2) {
-        roles.push({
-          role: cells[0],
-          level: cells[1] || '',
-          layer: cells[2] || '',
-          owns: cells[3] || '',
-        });
-      }
+      const cells = splitRow(line);
+      if (cells.filter(Boolean).length < 2) continue;
+      const col = (name, fallback) => {
+        const i = header ? header.indexOf(name) : -1;
+        return (i >= 0 ? cells[i] : cells[fallback]) || '';
+      };
+      const requiredCell = header && header.includes('required') ? col('required', -1) : '';
+      // ✅ (or "yes"/"required") = required; ⚡ / anything else = optional/conditional.
+      // No Required column → every listed role is required.
+      const required = !requiredCell || /✅|^yes\b|^required\b/i.test(requiredCell);
+      const condition = required ? '' : requiredCell.replace(/^⚡\s*/, '').trim();
+      roles.push({
+        role: col('role', 0),
+        level: col('level', 1),
+        layer: header && header.includes('layer') ? col('layer', -1) : '',
+        required,
+        condition,
+        owns: col('owns', header && header.length >= 4 ? 3 : 2),
+      });
+    }
+  }
+
+  // Extract activation sequence: one step per `### Phase …` heading, listing its roles
+  const sequence = [];
+  let inSeq = false;
+  let current = null;
+  let seqHeaderPassed = false;
+  for (const line of lines) {
+    if (/^##\s+Activation Sequence/.test(line)) { inSeq = true; continue; }
+    if (!inSeq) continue;
+    if (/^##\s/.test(line)) break;
+    const phase = line.match(/^###\s+(.+)/);
+    if (phase) {
+      current = { phase: phase[1].trim(), roles: [] };
+      sequence.push(current);
+      seqHeaderPassed = false;
+      continue;
+    }
+    if (current && line.startsWith('|')) {
+      if (!seqHeaderPassed) { if (/^\|[\s|:-]+\|?\s*$/.test(line)) seqHeaderPassed = true; continue; }
+      const cells = splitRow(line);
+      const role = (cells[1] || '').replace(/\s+/g, ' ').trim();
+      if (role && !current.roles.includes(role)) current.roles.push(role);
     }
   }
 
@@ -72,10 +111,12 @@ function parseSquadFile(content, filePath) {
     name,
     filePath,
     size: metadata.size || 'Unknown',
+    duration: metadata.duration || '',
     useWhen: metadata.useWhen || '',
     purpose: purpose.trim(),
     roles,
     roleCount: roles.length,
+    sequence: sequence.filter(p => p.roles.length > 0),
     raw: content,
   };
 }

@@ -6,7 +6,8 @@
     "compliance",
     "product",
     "business",
-    "general"
+    "general",
+    "research"
   ],
   "gates": {
     "pre-cto": ["clo"],
@@ -21,6 +22,7 @@
   },
   "logs": [
     "product",
-    "strategy"
+    "strategy",
+    "research"
   ]
 }

@@ -31,6 +31,7 @@ PHASE 1 (Discovery):
   10b. UX Researcher -- research plan, assumption testing, AI conversation analysis (parallel)
   10c. Designer     -- design perspective brief, problem framing through design lens (parallel)
   10d. PM           -- mission shaping informed by discovery outputs + design + research (parallel)
+  ── Discovery Loop (§31): Discovery Guardian GRADUATEs → then CLO + CISO hard gate
 
 PHASE 2 (Release Plan):
   11. CTO           -- architecture brief, make/buy matrix, team sizing
@@ -39,16 +40,18 @@ PHASE 2 (Release Plan):
   14. Designer      -- full interface direction brief (all surfaces: screen, conversation, AI, voice)
   15. Staff Engineer -- interface contracts, platform primitives
   16. EM            -- mission pod composition, critical path, Sprint 0 gate
+  ── Architecture Loop (§31): Architecture Guardian GRADUATEs → Mario gate, Sprint 0, pre-mortem (§28)
 
 PHASE 3 (Execution):
-  16. Liaison       -- activated at Sprint 1 start. Stays active until ship.
+  17. Liaison       -- activated at Sprint 1 start. Stays active until ship.
   [All execution layer agents remain active]
+  ── Implementation Loop (§31, per pod): Implementation Guardian GRADUATE + Pod Guardian sign-off (§8a) → pod dissolves
 
 PHASE 4 (Completion):
   Coordinator runs retro synthesis. All agents read the retrospective.
   All agents write their consequential decisions to history.md and their area logs before the release closes.
   PM seals the mission kanban board (product-log.md).
-  EM dissolves pods and writes pod dissolution entries to product-log.md.
+  EM dissolves pods and writes pod dissolution entries to engineering-log.md.
   CEO validates project-map.md (Section 11 checklist) before the release is sealed.
   Coordinator seals the project map only after CEO validation.
 ```
@@ -210,16 +213,7 @@ These pairs share domain boundaries and must coordinate. See `protocol.md` Secti
 
 ## Context Loading (What Each Agent Reads When Activated)
 
-Every agent reads these files before producing any output:
-
-**All agents (mandatory):**
-1. `project.md`
-2. `history.md`
-3. `protocol.md`
-4. `general-requirements.md`
-5. Their own `[domain]-requirements.md`
-6. `current-status.md` — the session continuity file (always read this; it tells you where the team is right now)
-7. The area log(s) relevant to your role (see `protocol.md` Section 12)
+The load order is defined once, in `protocol.md` §7 (cockpit first, then the index, queryMap, own requirements file; `history.md` and the full protocol are not loaded by default). The table below lists the role-specific inputs each agent adds on top of §7.
 
 **Role-specific additions:**
 

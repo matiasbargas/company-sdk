@@ -3,6 +3,7 @@
 > **Use this squad when:** [one sentence]
 > **Size:** [S / M / L — role count and scope depth]
 > **Roles:** [count] activated
+> **Duration:** [e.g. 1–5 days]
 > **Protocol:** Same `protocol.md` — same Bus format, same escalation ladder, same requirements files.
 
 ---
@@ -49,6 +50,15 @@
 | Role | Level | Required | Owns |
 |------|-------|----------|------|
 
+> `Required`: ✅ = required; `⚡ <condition>` = optional/conditional. An extra `Layer` column (before `Owns`) is allowed. `scripts/squad.js` parses this table — it is the single source for the roster.
+
+---
+
+## Deferred (optional)
+
+| Role | When to Activate |
+|------|----------------|
+
 ---
 
 ## Dependency Graph
@@ -70,9 +80,15 @@
 - [ ] Owner brief received by Coordinator
 - [ ] ...
 
+> Additional gates (e.g. `## Sprint 0 Gate (Hard Stop)`, `## Gate: Ready to Ship`) may follow.
+
 ---
 
 ## Example Projects
 
 - [Example 1]
 - [Example 2]
+
+---
+
+Always available, spawned on demand: Loop Coordinator (§32), Discovery/Architecture/Implementation Guardians (§31), Test Engineer.

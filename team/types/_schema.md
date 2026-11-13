@@ -65,8 +65,9 @@ Valid values and their file mappings:
 | `"design"` | `design-requirements.md` |
 | `"business"` | `business-requirements.md` |
 | `"general"` | `general-requirements.md` |
+| `"research"` | `research-requirements.md` |
 
-**Fallback if absent:** all 7 files are copied (same as `product` type). This ensures backward compatibility if a type config is missing this field.
+Omit a value to opt the type out of that file. **Fallback if absent:** all 7 files are copied (same as `product` type). This ensures backward compatibility if a type config is missing this field.
 
 ### `gates` (object, optional)
 
@@ -117,14 +118,15 @@ Valid values and their file mappings:
 | `"product"` | `product-log.md` |
 | `"design"` | `design-log.md` |
 | `"strategy"` | `strategy-log.md` |
+| `"research"` | `research-log.md` |
 
-**Fallback if absent:** all 4 log files are copied.
+**Fallback if absent:** all 5 log files are copied.
 
 ---
 
 ## Always-copied files
 
-These files are copied for every project type, regardless of `requirements_files` or `logs`:
+These files are copied from `project-template/` for every project type, regardless of `requirements_files` or `logs`:
 
 - `idea.md`
 - `current-status.md`
@@ -132,10 +134,17 @@ These files are copied for every project type, regardless of `requirements_files
 - `project-map.md`
 - `CLAUDE.md`
 - `DISCLAIMER.md`
-- `context-manifest.json`
 - `.gitignore`
 - `team.md`
 - `project.md`
+
+Any other `project-template/` file not mapped above (e.g. `START_HERE.md`, `liaison-log.md`) is also copied as-is. `surface-template.md` is copied to `surfaces/_template.md`.
+
+Not in `project-template/` — produced by `sdk-init` from other sources:
+
+- `SDK.md`, `CHARTER.md`, `protocol*.md`, `AGENTS.md`, `STRATEGY.md` — copied from the SDK root
+- `SQUAD.md` — copied from `team/squads/<squad>.md`
+- `context-manifest.json`, `context-index.json` — generated at the end of init (`sdk-doc manifest` / `sdk-doc index`)
 
 ---
 

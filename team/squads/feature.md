@@ -3,6 +3,7 @@
 > **Use this squad when:** You are adding a specific feature to an existing product.
 > **Size:** Small (3–5 roles, single sprint scope)
 > **Roles:** 3–5 activated
+> **Duration:** 1–5 days
 > **Protocol:** Same `protocol.md` — same Bus format, same escalation ladder, same requirements files.
 
 ---
@@ -61,12 +62,30 @@ A minimal squad for delivering a single, well-scoped feature. No discovery phase
 
 ---
 
+## Dependency Graph
+
+```
+Owner → PM → Staff Engineer (if platform touch) → EM → Cell
+                                                   ↓
+                                                Liaison → Coordinator (if decisions)
+```
+
+---
+
 ## Success Criteria
 
 - [ ] Feature ships within sprint
 - [ ] Acceptance criteria all met
 - [ ] No regressions in adjacent features
 - [ ] Any consequential decisions logged to `history.md`
+
+---
+
+## Gate: Ready to Start
+
+- [ ] Feature brief written by PM (user story, acceptance criteria, scope boundary)
+- [ ] Staff Engineer confirmed contract impact (or confirmed none) if platform is touched
+- [ ] Sprint plan and cell assignment confirmed by EM
 
 ---
 

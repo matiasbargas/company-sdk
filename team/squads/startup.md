@@ -3,6 +3,7 @@
 > **Use this squad when:** You are starting a company or building a full product from scratch.
 > **Size:** Large (20+ roles, all phases, full discovery)
 > **Roles:** All core + domain roles activated in sequence
+> **Duration:** 3–6 weeks
 > **Protocol:** Same `protocol.md` — same Bus format, same escalation ladder, same requirements files.
 
 ---
@@ -56,6 +57,7 @@ Full activation sequence per `AGENTS.md`. Abbreviated here for reference:
 | 14 | Designer | Full interface direction brief | — |
 | 15 | Staff Engineer | Interface contracts, platform primitives | — |
 | 16 | EM | Cell composition, critical path, sprint plan | — |
+| 16b | Test Engineer _(optional)_ | Test strategy, CI gates | — |
 
 ### Phase 3 — Execution (Sprint 1 → Ship)
 | # | Role | Output |
@@ -72,26 +74,51 @@ Full activation sequence per `AGENTS.md`. Abbreviated here for reference:
 
 ## Role Roster
 
-| Role | Level | Layer | Owns |
-|------|-------|-------|------|
-| Coordinator | M3 | Strategic | Release management, org memory |
-| CEO | M4 | Strategic | Company direction, strategic brief |
-| CLO | M3 | Domain | Legal, `compliance-requirements.md` |
-| CFO | M3 | Domain | Finance, runway, `business-requirements.md` |
-| CISO | M3 | Domain | Security, threat model, `compliance-requirements.md` |
-| CMO | M3 | Domain | Marketing, positioning, `business-requirements.md` |
-| CRO | M3 | Domain | Revenue, GTM, `business-requirements.md` |
-| CDO | M3 | Domain | Data, instrumentation, `business-requirements.md` |
-| COO | M3 | Domain | Operations, vendors, `business-requirements.md` |
-| CHRO | M3 | Domain | People, hiring, `business-requirements.md` |
-| CTO | M4 | Execution | Architecture, `engineering-requirements.md` |
-| Mario | L5 | Execution | Quality floor, `engineering-requirements.md` |
-| UX Researcher | L3 | Research | Studies, assumption testing, `research-requirements.md` |
-| Designer | L3 | Design | Interface direction, design system, `design-requirements.md` |
-| PM | L4 | Execution | Scope, stories, `product-requirements.md` |
-| Staff Engineer | L4 | Execution | Contracts, platform, `engineering-requirements.md` |
-| EM | M1 | Execution | Delivery, cells, `engineering-requirements.md` |
-| Liaison | L4 | Execution | Communication, `liaison-log.md` |
+| Role | Level | Required | Layer | Owns |
+|------|-------|----------|-------|------|
+| Coordinator | M3 | ✅ | Strategic | Release management, org memory |
+| CEO | M4 | ✅ | Strategic | Company direction, strategic brief |
+| CLO | M3 | ✅ | Domain | Legal, `compliance-requirements.md` |
+| CFO | M3 | ✅ | Domain | Finance, runway, `business-requirements.md` |
+| CISO | M3 | ✅ | Domain | Security, threat model, `compliance-requirements.md` |
+| CMO | M3 | ✅ | Domain | Marketing, positioning, `business-requirements.md` |
+| CRO | M3 | ✅ | Domain | Revenue, GTM, `business-requirements.md` |
+| CDO | M3 | ✅ | Domain | Data, instrumentation, `business-requirements.md` |
+| COO | M3 | ✅ | Domain | Operations, vendors, `business-requirements.md` |
+| CHRO | M3 | ✅ | Domain | People, hiring, `business-requirements.md` |
+| CTO | M4 | ✅ | Execution | Architecture, `engineering-requirements.md` |
+| Mario | L5 | ✅ | Execution | Quality floor, `engineering-requirements.md` |
+| UX Researcher | L3 | ✅ | Research | Studies, assumption testing, `research-requirements.md` |
+| Designer | L3 | ✅ | Design | Interface direction, design system, `design-requirements.md` |
+| PM | L4 | ✅ | Execution | Scope, stories, `product-requirements.md` |
+| Staff Engineer | L4 | ✅ | Execution | Contracts, platform, `engineering-requirements.md` |
+| EM | M1 | ✅ | Execution | Delivery, cells, `engineering-requirements.md` |
+| Liaison | L4 | ✅ | Execution | Communication, `liaison-log.md` |
+| Test Engineer | L3 | ⚡ optional | Execution | Test strategy, coverage, CI gates, `engineering-requirements.md` |
+
+---
+
+## Dependency Graph
+
+```
+Owner → Coordinator → CEO
+                       ↓
+   CLO + CISO ──gate──→ CTO → Mario
+   CFO, CMO, CRO, CDO, COO (gates EM), CHRO
+   UX Researcher + Designer + PM (parallel shaping)
+                       ↓
+   PM + Designer + Staff Engineer → EM → Cell (+ Test Engineer opt)
+                                     ↓
+                                  Liaison
+```
+
+---
+
+## Gate: Ready to Start
+
+- [ ] Owner brief received by Coordinator
+- [ ] CEO strategic framing brief written
+- [ ] Sprint 0 Gate below passed before engineering starts
 
 ---
 

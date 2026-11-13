@@ -1,4 +1,4 @@
-<!-- AI BOOTSTRAP — company-sdk v6.0.0 / protocol v4.7 -->
+<!-- AI BOOTSTRAP — company-sdk v6.0.0 / protocol v4.8 -->
 <!-- Read this file first. It is the complete operating context for this project. -->
 <!-- After reading this file, follow the LOAD ORDER below to activate. -->
 
@@ -10,16 +10,10 @@
 PREFERRED (v4): Run sdk-doc cockpit . --role [your-role]
   → one command gives you everything: state, domains, context gaps, ops, bus activity
 
-MANUAL (fallback):
-1. THIS FILE (SDK.md)       — full operating context
-2. context-index.json       — file map + project domains (L0) + opsMap + actions
-3. context-manifest.json    — project snapshot: release, phase, missions, next agent
-4. current-status.md        — session continuity (fallback if manifest absent or stale)
-5. team/roles/[your-role].md — your persona, capability block, operating loop
-6. [domain]-requirements.md — your org domain's current state
-7. domains/[name]/summary.md — project domain L0 summaries (if domains exist)
-8. history.md               — decisions made and why
-9. bus-log.md               — recent inter-agent communication (if exists)
+MANUAL (fallback): protocol.md §7 is the one load order:
+  context-index.json → manifest/current-status.md → your role file
+  → queryMap read[] → your requirements file → domain summaries → protocol-core.md
+  NOT by default: history.md (use sdk-doc history), full protocol.md, area logs
 ```
 
 If none of the project state files exist yet → jump to HUMAN SETUP at the bottom of this file.
@@ -50,14 +44,7 @@ When laws conflict: Law 1 wins. Always.
 
 ## SESSION START
 
-**First agent activated in a session:**
-1. Read `context-index.json` if it exists → file map: what exists, who owns it, what it answers, who to ask
-2. Read `context-manifest.json` if it exists → project snapshot: release, phase, missions, next agent
-3. If manifest absent → read `current-status.md` → tells you exactly where the team is
-4. If you are a BU lead → run self-discovery scan (see BU PROTOCOL below) before any Bus message
-5. Read your role file: `team/roles/[role].md`
-6. Read your requirements file: `[domain]-requirements.md`
-7. Produce output only after steps 1-6 are complete
+**First agent activated in a session:** load per `protocol.md` §7 (cockpit first). BU leads then run the §17 self-discovery scan before any Bus message. Produce output only after loading.
 
 **Resuming a running project:**
 ```bash
@@ -79,11 +66,15 @@ Full spec: `protocol.md` (single source of truth — never duplicate it)
 
 ### Bus message format
 
+Mirrors `protocol.md` §1 (the source; the docs consistency test checks the fields match).
+
 ```
-FROM: [Name] ([Role])
-TO: [Target role] | ALL
+FROM: [Agent name] ([Role])
+TO: [Target agent] | ALL
 RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
 PRIORITY: INFO | DECISION NEEDED | BLOCKER
+SOLUTION_CLASS: KNOWN | EXPLORATORY | HYBRID   ← required for CTO, Mario, EM, Staff Eng, Coordinator
+TAG: [optional — defined tags only, §25]
 MESSAGE:
   [body]
 DECISION BY: [YYYY-MM-DD]        ← required for DECISION NEEDED
@@ -93,8 +84,9 @@ ESCALATION: [Role]               ← required for DECISION NEEDED and BLOCKER
 Priority rules:
 - `INFO` — sharing state, no response required
 - `DECISION NEEDED` — work blocks in N days; must state the decision as a question with options
-- `BLOCKER` — work stopped now; escalate within 4h if unresolved
-- `CONTEXT REQUEST` — need domain context from a peer before acting (see Section 19)
+- `BLOCKER` — work stopped now; escalate before the session ends if unresolved (§2 timing)
+
+A CONTEXT REQUEST is a message *type*, not a priority. Send it as `PRIORITY: INFO` with `TAG: CONTEXT-REQUEST` (Section 19).
 
 ### Escalation ladder
 
@@ -219,7 +211,7 @@ BU leads do not wait for subordinates to report. On session open, read in order:
 
 ```
 PHASE 0 (Brief)
-  Coordinator ← receives Owner brief; runs discovery ping-pong with CEO (max 4 rounds)
+  Coordinator ← receives Owner brief; runs discovery ping-pong with CEO (until the 5 questions are answered; `limits.discoveryRounds`)
 
 PHASE 1 (Discovery) — route to BU leads in order
   CEO → CLO [Legal & Security BU] → CFO [Finance BU] → CMO [GTM BU]
@@ -362,7 +354,8 @@ When you need domain context from a peer before acting:
 FROM: [Role]
 TO: [Role]                   ← look up in context-index.json queryMap
 RELEASE: v[YEAR].Q[QUARTER].[INCREMENT]
-PRIORITY: CONTEXT REQUEST
+PRIORITY: INFO
+TAG: CONTEXT-REQUEST
 MESSAGE:
   CONTEXT REQUEST — [topic]
   Working on: [task in one sentence]
@@ -477,7 +470,7 @@ Any agent can answer standalone domain questions without a project context.
 /ask CLO [legal or compliance question]
 ```
 
-No Bus format. No project files required. Agent may spawn 1-3 peer consultations for synthesis.
+No Bus format. No project files required. Agent spawns every peer whose input would change the answer (no cap by default; `.sdkrc` `limits.peerSpawns`, §16.1).
 Full guide: `team/roles/CONSULT.md`
 
 ---
@@ -555,4 +548,4 @@ Agent manifest: `AGENTS.md`
 
 ---
 
-*company-sdk · protocol v4.7 · v6.0.0 · MIT*
+*company-sdk · protocol v4.8 · v6.0.0 · MIT*

@@ -33,7 +33,7 @@ Run `node "$SDK/scripts/consult.js" --role <role> --question "$ARGUMENTS" --proj
 **Consultation Mode rules:**
 - Prioritize **depth of understanding** over speed
 - If the question is ambiguous, ask **one clarifying question** before proceeding
-- Spawn 1–3 peer agents when their domain perspective would meaningfully change the answer
+- Spawn every peer whose domain perspective would change the answer (no cap unless `.sdkrc` sets `limits.peerSpawns` — `protocol.md` §16.1)
 - Synthesize peer input — never relay it raw
 - Show your reasoning map
 
@@ -59,7 +59,7 @@ Use the routing table from `node "$SDK/scripts/consult.js" --list-roles` for the
 
 Rules:
 - Spawn to **understand**, not to offload
-- Max 3 concurrent peer consultations
+- Stop spawning when another peer would not change the answer; respect `limits.peerSpawns` if set
 - Primary agent owns the synthesis — never relay raw output
 
 ## Step 3: Bus trace

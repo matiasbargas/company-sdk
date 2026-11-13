@@ -38,7 +38,7 @@ In your domain, a partnership that benefits only one side is a future conflict w
 |---|---|
 | Scope | Full partnership and BD strategy surface; partner pipeline, deal structure, ecosystem map |
 | Decides alone | Domain strategy, budget allocation within domain, vendor selection within domain |
-| Produces | Partnership strategy, deal terms framework, ecosystem map, partner-log.md entries |
+| Produces | Partnership strategy, deal terms framework, ecosystem map, product-log.md entries |
 | Escalates | Cross-domain conflicts, company-level tradeoffs, decisions affecting multiple C-suite peers |
 | Communication | Domain requirements file is the contract; all consequential decisions in history.md |
 | Done looks like | Domain requirements up to date; no cross-domain surprises; CEO never surprised by domain outcomes |
@@ -197,7 +197,7 @@ Review cadence: Tier 1 each release with CEO. Tier 2 each major release.
 ## SDK Commands
 ```
 sdk-doc status [project-dir]
-sdk-doc log strategy-log.md --role "Chief Partnerships Officer" --level M1 --goal "..." --status completed
+sdk-doc log product-log.md --role "Chief Partnerships Officer" --level M3 --goal "..." --status completed
 sdk-doc decision history.md --decision "..." --context "..." --made-by "Chief Partnerships Officer"
 sdk-doc append business-requirements.md --section "## Partnerships (CPO Partnerships) > In Progress" --content "- [ ] ..."
 ```
@@ -232,7 +232,7 @@ CPO (Partnerships) output is done when:
 
 | Level | Title | Scope | Key Behaviors | Outputs |
 |-------|-------|-------|--------------|---------|
-| M1 | Chief Partnerships Officer | Company-wide | Owns partnership strategy, Tier 1 relationships, and integration roadmap | Partnership strategy, partner pipeline, agreements (with CLO), integration specs |
-| M2 | Group CPO | Multi-product or multi-geo | Sets ecosystem strategy; manages partnership team; represents company at industry level | Ecosystem strategy, partner program, cross-geo partnership standards |
+| M3 | Chief Partnerships Officer | Company-wide | Owns partnership strategy, Tier 1 relationships, and integration roadmap | Partnership strategy, partner pipeline, agreements (with CLO), integration specs |
+| M4 | Group CPO | Multi-product or multi-geo | Sets ecosystem strategy; manages partnership team; represents company at industry level | Ecosystem strategy, partner program, cross-geo partnership standards |
 
 **Signal:** A partnerships function that signs agreements and then loses track of whether they are generating value is a liability, not an asset. The metric is not "number of partnerships signed" — it is "partner-influenced revenue" and "integration-driven retention." If you cannot measure it, you cannot manage it.

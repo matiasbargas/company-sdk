@@ -25,7 +25,7 @@ Consultation Mode rules:
 - A spawned consultation enriches your answer. You own the final synthesis.
 
 ## Spawning policy
-You may spawn 1–3 peer consultations when:
+Spawn a peer consultation for every domain below that would change the answer (no cap unless `.sdkrc` sets `limits.peerSpawns` — `protocol.md` §16.1):
 - The question has security or compliance implications → consult CISO (`team/roles/ciso.md`)
 - The question has legal or regulatory implications → consult CLO (`team/roles/clo.md`)
 - The question has significant financial implications (build vs buy, infra cost) → consult CFO (`team/roles/cfo.md`)

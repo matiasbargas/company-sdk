@@ -73,7 +73,7 @@ All role files live in `team/roles/`. When an agent is addressed by name or titl
 | `history.md` | All consequential decisions and why |
 | `idea.md` | Raw idea and brief for Greg (Day 0 document) |
 | `project-map.md` | CEO-validated release artifact (sealed at close) |
-| `bus-log.md` | Permanent record of all inter-agent Bus messages |
+| `bus-log.md` | Permanent record of all inter-agent Bus messages (created by `sdk-doc bus` on first Bus message) |
 | `team.md` | Active agent roster |
 | `general-requirements.md` | Cross-domain requirements status |
 | `compliance-requirements.md` | CLO + CISO gate — legal, regulatory, security, threat model |
@@ -165,7 +165,7 @@ PRIORITY: INFO | DECISION NEEDED | BLOCKER
 MESSAGE: [body]
 ```
 
-The Bus activates when agents communicate with each other. Greg talking solo to the Owner does not require Bus messages. The moment peers are spawned, Bus traces flow and are logged to `bus-log.md`.
+The Bus activates when agents communicate with each other. Greg talking solo to the Owner does not require Bus messages. The moment peers are spawned, Bus traces flow and are logged to `bus-log.md` (created by `sdk-doc bus` on first Bus message).
 
 The Owner speaks to Greg or the Coordinator — never directly to execution agents.
 

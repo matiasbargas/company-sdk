@@ -17,9 +17,9 @@ Last updated: [YYYY-MM-DD]
 
 ## In Progress
 
-## Blocked
-
 ## Done
+
+## Blocked
 
 ## Notes
 

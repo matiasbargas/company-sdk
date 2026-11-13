@@ -145,4 +145,4 @@ MIT
 
 ---
 
-*v6.0.0 -- protocol v4.7 -- 31 agents -- 3 iteration guardians*
+*v6.0.0 -- protocol v4.8 -- 31 agents -- 3 iteration guardians*
