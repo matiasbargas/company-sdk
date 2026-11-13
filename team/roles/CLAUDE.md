@@ -6,18 +6,11 @@ Quick reference for activating and working with each agent. Full definitions are
 
 ## How to activate an agent
 
-**Context orientation — index-driven loading (every activation):**
+**Load order:** defined once in `protocol.md` §7. Use cockpit first (`sdk-doc cockpit . --role <role>`), then `context-index.json` → manifest/current-status → your role file → queryMap `read[]` → your requirements file. `history.md` and the full protocol are not loaded by default.
 
-1. `context-index.json` — read this FIRST. It contains the file map, domain routing, queryMap (topic to files + consult agent), and project domains. Use the queryMap to determine what else to load for your specific task.
-2. `current-status.md` — session continuity, always second.
-3. **QueryMap lookup:** Identify your activation trigger (topic or task). Look it up in `context-index.json → queryMap`. Load ONLY the files listed in the `read` array for that topic. This replaces loading all requirements files.
-4. Your domain requirements file — if not already loaded via queryMap.
+**Every agent reads `_shared.md` first.** It holds the Constraints, Soul, and shared operating rules. Guardians also read `_guardian.md`.
 
-**Do NOT load by default:** `history.md`, `project.md`, `general-requirements.md`, `bus-log.md`, area logs. Load these only when the queryMap routes you to them.
-
-**Exceptions:** CEO and Coordinator do full context loading (all files). See their role files.
-
-To generate or refresh: `node scripts/doc.js index <project-dir>` (index) · `node scripts/doc.js manifest <project-dir>` (manifest)
+To generate or refresh: `sdk-doc index <project-dir>` (index) · `sdk-doc manifest <project-dir>` (manifest)
 
 ---
 
@@ -27,7 +20,7 @@ Address them by role in a conversation. Use the default name shown here, or the 
 > "CTO, we need an architecture assessment for [feature]"
 > "Hey Mario, review this irreversible decision: [decision]"
 
-Agents always read `context-index.json` then `context-manifest.json` (if present), then `current-status.md` as fallback. If starting a new session, say:
+To start a session, run `sdk-resume <project-dir>`, or say:
 > "Read context-manifest.json (or current-status.md if absent) and tell me where we are."
 
 ---
@@ -100,37 +93,27 @@ Agents always read `context-index.json` then `context-manifest.json` (if present
 | **Architecture Guardian** | `architecture-guardian.md` | CTO has delivered architecture brief — validates design soundness and problem traceability | "Architecture Guardian, review the Architecture iteration: is the design sound for long-term?" |
 | **Implementation Guardian** | `implementation-guardian.md` | EM triggers review after sprint batch — validates problem-solution fit and longevity (distinct from pod Guardian) | "Implementation Guardian, review the Implementation iteration for Pod [name]" |
 
+## Generative Loops (§32)
+
+| Agent | File | Activate when | First words |
+|---|---|---|---|
+| **Loop Coordinator** | `loop-coordinator.md` | Spawned by PM, CTO, Mario, or Test Engineer to drive a §32 loop. Driver, not judge. Consultation is disabled. | "Loop Coordinator, open a Red-Team loop on [artifact]: WEAKNESS_HYPOTHESIS …" |
+
+Pattern files: `loops/critique-revise.md`, `loops/red-team.md`, `loops/dialectic.md` (v0.2, not openable in v0.1). Signal schema: `loops/_IMPROVEMENT_SIGNAL.md`.
+
 ---
 
-## Activation order (full Discovery → Execution)
+## Activation order
 
-```
-Phase 0:  Coordinator
-Phase 1:  CEO (strategic framing)
-          → CLO + CISO (parallel, hard gate for CTO)
-          ── hard gate: CLO + CISO must deliver before CTO activates ──
-          → CFO, CMO, CRO, CDO, COO, CHRO (IN PARALLEL — inform but do not gate Phase 2)
-          → UX Researcher + Designer + PM (parallel with above)
-          → Discovery Guardian reviews (iteration loop until GRADUATE)
-Phase 2:  CTO (starts after CLO+CISO gate, absorbs other Phase 1 outputs as they arrive)
-          → Mario → Designer (full interface direction) → PM (SDD) → Staff Engineer → EM
-          → Architecture Guardian reviews (iteration loop until GRADUATE)
-Phase 3:  Liaison [Sprint 1 start] + Engineers (one per ticket)
-          → Implementation Guardian reviews per pod (iteration loop until GRADUATE)
-Phase 4:  All agents write area logs → PM seals kanban → EM dissolves pods
-          → CEO validates project-map.md → Coordinator seals release
-```
-
-**Hard gate:** CLO + CISO must deliver before CTO activates. This is the only gate between Phase 1 and Phase 2. CFO/CMO/CRO/CDO/COO/CHRO outputs flow to CTO as they complete but do not block CTO activation.
-**Hard gate:** Mario must review irreversible decisions before Sprint 1.
-**Hard gate:** CEO must validate `project-map.md` before release is sealed.
-**Iteration loops:** Discovery, Architecture, and Implementation Guardians must GRADUATE their loops before the next phase proceeds. See `protocol.md` Section 31.
+Canonical: `AGENTS.md` → Activation Sequence. It includes the §31 Guardian gates, and this file does not copy it. Hard gates: CLO + CISO before the CTO; Mario before Sprint 1; Guardians GRADUATE each phase (§31); the CEO validates `project-map.md` before the release seals.
 
 ---
 
 ## Role files in this directory
 
 ```
+_shared.md            Constraints, Soul, and shared operating rules (every agent reads this first)
+_guardian.md          Shared procedure for the three Iteration Guardians
 _template.md          Base template for new agents
 ceo.md                Greg — strategic anchor
 coordinator.md        PMO and org memory
@@ -163,5 +146,7 @@ test-engineer.md      Test strategy, coverage, CI gates
 discovery-guardian.md  Iteration Guardian — validates Discovery quality before Architecture
 architecture-guardian.md  Iteration Guardian — validates Architecture soundness and traceability
 implementation-guardian.md  Iteration Guardian — validates problem-solution fit and longevity per pod
+loop-coordinator.md   §32 loop driver (state machine, not judge)
+loops/                Generative-loop pattern files + improvement-signal schema
 CONSULT.md            Consultation mode guide (read by all agents)
 ```

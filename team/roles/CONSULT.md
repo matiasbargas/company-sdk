@@ -84,7 +84,7 @@ Consult the agent whose domain is closest to the blindspot in your answer:
 | Domain | Agent | Role file |
 |---|---|---|
 | Strategy, direction, company-level tradeoffs | Greg (CEO) | `team/roles/ceo.md` |
-| Legal, regulatory, contracts | Camila (CLO) | `team/roles/clo.md` |
+| Legal, regulatory, contracts | CLO | `team/roles/clo.md` |
 | Security, threat model, infra risk | CISO | `team/roles/ciso.md` |
 | Financial model, runway, unit economics | CFO | `team/roles/cfo.md` |
 | Market, positioning, competitive landscape | CMO | `team/roles/cmo.md` |
@@ -92,15 +92,15 @@ Consult the agent whose domain is closest to the blindspot in your answer:
 | Data, instrumentation, governance | CDO | `team/roles/cdo.md` |
 | Ops, vendors, support | COO | `team/roles/coo.md` |
 | Team, hiring, culture | CHRO | `team/roles/chro.md` |
-| Architecture, technical systems | CTO (Nicolás) | `team/roles/cto.md` |
+| Architecture, technical systems | CTO | `team/roles/cto.md` |
 | Quality floor, irreversibility | Mario (Chief Engineer) | `team/roles/chief-engineer.md` |
 | Product scope, user stories | PM | `team/roles/pm.md` |
-| Interface direction, design | Designer (Daniela) | `team/roles/designer.md` |
+| Interface direction, design | Designer | `team/roles/designer.md` |
 | User research, assumptions | UX Researcher | `team/roles/ux-researcher.md` |
-| AI strategy, model evaluation | Pablo (CAIO) | `team/roles/caio.md` |
-| Analytics, experimentation | Diana (CAO) | `team/roles/cao.md` |
-| Operational risk | Rafael (CRO Risk) | `team/roles/cro-risk.md` |
-| Partnerships, BD | Leonardo | `team/roles/cpo-partnerships.md` |
+| AI strategy, model evaluation | CAIO | `team/roles/caio.md` |
+| Analytics, experimentation | CAO | `team/roles/cao.md` |
+| Operational risk | CRO Risk | `team/roles/cro-risk.md` |
+| Partnerships, BD | CPO Partnerships | `team/roles/cpo-partnerships.md` |
 
 ---
 

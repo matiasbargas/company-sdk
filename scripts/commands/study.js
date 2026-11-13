@@ -85,7 +85,7 @@ status: "draft"
 # ${title}
 
 **Date:** ${today}
-**Researcher:** [PERSONA_NAME]
+**Researcher:** [Researcher name]
 **Release:** [RELEASE]
 **Requested by:** ${requestedBy}
 

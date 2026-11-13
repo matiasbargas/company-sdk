@@ -495,3 +495,21 @@ Alternatives considered: making protocol §1 the SOLUTION_CLASS authority (all o
 Implications: `workflows/retrospective.js` builds loop folders from `loop_id`, so a LOOP- form ID needs `state_path`; this is documented in _IMPROVEMENT_SIGNAL.md and the script is unchanged. Two historical loop folders predate the naming rule. Adding `research` to the type maps means a type that drops it stops getting the research files; all 7 types list it, so behaviour is unchanged.
 Reversible: YES — config defaults and wording; every enforced path is covered by `npm test`.
 Affects natural persons: NO
+
+---
+
+## SDK-CHANGE — Harness review, batch 3: shared modules + placeholder sweep
+**Date of work:** 2026-11-13
+**Made by:** Greg (CEO), Owner-directed ("modularity, not big chunks"; persona placeholders; keep Greg + Mario as aliases)
+**Release:** v2026.Q2.3
+**Tag:** SDK-CHANGE
+
+DECISION: Each repeated rule lives in one module; role files hold only what is specific to the role
+Date: 2026-11-13
+Made by: Greg (CEO), Owner-directed
+Context: Five generic blocks were copied into 27–31 role files (Consultation Mode, Challenge and Feedback, Clarify-before-implementing, Agency check, the two Constraint-1 safe-change lines), and Constraints/Purpose/Soul was pasted whole into 11 of them. The copies had already drifted: none carried the CHARTER pointer. The three Guardian files were about 85% identical. Personas hardcoded a city, a first name and a gender (for example "Amsterdam's merchant tradition runs in her"), which contradicts the spawn-time naming formula: a spawned "Fatima Nairobi" CFO still read Amsterdam. `[PERSONA_NAME]` was used about 200 times despite the `{{name}}` convention, and `[COMPANY]` was never filled.
+Decision: (1) `team/roles/_shared.md` gains the Shared Operating Rules: placeholders, onboarding via `sdk-doc spawn` (consultation spawns exempt), Consultation Mode, Challenge and Feedback, Agency check, Shared Safe-Change Rules (including "do not commit/merge/push unless asked"), consequential-decision logging, and a standard work close. All role files point to it, and the template follows the same structure. About 120 KB, roughly 30k tokens, was removed across the role files with no rule dropped. (2) `team/roles/_guardian.md` is the single Guardian procedure: authority, an 8-step cycle with a verdict table, rhythm, commands, and the Done Definition. Each Guardian file keeps its persona, inputs, domain checks and challenge triggers (about 200 → 140 lines each). Exit criteria live only in §31.2 and `sdk-doc iteration`. (3) Personas use second person plus one `*Cultural lens — {{city}}: {{cultural_profile}}*` line. Hardcoded persona names became `{{name}}`, and sample names in examples became `<Name> <City>`. Greg and Mario stay as protocol role aliases. Trivia-only persona prose was trimmed to the conviction it supported. (4) The role loader fills `{{name}}`, `{{city}}`, `{{cultural_profile}}` and `{{company}}` (test added); `[PERSONA_NAME]` and `[COMPANY]` are swept. (5) The four Determinism Pre-flight copies point to §24 and keep only their domain examples. The Coordinator's copies of §1/§3/§10 are replaced with links. `team/roles/CLAUDE.md` points to §7 and AGENTS.md, and lists `_shared.md`, `_guardian.md`, the Loop Coordinator and `loops/`. Protocol §18–24 headings were normalized to `## N.` so the generated views and section tooling see them.
+Alternatives considered: keeping city personas as labelled "defaults" — rejected by the Owner, because the persona must match the agent actually spawned. A full rewrite of each persona — rejected; only the sentences carrying geography or gender changed.
+Implications: The `team/roles/CLAUDE.md` index still shows default startup-squad names (Gabriela, Rafael, Pablo …) as documented defaults. An agent reading a role file outside the loader sees raw placeholders, and `_shared.md` → Placeholders tells it how to resolve them.
+Reversible: YES — text-only refactor plus an additive loader option.
+Affects natural persons: NO

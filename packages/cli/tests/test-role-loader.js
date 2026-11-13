@@ -43,6 +43,15 @@ const sdkRoot = findSdkRoot();
   assert(!role.raw.includes('{{name}}'), 'Placeholders resolved');
 }
 
+// All spawn-time placeholders resolve when provided
+{
+  const ctoPath = path.join(sdkRoot, 'team', 'roles', 'cto.md');
+  const role = loadRole(ctoPath, { agentName: 'Amara Lagos', city: 'Lagos', culturalProfile: 'Pragmatic, fast-moving.', company: 'Acme' });
+  for (const ph of ['{{name}}', '{{city}}', '{{cultural_profile}}', '{{company}}', '[PERSONA_NAME]']) {
+    assert(!role.raw.includes(ph), `${ph} resolved`);
+  }
+}
+
 // Load CEO role
 {
   const ceoPath = path.join(sdkRoot, 'team', 'roles', 'ceo.md');

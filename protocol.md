@@ -964,7 +964,7 @@ When a BU lead is the first role activated in a new session, they run the self-d
 
 ---
 
-## Section 18: Research Chapter Protocol
+## 18. Research Chapter Protocol
 
 Research operates as an independent chapter. It does not report to PM or any execution BU. Other chapters REQUEST research; the Research Chapter PRIORITIZES and DELIVERS.
 
@@ -1033,7 +1033,7 @@ Research state changes are logged to `research-log.md` — not `design-log.md`. 
 
 ---
 
-## Section 19: Context Request Protocol
+## 19. Context Request Protocol
 
 Agents frequently need domain context from a peer before they can act. This section defines the protocol for requesting and delivering that context cleanly — so no agent guesses, reads the wrong files, or blocks for missing information.
 
@@ -1111,7 +1111,7 @@ MESSAGE:
 
 ---
 
-## Section 20: Project Domain Architecture
+## 20. Project Domain Architecture
 
 Projects define **business domains** alongside the organizational domains (engineering, legal, product, etc.). Organizational domains are fixed — they represent how the team operates. Project domains are project-specific — they represent what the project IS.
 
@@ -1164,7 +1164,7 @@ Three resolution paths when a task touches a domain:
 
 ---
 
-## Section 21: Operations Map
+## 21. Operations Map
 
 The `context-index.json` (schema 2.0) includes an **opsMap** — a machine-readable catalog of operations agents can perform. This replaces agents needing to remember CLI command syntax.
 
@@ -1198,7 +1198,7 @@ Consultation-spawned agents (spawned via CONSULT.md without full project activat
 
 ---
 
-## Section 22: Bus Log
+## 22. Bus Log
 
 All inter-agent Bus messages are logged to `bus-log.md` — an append-only record with timestamps.
 
@@ -1225,7 +1225,7 @@ Resolution is conservative — most messages return null. The Bus format does no
 
 ---
 
-## Section 23: Session Memory
+## 23. Session Memory
 
 Sessions capture context that would otherwise be lost when a conversation ends.
 
@@ -1247,7 +1247,7 @@ Temp sessions are gitignored. Permanent sessions are committed.
 
 ---
 
-## Section 24: The Halloway Ratchet Doctrine
+## 24. The Halloway Ratchet Doctrine
 
 The reliability ratchet describes a failure mode in which an AI agent applies exploratory LLM reasoning to a problem that has a deterministic or well-known solution — indefinitely, with confidence, without volunteering to change approach. The agent will not tell you it is using a bad strategy. The only signal is a faint trail of corrections and revisions that scroll past unnoticed.
 

@@ -27,6 +27,9 @@ const ROLE_SECTIONS = [
  * @param {string} filePath - Absolute path to the role .md file
  * @param {object} [options]
  * @param {string} [options.agentName] - Name to substitute for {{name}} placeholders
+ * @param {string} [options.city] - City for {{city}} (naming formula, protocol §14)
+ * @param {string} [options.culturalProfile] - 1-2 sentence profile for {{cultural_profile}}
+ * @param {string} [options.company] - Company/project name for {{company}}
  * @returns {object} Parsed role with sections
  */
 function loadRole(filePath, options = {}) {
@@ -36,15 +39,17 @@ function loadRole(filePath, options = {}) {
 
   let content = fs.readFileSync(filePath, 'utf8');
 
-  // Resolve {{name}} placeholders
-  if (options.agentName) {
-    content = content.replace(/\{\{name\}\}/g, options.agentName);
+  // Resolve spawn-time placeholders. [PERSONA_NAME] is the legacy spelling of {{name}}.
+  const fills = {
+    name: options.agentName,
+    city: options.city,
+    cultural_profile: options.culturalProfile,
+    company: options.company,
+  };
+  for (const [key, value] of Object.entries(fills)) {
+    if (value) content = content.split(`{{${key}}}`).join(value);
   }
-
-  // Also resolve [PERSONA_NAME] which some templates use
-  if (options.agentName) {
-    content = content.replace(/\[PERSONA_NAME\]/g, options.agentName);
-  }
+  if (options.agentName) content = content.split('[PERSONA_NAME]').join(options.agentName);
 
   const sections = parseSections(content);
   const capability = parseCapability(sections['Capability'] || '');
