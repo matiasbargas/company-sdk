@@ -90,8 +90,8 @@ function writeSdkrc(projectDir, data) {
 /** Extract `**Release:** vYYYY.QN.N` from current-status.md */
 function extractReleaseFromStatus(content) {
   if (!content) return null;
-  const m = content.match(/\*\*Release:\*\*\s*(v\d{4}\.Q[1-4]\.\d+)/);
-  return m ? m[1] : null;
+  const s = require('./lib/project-state').parseStatus(content);
+  return s.release && require('./lib/project-state').RELEASE_RE.test(s.release) ? s.release : null;
 }
 
 /** Parse sections from markdown (bare heading names, no ## prefix) */

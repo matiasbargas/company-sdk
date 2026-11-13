@@ -124,28 +124,15 @@ if (runDiscovery && (gateRunClo || gateRunCiso)) {
   } else {
     const content = fs.readFileSync(discoveryFile, 'utf8');
 
-    const gateTableMatch = content.match(/\|\s*Legal\s*\|\s*CLO\s*\|\s*(\w+)/i);
-    const secTableMatch  = content.match(/\|\s*Security\s*\|\s*CISO\s*\|\s*(\w+)/i);
-    const legalStatus    = gateTableMatch ? gateTableMatch[1].trim() : null;
-    const secStatus      = secTableMatch  ? secTableMatch[1].trim()  : null;
-
-    // Body of an H2 section, matched by heading prefix so "## Legal & Regulatory (CLO)"
-    // and a future rename to "## Legal (CLO)" both resolve.
-    const h2Body = (prefix) => {
-      const m = content.match(new RegExp(`^## ${prefix}[^\\n]*\\n([\\s\\S]*?)(?=^## |(?![\\s\\S]))`, 'm'));
-      return m ? m[1] : null;
-    };
-
-    // Jurisdictions must exist AND be filled in — the template ships the section
-    // with "[Countries]" placeholders, which previously passed this check.
-    const jurisdictions      = h2Body('Jurisdictions');
-    const answerCells        = jurisdictions ? [...jurisdictions.matchAll(/^\|[^|\n]*\?\s*\|\s*([^|\n]*)\|/gm)].map(m => m[1].trim()) : [];
-    const hasJurisdictions   = jurisdictions !== null;
-    const jurisdictionsFilled = answerCells.length > 0 && answerCells.every(a => a && !/^\[.*\]$/.test(a));
-
-    // Any unchecked item anywhere in the owner's H2 (CISO nests Pending under ###/####).
-    const hasPendingLegal = /- \[ \]/.test(h2Body('Legal[^\\n]*\\(CLO\\)') || '');
-    const hasPendingSec   = /- \[ \]/.test(h2Body('Security[^\\n]*\\(CISO\\)') || '');
+    // One reader for the template's structure: scripts/lib/project-state.js.
+    const { parseCompliance } = require('./lib/project-state');
+    const cs = parseCompliance(content);
+    const legalStatus         = cs.gates.legal;
+    const secStatus           = cs.gates.security;
+    const hasJurisdictions    = cs.jurisdictions.present;
+    const jurisdictionsFilled = cs.jurisdictions.filled;
+    const hasPendingLegal     = cs.pending.legal;
+    const hasPendingSec       = cs.pending.security;
 
     if (gateRunClo) {
       if (!legalStatus) {

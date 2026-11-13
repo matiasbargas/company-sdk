@@ -1,3 +1,14 @@
+---
+ritual:
+  id: surface-sweep
+  order: 1
+  owner: Coordinator
+  cadence: daily
+  slot: morning
+  runs: "office-day-v0.1.js → Surface sweep phase"
+  writes: [] # read-and-report only
+  idempotent: true
+---
 # Ritual 01 — Surface Sweep
 
 > Move the §34 Collaboration Surfaces forward. Find the ones that have stalled.

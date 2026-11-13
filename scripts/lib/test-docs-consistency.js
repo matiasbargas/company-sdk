@@ -135,6 +135,22 @@ const sdkBus = sdk.slice(sdk.indexOf('### Bus message format'));
 const sdkFields = fieldsOf(sdkBus.slice(sdkBus.indexOf('```'), sdkBus.indexOf('```', sdkBus.indexOf('```') + 3)));
 for (const f of s1Fields) check(sdkFields.includes(f), `SDK.md Bus block has §1 field ${f}`);
 
+// ── 7. Rituals ─────────────────────────────────────────────────────────────────
+const roleFiles = new Set(fs.readdirSync(path.join(root, 'team/roles')).map(f => f.replace(/\.md$/, '')));
+const ROLE_SLUG = { Coordinator: 'coordinator', PM: 'pm', CEO: 'ceo', EM: 'em', CTO: 'cto' };
+const ritualsReadme = read('team/office/rituals/README.md');
+for (const file of walk('team/office/rituals/office')) {
+  const text = read(file);
+  const fm = text.match(/^---\nritual:\n([\s\S]*?)\n---\n/);
+  check(!!fm, `${file} has ritual frontmatter`);
+  if (!fm) continue;
+  const get = (k) => (fm[1].match(new RegExp(`^\\s+${k}:\\s*([^#\\n]+)`, 'm')) || [])[1]?.trim();
+  const order = get('order'), owner = get('owner');
+  check(!!get('id') && !!order && !!owner, `${file} frontmatter has id, order, owner`);
+  check(roleFiles.has(ROLE_SLUG[owner] || String(owner).toLowerCase()), `${file} owner "${owner}" is a real role`);
+  check(new RegExp(`\\b0?${order} `).test(ritualsReadme), `${file} (order ${order}) is listed in the rituals README`);
+}
+
 // ── Report ─────────────────────────────────────────────────────────────────────
 for (const f of failures) console.log(`  ✗  ${f}`);
 console.log(`  docs consistency: ${passed} passed, ${failures.length} failed`);

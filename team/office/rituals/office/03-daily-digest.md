@@ -1,3 +1,14 @@
+---
+ritual:
+  id: daily-digest
+  order: 3
+  owner: Coordinator
+  cadence: daily
+  slot: morning
+  runs: "retrospective.js cadence=daily"
+  writes: [record/metrics/_daily-digests/<date>.md]
+  idempotent: true  # same date overwrites that day
+---
 # Ritual 03 — Daily Digest
 
 > Turn the raw signal stream into a watchlist a human can act on.

@@ -531,3 +531,23 @@ Alternatives considered: a SessionStart hook that injects ceo.md as the persona 
 Implications: `omitClaudeMd` and the output-style behaviour follow current Claude Code docs; if a future version changes them, `gen-agents.js` and `greg.md` are the only two files to touch. Generated projects still lack the §35 commit-msg gate (open follow-through). Workflow-based skills (office-day) still need the Owner's opt-in to workflows.
 Reversible: YES — remove the settings keys or the generated directories; every script is covered by tests.
 Affects natural persons: NO
+
+---
+
+## SDK-CHANGE — Harness review, batch 6: per-section protocol + one state reader
+**Date of work:** 2026-11-13
+**Made by:** Greg (CEO), Owner-directed ("generated per-section"; "one parser module")
+**Release:** v2026.Q2.3
+**Tag:** SDK-CHANGE
+
+DECISION: protocol.md stays the only hand-edited source, generated as one file per section; markdown state is read through one module
+Date: 2026-11-13
+Made by: Greg (CEO), Owner-directed
+Context: protocol.md is about 110 KB. Agents loaded either the whole file or a two-part split. Eight scripts parsed current-status.md and compliance-requirements.md with private regexes. Two of them had already broken silently: gate-check (headings) and `sdk-status`, which read the Active Missions table by column position and so put "Next action" into Status.
+Decision: (1) `scripts/split-protocol.js` also generates `protocol/NN-<slug>.md` for §0–§35 plus `protocol/INDEX.md`. §7 now loads sections by number, the PreToolUse hook denies edits to them, init and update ship them, and `npm test` pins them. (2) `scripts/lib/project-state.js` is the one reader: header fields, H2 bodies, and header-aware tables for missions, waiting, open decisions, next agent, release, compliance gates, jurisdictions and pending items. `sdk-status`, `sdk-gate-check`, `sdk-version` and `sdk-pre-tag` read through it. `scripts/lib/test-project-state.js` pins the column-order and template-heading cases. File formats are unchanged, so existing projects keep working. (3) Ritual files carry `ritual:` frontmatter (id, order, owner, cadence, slot, runs, writes, idempotent), and the docs test checks it against roles and the README. Status Reconcile, in both the ritual and the office-day workflow, now rewrites only derived sections and carries Session Notes and Open Decisions verbatim.
+Alternatives considered: YAML frontmatter on current-status.md and the requirements files — deferred by the Owner; it needs a migration and makes prose and frontmatter two sources of truth. Making the per-section files the source — rejected; every existing reference and the core/reference views would have to move.
+Implications: `sdk-status` now lists the open missions in this repo's status file (three BLOCKED Tier-2 missions), which the old positional parser silently dropped. ops.js, kill.js, pod-update.js and manifest-generator still use their own small regexes; move them onto project-state.js when next touched.
+Reversible: YES — generated files and a parser module; tests cover both.
+Affects natural persons: NO
+
+**Harness review complete (batches 1–6).** Six commits on `feat/harness-hardening`. `npm test` is green, including the four new guard suites (doc sections, project state, docs consistency, generated views).

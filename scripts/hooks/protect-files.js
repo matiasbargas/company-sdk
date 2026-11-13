@@ -4,7 +4,7 @@
  * protect-files.js — Claude Code PreToolUse hook (Edit|Write).
  *
  *   CHARTER.md                       Layer A — changes only by Owner ratification (see the CHARTER.md header).
- *   protocol-core.md / -reference.md generated from protocol.md by scripts/split-protocol.js.
+ *   protocol-core.md / -reference.md / protocol/*.md   generated from protocol.md by scripts/split-protocol.js.
  *
  * Denies with a reason Claude can act on; anything else passes through (exit 0, no output).
  */
@@ -22,6 +22,11 @@ process.stdin.on('end', () => {
     'protocol-core.md': 'protocol-core.md is generated. Edit protocol.md, then run `node scripts/split-protocol.js`.',
     'protocol-reference.md': 'protocol-reference.md is generated. Edit protocol.md, then run `node scripts/split-protocol.js`.',
   };
+  // Only the generated views: a protocol/ dir that sits next to a protocol.md source.
+  const path = require('path');
+  if (/\/protocol\/[^/]+\.md$/.test(filePath) && require('fs').existsSync(path.join(path.dirname(path.dirname(filePath)), 'protocol.md'))) {
+    rules[base] = `protocol/${base} is generated. Edit protocol.md, then run \`node scripts/split-protocol.js\`.`;
+  }
   if (!rules[base]) process.exit(0);
   process.stdout.write(JSON.stringify({
     hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: rules[base] },

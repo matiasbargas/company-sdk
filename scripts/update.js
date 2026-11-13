@@ -182,6 +182,7 @@ const TOP_LEVEL_FILES = [
 ];
 
 const DIRECTORIES = [
+  'protocol',
   'team',
   'scripts',
   'project-template',

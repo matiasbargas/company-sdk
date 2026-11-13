@@ -67,11 +67,8 @@ function readCurrentRelease(projectDir) {
   const sdkrc = readSdkrc(projectDir);
   if (sdkrc.releaseId && parseVersion(sdkrc.releaseId)) return sdkrc.releaseId;
   // 2. Try current-status.md **Release:** field
-  const statusFile = path.join(projectDir, 'current-status.md');
-  if (fs.existsSync(statusFile)) {
-    const m = fs.readFileSync(statusFile, 'utf8').match(/^\*\*Release:\*\*\s*(.+)$/m);
-    if (m && parseVersion(m[1].trim())) return m[1].trim();
-  }
+  const status = require('./lib/project-state').readStatus(projectDir);
+  if (status && status.release && parseVersion(status.release)) return status.release;
   return null;
 }
 

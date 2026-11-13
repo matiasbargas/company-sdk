@@ -14,6 +14,6 @@ description: Start or resume a team-sdk session: run sdk-resume, read the cockpi
    - what is overdue or blocked;
    - health issues;
    - the next action, as the activation phrase.
-5. Load further context only as `protocol.md` §7 allows. Do not read `history.md` or the full protocol by default.
+5. Load further context only as `protocol.md` §7 allows: protocol sections come one at a time from `protocol/NN-*.md` (see `protocol/INDEX.md`). Do not read `history.md` or the full protocol by default.
 
 Commands: use the `sdk-*` bins; inside the SDK repo without `npm link`, run `node scripts/<name>.js`; in a generated project, `$SDK` is `sdkPath` from `./.sdkrc`.

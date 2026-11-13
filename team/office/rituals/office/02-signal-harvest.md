@@ -1,3 +1,14 @@
+---
+ritual:
+  id: signal-harvest
+  order: 2
+  owner: Coordinator
+  cadence: daily
+  slot: morning
+  runs: "retrospective.js cadence=loop (per missing loop_id)"
+  writes: [record/metrics/_signals.jsonl]
+  idempotent: true  # skips loop_ids already in the stream
+---
 # Ritual 02 — Signal Harvest
 
 > Every closed loop owes one `improvement_signal`. Pull them into the stream before they are lost.

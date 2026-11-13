@@ -337,6 +337,14 @@ if (fs.existsSync(squadSrc)) {
 
 // Shared SDK docs
 // SDK.md comes from the SDK root — the old project-template/SDK.md copy drifted to v4.3.
+const protocolSectionsSrc = path.join(sdkRoot, 'protocol');
+if (fs.existsSync(protocolSectionsSrc)) {
+  ensureDir(path.join(outputDir, 'protocol'));
+  for (const f of fs.readdirSync(protocolSectionsSrc).filter(n => n.endsWith('.md'))) {
+    fs.copyFileSync(path.join(protocolSectionsSrc, f), path.join(outputDir, 'protocol', f));
+  }
+  console.log(`    ✓  protocol/  (per-section views)`);
+}
 for (const extra of ['SDK.md', 'protocol.md', 'protocol-core.md', 'protocol-reference.md', 'AGENTS.md', 'STRATEGY.md', 'CHARTER.md']) {
   const src = path.join(sdkRoot, extra);
   if (fs.existsSync(src)) {

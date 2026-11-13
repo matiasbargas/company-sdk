@@ -195,7 +195,7 @@ Gather on-disk reality:
 Then:
 1. Read ${projectDir}/current-status.md.
 2. Build a drift list: each claim in the file that on-disk evidence contradicts — field, what it "was", what it "now" should be. Be concrete (e.g. retro status, _RETRO-INDEX existence, Next Agent To Activate).
-3. Rewrite ${projectDir}/current-status.md so Phase, Active Missions, Next Agent To Activate, and Session Notes match reality. Append a dated Session Notes line for ${date} summarizing the office-day run. Preserve the file's structure and its closing ownership footer. Use the Write tool.
+3. Rewrite only the derived sections of ${projectDir}/current-status.md (Phase, Active Missions, Waiting On, Next Agent To Activate) so they match reality. Carry existing Session Notes and Open Decisions over verbatim; never regenerate them. Append one dated Session Notes line for ${date} summarizing the office-day run. Preserve the file's structure and its closing ownership footer. Use the Edit tool for targeted replacements rather than rewriting the whole file.
 
 Today's outputs:
 - surfaces: ${JSON.stringify(surfaces)}

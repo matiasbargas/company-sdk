@@ -1,3 +1,14 @@
+---
+ritual:
+  id: retro-trigger-sweep
+  order: 4
+  owner: PM
+  cadence: daily
+  slot: midday
+  runs: "office-day-v0.1.js → Retro-trigger phase (reports; firing is a PM/Owner act)"
+  writes: [] # report only
+  idempotent: true
+---
 # Ritual 04 — Retro-Trigger Sweep
 
 > Find the shipped work that is owed a sprint retrospective and has not had one.

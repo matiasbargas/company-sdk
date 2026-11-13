@@ -1,3 +1,14 @@
+---
+ritual:
+  id: status-reconcile
+  order: 5
+  owner: Coordinator
+  cadence: daily
+  slot: close
+  runs: "office-day-v0.1.js → Status reconcile phase, then sdk-health"
+  writes: [current-status.md]
+  idempotent: false # rewrites derived sections; Session Notes must be preserved
+---
 # Ritual 05 — Status Reconcile
 
 > Close the day by making `current-status.md` tell the truth.
@@ -29,7 +40,7 @@ sdk-health project/      # staleness + validate + manifest + .sdkrc check
 sdk-status project/      # missions table, open decisions, activation phrase
 ```
 
-…then rewrite `current-status.md` to reality. Inside `office-day-v0.1.js` this is the **Status reconcile** phase: one agent diffs the status file against the evidence above, rewrites it, and returns the drift list. The file is fully reversible via git, so the rewrite is safe; the drift list keeps it auditable.
+…then rewrite the derived sections of `current-status.md` (Phase, Active Missions, Waiting On, Next Agent) to match reality. **Session Notes and Open Decisions are carried over verbatim, never regenerated.** Inside `office-day-v0.1.js` this is the **Status reconcile** phase: one agent diffs the status file against the evidence above, rewrites it, and returns the drift list. The file is fully reversible via git, so the rewrite is safe; the drift list keeps it auditable.
 
 ## Why this ritual exists (the gap it was built to close)
 

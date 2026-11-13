@@ -4,7 +4,7 @@
 **Owner:** Coordinator
 **Every agent references this file. Do not duplicate these definitions in individual role files. If the protocol changes, it changes here.**
 
-> **Optimized loading:** For context-window efficiency, agents may load `protocol-core.md` (Sections 0-13, ~800 lines) for routine work and `protocol-reference.md` (Sections 14+) only when the topic requires it. Both files are generated views of this document (`node scripts/split-protocol.js`; `npm test` fails if they go stale) — edit only protocol.md.
+> **Optimized loading:** For context-window efficiency, agents may load `protocol-core.md` (Sections 0-13, ~800 lines) for routine work and `protocol-reference.md` (Sections 14+) only when the topic requires it. Both files, and the per-section files in `protocol/` (one per section, with `protocol/INDEX.md`), are generated views of this document (`node scripts/split-protocol.js`; `npm test` fails if they go stale). Edit only protocol.md.
 
 ---
 
@@ -323,7 +323,7 @@ The one load order. Role files, `AGENTS.md`, and `SDK.md` point here and do not 
 4. **QueryMap lookup.** Find your activation topic in `context-index.json → queryMap` and load only the files in its `read` array.
 5. Your own `<domain>-requirements.md`, if the queryMap did not already include it.
 6. `domains/<name>/summary.md`, only if your task touches a project domain.
-7. Protocol: `protocol-core.md` (§0–13). Load later sections from `protocol-reference.md` only by number, when the topic needs them.
+7. Protocol: `protocol-core.md` (§0–13). Load any other section by number from `protocol/NN-*.md` (index: `protocol/INDEX.md`), and only when the topic needs it.
 
 **Do not load by default:** `history.md` (query it with `sdk-doc history . --search <term>`), `project.md`, `general-requirements.md`, `bus-log.md`, area logs, `iterations/`, or the full `protocol.md`. Load them only when the queryMap routes you there or the task needs decision history.
 
