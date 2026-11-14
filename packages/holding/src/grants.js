@@ -11,8 +11,11 @@
 
 const PROOF_KINDS = ['verified_surface', 'graduated_cycle', 'owner_approved_ship'];
 
-// Company-qualified reference, e.g. "acme/SURFACE-20261114-x-001" (C11 qualifies by companyId).
-const REF_RE = /^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/;
+// Company-qualified reference (C11 qualifies by companyId): "acme/SURFACE-20261114-x-001",
+// "acme/discovery/2" (a §31 loop/cycle), "acme/implementation/pod-auth/1", "acme/ship-v1".
+// Segments may not be "." or ".." so a ref can never name a path outside the company repo.
+const SEGMENT = '(?!\\.{1,2}(?:/|$))[A-Za-z0-9._-]+';
+const REF_RE = new RegExp(`^${SEGMENT}(?:/${SEGMENT})+$`);
 const SHA_RE = /^[0-9a-f]{7,64}$/;
 
 const isNonEmptyString = (v) => typeof v === 'string' && v.trim().length > 0;

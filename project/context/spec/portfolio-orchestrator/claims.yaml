@@ -107,11 +107,12 @@ claims:
         when: "sdk-health runs on the holding"
         then: "it reports that the outside-verifier decision is due (proof self-verification risk)"
     sources: [{file: history.md, section: "Portfolio Orchestrator — Discovery decisions"}]
-    conformance: []
+    # pinned at the report level (report.revisit_trigger); stays planned until sdk-health reports it
+    conformance: [cap-po-proof-002]
 
   - id: cap-po-runner-001
     kind: capability
-    status: planned
+    status: built
     statement: "The runner refuses to start a run when the company has no open tranche (with or without infinite fuel), and stops at a turn boundary when the working budget is spent, leaving the repository committed or clean."
     acceptance:
       - given: "a company whose open tranche is exhausted"
@@ -121,7 +122,7 @@ claims:
         when: "the next tool call is attempted"
         then: "work tools are denied with a landing message; git/status writes still succeed; no .git/index.lock remains"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "v0 gates"}]
-    conformance: []
+    conformance: [cap-po-runner-001]
 
   - id: cap-po-runner-002
     kind: capability
@@ -178,25 +179,25 @@ claims:
 
   - id: cap-po-killswitch-001
     kind: capability
-    status: planned
+    status: built
     statement: "The holding Owner can halt any instance and freeze the ledger; a frozen ledger accepts no draws."
     acceptance:
       - given: "the ledger is frozen"
         when: "any draw is attempted"
         then: "it is refused; running sessions reach landing mode at the next turn boundary"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "v0 gates"}]
-    conformance: []
+    conformance: [cap-po-killswitch-001]
 
   - id: cap-po-metric-001
     kind: capability
-    status: planned
+    status: built
     statement: "VOF is reported per company and per bet, fully loaded, only compared within a bet class, always beside the company Owner's judgment; a cycle with unmetered sessions suppresses that company's VOF."
     acceptance:
       - given: "company A had one unmetered session in the cycle"
         when: "the ledger report runs"
         then: "A's VOF is shown as suppressed with the reason"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft, 6. Metric"}]
-    conformance: []
+    conformance: [cap-po-metric-001]
 
   - id: cap-po-budget-001
     kind: capability
@@ -211,58 +212,59 @@ claims:
 
   - id: cap-po-grant-002
     kind: capability
-    status: planned
+    status: built
     statement: "A grant becomes drawable only after the holding Owner ratifies it; agents can propose but never ratify."
     acceptance:
       - given: "a grant approved at the Betting Table but not ratified by the holding Owner"
         when: "a draw is attempted"
         then: "it is refused"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 2. Lifecycle"}]
-    conformance: []
+    conformance: [cap-po-grant-002]
 
   - id: cap-po-grant-003
     kind: capability
-    status: planned
+    status: built
     statement: "Unspent fuel returns to the pool on close or kill, and is reclaimed after `fuel.reclaimCyclesWithoutProof` Betting cycles without new proof; returned fuel is credited to the company's next request."
     acceptance:
       - given: "a grant with undrawn FU and no proof for reclaimCyclesWithoutProof cycles"
         when: "the cycle closes"
         then: "a `reclaim` event returns the undrawn FU to the pool"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 7. Guardrails"}]
-    conformance: []
+    conformance: [cap-po-grant-003]
 
   - id: cap-po-proof-003
     kind: capability
-    status: planned
+    status: built
     statement: "Proof reverted within `fuel.proofRevertCommits` commits is clawed back from the metric and cannot unlock a further tranche."
     acceptance:
       - given: "a verified surface that unlocked tranche 2 and is reverted 3 commits later"
         when: "the ledger report runs"
         then: "its weight is removed from VOF and a `proof` reversal event is recorded"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 7. Guardrails"}]
-    conformance: []
+    conformance: [cap-po-proof-003]
 
   - id: cap-po-reserve-001
     kind: capability
-    status: planned
+    status: built
     statement: "With a finite envelope, `fuel.smallBetReserve` of the pool is held for grants up to `fuel.smallBetMax`, and `fuel.overrunReserve` for overruns; overruns stop when the reserve is empty."
     acceptance:
       - given: "a finite envelope where large grants would consume all non-reserved fuel"
         when: "a small grant is requested"
         then: "it is funded from the small-bet reserve"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 6–7"}]
-    conformance: []
+    # overrun stop = pre-flight in sdk-holding `run` (pool.overrun_reserve_empty); runner.js does not check it yet
+    conformance: [cap-po-reserve-001]
 
   - id: cap-po-runner-003
     kind: capability
-    status: planned
+    status: built
     statement: "The runner caps parallel sessions at `limits.fuel.concurrency` and holds one lock per company, so a repository never has two writer sessions; it never runs with skip-permissions."
     acceptance:
       - given: "concurrency 2 and three queued runs"
         when: "the runner schedules them"
         then: "at most two run at once, never two in the same company, and no run uses --dangerously-skip-permissions or bypassPermissions"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "v0 gates"}]
-    conformance: []
+    conformance: [cap-po-runner-003]
 
   - id: cap-po-registry-002
     kind: capability
@@ -312,4 +314,39 @@ claims:
         when: "the ledger report runs"
         then: "divergence is not computed for that class (below the minimum)"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 8. Metric and the judgment column"}]
+    # pinned at the report level (report.unrated + divergence); stays planned until sdk-health flags the unfilled column
+    conformance: [cap-po-judgment-001]
+
+  - id: cap-po-runner-004
+    kind: capability
+    status: built
+    statement: "The runner launches sessions with a clean environment (nothing inherited from the Owner's shell or user settings except what the runner passes), pins the model through runner-owned settings, and aborts a session at its `system:init` event when the resolved model differs from the grant's model, before any spend."
+    acceptance:
+      - given: "the Owner's environment sets ANTHROPIC_MODEL to a different model than the grant (observed in spike 2)"
+        when: "the runner starts a session"
+        then: "the child environment does not contain ANTHROPIC_MODEL, and if init reports a model other than the grant's, the run stops with terminalReason model_mismatch and no draw"
+    sources: [{file: record/experiments/2026-11-14-metering-spike-2/README.md, section: "Observations"}]
+    conformance: [cap-po-runner-004]
+
+  - id: cap-po-runner-005
+    kind: capability
+    status: built
+    statement: "The runner refuses a run whose per-run budget cap is below the pinned model's session floor (fixed per-session overhead), because such a cap is overshot on the first turn."
+    acceptance:
+      - given: "a model whose recorded session floor is ~$0.08 and a run cap of $0.02"
+        when: "start is called"
+        then: "it is refused naming the floor"
+    sources: [{file: record/experiments/2026-11-14-metering-spike-2/README.md, section: "Observations"}]
+    conformance: [cap-po-runner-005]
+
+  - id: cap-po-reconcile-001
+    kind: capability
+    status: planned
+    statement: "Each cycle, ledger draws per company key are reconciled against the provider's usage for that key; the difference (e.g. killed runs with no visible usage) is recorded as an `unmetered` reconciliation event, never ignored."
+    acceptance:
+      - given: "provider usage for a key exceeds the ledger's draws for that key in a cycle"
+        when: "reconciliation runs"
+        then: "an unmetered event records the difference with the provider evidence reference"
+    sources: [{file: record/experiments/2026-11-14-metering-spike-2/README.md, section: "Observations"}]
     conformance: []
+

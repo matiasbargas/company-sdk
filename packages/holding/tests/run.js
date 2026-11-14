@@ -10,22 +10,23 @@ let totalPassed = 0;
 let totalFailed = 0;
 let totalSuites = 0;
 
-for (const file of testFiles) {
-  totalSuites++;
-  try {
-    const { passed, failed } = require(join(testDir, file));
-    totalPassed += passed;
-    totalFailed += failed;
-  } catch (err) {
-    console.error(`\n  CRASH in ${file}:`, err.message);
-    totalFailed++;
+// A suite exports { passed, failed }, or a promise of it (async suites such as test-runner.js).
+(async () => {
+  for (const file of testFiles) {
+    totalSuites++;
+    try {
+      const { passed, failed } = await require(join(testDir, file));
+      totalPassed += passed;
+      totalFailed += failed;
+    } catch (err) {
+      console.error(`\n  CRASH in ${file}:`, err.stack || err.message);
+      totalFailed++;
+    }
   }
-}
 
-console.log(`\n${'═'.repeat(60)}`);
-console.log(`  @team-sdk/holding — ${totalSuites} suites, ${totalPassed} passed, ${totalFailed} failed`);
-console.log(`${'═'.repeat(60)}`);
+  console.log(`\n${'═'.repeat(60)}`);
+  console.log(`  @team-sdk/holding — ${totalSuites} suites, ${totalPassed} passed, ${totalFailed} failed`);
+  console.log(`${'═'.repeat(60)}`);
 
-if (totalFailed > 0) {
-  process.exit(1);
-}
+  process.exit(totalFailed > 0 ? 1 : 0);
+})();

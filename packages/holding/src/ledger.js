@@ -14,8 +14,9 @@
  * and every fold (fail closed). A foreign lock is never broken automatically: a crashed writer's
  * lock times out with LOCK_TIMEOUT naming the file, and a human removes it.
  *
- * Authority: the actor field is checked per event type (only `holding-owner` may fund, grant,
- * freeze, unfreeze; only `runner` may draw, overrun, unmetered). The actor string is declared by
+ * Authority: the actor field is checked per event type (only `holding-owner` may fund, ratify,
+ * freeze, unfreeze, close a cycle; `agent`/`company-owner` may propose a grant; only
+ * `company-owner` may rate (judgment); only `runner` may draw, overrun, unmetered). The actor string is declared by
  * the caller; the real barrier is the OS (D7: holding/ is 0700 under the Owner's user), so this
  * check stops honest mistakes inside the trusted writer, not a hostile process.
  */
@@ -27,11 +28,15 @@ const { GENESIS_SHA256, LedgerError, createFoldContext, applyEvent, drawIdemKey,
 
 const SCHEMA_VERSION = 1;
 const EVENT_TYPES = ['fund', 'grant', 'release', 'draw', 'proof', 'proof_revert', 'overrun', 'reclaim',
-  'return', 'close', 'freeze', 'unfreeze', 'unmetered', 'checkpoint'];
+  'return', 'close', 'freeze', 'unfreeze', 'unmetered', 'checkpoint', 'ratify', 'judgment', 'cycle_close'];
 const HOLDING_OWNER = 'holding-owner';
 const RUNNER = 'runner';
 const ACTORS_BY_TYPE = {
-  fund: [HOLDING_OWNER], grant: [HOLDING_OWNER], freeze: [HOLDING_OWNER], unfreeze: [HOLDING_OWNER],
+  fund: [HOLDING_OWNER], freeze: [HOLDING_OWNER], unfreeze: [HOLDING_OWNER],
+  ratify: [HOLDING_OWNER], cycle_close: [HOLDING_OWNER],
+  // anyone in the company may propose a grant; only the holding Owner's own grant is ratified on entry
+  grant: [HOLDING_OWNER, 'agent', 'company-owner'],
+  judgment: ['company-owner'], // the judgment column is the company Owner's rating
   draw: [RUNNER], overrun: [RUNNER], unmetered: [RUNNER],
   release: [HOLDING_OWNER, RUNNER], proof: [HOLDING_OWNER, RUNNER], proof_revert: [HOLDING_OWNER, RUNNER],
   close: [HOLDING_OWNER, RUNNER], return: [HOLDING_OWNER, RUNNER], reclaim: [HOLDING_OWNER, RUNNER],

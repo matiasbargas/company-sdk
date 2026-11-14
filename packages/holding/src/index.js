@@ -12,6 +12,11 @@
  *   meter      — Claude Code stream-json result.modelUsage → UsageEvent → draw / overrun / unmetered
  *   portfolio  — portfolio.json (schema 1) registry validator
  *   grants     — grant shape and proof matching
+ *   runner     — LocalRunner (Runner contract v1: start/stop/status/meter) + the landing PreToolUse hook
+ *   proofs     — deterministic proof checks in a company repo (commit SHA + state) and revert detection
+ *   cycle      — Betting-cycle close (reclaim, envelope top-up) and grant close/kill
+ *   report     — ledger report: fully loaded VOF, suppression, judgment column, divergence, revisit trigger
+ *   CLI        — bin/sdk-holding.js (main(argv, deps) exported for tests)
  */
 
 const canonical = require('./canonical');
@@ -19,6 +24,10 @@ const ledger = require('./ledger');
 const meter = require('./meter');
 const portfolio = require('./portfolio');
 const grants = require('./grants');
+const runner = require('./runner');
+const proofs = require('./proofs');
+const cycle = require('./cycle');
+const report = require('./report');
 
 module.exports = {
   // canonical JSON
@@ -52,4 +61,29 @@ module.exports = {
   validateGrant: grants.validateGrant,
   qualifiedSurfaceId: grants.qualifiedSurfaceId,
   PROOF_KINDS: grants.PROOF_KINDS,
+
+  // runner
+  createLocalRunner: runner.createLocalRunner,
+  RunnerError: runner.RunnerError,
+  RUNNER_CONTRACT_VERSION: runner.RUNNER_CONTRACT_VERSION,
+  RUN_STATES: runner.STATES,
+  TERMINAL_REASONS: runner.TERMINAL_REASONS,
+  RUNNER_ENV_ALLOWLIST: runner.ENV_ALLOWLIST,
+
+  // proofs
+  verifyProof: proofs.verifyProof,
+  findRevert: proofs.findRevert,
+  recordProof: proofs.recordProof,
+  scanReverts: proofs.scanReverts,
+  ProofError: proofs.ProofError,
+
+  // cycles
+  planCycleClose: cycle.planCycleClose,
+  closeCycle: cycle.closeCycle,
+  endGrant: cycle.endGrant,
+
+  // report
+  buildReport: report.buildReport,
+  formatReport: report.formatReport,
+  VOF_WEIGHTS: report.WEIGHTS,
 };

@@ -66,7 +66,8 @@
     "sdk-daemon": "./scripts/daemon.js",
     "sdk-ops": "./scripts/ops.js",
     "sdk-consult": "./scripts/consult.js",
-    "sdk-memory": "./scripts/memory.js"
+    "sdk-memory": "./scripts/memory.js",
+    "sdk-holding": "./packages/holding/bin/sdk-holding.js"
   },
   "scripts": {
     "bootstrap": "node scripts/bootstrap.js",

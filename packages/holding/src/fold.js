@@ -10,9 +10,29 @@
  * Units are integer Fuel Units (FU). Pool rule: with `limits.envelopePerCycle: null` (infinite
  * fuel) no event is refused for pool balance; every other rule (live grant, mission, tranche
  * gating, frozen ledger, kill condition at grant time) still applies (cap-po-fuel-002).
+ *
+ * Cycles (cap-po-grant-003): the fold counts Betting cycles from 1; `cycle_close` closes the
+ * current one. Draws, overruns, proofs, reverts, unmetered sessions and judgments are stamped
+ * with the cycle they landed in, so per-cycle reports are a pure function of the ledger.
+ *
+ * Ratification (cap-po-grant-002): a `grant` authored by anyone but the holding Owner is a
+ * proposal (status `proposed`, nothing released, not drawable) until the holding Owner writes
+ * `ratify`. A grant the holding Owner authors is ratified on entry: the ratifier is the author.
+ *
+ * Reserves (cap-po-reserve-001), finite envelope only: each `fund` first tops the small-bet
+ * reserve up to floor(smallBetReserve × envelope), then the overrun reserve up to
+ * floor(overrunReserve × envelope); the rest is general fuel. Tranches of large grants debit
+ * general fuel only; small grants (appetite ≤ smallBetMax, default the small-bet target) debit
+ * general first, then the small-bet reserve. Overruns debit the overrun reserve first; beyond it
+ * they are still recorded (real spend) with a warning and `overrun_reserve_empty` set, which is
+ * the pre-flight signal that stops further runs. Returned fuel goes back to general fuel.
+ * pool.balance_fu is always the total of all buckets.
  */
 
 const { validateGrant, validateRecordedProof, proofMatches, qualifiedSurfaceId } = require('./grants');
+
+const HOLDING_OWNER = 'holding-owner';
+const RATINGS = ['advanced', 'flat', 'regressed'];
 
 class LedgerError extends Error {
   constructor(code, message) { super(`${code}: ${message}`); this.code = code; }
@@ -37,11 +57,22 @@ function createFoldContext(limits) {
     fail('LIMITS_REQUIRED', 'limits.envelopePerCycle must be set explicitly (a number, or null for infinite fuel)');
   }
   const infinite = limits.envelopePerCycle === null;
+  const reserveCfg = reserveConfig(limits, infinite);
   return {
     state: {
-      pool: { infinite, funded_fu: 0, balance_fu: 0 },
+      pool: {
+        infinite, funded_fu: 0, balance_fu: 0, general_fu: 0,
+        reserves: reserveCfg ? { small_bet_fu: 0, overrun_fu: 0 } : null,
+        reserve_targets: reserveCfg ? { small_bet_fu: reserveCfg.smallTarget, overrun_fu: reserveCfg.overrunTarget } : null,
+        small_bet_max_fu: reserveCfg ? reserveCfg.smallBetMax : null,
+        overrun_reserve_empty: false,
+      },
+      cycle: 1,
+      closed_cycles: [],
       frozen: false,
+      frozen_at_seq: null,
       grants: {},
+      credits: {},
       unmetered: [],
       warnings: [],
       counts: {},
@@ -53,11 +84,36 @@ function createFoldContext(limits) {
   };
 }
 
+const isFraction = (v) => typeof v === 'number' && v >= 0 && v < 1;
+
+/** Reserve configuration, or null when reserves do not apply (infinite fuel, or no fractions set). */
+function reserveConfig(limits, infinite) {
+  if (infinite) return null;
+  if (!isPosInt(limits.envelopePerCycle)) fail('LIMITS_INVALID', 'limits.envelopePerCycle must be a positive integer or null');
+  const small = limits.smallBetReserve ?? 0;
+  const over = limits.overrunReserve ?? 0;
+  if (!isFraction(small) || !isFraction(over) || small + over >= 1) {
+    fail('LIMITS_INVALID', 'smallBetReserve and overrunReserve must be fractions in [0, 1) that sum below 1');
+  }
+  if (small === 0 && over === 0) return null;
+  const smallTarget = Math.floor(small * limits.envelopePerCycle);
+  const smallBetMax = limits.smallBetMax ?? smallTarget;
+  if (!isNonNegInt(smallBetMax)) fail('LIMITS_INVALID', 'smallBetMax must be a non-negative integer or null');
+  return { smallTarget, overrunTarget: Math.floor(over * limits.envelopePerCycle), smallBetMax };
+}
+
+const recomputeGeneral = (pool) => {
+  pool.general_fu = pool.balance_fu - (pool.reserves ? pool.reserves.small_bet_fu + pool.reserves.overrun_fu : 0);
+};
+
 function liveGrant(ctx, id) {
   const g = ctx.state.grants[id];
+  if (g && g.status === 'proposed') fail('GRANT_NOT_RATIFIED', `grant ${id} is a proposal; the holding Owner has not ratified it`);
   if (!g || g.status !== 'open') fail('NO_LIVE_GRANT', `no open grant ${JSON.stringify(id)}`);
   return g;
 }
+
+const bump = (obj, key, n) => { obj[key] = (obj[key] || 0) + n; };
 
 function trancheOf(g, n) {
   if (!Number.isSafeInteger(n) || n < 1 || n > g.tranches.length) {
@@ -66,18 +122,41 @@ function trancheOf(g, n) {
   return g.tranches[n - 1];
 }
 
-function debitPool(ctx, fu, what) {
+function debitPool(ctx, fu, what, small) {
   const pool = ctx.state.pool;
-  if (!pool.infinite && pool.balance_fu < fu) {
-    fail('POOL_INSUFFICIENT', `${what} needs ${fu} FU, pool has ${pool.balance_fu} FU`);
+  if (pool.infinite) { pool.balance_fu -= fu; recomputeGeneral(pool); return; }
+  if (!pool.reserves) {
+    if (pool.balance_fu < fu) fail('POOL_INSUFFICIENT', `${what} needs ${fu} FU, pool has ${pool.balance_fu} FU`);
+    pool.balance_fu -= fu; recomputeGeneral(pool); return;
   }
+  const general = Math.max(0, pool.general_fu);
+  const fromSmall = small ? Math.max(0, fu - general) : 0;
+  if (fu - fromSmall > general || fromSmall > pool.reserves.small_bet_fu) {
+    fail('POOL_INSUFFICIENT', `${what} needs ${fu} FU; general fuel has ${general} FU` +
+      (small ? ` and the small-bet reserve ${pool.reserves.small_bet_fu} FU` : ` (reserves are held for small bets and overruns)`));
+  }
+  pool.reserves.small_bet_fu -= fromSmall;
   pool.balance_fu -= fu;
+  recomputeGeneral(pool);
 }
+
+/** Move up to `fu` of general fuel into the overrun reserve, never above its target. */
+function refillOverrunReserve(pool, fu) {
+  if (!pool.reserves) return;
+  const room = pool.reserve_targets.overrun_fu - pool.reserves.overrun_fu;
+  const moved = Math.max(0, Math.min(fu, room, pool.general_fu));
+  pool.reserves.overrun_fu += moved;
+  if (pool.reserves.overrun_fu > 0) pool.overrun_reserve_empty = false;
+  recomputeGeneral(pool);
+}
+
+const isSmallBet = (ctx, g) => ctx.state.pool.small_bet_max_fu !== null && g.appetite_fu <= ctx.state.pool.small_bet_max_fu;
 
 function releaseTranche(ctx, g, t) {
   const recovered = Math.min(t.size_fu, g.overrun_outstanding_fu);
   const effective = t.size_fu - recovered;
-  debitPool(ctx, effective, `tranche ${t.index} of ${g.grant_id}`);
+  debitPool(ctx, effective, `tranche ${t.index} of ${g.grant_id}`, isSmallBet(ctx, g));
+  refillOverrunReserve(ctx.state.pool, recovered); // the grant repays the reserve that covered its overrun
   g.overrun_outstanding_fu -= recovered;
   t.effective_fu = effective;
   t.released = true;
@@ -89,8 +168,19 @@ const available = (g) => g.released_fu - g.drawn_fu;
 const handlers = {
   fund(ctx, e) {
     if (!isPosInt(e.amount_fu)) fail('INVALID_AMOUNT', 'fund amount_fu must be a positive integer');
-    ctx.state.pool.funded_fu += e.amount_fu;
-    ctx.state.pool.balance_fu += e.amount_fu;
+    const pool = ctx.state.pool;
+    pool.funded_fu += e.amount_fu;
+    pool.balance_fu += e.amount_fu;
+    if (pool.reserves) {
+      let left = e.amount_fu;
+      for (const k of ['small_bet_fu', 'overrun_fu']) {
+        const add = Math.max(0, Math.min(left, pool.reserve_targets[k] - pool.reserves[k]));
+        pool.reserves[k] += add;
+        left -= add;
+      }
+      if (pool.reserves.overrun_fu > 0) pool.overrun_reserve_empty = false;
+    }
+    recomputeGeneral(pool);
   },
 
   grant(ctx, e) {
@@ -98,17 +188,43 @@ const handlers = {
     if (!ok) fail('GRANT_MALFORMED', errors.join('; '));
     if (ctx.state.frozen) fail('LEDGER_FROZEN', 'no new grants while the ledger is frozen');
     if (ctx.state.grants[e.grant_id]) fail('GRANT_EXISTS', `grant ${e.grant_id} already exists`);
+    if (e.bet_class !== undefined && !isNonEmptyString(e.bet_class)) fail('GRANT_MALFORMED', 'bet_class must be a non-empty string when given');
     const g = {
       grant_id: e.grant_id, company: e.company, mission_id: e.mission_id, appetite_fu: e.appetite_fu,
-      kill_condition: e.kill_condition, status: 'open',
+      bet_class: e.bet_class || 'default', kill_condition: e.kill_condition, status: 'proposed', proposed_by: e.actor,
       tranches: e.tranches.map((t, i) => ({
         index: i + 1, size_fu: t.size_fu, effective_fu: 0, named_proof: { kind: t.proof.kind, ref: t.proof.ref },
-        released: false, proven: false, proof_id: null, reverted: false,
+        released: false, proven: false, proof_id: null, proof: null, proof_cycle: null, reverted: false, revert_cycle: null,
       })),
       released_fu: 0, drawn_fu: 0, overrun_fu: 0, overrun_outstanding_fu: 0, returned_fu: 0,
+      proposed_cycle: ctx.state.cycle, ratified_cycle: null, ended_cycle: null, last_proof_cycle: null,
+      fu_by_cycle: {}, overrun_by_cycle: {}, judgments: {},
     };
-    releaseTranche(ctx, g, g.tranches[0]); // only tranche 1 is drawable at grant time
+    if (e.actor === HOLDING_OWNER) ratifyGrant(ctx, g); // the holding Owner's own grant is ratified by its author
     ctx.state.grants[g.grant_id] = g;
+  },
+
+  ratify(ctx, e) {
+    if (ctx.state.frozen) fail('LEDGER_FROZEN', 'no ratifications while the ledger is frozen');
+    const g = ctx.state.grants[e.grant_id] || fail('NO_SUCH_GRANT', `no grant ${JSON.stringify(e.grant_id)}`);
+    if (g.status !== 'proposed') fail('GRANT_NOT_PROPOSED', `grant ${g.grant_id} is ${g.status}, not a proposal awaiting ratification`);
+    ratifyGrant(ctx, g);
+  },
+
+  judgment(ctx, e) {
+    const g = ctx.state.grants[e.grant_id] || fail('NO_SUCH_GRANT', `no grant ${JSON.stringify(e.grant_id)}`);
+    if (!RATINGS.includes(e.rating)) fail('JUDGMENT_INVALID', `rating must be one of ${RATINGS.join(', ')}, got ${JSON.stringify(e.rating)}`);
+    if (!isPosInt(e.cycle) || e.cycle > ctx.state.cycle) fail('JUDGMENT_INVALID', `cycle must be a past or current cycle (1..${ctx.state.cycle})`);
+    if (g.ratified_cycle === null || e.cycle < g.ratified_cycle || (g.ended_cycle !== null && e.cycle > g.ended_cycle)) {
+      fail('JUDGMENT_INVALID', `grant ${g.grant_id} was not funded in cycle ${e.cycle}`);
+    }
+    g.judgments[String(e.cycle)] = e.rating; // a later rating for the same cycle is the correction
+  },
+
+  cycle_close(ctx, e) {
+    if (e.cycle !== ctx.state.cycle) fail('CYCLE_MISMATCH', `cycle ${ctx.state.cycle} is open; cannot close cycle ${e.cycle}`);
+    ctx.state.closed_cycles.push(e.cycle);
+    ctx.state.cycle += 1;
   },
 
   release(ctx, e) {
@@ -137,6 +253,9 @@ const handlers = {
     ctx.usedProofs.add(key);
     t.proven = true;
     t.proof_id = qualifiedSurfaceId(e.proof.ref, e.proof.sha);
+    t.proof = { kind: e.proof.kind, ref: e.proof.ref, sha: e.proof.sha };
+    t.proof_cycle = ctx.state.cycle;
+    g.last_proof_cycle = ctx.state.cycle;
   },
 
   proof_revert(ctx, e) {
@@ -145,10 +264,17 @@ const handlers = {
     if (!t.proven) fail('PROOF_NOT_FOUND', `tranche ${t.index} of ${g.grant_id} has no proof to revert`);
     if (t.reverted) fail('PROOF_ALREADY_REVERTED', `tranche ${t.index} of ${g.grant_id} is already reverted`);
     t.reverted = true;
+    t.revert_cycle = ctx.state.cycle;
   },
 
+  // A draw while frozen is accepted only for a session that started before the freeze
+  // (after_freeze: true, run_started_seq < the freeze event's seq): that spend already happened,
+  // so it counts against its grant instead of hiding as unmetered (Greg decision 2026-11-14).
   draw(ctx, e) {
-    if (ctx.state.frozen) fail('LEDGER_FROZEN', 'the ledger is frozen; no draws');
+    if (ctx.state.frozen) {
+      const preFreeze = e.after_freeze === true && isPosInt(e.run_started_seq) && e.run_started_seq < ctx.state.frozen_at_seq;
+      if (!preFreeze) fail('LEDGER_FROZEN', 'the ledger is frozen; no draws (only a session started before the freeze may record its draw, marked after_freeze)');
+    }
     for (const f of ['run_id', 'session_id', 'result_uuid', 'company', 'mission_id', 'price_table_version']) {
       if (!isNonEmptyString(e[f])) fail('DRAW_INVALID', `draw.${f} is required`);
     }
@@ -165,6 +291,7 @@ const handlers = {
       fail('TRANCHE_EXHAUSTED', `draw of ${e.fu} FU exceeds the ${available(g)} FU left in ${g.grant_id}'s released tranches`);
     }
     g.drawn_fu += e.fu;
+    bump(g.fu_by_cycle, String(ctx.state.cycle), e.fu);
   },
 
   // Real spend above a run's soft cap. Accepted even when frozen or exhausted: refusing it would
@@ -178,9 +305,20 @@ const handlers = {
     const g = ctx.state.grants[d.grant_id];
     g.overrun_fu += e.fu;
     g.overrun_outstanding_fu += e.fu;
-    ctx.state.pool.balance_fu -= e.fu;
-    if (!ctx.state.pool.infinite && ctx.state.pool.balance_fu < 0) {
-      ctx.state.warnings.push(`seq ${e.seq}: overrun took the pool to ${ctx.state.pool.balance_fu} FU`);
+    bump(g.overrun_by_cycle, String(ctx.state.cycle), e.fu);
+    const pool = ctx.state.pool;
+    pool.balance_fu -= e.fu;
+    if (pool.reserves) {
+      const fromReserve = Math.min(e.fu, pool.reserves.overrun_fu);
+      pool.reserves.overrun_fu -= fromReserve;
+      if (pool.reserves.overrun_fu === 0) pool.overrun_reserve_empty = true;
+      if (fromReserve < e.fu) {
+        ctx.state.warnings.push(`seq ${e.seq}: overrun of ${e.fu} FU exceeded the overrun reserve by ${e.fu - fromReserve} FU (taken from general fuel)`);
+      }
+    }
+    recomputeGeneral(pool);
+    if (!pool.infinite && pool.balance_fu < 0) {
+      ctx.state.warnings.push(`seq ${e.seq}: overrun took the pool to ${pool.balance_fu} FU`);
     }
   },
 
@@ -188,12 +326,15 @@ const handlers = {
     for (const f of ['company', 'run_id', 'session_id', 'reason']) {
       if (!isNonEmptyString(e[f])) fail('UNMETERED_INVALID', `unmetered.${f} is required`);
     }
-    ctx.state.unmetered.push({ seq: e.seq, company: e.company, run_id: e.run_id, session_id: e.session_id,
+    ctx.state.unmetered.push({ seq: e.seq, cycle: ctx.state.cycle, company: e.company, run_id: e.run_id, session_id: e.session_id,
       grant_id: e.grant_id || null, reason: e.reason });
   },
 
-  freeze(ctx) { ctx.state.frozen = true; },
-  unfreeze(ctx) { ctx.state.frozen = false; },
+  freeze(ctx, e) {
+    if (!ctx.state.frozen) ctx.state.frozen_at_seq = e.seq;
+    ctx.state.frozen = true;
+  },
+  unfreeze(ctx) { ctx.state.frozen = false; ctx.state.frozen_at_seq = null; },
 
   checkpoint(ctx, e) {
     if (e.head_sha256 !== ctx.head || e.count !== ctx.count) {
@@ -202,15 +343,27 @@ const handlers = {
   },
 };
 
-// close / return / reclaim end a grant and credit its undrawn released fuel back to the pool.
+function ratifyGrant(ctx, g) {
+  g.status = 'open';
+  g.ratified_cycle = ctx.state.cycle;
+  releaseTranche(ctx, g, g.tranches[0]); // only tranche 1 is drawable at ratification
+}
+
+// close / return / reclaim end a grant and credit its undrawn released fuel back to the pool
+// (general fuel) and to the company's next request (state.credits). A proposal can be closed or
+// returned (nothing was released); only an open grant can be reclaimed.
 for (const [type, status] of [['close', 'closed'], ['return', 'returned'], ['reclaim', 'reclaimed']]) {
   handlers[type] = (ctx, e) => {
     const g = ctx.state.grants[e.grant_id] || fail('NO_SUCH_GRANT', `no grant ${JSON.stringify(e.grant_id)}`);
-    if (g.status !== 'open') fail('GRANT_NOT_OPEN', `grant ${g.grant_id} is already ${g.status}`);
+    const endable = g.status === 'open' || (g.status === 'proposed' && type !== 'reclaim');
+    if (!endable) fail('GRANT_NOT_OPEN', `grant ${g.grant_id} is ${g.status}; it cannot be ${status}`);
     const undrawn = available(g);
     ctx.state.pool.balance_fu += undrawn;
+    recomputeGeneral(ctx.state.pool);
+    if (undrawn > 0) bump(ctx.state.credits, g.company, undrawn);
     g.returned_fu = undrawn;
     g.status = status;
+    g.ended_cycle = ctx.state.cycle;
   };
 }
 
@@ -223,4 +376,4 @@ function applyEvent(ctx, e) {
   ctx.count += 1;
 }
 
-module.exports = { GENESIS_SHA256, LedgerError, createFoldContext, applyEvent, drawIdemKey, overrunIdemKey, handlers };
+module.exports = { GENESIS_SHA256, LedgerError, createFoldContext, applyEvent, drawIdemKey, overrunIdemKey, handlers, RATINGS };

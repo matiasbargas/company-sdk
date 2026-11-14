@@ -650,3 +650,21 @@ New defect found and fixed during integration: `init` substituted `[YEAR]` and `
 Implications: **Behaviour coverage is 189 of 199 existing capabilities pinned (95%), with 0 open defects** (was 157/188, 20 defects). `npm test` runs about 4,200 assertions. Still `planned` for the orchestrator: runner, landing mode, reserves, reclaim, commons, judgment column. The two-company run is still blocked on C4, C12, C13 and C14. Design choices to review: a stale ledger lock is never broken automatically (a human removes it); there is no default price table (the caller must pass one); overruns draw from the general pool until the overrun reserve exists.
 Reversible: YES (code + tests).
 Affects natural persons: NO
+
+**Owner direction — 2026-11-14:** "Focus on orchestration first; iterate until it's ready. Sandbox: keep running for 1 for now." The v0 orchestrator runs **one company** (concurrency 1). The two-company blockers (C12 sandbox user, C13 cap location, C14 key isolation) are deferred until a second company is added; `cap-po-registry` keeps refusing a second company until they hold. "Ready" means the single-company lifecycle works end to end (grant → run → meter → land/kill → proof → report → reclaim) and the Implementation Guardian graduates it.
+
+**Metering spike 2 — 2026-11-14 (Owner limit $0.05 for validation; EXCEEDED).** Greg ran two sessions himself. Run (a) cost $0.085, because `--model claude-haiku-4-5` was overridden by the Owner's environment (`ANTHROPIC_MODEL`, user settings `model`) and the session ran on Opus. Run (b) was killed at 4 s with no usage visible; it may also have been billed. Greg did not check which model would actually run before spending; that is the cause, and no further real runs were made. Findings (`record/experiments/2026-11-14-metering-spike-2/`), now required of the runner:
+- a clean environment, with no Owner env or user settings inherited;
+- model pinned by runner-owned settings;
+- abort on the `system:init` event when the resolved model does not match the grant's model, before any spend;
+- refuse a run whose cap is below the model's session floor;
+- killed runs before the first assistant message are recorded as `unmetered` (spend the meter cannot see), so per-key provider reconciliation is required even with one company.
+
+---
+
+## SDK-CHANGE — Orchestrator iteration 1: runner, CLI, proofs, cycle, report (2026-11-14)
+**Made by:** Greg (CEO), Owner-directed ("focus on orchestration; iterate until ready; one company") · **Release:** v2026.Q2.3 · **Tag:** SDK-CHANGE
+- **LocalRunner + landing hook:** a contract with a version and an idempotent start; a semaphore plus a per-company lock; an authoritative pre-flight (frozen, unratified, tranche exhausted); a clean env from an allowlist, with no `ANTHROPIC_*`/`CLAUDE_*` from the Owner; the model pinned in settings and with `--model`, plus `--setting-sources project` so user settings are never loaded; a hard stop with `model_mismatch` at `system:init`; refusal below the session floor; landing mode that denies work tools and allows git; freeze mirrored to the hook. Draws from sessions started before a freeze are accepted with `after_freeze` (Greg's decision: a freeze stops new work and does not hide spend).
+- **`sdk-holding` CLI:** init, add-company, fund (incl. infinite), grant, ratify, run, proof, judge, close, kill, cycle close, freeze/unfreeze, report, verify. Proofs are checked at the company's commit SHA (Level 3), with revert detection. Cycle close handles reclaim and envelope top-up. The report shows VOF per cycle, the judgment column, divergence, and the revisit trigger.
+- **Tests:** `packages/holding` has 573 assertions and spends zero tokens (a fake CLI built from recorded streams). Behaviour coverage is 199 of 209 (95%).
+- **Known risks going into iteration 2:** limits live outside the hash chain (editing settings changes how history replays); the runner reads only part of the limits; `priceTable` and the pinned Claude Code version must be set before a real run. Spike-2 findings are carried as runner-004/005 and reconcile-001.
