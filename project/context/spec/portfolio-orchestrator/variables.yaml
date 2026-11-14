@@ -108,5 +108,22 @@ metric:
 
 isolation_v0:   # Owner decision: light v0 (own ventures only), full before any other Owner
   required: [separate clones, one API key per company with provider cap unless infinite, runner-owned settings/hooks, no skip-permissions, kill switch]
-  honest_limit: isolation is permission rules + separate clones under one OS user — NOT OS-enforced; Bash can still reach a sibling
+  trust_split: company sessions run as one dedicated sandbox OS user; the runner + holding/ (ledger, settings, hooks, kill switch, commons, keys) stay under the Owner's user, 0700 (Owner decision D7, 2026-11-14)
+  honest_limit: company-to-company separation is clone + permission rules (same sandbox user) — Bash can still reach a sibling company until per-company users
   deferred_until_second_owner: [OS user / container per instance, adoption ledger + automated recall, signed commons commits]
+
+mario_conditions:   # Mario gate 2026-11-14: APPROVED WITH CONDITIONS — these pin formats before code
+  C1: canonical JSON (RFC 8785 JCS) + SHA-256 for the hash chain; schema_version on every event; checkpoint event
+  C2: appends serialized (flock, single writer); idem_key = runId + session_id + result message uuid
+  C3: events add freeze/unfreeze, proof_revert, unmetered; store raw modelUsage verbatim beside normalized fields; derived views record priceTable version
+  C4: second spike (multi-turn tools, Task subagent, mid-run kill, backfill) + meter contract tests on recorded fixtures — BLOCKS two-company run
+  C5: pin Claude Code version per runner; unknown schema → fail closed as `unmetered`, never zero
+  C6: "single writer" = the runner's ledger lib; the holding Owner authors `fund` through sdk-holding
+  C7: pin sdkPath per company; the holding repo is never a parent directory of a company clone
+  C8: contract usage shape = variables.yaml `raw` + verbatim blob; CLI and Agent SDK are adapters; contract has a version
+  C9: start idempotent via caller key; status returns a terminal-reason enum; stop modes {landing, hard}
+  C10: commons tree hash = sorted relative paths, LF-normalized, algorithm-prefixed ("sha256:")
+  C11: surface ids qualified as companyId/surfaceId@sha
+  C12: D7 decided by the Owner (sandbox OS user); runner-002 / isolation-001 / commons-001 updated — BLOCKS two-company run until built
+  C13: CTO + CLO verify where provider spend caps live (per key vs per workspace); if workspace, one workspace + key per company — BLOCKS two-company run
+  C14: keys never on disk readable by the sandbox user; injected per session; per-key reconciliation each cycle — BLOCKS two-company run

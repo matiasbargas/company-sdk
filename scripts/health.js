@@ -340,7 +340,10 @@ function gitOut(args, cwd) {
   const caps = loadCapabilities(specRoot);
   if (caps.length) {
     const built = caps.filter(c => c.status === 'built').length;
-    notices.push(`capabilities: ${built} built, ${caps.length - built} planned or retired (context/spec) ✓`);
+    const existing = caps.filter(c => ['built', 'unpinned', 'defect'].includes(c.status)).length;
+    const defects = caps.filter(c => c.status === 'defect').map(c => c.id);
+    notices.push(`capabilities: ${built} of ${existing} existing pinned by tests; ${caps.length - existing} planned or retired (context/spec)`);
+    if (defects.length) issues.push(`capability defects (a test proved behaviour differs from spec): ${defects.join(', ')}`);
   }
   let codeRoot = projectDir;
   try { codeRoot = require('child_process').execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: projectDir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || projectDir; } catch (_) { /* not a repo */ }

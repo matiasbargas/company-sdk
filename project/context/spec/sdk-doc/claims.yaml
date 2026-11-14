@@ -1,0 +1,855 @@
+# Layer B capabilities — sdk-doc (scripts/doc.js and its 22 registered subcommands)
+#
+# What `sdk-doc` promises at its public interface (argv, files written, exit codes, stdout/stderr),
+# independent of how scripts/commands/*.js implements it (protocol.md §30, "Specs outlive implementations").
+# Black-box conformance: scripts/lib/test-cap-doc.js runs `node scripts/doc.js ...` against fixture
+# projects in os.tmpdir(). Section addressing, scaffolding, and the core iteration lifecycle live in
+# sdk-core (cap-sdk-sections-001, cap-sdk-iteration-001); cap-doc-iteration-* covers the gaps only.
+#
+# status: built = covering test passes · unpinned = exists, untested · defect = a test proved the
+# behaviour differs from help/docs (defect_note says how; the test pins current behaviour with `// DEFECT:`).
+
+claims:
+  # ─── dispatcher ─────────────────────────────────────────────────────────────
+  - id: cap-doc-dispatch-001
+    kind: capability
+    status: built
+    statement: 'sdk-doc prints usage on no args (exit 0) or --help, and exits 1 on an unknown command or a file command without its file argument.'
+    acceptance:
+      - given: 'no arguments'
+        when: 'node scripts/doc.js'
+        then: 'stdout contains Usage:, exit 0'
+      - given: 'an unregistered command'
+        when: 'node scripts/doc.js frobnicate x.md'
+        then: 'stderr Unknown command: "frobnicate", exit 1'
+      - given: 'a file command (read) with no file'
+        when: 'node scripts/doc.js read'
+        then: 'usage printed, exit 1'
+    sources: [{file: scripts/doc.js, lines: '14-66'}]
+    conformance: [cap-doc-dispatch-001]
+
+  - id: cap-doc-dispatch-002
+    kind: capability
+    status: unpinned
+    statement: 'Every file-writing command honours --dry-run by printing a DRY RUN preview and modifying no file.'
+    acceptance:
+      - given: 'any writing command'
+        when: 'invoked with --dry-run'
+        then: 'stdout shows DRY RUN and no file or directory changes (append, iteration create are pinned; study, session promote, domain are known defects)'
+    sources: [{file: scripts/doc.js, lines: '15,130-131'}, {file: scripts/lib/doc-utils.js, lines: '54-63'}]
+    conformance: []
+
+  # ─── list / read ────────────────────────────────────────────────────────────
+  - id: cap-doc-list-001
+    kind: capability
+    status: built
+    statement: 'list prints every markdown heading of a file, indented two spaces per level below H1.'
+    acceptance:
+      - given: 'a file with #, ##, ### headings'
+        when: 'sdk-doc list <file>'
+        then: 'stdout lists each heading in order, ## indented 2 spaces, ### indented 4; exit 0'
+    sources: [{file: scripts/commands/list.js, lines: '5-17'}]
+    conformance: [cap-doc-list-001]
+
+  - id: cap-doc-read-001
+    kind: capability
+    status: built
+    statement: 'read prints one section (heading, body and subsections) up to the next heading of the same or higher level; matching is case-insensitive.'
+    acceptance:
+      - given: '## One with a ### Sub, followed by ## Two'
+        when: 'sdk-doc read <file> --section "## One"'
+        then: 'stdout has One and Sub bodies but not Two; exit 0'
+    sources: [{file: scripts/commands/read-cmd.js, lines: '5-20'}]
+    conformance: [cap-doc-read-001]
+
+  - id: cap-doc-read-002
+    kind: capability
+    status: built
+    statement: 'read fails loudly: missing --section, a missing section, or a missing file each exit 1 with a message.'
+    acceptance:
+      - given: 'a file without ## Nope'
+        when: 'sdk-doc read <file> --section "## Nope"'
+        then: 'stderr Section not found: "## Nope", exit 1'
+      - given: 'a path that does not exist'
+        when: 'sdk-doc read <missing> --section x'
+        then: 'stderr File not found:, exit 1'
+    sources: [{file: scripts/commands/read-cmd.js, lines: '6-16'}, {file: scripts/lib/doc-utils.js, lines: '42-49'}]
+    conformance: [cap-doc-read-002]
+
+  # ─── append / rewrite / add-item ────────────────────────────────────────────
+  - id: cap-doc-append-001
+    kind: capability
+    status: built
+    statement: 'append inserts content at the end of the named section, before the next heading, leaving other sections intact.'
+    acceptance:
+      - given: '## One then ## Two'
+        when: 'sdk-doc append <file> --section "## One" --content "added line"'
+        then: 'added line sits after One body and before ## Two; stdout Appended to section "## One"'
+    sources: [{file: scripts/commands/append.js, lines: '32-46'}]
+    conformance: [cap-doc-append-001]
+
+  - id: cap-doc-append-002
+    kind: capability
+    status: built
+    statement: 'append to a missing plain (non-path) section creates it at the end of the file; missing --section/--content exits 1.'
+    acceptance:
+      - given: 'no ## Three'
+        when: 'sdk-doc append <file> --section "## Three" --content third'
+        then: 'file ends with ## Three + third; stdout Created section'
+    sources: [{file: scripts/commands/append.js, lines: '6-30'}]
+    conformance: [cap-doc-append-002]
+
+  - id: cap-doc-append-003
+    kind: capability
+    status: built
+    statement: 'append --dry-run previews the result and leaves the file unchanged.'
+    acceptance:
+      - given: 'any file'
+        when: 'sdk-doc append <file> --section "## One" --content dry --dry-run'
+        then: 'stdout DRY RUN — no files modified; file bytes unchanged'
+    sources: [{file: scripts/lib/doc-utils.js, lines: '54-63'}]
+    conformance: [cap-doc-append-003]
+
+  - id: cap-doc-rewrite-001
+    kind: capability
+    status: built
+    statement: 'rewrite replaces a section body (including its subsections), keeping the heading and the following sections.'
+    acceptance:
+      - given: '## One with content, then ## Two'
+        when: 'sdk-doc rewrite <file> --section "## One" --content replaced'
+        then: 'file has ## One, replaced, ## Two; old body gone; stdout Rewrote section'
+    sources: [{file: scripts/commands/rewrite.js, lines: '21-33'}]
+    conformance: [cap-doc-rewrite-001]
+
+  - id: cap-doc-rewrite-002
+    kind: capability
+    status: built
+    statement: 'rewrite of a missing section behaves like append (creates it); missing options exit 1.'
+    acceptance:
+      - given: 'no ## Four'
+        when: 'sdk-doc rewrite <file> --section "## Four" --content fourth'
+        then: 'file contains ## Four + fourth'
+    sources: [{file: scripts/commands/rewrite.js, lines: '7-19'}]
+    conformance: [cap-doc-rewrite-002]
+
+  - id: cap-doc-add-item-001
+    kind: capability
+    status: built
+    statement: 'add-item appends a checklist item at the end of a section: [ ] pending (default), [x] done, [!] blocked.'
+    acceptance:
+      - given: '## Pending with one item, then ## Done'
+        when: 'add-item three times with no --status, --status done, --status blocked'
+        then: 'section ends - [ ] p1, - [x] d1, - [!] b1, before ## Done'
+    sources: [{file: scripts/commands/add-item.js, lines: '11-52'}]
+    conformance: [cap-doc-add-item-001]
+
+  - id: cap-doc-add-item-002
+    kind: capability
+    status: defect
+    statement: 'add-item to a missing plain section creates that section at the end of the file with the item.'
+    defect_note: 'A bare name (Notes) is created as ### Notes, but a level-qualified "## Risks" is written as the malformed heading "### ## Risks" (append creates "## Risks" correctly).'
+    acceptance:
+      - given: 'no Notes / ## Risks section'
+        when: 'sdk-doc add-item <file> --section Notes --item n1; then --section "## Risks" --item r1'
+        then: 'file ends with ### Notes + - [ ] n1, and with ## Risks + - [ ] r1 (today: ### ## Risks)'
+    sources: [{file: scripts/commands/add-item.js, lines: '33-37'}]
+    conformance: [cap-doc-add-item-002]
+
+  # ─── decision / log ─────────────────────────────────────────────────────────
+  - id: cap-doc-decision-001
+    kind: capability
+    status: built
+    statement: 'decision appends a structured entry (### Decision heading, YAML comment block, field table) under the decisions section, creating ## Decision History if absent; defaults release current, reversible unknown, domain inferred from --made-by.'
+    acceptance:
+      - given: 'a template history.md'
+        when: 'sdk-doc decision history.md --decision "Use Postgres..." --context "ACID needed" --made-by CTO'
+        then: '## Decision History + ### Decision: ... + comment with release "current", made_by "CTO", domain "engineering", reversible: unknown; exit 0'
+      - given: 'an existing Decision History'
+        when: 'a second decision with --release --reversible --rationale --domain'
+        then: 'values written, still one ## Decision History'
+    sources: [{file: scripts/commands/decision.js, lines: '5-73'}]
+    conformance: [cap-doc-decision-001]
+
+  - id: cap-doc-decision-002
+    kind: capability
+    status: built
+    statement: 'decision warns (non-blocking) when the new decision shares ≥2 words of 4+ letters with an existing decision in the same domain.'
+    acceptance:
+      - given: 'Use Postgres for ledger storage (engineering)'
+        when: 'decision "Use Postgres replicas for ledger reads" --made-by Mario'
+        then: 'stdout Potential conflicts with existing decisions + the earlier decision; exit 0'
+    sources: [{file: scripts/commands/decision.js, lines: '75-113'}]
+    conformance: [cap-doc-decision-002]
+
+  - id: cap-doc-decision-003
+    kind: capability
+    status: built
+    statement: 'decision without --decision, --context and --made-by exits 1.'
+    acceptance:
+      - given: 'no --made-by'
+        when: 'sdk-doc decision history.md --decision x --context y'
+        then: 'stderr Missing required options: --decision, --context, --made-by; exit 1'
+    sources: [{file: scripts/commands/decision.js, lines: '6-9'}]
+    conformance: [cap-doc-decision-003]
+
+  - id: cap-doc-log-001
+    kind: capability
+    status: built
+    statement: 'log appends a dated area-log entry (## <date> <role> <level>, Goal/Change, Expected outcome, Requirements discovered, Status upper-cased; defaults —, None, ACTIVE) after a --- separator.'
+    acceptance:
+      - given: 'engineering-log.md'
+        when: 'sdk-doc log engineering-log.md --role EM --level M1 --goal "Pod-A done" --status completed'
+        then: 'file ends with ---, ## <today> EM M1, Goal/Change: Pod-A done, Expected outcome: —, Requirements discovered: None, Status: COMPLETED'
+    sources: [{file: scripts/commands/log.js, lines: '11-27'}]
+    conformance: [cap-doc-log-001]
+
+  - id: cap-doc-log-002
+    kind: capability
+    status: built
+    statement: 'log without --role, --level and --goal exits 1.'
+    acceptance:
+      - given: 'no --goal'
+        when: 'sdk-doc log <file> --role EM --level M1'
+        then: 'stderr Missing required options: --role, --level, --goal; exit 1'
+    sources: [{file: scripts/commands/log.js, lines: '6-9'}]
+    conformance: [cap-doc-log-002]
+
+  # ─── status / pod-update ────────────────────────────────────────────────────
+  - id: cap-doc-status-001
+    kind: capability
+    status: built
+    statement: 'status <project-dir> prints current-status.md verbatim.'
+    acceptance:
+      - given: 'a project with current-status.md'
+        when: 'sdk-doc status <dir>'
+        then: 'stdout contains the file (## Active Missions ...); exit 0'
+    sources: [{file: scripts/commands/status.js, lines: '7-20'}]
+    conformance: [cap-doc-status-001]
+
+  - id: cap-doc-status-002
+    kind: capability
+    status: built
+    statement: 'status on a directory without current-status.md exits 1 with a pointer to sdk-bootstrap.'
+    acceptance:
+      - given: 'an empty dir'
+        when: 'sdk-doc status <dir>'
+        then: 'stderr current-status.md not found in:, exit 1'
+    sources: [{file: scripts/commands/status.js, lines: '12-16'}]
+    conformance: [cap-doc-status-002]
+
+  - id: cap-doc-status-003
+    kind: capability
+    status: defect
+    statement: 'status with no argument reads current-status.md from the current directory (help: status [<project-dir>]).'
+    defect_note: 'status is not in the dispatcher projectDirCommands list, so `sdk-doc status` with no dir prints usage and exits 1 instead of using cwd.'
+    acceptance:
+      - given: 'cwd is a project'
+        when: 'sdk-doc status'
+        then: 'current-status.md printed, exit 0 (today: usage, exit 1)'
+    sources: [{file: scripts/doc.js, lines: '20-29,90'}, {file: scripts/commands/status.js, lines: '9'}]
+    conformance: [cap-doc-status-003]
+
+  - id: cap-doc-status-004
+    kind: capability
+    status: unpinned
+    statement: 'When stdout is a TTY, status ends with "Next: <activation phrase>" from current-status.md Next Agent To Activate.'
+    acceptance:
+      - given: 'a filled activation phrase, interactive terminal'
+        when: 'sdk-doc status <dir>'
+        then: 'last line Next: <phrase>'
+    sources: [{file: scripts/lib/next-stub.js, lines: '17-40'}]
+    conformance: []
+
+  - id: cap-doc-pod-update-001
+    kind: capability
+    status: built
+    statement: 'pod-update adds an unknown mission as a new Active Missions row under the template row and stamps **Last updated:** with date and time.'
+    acceptance:
+      - given: 'template current-status.md'
+        when: 'sdk-doc pod-update current-status.md --mission "Auth Service" --status Active --next "EM: wire API"'
+        then: 'row | Auth Service | — | — | Active | EM: wire API | after [Mission name]; Last updated YYYY-MM-DD HH:MM; stdout Added mission'
+    sources: [{file: scripts/commands/pod-update.js, lines: '11-36'}]
+    conformance: [cap-doc-pod-update-001]
+
+  - id: cap-doc-pod-update-002
+    kind: capability
+    status: built
+    statement: 'pod-update on a known mission rewrites its Status and Next action cells in place (no duplicate row); missing options exit 1.'
+    acceptance:
+      - given: 'an Auth Service row'
+        when: 'pod-update --mission "Auth Service" --status Blocked --next "CISO: review"'
+        then: 'the single row shows Blocked / CISO: review; stdout Updated mission'
+    sources: [{file: scripts/commands/pod-update.js, lines: '6-26'}]
+    conformance: [cap-doc-pod-update-002]
+
+  - id: cap-doc-pod-update-003
+    kind: capability
+    status: defect
+    statement: 'pod-update matches the mission name literally, whatever characters it contains.'
+    defect_note: 'The mission name is interpolated into a RegExp unescaped: "Billing (v2)" never matches its own row, so each update appends a duplicate; a name with an unbalanced [ or ( would throw.'
+    acceptance:
+      - given: 'a Billing (v2) row'
+        when: 'pod-update --mission "Billing (v2)" again'
+        then: 'one row updated (today: two rows)'
+    sources: [{file: scripts/commands/pod-update.js, lines: '21'}]
+    conformance: [cap-doc-pod-update-003]
+
+  # ─── spawn / dissolve ───────────────────────────────────────────────────────
+  - id: cap-doc-spawn-001
+    kind: capability
+    status: built
+    statement: 'spawn writes the agent row into team.md Active Agents (replacing the empty placeholder row, else appending), increments Current active agents and Total agents ever activated, and appends an onboarding log entry.'
+    acceptance:
+      - given: 'template team.md'
+        when: 'sdk-doc spawn <dir> --name "Fatima Nairobi" --role CLO --level M3 --activated-by ... --profile ... --how ... --fun-fact ...'
+        then: 'Active row with all 8 cells incl. today; both metrics 1; ### <today> — Fatima Nairobi (CLO, M3) entry; a second spawn appends and makes current 2'
+    sources: [{file: scripts/commands/spawn.js, lines: '26-63'}]
+    conformance: [cap-doc-spawn-001]
+
+  - id: cap-doc-spawn-002
+    kind: capability
+    status: built
+    statement: 'spawn lists every missing required option and refuses to run without team.md (exit 1).'
+    acceptance:
+      - given: 'only --name and --role'
+        when: 'sdk-doc spawn <dir> --name X --role CTO'
+        then: 'stderr Missing required options: --level, --activated-by, --profile, --how, --fun-fact; exit 1'
+    sources: [{file: scripts/commands/spawn.js, lines: '14-24'}]
+    conformance: [cap-doc-spawn-002]
+
+  - id: cap-doc-dissolve-001
+    kind: capability
+    status: built
+    statement: 'dissolve moves an agent from Active to Dissolved Agents (role and level carried over), decrements Current active agents, keeps the total and the onboarding entry.'
+    acceptance:
+      - given: 'two spawned agents'
+        when: 'sdk-doc dissolve <dir> --name "Fatima Nairobi" --dissolved-by "Lena Tbilisi (EM)" --reason "Mission complete"'
+        then: 'Dissolved row | Fatima Nairobi | CLO | M3 | Lena Tbilisi (EM) | <today> | Mission complete |; current 1, total 2; other agent still active'
+    sources: [{file: scripts/commands/dissolve.js, lines: '26-69'}]
+    conformance: [cap-doc-dissolve-001]
+
+  - id: cap-doc-dissolve-002
+    kind: capability
+    status: built
+    statement: 'dissolve of an agent not in Active Agents, or without --dissolved-by/--reason, exits 1.'
+    acceptance:
+      - given: 'no such agent'
+        when: 'sdk-doc dissolve <dir> --name "Nobody Here" --dissolved-by x --reason y'
+        then: 'stderr Agent "Nobody Here" not found in Active Agents table.; exit 1'
+    sources: [{file: scripts/commands/dissolve.js, lines: '14-37'}]
+    conformance: [cap-doc-dissolve-002]
+
+  # ─── manifest / index ───────────────────────────────────────────────────────
+  - id: cap-doc-manifest-001
+    kind: capability
+    status: built
+    statement: 'manifest writes <dir>/context-manifest.json with schemaVersion and a manifestVersion that increments on every regeneration.'
+    acceptance:
+      - given: 'a template project'
+        when: 'sdk-doc manifest <dir> twice'
+        then: 'stdout context-manifest.json written (v1, schema ...); file manifestVersion 1 then 2'
+    sources: [{file: scripts/commands/manifest.js, lines: '9-23'}]
+    conformance: [cap-doc-manifest-001]
+
+  - id: cap-doc-manifest-002
+    kind: capability
+    status: built
+    statement: 'manifest without current-status.md still writes a minimal manifest and prints a warning (exit 0).'
+    acceptance:
+      - given: 'an empty dir'
+        when: 'sdk-doc manifest <dir>'
+        then: 'stdout Warning: current-status.md not found ...; context-manifest.json exists'
+    sources: [{file: scripts/commands/manifest.js, lines: '17-19'}]
+    conformance: [cap-doc-manifest-002]
+
+  - id: cap-doc-index-001
+    kind: capability
+    status: built
+    statement: 'index writes <dir>/context-index.json with files, queryMap, opsMap, projectDomains (with lead), permanent sessions, and an indexVersion that increments.'
+    acceptance:
+      - given: 'a project with domains/payments and sessions/permanent/<file>'
+        when: 'sdk-doc index <dir> twice'
+        then: 'stdout context-index.json written (v1, N files indexed); projectDomains.payments.lead CTO; sessions lists the file; indexVersion 2 after rerun'
+    sources: [{file: scripts/commands/index-cmd.js, lines: '9-18'}]
+    conformance: [cap-doc-index-001]
+
+  # ─── study ──────────────────────────────────────────────────────────────────
+  - id: cap-doc-study-001
+    kind: capability
+    status: built
+    statement: 'study create writes research/studies/<date>-<slug>.md with scientific-format frontmatter (title, requested_by, method, tags, confidence TBD, status draft) and the Hypothesis→Open Questions sections.'
+    acceptance:
+      - given: 'a project'
+        when: 'sdk-doc study <dir> create --title "Onboarding Drop-off!" --requested-by PM --tags "a, b" --method interviews'
+        then: 'file <today>-onboarding-drop-off.md with tags ["a", "b"], status "draft"; stdout Study created:'
+    sources: [{file: scripts/commands/study.js, lines: '47-157'}]
+    conformance: [cap-doc-study-001]
+
+  - id: cap-doc-study-002
+    kind: capability
+    status: built
+    statement: 'study list prints date, confidence, status and title per study, or says no studies directory exists.'
+    acceptance:
+      - given: 'one draft study'
+        when: 'sdk-doc study <dir> list'
+        then: 'row <today> TBD draft <title>'
+    sources: [{file: scripts/commands/study.js, lines: '21-45'}]
+    conformance: [cap-doc-study-002]
+
+  - id: cap-doc-study-003
+    kind: capability
+    status: built
+    statement: 'study create without --title, or an unknown study subcommand, exits 1.'
+    acceptance:
+      - given: 'any project'
+        when: 'sdk-doc study <dir> remove'
+        then: 'stderr Usage: sdk-doc study ...; exit 1'
+    sources: [{file: scripts/commands/study.js, lines: '16-19,55-58'}]
+    conformance: [cap-doc-study-003]
+
+  - id: cap-doc-study-004
+    kind: capability
+    status: defect
+    statement: 'study create --dry-run previews the study without modifying the project.'
+    defect_note: 'The file is not written, but research/studies/ is created (mkdirSync runs before the dry-run check), contradicting "without modifying any file".'
+    acceptance:
+      - given: 'a project without research/'
+        when: 'sdk-doc study <dir> create --title Dry --dry-run'
+        then: 'stdout DRY RUN; no research/ dir (today: empty research/studies/ created)'
+    sources: [{file: scripts/commands/study.js, lines: '69-70,152-153'}]
+    conformance: [cap-doc-study-004]
+
+  # ─── session ────────────────────────────────────────────────────────────────
+  - id: cap-doc-session-001
+    kind: capability
+    status: built
+    statement: 'session save writes sessions/temp/<date>-<slug>.md with frontmatter (release from .sdkrc, participants, domains, saved_by, status temp) and the summary sections; --title is required.'
+    acceptance:
+      - given: '.sdkrc releaseId v2026.Q4.2'
+        when: 'sdk-doc session <dir> save --title "Pricing Talk" --participants CFO,PM --domains billing --saved-by Greg'
+        then: 'sessions/temp/<today>-pricing-talk.md with release "v2026.Q4.2", status "temp"'
+    sources: [{file: scripts/commands/session.js, lines: '23-106'}]
+    conformance: [cap-doc-session-001]
+
+  - id: cap-doc-session-002
+    kind: capability
+    status: built
+    statement: 'session list shows date, status, domains and title for temp and permanent sessions, filterable with --status temp|permanent|all; prints (none) when empty.'
+    acceptance:
+      - given: 'one temp session'
+        when: 'sdk-doc session <dir> list --status permanent'
+        then: '(none)'
+    sources: [{file: scripts/commands/session.js, lines: '109-137'}]
+    conformance: [cap-doc-session-002]
+
+  - id: cap-doc-session-003
+    kind: capability
+    status: built
+    statement: 'session promote moves a temp session to sessions/permanent/ and flips its status to permanent; an unknown file exits 1.'
+    acceptance:
+      - given: 'a temp session'
+        when: 'sdk-doc session <dir> promote <file>'
+        then: 'file only in permanent/, status: "permanent" and Status: permanent'
+    sources: [{file: scripts/commands/session.js, lines: '140-169'}]
+    conformance: [cap-doc-session-003]
+
+  - id: cap-doc-session-004
+    kind: capability
+    status: built
+    statement: 'session clean lists temp sessions and deletes them only with --confirm; permanent sessions are never touched.'
+    acceptance:
+      - given: 'one temp and one permanent session'
+        when: 'clean, then clean --confirm'
+        then: 'first: Re-run with --confirm, nothing deleted; second: Deleted 1 temp session(s), permanent intact'
+    sources: [{file: scripts/commands/session.js, lines: '172-200'}]
+    conformance: [cap-doc-session-004]
+
+  - id: cap-doc-session-005
+    kind: capability
+    status: defect
+    statement: 'session promote --dry-run previews the move without touching files.'
+    defect_note: 'promote ignores --dry-run: it writes to permanent/ and deletes the temp file.'
+    acceptance:
+      - given: 'a temp session'
+        when: 'sdk-doc session <dir> promote <file> --dry-run'
+        then: 'file still in temp/ (today: moved)'
+    sources: [{file: scripts/commands/session.js, lines: '156-164'}]
+    conformance: [cap-doc-session-005]
+
+  # ─── domain ─────────────────────────────────────────────────────────────────
+  - id: cap-doc-domain-001
+    kind: capability
+    status: built
+    statement: 'domain add creates domains/<slug>/summary.md with lead, spawn_when, context_provides frontmatter and a summary (placeholder when --summary is omitted); --name is required.'
+    acceptance:
+      - given: 'a project'
+        when: 'sdk-doc domain <dir> add --name "Card Payments" --lead CTO --spawn-when chargebacks --context-provides rails'
+        then: 'domains/card-payments/summary.md with lead "CTO" and [Describe the Card Payments domain...]; stdout Domain created: card-payments'
+    sources: [{file: scripts/commands/domain.js, lines: '59-103'}]
+    conformance: [cap-doc-domain-001]
+
+  - id: cap-doc-domain-002
+    kind: capability
+    status: built
+    statement: 'domain add refuses a name whose slug already exists (exit 1, pointing to update).'
+    acceptance:
+      - given: 'card-payments exists'
+        when: 'domain add --name "card payments"'
+        then: 'stderr Domain already exists: card-payments; exit 1'
+    sources: [{file: scripts/commands/domain.js, lines: '79-83'}]
+    conformance: [cap-doc-domain-002]
+
+  - id: cap-doc-domain-003
+    kind: capability
+    status: built
+    statement: 'domain list shows each domain slug, lead, count of L1 files (non-summary .md) and the first summary line.'
+    acceptance:
+      - given: 'card-payments with disputes.md'
+        when: 'sdk-doc domain <dir> list'
+        then: 'Project Domains (1); row card-payments CTO 1 <summary>'
+    sources: [{file: scripts/commands/domain.js, lines: '22-56'}]
+    conformance: [cap-doc-domain-003]
+
+  - id: cap-doc-domain-004
+    kind: capability
+    status: built
+    statement: 'domain update rewrites only the given frontmatter fields and, with --summary, the body; an unknown domain exits 1 listing available ones.'
+    acceptance:
+      - given: 'card-payments'
+        when: 'domain update --name "Card Payments" --lead Mario --summary "Card rails and disputes."'
+        then: 'lead "Mario", spawn_when unchanged, body replaced'
+    sources: [{file: scripts/commands/domain.js, lines: '106-148'}]
+    conformance: [cap-doc-domain-004]
+
+  - id: cap-doc-domain-005
+    kind: capability
+    status: defect
+    statement: 'domain add/update --dry-run modify nothing.'
+    defect_note: 'add --dry-run still creates the empty domains/<slug>/ dir (which then blocks the real add as "already exists"); update ignores --dry-run and writes.'
+    acceptance:
+      - given: 'a project'
+        when: 'domain add --name "Dry Domain" --dry-run; domain update --name X --lead Y --dry-run'
+        then: 'no dir created, summary unchanged (today: both modified)'
+    sources: [{file: scripts/commands/domain.js, lines: '85,145'}]
+    conformance: [cap-doc-domain-005]
+
+  # ─── bus (protocol §1) ──────────────────────────────────────────────────────
+  - id: cap-doc-bus-001
+    kind: capability
+    status: built
+    statement: 'bus appends a timestamped entry to bus-log.md (creating it with an append-only header) and prints the §1 formatted message with RELEASE from .sdkrc (unknown without it); PRIORITY defaults to INFO.'
+    acceptance:
+      - given: '.sdkrc releaseId v2026.Q4.1, no bus-log.md'
+        when: 'sdk-doc bus <dir> --from PM --to Designer --message "Scope ready"'
+        then: 'bus-log.md has # Bus Log header and [YYYY-MM-DD HH:MM] FROM: PM → TO: Designer | PRIORITY: INFO | RELEASE: v2026.Q4.1; stdout FROM/TO/RELEASE/PRIORITY/MESSAGE block; exit 0'
+    sources: [{file: scripts/commands/bus.js, lines: '80-114,138-141'}]
+    conformance: [cap-doc-bus-001]
+
+  - id: cap-doc-bus-002
+    kind: capability
+    status: built
+    statement: 'bus rejects (exit 1, nothing logged) a message missing --from/--to/--message or with a priority other than INFO, DECISION NEEDED, BLOCKER.'
+    acceptance:
+      - given: 'any project'
+        when: 'bus --from PM --to CTO --message x --priority URGENT'
+        then: 'stderr --priority must be INFO, DECISION NEEDED, or BLOCKER; exit 1; bus-log.md unchanged'
+    sources: [{file: scripts/commands/bus.js, lines: '35-50'}]
+    conformance: [cap-doc-bus-002]
+
+  - id: cap-doc-bus-003
+    kind: capability
+    status: built
+    statement: 'DECISION NEEDED requires --decision-by YYYY-MM-DD; any non-INFO priority requires --escalation <role>; both are printed after MESSAGE and logged.'
+    acceptance:
+      - given: 'DECISION NEEDED without --decision-by (or a non-ISO date)'
+        when: 'sdk-doc bus ...'
+        then: 'stderr DECISION NEEDED requires --decision-by YYYY-MM-DD; exit 1'
+      - given: 'BLOCKER without --escalation'
+        when: 'sdk-doc bus ...'
+        then: 'stderr BLOCKER requires --escalation <role> ...; exit 1'
+      - given: 'valid --decision-by 2026-12-01 --escalation Coordinator'
+        when: 'sdk-doc bus ...'
+        then: 'stdout MESSAGE ... then DECISION BY: 2026-12-01 then ESCALATION: Coordinator; same lines in bus-log.md'
+    sources: [{file: scripts/commands/bus.js, lines: '55-62,97-105'}]
+    conformance: [cap-doc-bus-003]
+
+  - id: cap-doc-bus-004
+    kind: capability
+    status: built
+    statement: 'CONTEXT-REQUEST is a TAG on INFO only; the legacy --priority "CONTEXT REQUEST" is converted to INFO + TAG CONTEXT-REQUEST (keeping any other tag) with a deprecation note on stderr.'
+    acceptance:
+      - given: '--priority BLOCKER --tag CONTEXT-REQUEST'
+        when: 'sdk-doc bus ...'
+        then: 'stderr CONTEXT-REQUEST tag requires PRIORITY: INFO; exit 1'
+      - given: '--priority "CONTEXT REQUEST" --tag RESEARCH'
+        when: 'sdk-doc bus ...'
+        then: 'exit 0; PRIORITY: INFO; TAG: CONTEXT-REQUEST, RESEARCH; stderr ... is deprecated ...'
+    sources: [{file: scripts/commands/bus.js, lines: '23-28,51-54'}]
+    conformance: [cap-doc-bus-004]
+
+  - id: cap-doc-bus-005
+    kind: capability
+    status: built
+    statement: 'SOLUTION_CLASS (KNOWN|EXPLORATORY|HYBRID) is required on DECISION NEEDED/BLOCKER from technical roles (CTO, Mario, Chief Engineer, EM, Staff Engineer, Coordinator), optional otherwise, and validated when present; COST_SIGNAL/TIME_SIGNAL are passed through.'
+    acceptance:
+      - given: '--from CTO --priority BLOCKER --escalation CEO, no --solution-class'
+        when: 'sdk-doc bus ...'
+        then: 'stderr SOLUTION_CLASS is required on BLOCKER messages from CTO; exit 1'
+      - given: '--solution-class MAYBE'
+        when: 'sdk-doc bus ...'
+        then: 'stderr --solution-class must be KNOWN, EXPLORATORY, or HYBRID; exit 1'
+      - given: 'valid KNOWN + --cost-signal HIGH --time-signal 4h'
+        when: 'sdk-doc bus ...'
+        then: 'stdout SOLUTION_CLASS / COST_SIGNAL / TIME_SIGNAL lines before MESSAGE; log has | SOL: KNOWN |'
+    sources: [{file: scripts/commands/bus.js, lines: '64-78,93-96'}]
+    conformance: [cap-doc-bus-005]
+
+  - id: cap-doc-bus-006
+    kind: capability
+    status: built
+    statement: 'A FRAMING-CHALLENGE tag requires DECISION NEEDED or BLOCKER.'
+    acceptance:
+      - given: '--tag FRAMING-CHALLENGE, default priority'
+        when: 'sdk-doc bus ...'
+        then: 'stderr FRAMING-CHALLENGE tag requires PRIORITY: DECISION NEEDED or BLOCKER, not INFO.; exit 1'
+    sources: [{file: scripts/commands/bus.js, lines: '41-44'}]
+    conformance: [cap-doc-bus-006]
+
+  - id: cap-doc-bus-007
+    kind: capability
+    status: built
+    statement: 'bus reports what the message implies: an intent action (script, writes, params), a routing suggestion, or "No action implied — pure communication".'
+    acceptance:
+      - given: 'a plain INFO message'
+        when: 'sdk-doc bus ...'
+        then: 'stdout has one of Intent resolved: / Routing: topic= / No action implied — pure communication'
+    sources: [{file: scripts/commands/bus.js, lines: '116-136'}]
+    conformance: [cap-doc-bus-007]
+
+  # ─── cockpit ────────────────────────────────────────────────────────────────
+  - id: cap-doc-cockpit-001
+    kind: capability
+    status: built
+    statement: 'cockpit prints a role briefing header (COCKPIT: <role>, default Coordinator; Project | Release | Phase) and, with no manifest, points at current-status.md.'
+    acceptance:
+      - given: 'an empty dir'
+        when: 'sdk-doc cockpit <dir>'
+        then: 'COCKPIT: Coordinator; Release: unknown | Phase: unknown; STATE: No manifest — read current-status.md directly'
+    sources: [{file: scripts/commands/cockpit.js, lines: '9-75'}]
+    conformance: [cap-doc-cockpit-001]
+
+  - id: cap-doc-cockpit-002
+    kind: capability
+    status: built
+    statement: 'With context-manifest.json and context-index.json, cockpit shows the STATE counts, L0 domain summaries, the last bus messages to/from the role (or ALL), and available operations.'
+    acceptance:
+      - given: 'manifest + index with a payments domain, bus messages to CTO and CLO'
+        when: 'sdk-doc cockpit <dir> --role CTO'
+        then: 'STATE: N active mission(s)...; payments [CTO]: Card rails.; RECENT BUS MESSAGES (for CTO) without the CLO message; AVAILABLE OPERATIONS:'
+    sources: [{file: scripts/commands/cockpit.js, lines: '62-160'}]
+    conformance: [cap-doc-cockpit-002]
+
+  - id: cap-doc-cockpit-003
+    kind: capability
+    status: unpinned
+    statement: 'cockpit lists ACTIVE MISSIONS, WAITING ON, a CONTEXT GAP ANALYSIS for domains the missions touch (lead vs cross-loadable vs spawn triggers), a stale-status warning, and NEXT AGENT from the manifest.'
+    acceptance:
+      - given: 'a manifest with missions naming a domain and a next agent'
+        when: 'sdk-doc cockpit <dir> --role PM'
+        then: 'those sections are printed'
+    sources: [{file: scripts/commands/cockpit.js, lines: '69-71,87-138,162-169'}]
+    conformance: []
+
+  # ─── discovery ──────────────────────────────────────────────────────────────
+  - id: cap-doc-discovery-001
+    kind: capability
+    status: built
+    statement: 'discovery start writes discovery-state.json with 10 core questions (6 blocking) plus, per domain, a blocking describe-question when the summary is a placeholder and an important locked-decisions question; each question routes to a target file.'
+    acceptance:
+      - given: 'one placeholder domain ledger'
+        when: 'sdk-doc discovery <dir> start'
+        then: 'stdout Discovery started: 12 questions generated, Blocking: 6, Domains: ledger; state answered 0, readyForActivation false'
+    sources: [{file: scripts/commands/discovery.js, lines: '23-114'}]
+    conformance: [cap-doc-discovery-001]
+
+  - id: cap-doc-discovery-002
+    kind: capability
+    status: built
+    statement: 'discovery answer records an answer, routes domain answers into domains/<d>/summary.md (replacing the placeholder), reports remaining blockers, and flips readyForActivation when all blocking questions are answered.'
+    acceptance:
+      - given: 'a started discovery'
+        when: 'answer the domain describe-question, then every other blocker'
+        then: 'summary placeholder replaced; Remaining blockers: 5; finally All blocking questions answered. Ready to activate the team.; unknown id exits 1'
+    sources: [{file: scripts/commands/discovery.js, lines: '117-184'}]
+    conformance: [cap-doc-discovery-002]
+
+  - id: cap-doc-discovery-003
+    kind: capability
+    status: built
+    statement: 'discovery status shows answered/total, readiness, and unanswered blocking/important plus answered questions; status/answer before start and unknown subcommands exit 1.'
+    acceptance:
+      - given: 'all 6 blockers answered of 12'
+        when: 'sdk-doc discovery <dir> status'
+        then: 'Discovery Status: 6/12 answered; Ready for activation: YES; Important (6); Answered (6)'
+    sources: [{file: scripts/commands/discovery.js, lines: '15-18,118-121,187-224'}]
+    conformance: [cap-doc-discovery-003]
+
+  - id: cap-doc-discovery-004
+    kind: capability
+    status: unpinned
+    statement: 'A domain answer for a summary that is no longer a placeholder is appended to the summary under a <!-- Discovery Qn --> marker; --dry-run on start/answer writes no state.'
+    acceptance:
+      - given: 'a filled domain summary'
+        when: 'answer its locked-decisions question'
+        then: 'summary ends with the marker comment and the answer'
+    sources: [{file: scripts/commands/discovery.js, lines: '164-167'}]
+    conformance: []
+
+  # ─── disagreement (protocol §29) ────────────────────────────────────────────
+  - id: cap-doc-disagreement-001
+    kind: capability
+    status: built
+    statement: 'disagreement open appends an auto-numbered DISAGREE-NNN entry (Status OPEN, positions table, Pending resolution) to history.md, creating it if absent; "Role: position" parsing falls back to role Unknown.'
+    acceptance:
+      - given: 'no history.md'
+        when: 'sdk-doc disagreement <dir> open --topic "Build vs buy auth" --position-a "CTO: build it" --position-b "CFO: buy it"'
+        then: 'history.md starts # History and has ### [DISAGREE-001] ... Status: OPEN; a second open is DISAGREE-002'
+    sources: [{file: scripts/commands/disagreement.js, lines: '29-94'}]
+    conformance: [cap-doc-disagreement-001]
+
+  - id: cap-doc-disagreement-002
+    kind: capability
+    status: built
+    statement: 'disagreement resolve fills Status RESOLVED, Date resolved, Resolution, Decided by, Reasoning and Dissent on record for that id only; unknown ids and missing --decision/--decided-by exit 1.'
+    acceptance:
+      - given: 'DISAGREE-001 and DISAGREE-002 OPEN'
+        when: 'resolve --id DISAGREE-001 --decision "Buy Auth0" --decided-by CEO --reasoning ... --dissent ...'
+        then: 'DISAGREE-001 resolved with those values; DISAGREE-002 still OPEN'
+    sources: [{file: scripts/commands/disagreement.js, lines: '96-151'}]
+    conformance: [cap-doc-disagreement-002]
+
+  - id: cap-doc-disagreement-003
+    kind: capability
+    status: built
+    statement: 'disagreement list prints each id with status and topic, marking OPEN entries with !.'
+    acceptance:
+      - given: 'one resolved, one open'
+        when: 'sdk-doc disagreement <dir> list'
+        then: 'Disagreements (2); - DISAGREE-001 RESOLVED ...; ! DISAGREE-002 OPEN ...'
+    sources: [{file: scripts/commands/disagreement.js, lines: '153-182'}]
+    conformance: [cap-doc-disagreement-003]
+
+  - id: cap-doc-disagreement-004
+    kind: capability
+    status: defect
+    statement: 'disagreement open accepts the documented positions syntax.'
+    defect_note: 'sdk-doc --help and .claude/skills/challenge/SKILL.md document open --positions "A:...,B:..."; the command only accepts --position-a/--position-b (as protocol §29 shows) and rejects the documented form with exit 1.'
+    acceptance:
+      - given: 'any project'
+        when: 'sdk-doc disagreement <dir> open --topic Pricing --positions "CFO:raise,CRO:hold"'
+        then: 'DISAGREE entry opened (today: --topic, --position-a, and --position-b are required, exit 1)'
+    sources: [{file: scripts/doc.js, lines: '107'}, {file: scripts/commands/disagreement.js, lines: '30-37'}]
+    conformance: [cap-doc-disagreement-004]
+
+  - id: cap-doc-disagreement-005
+    kind: capability
+    status: defect
+    statement: 'Only an OPEN disagreement can be resolved; resolving a non-OPEN id fails with "not found or not OPEN" and changes nothing.'
+    defect_note: 'The resolve regex is lazy across entries: re-resolving an already-resolved DISAGREE-001 matches the next entry''s Status: OPEN and silently resolves DISAGREE-002 with the wrong decision (exit 0).'
+    acceptance:
+      - given: 'DISAGREE-001 RESOLVED, DISAGREE-002 OPEN'
+        when: 'resolve --id DISAGREE-001 --decision "second ruling" --decided-by CEO'
+        then: 'exit 1, history.md unchanged (today: exit 0 and DISAGREE-002 resolved as "second ruling")'
+    sources: [{file: scripts/commands/disagreement.js, lines: '117-143'}]
+    conformance: [cap-doc-disagreement-005]
+
+  # ─── history ────────────────────────────────────────────────────────────────
+  - id: cap-doc-history-001
+    kind: capability
+    status: built
+    statement: 'history lists structured decisions (and legacy table-format ones as domain unknown) with date, domain, title and maker, filterable by --domain, --search (case-insensitive) and --reversible.'
+    acceptance:
+      - given: 'two sdk-doc decisions and one legacy table entry'
+        when: 'sdk-doc history <dir> [--domain strategy | --search postgres | --reversible no]'
+        then: 'Decisions (3/3) unfiltered; (1/3) for each filter'
+    sources: [{file: scripts/commands/history.js, lines: '18-99'}]
+    conformance: [cap-doc-history-001]
+
+  - id: cap-doc-history-002
+    kind: capability
+    status: built
+    statement: 'history says so when there are no structured decisions, and exits 1 without history.md.'
+    acceptance:
+      - given: 'template history.md'
+        when: 'sdk-doc history <dir>'
+        then: 'No structured decisions found in history.md.'
+    sources: [{file: scripts/commands/history.js, lines: '13-16,54-58'}]
+    conformance: [cap-doc-history-002]
+
+  - id: cap-doc-history-003
+    kind: capability
+    status: defect
+    statement: 'Irreversible decisions are findable: `sdk-doc history . --reversible NO` (irreversible-review skill) lists decisions logged with --reversible no, and they are marked [IRREVERSIBLE].'
+    defect_note: 'The --reversible filter is an exact case-sensitive match, so NO finds nothing for decisions logged as no (help documents yes|no); [IRREVERSIBLE] only fires for reversible: false, a value decision never writes from the documented options.'
+    acceptance:
+      - given: 'decision logged with --reversible no'
+        when: 'sdk-doc history <dir> --reversible NO'
+        then: 'it is listed with [IRREVERSIBLE] (today: Decisions (0/N), no marker)'
+    sources: [{file: scripts/commands/history.js, lines: '88-96'}, {file: .claude/skills/irreversible-review/SKILL.md, lines: '11'}]
+    conformance: [cap-doc-history-003]
+
+  - id: cap-doc-history-004
+    kind: capability
+    status: unpinned
+    statement: 'history --since filters decisions by date (undocumented in --help).'
+    acceptance:
+      - given: 'decisions on several dates'
+        when: 'sdk-doc history <dir> --since 2026-06-01'
+        then: 'only decisions dated on/after it'
+    sources: [{file: scripts/commands/history.js, lines: '74-77'}]
+    conformance: []
+
+  # ─── iteration (gaps beyond cap-sdk-iteration-001) ──────────────────────────
+  - id: cap-doc-iteration-001
+    kind: capability
+    status: built
+    statement: 'iteration list shows loop, cycle, status, guardian and pod across all loops (including pod subdirs), filterable by --loop and --status; an unknown --loop exits 1.'
+    acceptance:
+      - given: 'discovery cycles 1 (graduated) and 2, implementation Pod A cycle 1'
+        when: 'sdk-doc iteration <dir> list [--status graduated | --loop implementation]'
+        then: 'rows per cycle with guardian (unassigned default) and pod; filters narrow the rows'
+    sources: [{file: scripts/commands/iteration.js, lines: '101-131'}]
+    conformance: [cap-doc-iteration-001]
+
+  - id: cap-doc-iteration-002
+    kind: capability
+    status: built
+    statement: 'iteration create --dry-run prints the would-be file (with that loop''s §31.2 exit criteria) and writes nothing.'
+    acceptance:
+      - given: 'no architecture iterations'
+        when: 'sdk-doc iteration <dir> create --loop architecture --dry-run'
+        then: '[DRY RUN] Would create: .../iter-001.md + criteria; iterations/architecture absent'
+    sources: [{file: scripts/commands/iteration.js, lines: '170-175'}]
+    conformance: [cap-doc-iteration-002]
+
+  - id: cap-doc-iteration-003
+    kind: capability
+    status: built
+    statement: 'iteration review validates --verdict graduate|iterate (iterate needs --feedback) and an existing --cycle; graduate sets status graduated, the graduated date and the GRADUATE verdict text; unknown loops/subcommands exit 1.'
+    acceptance:
+      - given: 'discovery cycle 2'
+        when: 'review --verdict iterate (no feedback) / --verdict maybe / graduate --cycle 9 / review --verdict graduate'
+        then: 'exit 1 x3 with messages; then status "graduated", graduated "<today>", ## Verdict GRADUATE — All exit criteria passed.'
+    sources: [{file: scripts/commands/iteration.js, lines: '79-92,185-197'}]
+    conformance: [cap-doc-iteration-003]
+
+  - id: cap-doc-iteration-004
+    kind: capability
+    status: built
+    statement: 'Past limits.guardianCyclesBeforeEscalation (default 3) iteration create warns that the Guardian escalates to the CEO; an iterate verdict at the limit warns before the next cycle.'
+    acceptance:
+      - given: 'three architecture cycles'
+        when: 'create a 4th; review cycle 3 --verdict iterate --feedback ...'
+        then: 'Cycle 4: past 3 cycles without graduation — Guardian escalates to CEO; Cycle 3 did not graduate — Guardian escalates to CEO before cycle 4'
+    sources: [{file: scripts/commands/iteration.js, lines: '180-182,203-205'}]
+    conformance: [cap-doc-iteration-004]

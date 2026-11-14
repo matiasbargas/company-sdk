@@ -130,25 +130,25 @@ claims:
     acceptance:
       - given: "an agent inside a company attempts to append to holding/fuel/ledger.jsonl"
         when: "the write is attempted"
-        then: "it is denied by the runner-owned permission rules (v0: permission deny rules + separate clones, not OS-enforced; OS-level enforcement is gated before a second Owner)"
+        then: "it is denied by the OS: company sessions run as the dedicated sandbox user, and holding/ (ledger, settings, hooks, kill switch, commons, keys) is owned by the Owner's user with mode 0700 (Owner decision D7, 2026-11-14)"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "The shape everyone converged on"}]
     conformance: []
 
   - id: cap-po-isolation-001
     kind: capability
     status: planned
-    statement: "Each company runs from its own clone with its own API key and runner-owned settings that deny access outside the company root; in v0 this is permission-level isolation under one OS user, and OS-level isolation (OS user or container) is required before any company of another Owner is registered."
+    statement: "Company sessions run as one dedicated unprivileged OS user (the sandbox user), launched by the runner through a narrow sudo rule with the company key passed per session; the runner and holding/ stay under the Owner's user (0700). Companies are separated from each other by clone + permission rules in v0; per-company OS users or containers are required before any company of another Owner is registered."
     acceptance:
       - given: "two registered companies A and B"
         when: "a session in A attempts to read or edit B's path through Read/Edit/Write tools"
-        then: "the runner-owned permission rules deny it (Bash reach is a documented v0 limit)"
+        then: "permission rules deny it; reaching the holding/ control plane is denied by the OS (sandbox user); sibling-company reach via Bash remains a documented v0 limit until per-company users"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "v0 gates"}]
     conformance: []
 
   - id: cap-po-commons-001
     kind: capability
     status: planned
-    statement: "The commons is pull-only: an item enters only through a §34 surface verified by another company's roster plus the CISO (never only its own), sits in quarantine until verified, is content-addressed, never carries settings/hooks/CHARTER/scripts, and is adopted by a company only on its Owner's approval; a local edit is never overwritten (conflict opens a reconciling surface)."
+    statement: "The commons (under holding/, unreachable by the sandbox user) is pull-only: an item enters only through a §34 surface verified by another company's roster plus the CISO (never only its own), sits in quarantine until verified, is content-addressed, never carries settings/hooks/CHARTER/scripts, and is adopted by a company only on its Owner's approval; a local edit is never overwritten (conflict opens a reconciling surface)."
     acceptance:
       - given: "a verified skill item in the commons and company B subscribed to `skill`"
         when: "B pulls with Owner approval"

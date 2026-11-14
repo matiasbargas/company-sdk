@@ -1,0 +1,609 @@
+# Layer B capabilities — sdk-lifecycle (project lifecycle bins)
+#
+# sdk-init, sdk-bootstrap, sdk-update, sdk-squad, sdk-install-hooks, sdk-kill, sdk-version,
+# sdk-ship, sdk-github, sdk-retro. Promises are stated against the PUBLIC interface only
+# (CLI args, exit codes, files written, stdout lines other tools parse), so the scripts can be
+# rewritten from scratch (protocol.md §30, "Specs outlive implementations").
+#
+# Conformance suite: scripts/lib/test-cap-lifecycle.js (black-box, child_process, mkdtemp dirs).
+# status: built ⇒ a `@covers <id>` test exists and passes · unpinned ⇒ behaviour exists, no test ·
+# defect ⇒ a test proved behaviour differs from what docs/help promise (test pins CURRENT behaviour).
+
+claims:
+  # ──────────────────────────────────────────────────────────────── sdk-init (scripts/init.js)
+
+  - id: cap-life-init-001
+    kind: capability
+    status: built
+    statement: "`sdk-init` with no args, `--help` or `-h` prints usage (squad, type, idea options) and exits 0 without writing anything."
+    acceptance:
+      given: "no project name, or --help / -h"
+      when: "node scripts/init.js [--help]"
+      then: "stdout contains 'Usage:' and the --squad / --idea options; exit 0"
+    sources:
+      - { file: scripts/init.js, lines: "36-57" }
+    conformance: [cap-life-init-001]
+
+  - id: cap-life-init-002
+    kind: capability
+    status: built
+    statement: "`sdk-init` refuses bad input before writing: unknown --squad (exit 1, lists website/mvp/feature/startup), unknown --type (exit 1, lists team/types), missing --source file (exit 1), or an existing output dir (exit 1, left untouched)."
+    acceptance:
+      given: "--squad research | --type nope | --source <missing> | --output <existing dir>"
+      when: "node scripts/init.js x --output <tmp>/p ..."
+      then: "exit 1 with the named error on stderr; the output dir is not created (or, if it existed, unchanged)"
+    sources:
+      - { file: scripts/init.js, lines: "78-124, 231-235" }
+    conformance: [cap-life-init-002]
+
+  - id: cap-life-init-003
+    kind: capability
+    status: built
+    statement: "`sdk-init` scaffolds a project: always-copied template files, sessions/temp + sessions/permanent, SQUAD.md from team/squads/<squad>.md, the SDK docs (SDK.md, protocol.md, protocol-core.md, protocol-reference.md, AGENTS.md, STRATEGY.md, CHARTER.md), team/ verbatim, with {{PROJECT_NAME}}-style placeholders substituted; it prints a ready banner with the sdk-resume next step."
+    acceptance:
+      given: "an empty target path"
+      when: "node scripts/init.js demo --output <tmp>/p --squad startup"
+      then: "the listed files/dirs exist; team/ equals the SDK's team/; CLAUDE.md names the project and holds no {{...}} vars; stdout shows '<name>  ready' and 'sdk-resume <dir>'"
+    sources:
+      - { file: scripts/init.js, lines: "245-376, 582-619" }
+    conformance: [cap-life-init-003]
+
+  - id: cap-life-init-004
+    kind: capability
+    status: built
+    statement: "`--type` selects requirements files and area logs from team/types/<type>.json (every type maps research requirements + research log); files outside the type are skipped and reported; defaults are --squad mvp and --type product (all seven requirements files, all five logs)."
+    acceptance:
+      given: "--type api (no design/business) and the default type"
+      when: "node scripts/init.js api-proj --output <tmp>/api --type api --no-git"
+      then: "each requirements_files/logs entry of api.json exists (incl. research-requirements.md, research-log.md); design-requirements.md, design-log.md, business-requirements.md are absent and stdout says '(skipped — not in type \"api\")'; .sdkrc type=api; with no flags .sdkrc squad=mvp, type=product"
+    sources:
+      - { file: scripts/init.js, lines: "126-163, 300-322" }
+      - { file: team/types/*.json }
+    conformance: [cap-life-init-004]
+
+  - id: cap-life-init-005
+    kind: capability
+    status: built
+    statement: "`sdk-init` copies the Claude Code harness — .claude/skills (incl. /ask), .claude/agents, .claude/output-styles (and legacy .claude/commands if present) — from the SDK into the project byte-for-byte."
+    acceptance:
+      given: "the SDK has .claude/skills, agents, output-styles"
+      when: "sdk-init runs"
+      then: "<project>/.claude/<sub>/ trees are identical to the SDK's; .claude/skills/ask exists"
+    sources:
+      - { file: scripts/init.js, lines: "385-393" }
+    conformance: [cap-life-init-005]
+
+  - id: cap-life-init-006
+    kind: capability
+    status: built
+    statement: "`sdk-init` copies every generated protocol/ per-section view (*.md) into <project>/protocol/ byte-for-byte."
+    acceptance:
+      given: "SDK protocol/*.md views"
+      when: "sdk-init runs"
+      then: "every SDK protocol/*.md exists in <project>/protocol/ with identical content"
+    sources:
+      - { file: scripts/init.js, lines: "340-347" }
+    conformance: [cap-life-init-006]
+
+  - id: cap-life-init-007
+    kind: capability
+    status: built
+    statement: "`sdk-init` writes .sdkrc with releaseId (current year/quarter, increment 1, vYYYY.QN.1), squad, projectName, absolute sdkPath, type, and the default limits block (spawn/round/iteration caps null = no cap; work-based integers, no day-based keys)."
+    acceptance:
+      given: "a run on date D"
+      when: "sdk-init runs"
+      then: ".sdkrc parses as JSON; releaseId = v<year(D)>.Q<quarter(D)>.1; sdkPath = the SDK root; limits.peerSpawns/discoveryRounds/loopIterations = null; guardianCyclesBeforeEscalation, surfaceStaleCommits, statusStaleCommits, charterReviewEvery, refactorReviewLines, refactorReviewGrowthPct are positive integers"
+    sources:
+      - { file: scripts/init.js, lines: "192-197, 476-487" }
+      - { file: scripts/lib/limits.js, section: DEFAULT_LIMITS }
+    conformance: [cap-life-init-007]
+
+  - id: cap-life-init-008
+    kind: capability
+    status: built
+    statement: ".claude/settings.json records project/release/squad/createdAt, grants only scoped `Bash(node <abs SDK>/scripts/<name>.js:*)` permissions for doc, consult, status, gate-check, validate, health, next, resume (never blanket Bash(node:*)), sets outputStyle Greg (an output style named Greg ships), and wires SessionStart (startup|resume|clear|compact) and PreToolUse (Edit|Write|NotebookEdit) hooks to existing SDK scripts by absolute path."
+    acceptance:
+      given: "a fresh init"
+      when: "reading <project>/.claude/settings.json"
+      then: "every allow entry matches Bash(node <abs existing SDK script>:*); no Bash(node:*); outputStyle == 'Greg' and an output-styles file has 'name: Greg'; both hook commands are `node \"<abs existing path>\"`"
+    sources:
+      - { file: scripts/init.js, lines: "395-416" }
+    conformance: [cap-life-init-008]
+
+  - id: cap-life-init-009
+    kind: capability
+    status: built
+    statement: "`--idea` seeds idea.md Section 1 with the raw text (replacing the placeholder), flips its status to 'Raw idea — being shaped', quotes it in CLAUDE.md domain context, and quotes it (truncated to 120 chars + '...') in history's Project Start."
+    acceptance:
+      given: "--idea '<text longer than 120 chars>'"
+      when: "sdk-init runs"
+      then: "idea.md contains the text and '**Status:** Raw idea — being shaped'; CLAUDE.md contains '**Idea:** <text>'; history.md contains the first 120 chars followed by '...'"
+    sources:
+      - { file: scripts/init.js, lines: "199-209, 418-435, 504-508" }
+    conformance: [cap-life-init-009]
+
+  - id: cap-life-init-010
+    kind: capability
+    status: built
+    statement: "`sdk-init` primes current-status.md for Day 0 (Discovery Pending mission row, Waiting On the idea.md Section 4 brief, 'Project scaffolded' completed, Updated by init.js, Release set, Day 0 session note), and the result passes `sdk-validate --strict`."
+    acceptance:
+      given: "a fresh init"
+      when: "reading current-status.md and running node scripts/validate.js <p> --strict"
+      then: "the Day 0 rows are present verbatim; validate exits 0 with 'Project is clean'"
+    sources:
+      - { file: scripts/init.js, lines: "437-474" }
+    conformance: [cap-life-init-010]
+
+  - id: cap-life-init-011
+    kind: capability
+    status: defect
+    statement: "`sdk-init` names Greg (CEO) in current-status.md 'Next Agent To Activate' so sdk-next / sdk-resume can print the Day 0 activation phrase (init.js header: 'Pre-fills current-status.md with Day 0 state (ready for Greg)')."
+    defect_note: "The template's Next Agent section is now a table (| [Role name] | [e.g. ...] | ...); init.js still replaces the old '**[Role name]** — because ...' line, so the row keeps its placeholder and `sdk-next` on a fresh project prints the table header '| Role | Activation phrase | Read first |' as the phrase to paste."
+    acceptance:
+      given: "a fresh init"
+      when: "reading '## Next Agent To Activate' and running node scripts/next.js <p>"
+      then: "the row names Greg (CEO) with the idea.md Section 4 activation phrase; sdk-next prints that phrase"
+    sources:
+      - { file: scripts/init.js, lines: "458-461" }
+      - { file: project-template/current-status.md, section: "Next Agent To Activate" }
+    conformance: [cap-life-init-011]
+
+  - id: cap-life-init-012
+    kind: capability
+    status: built
+    statement: "`sdk-init` replaces history.md's placeholder '[Project Start]' with a dated Project Start entry listing squad, project type and release; with neither --idea nor --source it says the idea is to be shaped during Discovery."
+    acceptance:
+      given: "a fresh init (with and without --idea/--source)"
+      when: "reading history.md"
+      then: "'## Project Start' + '**Date:** YYYY-MM-DD'; '- Squad type: <squad>', '- Project type: <type> (<name>)', '- Release: <id>'; no '## [Project Start]'"
+    sources:
+      - { file: scripts/init.js, lines: "498-544" }
+    conformance: [cap-life-init-012]
+
+  - id: cap-life-init-013
+    kind: capability
+    status: built
+    statement: "Unless --no-git, `sdk-init` creates a git repo on branch main with exactly one commit 'feat: initialize <name> with team-sdk' (body: squad, type, release, source) and a clean working tree; --no-git skips git entirely. Git failure is reported as non-blocking."
+    acceptance:
+      given: "a fresh init with and without --no-git"
+      when: "git -C <p> rev-parse --abbrev-ref HEAD; git log; git status --porcelain"
+      then: "main; one commit with that subject and 'Squad: X | Type: Y | Release: Z' body; empty porcelain; with --no-git no .git dir"
+    sources:
+      - { file: scripts/init.js, lines: "566-580" }
+    conformance: [cap-life-init-013]
+
+  - id: cap-life-init-014
+    kind: capability
+    status: built
+    statement: "`sdk-init` installs the Collaboration Surface template as surfaces/_template.md (§34; `_` files are skipped by sdk-health) and does not leave surface-template.md at the project root."
+    acceptance:
+      given: "project-template/surface-template.md"
+      when: "sdk-init runs"
+      then: "<p>/surfaces/_template.md exists and is non-empty; <p>/surface-template.md does not exist"
+    sources:
+      - { file: scripts/init.js, lines: "283-290" }
+    conformance: [cap-life-init-014]
+
+  - id: cap-life-init-015
+    kind: capability
+    status: built
+    statement: "`--domains 'Name:Lead, other'` creates domains/<slug>/summary.md per entry (slugified lower-kebab name) with frontmatter lead (default Coordinator), spawn_when, context_provides."
+    acceptance:
+      given: "--domains 'Platform Core:CTO, lending'"
+      when: "sdk-init runs"
+      then: "domains/platform-core/summary.md has lead: \"CTO\"; domains/lending/summary.md has lead: \"Coordinator\"; both carry spawn_when and context_provides"
+    sources:
+      - { file: scripts/init.js, lines: "249-269" }
+    conformance: [cap-life-init-015]
+
+  - id: cap-life-init-016
+    kind: capability
+    status: built
+    statement: "`--source <file>` copies the file into the project root; with --source and no --idea, CLAUDE.md points at the source document and Project Start names it."
+    acceptance:
+      given: "--source <tmp>/vision.md"
+      when: "sdk-init runs"
+      then: "<p>/vision.md equals the source; CLAUDE.md contains '**Source document:** `vision.md`'; history contains 'Vision document provided: vision.md'"
+    sources:
+      - { file: scripts/init.js, lines: "84-91, 202-205, 489-496" }
+    conformance: [cap-life-init-016]
+
+  - id: cap-life-init-017
+    kind: capability
+    status: built
+    statement: "`sdk-init` generates context-manifest.json and context-index.json (via sdk-doc manifest/index) as valid JSON; generation failure is non-blocking."
+    acceptance:
+      given: "a fresh init"
+      when: "parsing <p>/context-manifest.json and <p>/context-index.json"
+      then: "both parse as JSON objects"
+    sources:
+      - { file: scripts/init.js, lines: "546-564" }
+    conformance: [cap-life-init-017]
+
+  # ──────────────────────────────────────────────────────── sdk-bootstrap (scripts/bootstrap.js)
+
+  - id: cap-life-bootstrap-001
+    kind: capability
+    status: built
+    statement: "`sdk-bootstrap` (legacy scaffold) copies every project-template file unfiltered, SQUAD.md (default squad startup), protocol.md/AGENTS.md/STRATEGY.md, team/, the .claude harness, and .sdkrc {sdkPath, limits}; unlike sdk-init it does not git-init, write .claude/settings.json, copy protocol/ views, or move the surface template to surfaces/."
+    acceptance:
+      given: "an empty target"
+      when: "node scripts/bootstrap.js boot-proj --output <tmp>/b"
+      then: "exit 0; every project-template file present; SQUAD.md from startup.md; team/ identical; .claude/skills + agents present; .sdkrc has sdkPath + limits; no .git, no settings.json, no protocol/"
+    sources:
+      - { file: scripts/bootstrap.js, lines: "136-201" }
+    conformance: [cap-life-bootstrap-001]
+
+  - id: cap-life-bootstrap-002
+    kind: capability
+    status: built
+    statement: "`sdk-bootstrap` exits 1 on an unknown --squad or an existing output dir without writing; --help exits 0."
+    acceptance:
+      given: "--squad nope | --output <existing>"
+      when: "node scripts/bootstrap.js x ..."
+      then: "exit 1, error on stderr, nothing written"
+    sources:
+      - { file: scripts/bootstrap.js, lines: "26-58, 126-130" }
+    conformance: [cap-life-bootstrap-002]
+
+  # ──────────────────────────────────────────────────────────────── sdk-update (scripts/update.js)
+
+  - id: cap-life-update-001
+    kind: capability
+    status: built
+    statement: "`sdk-update` validates its source: no path and no usable ./.sdkrc sdkPath → exit 1; a missing path → exit 1; a dir without AGENTS.md → exit 1 'does not look like a team-sdk directory'; --help exits 0."
+    acceptance:
+      given: "cwd without .sdkrc | nonexistent path | dir without AGENTS.md"
+      when: "node <x>/update.js [path]"
+      then: "exit 1 with the named error; nothing written"
+    sources:
+      - { file: scripts/update.js, lines: "50-118" }
+    conformance: [cap-life-update-001]
+
+  - id: cap-life-update-002
+    kind: capability
+    status: built
+    statement: "Run as <project>/team-sdk/scripts/update.js, `sdk-update <src>` syncs top-level SDK files and protocol/, team/, scripts/, project-template/ into <project>/team-sdk/ (added/updated), removes target files that no longer exist in the source, syncs the .claude harness into the project root, never touches project-level files, reports counts and the protocol version; a repeat run reports 'Already up to date'; --dry-run writes nothing; with no path it reads ./.sdkrc sdkPath."
+    acceptance:
+      given: "a vendored <project>/team-sdk/ and a source SDK"
+      when: "update.js <src> [--dry-run]; then again; then with ./.sdkrc only"
+      then: "dry-run: 'DRY RUN' + 'Would change', no fs change; real run: '✅ Done:', files synced, obsolete removed and listed with '-', .claude/skills synced at project root, <project>/history.md unchanged, 'Protocol version: X'; second run 'Already up to date'"
+    sources:
+      - { file: scripts/update.js, lines: "168-306" }
+    conformance: [cap-life-update-002]
+
+  - id: cap-life-update-003
+    kind: capability
+    status: defect
+    statement: "Run with no args from a project created by sdk-init or sdk-bootstrap, `sdk-update` uses the .sdkrc sdkPath those commands persist ('SDK path persisted for sdk-update') to refresh the project."
+    defect_note: "init/bootstrap projects have no team-sdk/ copy and .sdkrc sdkPath points at the SDK itself, so target (the script's own SDK) == source and update exits 1 'Source and target are the same directory'. Projects created by the current init can never receive harness/protocol updates via sdk-update."
+    acceptance:
+      given: "a fresh sdk-init project"
+      when: "cd <p> && node <sdk>/scripts/update.js"
+      then: "exit 0 and the project's .claude harness / protocol copies refresh from sdkPath"
+    sources:
+      - { file: scripts/update.js, lines: "93-118" }
+      - { file: scripts/init.js, lines: "476-487" }
+    conformance: [cap-life-update-003]
+
+  # ──────────────────────────────────────────────────────────────── sdk-squad (scripts/squad.js)
+
+  - id: cap-life-squad-001
+    kind: capability
+    status: built
+    statement: "`sdk-squad list` and `--help` list every squad parsed from team/squads/*.md (excluding _template) with duration and required/optional role counts; exit 0."
+    acceptance:
+      given: "team/squads/{feature,mvp,startup,website}.md"
+      when: "node scripts/squad.js list"
+      then: "each squad name starts a line; '<n> required'; no _template; exit 0"
+    sources:
+      - { file: scripts/squad.js, lines: "48-88" }
+    conformance: [cap-life-squad-001]
+
+  - id: cap-life-squad-002
+    kind: capability
+    status: built
+    statement: "`sdk-squad <type>` prints the roster (required/optional roles with levels and ownership), the numbered activation sequence by phase, and the bootstrap command for that squad; an unknown squad exits 1."
+    acceptance:
+      given: "squad feature | zzz"
+      when: "node scripts/squad.js feature"
+      then: "'Squad: Feature', '── Required Roles', 'PM [L4]', '1. Phase 0', '--squad feature'; zzz → exit 1 'Unknown squad'"
+    sources:
+      - { file: scripts/squad.js, lines: "89-130" }
+    conformance: [cap-life-squad-002]
+
+  # ─────────────────────────────────────────────────── sdk-install-hooks (scripts/install-hooks.js)
+
+  - id: cap-life-hooks-001
+    kind: capability
+    status: built
+    statement: "`sdk-install-hooks` exits 1 outside a git repo, or in a repo without scripts/hooks/commit-msg, leaving core.hooksPath unset."
+    acceptance:
+      given: "a non-repo dir | a repo with no scripts/hooks/commit-msg"
+      when: "node scripts/install-hooks.js (cwd = that dir)"
+      then: "exit 1 ('not a git repository' | 'commit-msg not found'); git config core.hooksPath unset"
+    sources:
+      - { file: scripts/install-hooks.js, lines: "28-44" }
+    conformance: [cap-life-hooks-001]
+
+  - id: cap-life-hooks-002
+    kind: capability
+    status: built
+    statement: "From anywhere inside a repo that has scripts/hooks/commit-msg, `sdk-install-hooks` sets core.hooksPath=scripts/hooks, makes the hook executable, prints the Document-First Gate confirmation, exits 0, and is idempotent."
+    acceptance:
+      given: "a repo with scripts/hooks/commit-msg + map-gate.js, cwd = a subdir"
+      when: "node scripts/install-hooks.js (twice)"
+      then: "exit 0 both times; git config core.hooksPath == scripts/hooks; commit-msg has an exec bit"
+    sources:
+      - { file: scripts/install-hooks.js, lines: "46-64" }
+    conformance: [cap-life-hooks-002]
+
+  # ──────────────────────────────────────────────────────────────────── sdk-kill (scripts/kill.js)
+
+  - id: cap-life-kill-001
+    kind: capability
+    status: built
+    statement: "`sdk-kill` prints usage (exit 0) with fewer than two args, and otherwise rejects without writing: missing --reason, --class not in FRAMING_WRONG/SCOPE_OBSOLETE/PRIORITY_SHIFT/EXECUTION_STALLED, FRAMING_WRONG without --assumption, missing project dir (exit 1)."
+    acceptance:
+      given: "each invalid combination"
+      when: "node scripts/kill.js <dir> <pod> ..."
+      then: "exit 1 with the named error; no ~/.claude/kill-log.json, no project files"
+    sources:
+      - { file: scripts/kill.js, lines: "33-96" }
+    conformance: [cap-life-kill-001]
+
+  - id: cap-life-kill-002
+    kind: capability
+    status: built
+    statement: "A valid `sdk-kill` appends a structured entry (id KILL-<date>-<n>, sequential per day; project, release from .sdkrc, pod, class, reason, assumption|null, killedBy default Owner) to ~/.claude/kill-log.json, a block to ~/.claude/kill-log.md, a 'Pod Kill' entry to history.md, and a POD-KILL INFO Bus message to bus-log.md."
+    acceptance:
+      given: "a project dir with .sdkrc and history.md; HOME = sandbox"
+      when: "node scripts/kill.js <p> auth-v2 --reason r --class FRAMING_WRONG --assumption a --killed-by PM; then a PRIORITY_SHIFT kill"
+      then: "kill-log.json has KILL-<today>-1 then -2; kill-log.md header + '### KILL-...'; history '## Pod Kill: auth-v2'; bus-log 'FROM: PM → TO: ALL | PRIORITY: INFO | TAG: POD-KILL | RELEASE: <id>'"
+    sources:
+      - { file: scripts/kill.js, lines: "98-223" }
+    conformance: [cap-life-kill-002]
+
+  # ────────────────────────────────────────────────────────────── sdk-version (scripts/version.js)
+
+  - id: cap-life-version-001
+    kind: capability
+    status: built
+    statement: "`sdk-version <dir>` prints the current release as one stdout line — .sdkrc releaseId, else current-status '**Release:**' — or a 'No version set' hint (exit 0); a missing dir exits 2."
+    acceptance:
+      given: ".sdkrc releaseId | only current-status Release | neither | missing dir"
+      when: "node scripts/version.js <dir>"
+      then: "stdout == the id | hint, exit 0 | exit 2"
+    sources:
+      - { file: scripts/version.js, lines: "68-77, 133-143" }
+    conformance: [cap-life-version-001]
+
+  - id: cap-life-version-002
+    kind: capability
+    status: built
+    statement: "`sdk-version <dir> bump patch|minor|major` increments vYYYY.QN.N (patch .N+1; minor next quarter .1, Q4 rolls to next year Q1; major next year Q1.1), writes .sdkrc releaseId (other keys preserved), rewrites current-status '**Release:**', appends '## Version Bump — old → new' to history.md, and prints 'old → new'."
+    acceptance:
+      given: "v2026.Q4.3 / v2026.Q2.3"
+      when: "bump patch | minor | major"
+      then: "v2026.Q4.4 | v2026.Q3.1 (Q4 → v2027.Q1.1) | v2027.Q1.1 in stdout line 1, .sdkrc, current-status, history"
+    sources:
+      - { file: scripts/version.js, lines: "41-54, 145-174" }
+    conformance: [cap-life-version-002]
+
+  - id: cap-life-version-003
+    kind: capability
+    status: built
+    statement: "`sdk-version <dir> set <id>` validates vYYYY.Q[1-4].N (exit 2 and unchanged otherwise), writes .sdkrc + current-status, and logs a history entry only when a previous version existed ('(none) → id')."
+    acceptance:
+      given: "existing v2026.Q2.1 | no version"
+      when: "set v2026.Q3.5 | set 2026.Q3.5 | set v2026.Q5.1 | set (no id)"
+      then: "'v2026.Q2.1 → v2026.Q3.5' + history entry | exit 2 | exit 2 | exit 2; from nothing: '(none) → v…', history unchanged"
+    sources:
+      - { file: scripts/version.js, lines: "176-199" }
+    conformance: [cap-life-version-003]
+
+  - id: cap-life-version-004
+    kind: capability
+    status: built
+    statement: "`sdk-version` usage errors exit 2 (bump without/with unknown kind, unknown subcommand); bump with no current version exits 1; failed commands leave .sdkrc unchanged."
+    acceptance:
+      given: "a versioned dir and an unversioned dir"
+      when: "bump | bump huge | frobnicate | bump patch (unversioned)"
+      then: "2 | 2 | 2 | 1; .sdkrc releaseId unchanged"
+    sources:
+      - { file: scripts/version.js, lines: "145-160, 202-203" }
+    conformance: [cap-life-version-004]
+
+  # ──────────────────────────────────────────────────────────────────── sdk-ship (scripts/ship.js)
+
+  - id: cap-life-ship-001
+    kind: capability
+    status: built
+    statement: "`sdk-ship` exits 1 without tagging when <project-dir>/<release-id> are missing, the id is not vYYYY.QN.N, the dir is missing, history.md is missing, or history.md has no '## [<id>]' / '## <id>' entry ('SHIP BLOCKED')."
+    acceptance:
+      given: "each invalid input in a temp git repo"
+      when: "node scripts/ship.js <dir> <id>"
+      then: "exit 1 with the named message; git tag -l empty"
+    sources:
+      - { file: scripts/ship.js, lines: "64-108" }
+      - { file: scripts/lib/release-notes.js }
+    conformance: [cap-life-ship-001]
+
+  - id: cap-life-ship-002
+    kind: capability
+    status: built
+    statement: "`sdk-ship <dir> <id> --dry-run` (no clean tree required) exits 0, reports the history/validate checks, and previews GitHub release notes built from the release's history section only: '### What shipped' (COMPLETED/shipped/Done/delivered bullets), '### Decisions made' (**Decision:** lines / approved table rows), '### Full log'; no tag is created."
+    acceptance:
+      given: "history '## [v2026.Q2.1] …' with '- Mission A COMPLETED' and '**Decision:** Use Postgres', followed by another ## section; a dirty file"
+      when: "node scripts/ship.js <dir> v2026.Q2.1 --dry-run"
+      then: "exit 0; '(dry run) sdk-ship', 'history.md: entry found ✓', 'sdk-validate: clean ✓'; notes sections as stated; next-section text absent; git tag -l empty"
+    sources:
+      - { file: scripts/ship.js, lines: "141-155" }
+      - { file: scripts/lib/release-notes.js }
+    conformance: [cap-life-ship-002]
+
+  - id: cap-life-ship-003
+    kind: capability
+    status: built
+    statement: "`sdk-ship` runs sdk-validate first: any warning blocks a real ship (exit 1, 'SHIP BLOCKED — documentation issues found', warnings listed); --dry-run shows the warnings as 'would block' and exits 0."
+    acceptance:
+      given: "a committed project missing general-requirements.md"
+      when: "ship <dir> <id> | ship <dir> <id> --dry-run"
+      then: "exit 1 naming 'general-requirements.md is missing' | exit 0 with '1 warning(s) — would block'; no tag"
+    sources:
+      - { file: scripts/ship.js, lines: "110-127" }
+    conformance: [cap-life-ship-003]
+
+  - id: cap-life-ship-004
+    kind: capability
+    status: built
+    statement: "A real `sdk-ship` refuses a dirty working tree (exit 1, 'Working tree is not clean', uncommitted files listed) and creates no tag."
+    acceptance:
+      given: "an untracked file in an otherwise shippable repo"
+      when: "ship <dir> <id>"
+      then: "exit 1; stderr names the file; git tag -l empty"
+    sources:
+      - { file: scripts/ship.js, lines: "129-139" }
+      - { file: scripts/lib/git.js, section: assertCleanTree }
+    conformance: [cap-life-ship-004]
+
+  - id: cap-life-ship-005
+    kind: capability
+    status: built
+    statement: "`sdk-ship` is atomic: it creates an annotated tag and pushes it to origin; if the push fails the local tag is deleted (exit 1, 'SHIP FAILED … local tag rolled back'); an existing tag blocks with a delete hint."
+    acceptance:
+      given: "a shippable repo whose origin is a nonexistent local path (offline) | a pre-existing tag"
+      when: "ship <dir> v2026.Q2.1"
+      then: "exit 1 'local tag rolled back' and git tag -l empty | exit 1 'already exists'"
+    sources:
+      - { file: scripts/ship.js, lines: "157-183" }
+      - { file: scripts/lib/git.js, section: createAndPushTag }
+    conformance: [cap-life-ship-005]
+
+  - id: cap-life-ship-006
+    kind: capability
+    status: defect
+    statement: "The remediation `sdk-ship` prints when a release entry is missing (`sdk-doc decision history.md --decision \"Release <id>\" …`) produces an entry that `sdk-ship` then accepts."
+    defect_note: "sdk-doc decision writes '### Decision: Release <id>' under '## Decision History'; ship's matcher requires a heading '## [<id>]' or '## <id>', so after following its own hint ship still exits 1 'No history.md entry found'. Same mismatch for sdk-github release (needs '## [<id>]')."
+    acceptance:
+      given: "a history.md without an entry; the printed sdk-doc command is run"
+      when: "ship <dir> <id> --dry-run"
+      then: "exit 0 (entry found)"
+    sources:
+      - { file: scripts/ship.js, lines: "88-108" }
+      - { file: scripts/lib/release-notes.js }
+      - { file: scripts/commands/decision.js }
+    conformance: [cap-life-ship-006]
+
+  - id: cap-life-ship-007
+    kind: capability
+    status: unpinned
+    statement: "On a clean, validated repo with a reachable origin, `sdk-ship` pushes the annotated tag 'Release <id>', prints the release notes and '✅ <id> shipped', exits 0."
+    acceptance:
+      given: "a shippable repo with a writable origin"
+      when: "ship <dir> <id>"
+      then: "exit 0; origin has tag <id>; stdout contains the notes and '<id> shipped'"
+    sources:
+      - { file: scripts/ship.js, lines: "157-183" }
+    conformance: [cap-life-ship-007]
+
+  # ──────────────────────────────────────────────────────────────── sdk-github (scripts/github.js)
+
+  - id: cap-life-github-001
+    kind: capability
+    status: built
+    statement: "`sdk-github` offline argument handling: --help exits 0 naming TEAM_SDK_GITHUB_TOKEN; missing or nonexistent project dir → exit 2; unknown subcommand → exit 2; `link` with --repo not in owner/repo form → exit 2 before any auth or network, .sdkrc untouched."
+    acceptance:
+      given: "no network, dummy token"
+      when: "github.js --help | status | status <missing> | frob <dir> | link <dir> --repo no-slash"
+      then: "0 | 2 | 2 | 2 | 2"
+    sources:
+      - { file: scripts/github.js, lines: "182-186, 322-378" }
+    conformance: [cap-life-github-001]
+
+  - id: cap-life-github-002
+    kind: capability
+    status: built
+    statement: "`sdk-github` authenticates only with TEAM_SDK_GITHUB_TOKEN: without it every network command exits 1; if only GITHUB_TOKEN is set it explains the Actions-token collision instead of using it."
+    acceptance:
+      given: "TEAM_SDK_GITHUB_TOKEN unset (GITHUB_TOKEN unset | set)"
+      when: "sync-issues | release | status <dir>"
+      then: "exit 1 'TEAM_SDK_GITHUB_TOKEN is not set' | 'GITHUB_TOKEN is set but TEAM_SDK_GITHUB_TOKEN is not'"
+    sources:
+      - { file: scripts/github.js, lines: "29-45" }
+    conformance: [cap-life-github-002]
+
+  - id: cap-life-github-003
+    kind: capability
+    status: built
+    statement: "`sdk-github` pre-network guards: sync-issues/release with no linked repo (.sdkrc github.repo) exit 1; status with no linked repo prints the link hint (exit 0); release with no id (flag or .sdkrc) exits 1; release with no '## [<id>]' history entry exits 1."
+    acceptance:
+      given: "dummy token; unlinked dir | linked dir without releaseId | history with unbracketed '## <id>'"
+      when: "sync-issues | release | status | release --release-id <id>"
+      then: "1 | 1 | 0 + hint | 1 'No release ID' | 1 'No history.md entry found'"
+    sources:
+      - { file: scripts/github.js, lines: "167-176, 196-274, 276-284" }
+    conformance: [cap-life-github-003]
+
+  - id: cap-life-github-004
+    kind: capability
+    status: unpinned
+    statement: "`sdk-github link <dir> --repo owner/repo` verifies the repo via the GitHub API and records it in .sdkrc github.repo (other keys preserved)."
+    acceptance:
+      given: "a valid token and existing repo"
+      when: "link <dir> --repo acme/x"
+      then: "'✓ Repo acme/x found'; .sdkrc github.repo == 'acme/x'"
+    sources:
+      - { file: scripts/github.js, lines: "181-197" }
+    conformance: [cap-life-github-004]
+
+  - id: cap-life-github-005
+    kind: capability
+    status: unpinned
+    statement: "`sdk-github sync-issues` gets or creates a milestone named for the release, then creates one issue per unchecked '- [ ]' item in product/engineering/general requirements (labels sdk:<area> + sdk), skipping titles that already exist (any state)."
+    acceptance:
+      given: "a linked repo and pending items"
+      when: "sync-issues <dir> (twice)"
+      then: "first run '<n> created'; second run '0 created, <n> skipped'"
+    sources:
+      - { file: scripts/github.js, lines: "125-165, 199-253" }
+    conformance: [cap-life-github-005]
+
+  - id: cap-life-github-006
+    kind: capability
+    status: unpinned
+    statement: "`sdk-github release` creates a published GitHub release tagged/named <id> whose body is the '## [<id>]' history section; `sdk-github status` prints repo, stars, and up to 10 open sdk-labelled issues."
+    acceptance:
+      given: "a linked repo, pushed tag, history entry"
+      when: "release <dir> --release-id <id> | status <dir>"
+      then: "'GitHub release created: <url>' | 'Open SDK issues: n'"
+    sources:
+      - { file: scripts/github.js, lines: "255-320" }
+    conformance: [cap-life-github-006]
+
+  # ──────────────────────────────────────────────────────────────────── sdk-retro (scripts/retro.js)
+
+  - id: cap-life-retro-001
+    kind: capability
+    status: built
+    statement: "`sdk-retro <dir> --release --what-worked --what-slowed --change [--note]` appends '## Retrospective — <id>' (Date, What worked, What slowed us down, One thing to change next cycle, optional Additional notes) to strategy-log.md, creating it with a '# Strategy Log' header if missing; missing dir exits 2."
+    acceptance:
+      given: "an empty dir, then a second retro with --note"
+      when: "node scripts/retro.js <dir> --release v2026.Q2.1 --what-worked W --what-slowed S --change C"
+      then: "exit 0; strategy-log.md starts with the header once; both entries present in order; notes only on the second"
+    sources:
+      - { file: scripts/retro.js, lines: "38-71, 116-132" }
+    conformance: [cap-life-retro-001]
+
+  - id: cap-life-retro-002
+    kind: capability
+    status: defect
+    statement: "`sdk-retro <dir>` interactive mode prompts for release (suggesting .sdkrc/current-status), what worked, what slowed, one change, optional notes, then writes the entry; an empty required answer exits 1."
+    defect_note: "With non-TTY stdin (piped answers), readline delivers all lines before later rl.question calls attach, so only the first answer is consumed; the process exits 0 having written nothing (silent data loss). Not tested with a real TTY."
+    acceptance:
+      given: ".sdkrc releaseId v2026.Q2.1; stdin '\\nworked\\nslowed\\nchange\\n\\n'"
+      when: "node scripts/retro.js <dir>"
+      then: "prompt shows '[v2026.Q2.1]'; strategy-log.md gets the entry; exit 0"
+    sources:
+      - { file: scripts/retro.js, lines: "134-191" }
+    conformance: [cap-life-retro-002]

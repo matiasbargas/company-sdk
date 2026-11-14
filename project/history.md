@@ -607,3 +607,21 @@ Affects natural persons: NO
 - **The revisit trigger is now measurable.** The company Owner rates each funded bet advanced / flat / regressed. Divergence means ≥ 50% of the bets with VOF above the portfolio median are rated flat or regressed. Two consecutive cycles of divergence, or a second Owner, makes the outside-verifier decision for fuel due.
 
 **Discovery GRADUATED — 2026-11-14 (cycle 2, 6/6; `project/iterations/discovery/iter-002.md`).** Carry-forward items settled by Greg: (1) divergence is computed within a bet class of ≥ 3 funded bets, against that class's VOF median; (2) an unrated funded bet counts as divergent, and sdk-health flags the unfilled judgment column; (5) rate-limit contention is marked as an untested assumption; (6) the brief now says v0 proof is own-gates. Routed to owners: CLO reads the live provider terms before the first two-instance run; CTO tests per-company keys and rate limits at scale; Mario plus a §32 Red-Team look at how the ledger stays out of reach of company sessions (Bash) under light v0. Next gate: Mario's irreversibility review of the six decisions.
+
+---
+
+## Mario gate — Portfolio Orchestrator irreversible decisions: APPROVED WITH CONDITIONS (2026-11-14)
+**Made by:** Chief Engineer (Mario seat), with the Owner deciding D7 · **Release:** v2026.Q2.3 · **Tag:** SDK-CHANGE
+
+DECISION: The six irreversible decisions hold in shape, and formats are pinned before any code. D7, the trust split, goes to a dedicated sandbox OS user.
+Context: The Mario review of D1 ledger model, D2 runner as the only meter, D3 one repository per company, D4 runner contract, D5 commons identity, D6 one key per company, and D7 keeping the ledger out of company reach (a Guardian carry-forward).
+Decision: All seven are **APPROVED WITH CONDITIONS C1–C14**, recorded in `context/spec/portfolio-orchestrator/variables.yaml` → `mario_conditions`. **D7 (Owner decision):** company sessions run as one dedicated unprivileged sandbox OS user. The runner and `holding/` (ledger, settings, hooks, kill switch, commons, keys) stay under the Owner's user with mode 0700. The runner launches sessions through a narrow sudo rule and passes the key per session. Per-key reconciliation is added as the layer that detects problems, and deny rules as a second layer. Per-company users or containers stay deferred until a second Owner.
+Alternatives considered: deny rules alone (bypassable with `python -c`); HMAC under one user (the key is readable by the forger); a ledger daemon as another user (it cannot authenticate callers under the same user); detect-not-prevent only (it cannot catch a forged proof, release or grant); containers now (deferred, too slow for the proof).
+Implications: These can start now, test-first: the conformance tests, the ledger library, the meter (on recorded fixtures), and the portfolio validator. **The first two-company run is blocked until C4** (a second metering spike), **C12** (sandbox user built), **C13** (where provider caps live, possibly per workspace) **and C14** (keys never readable by the sandbox user) hold.
+Reversible: NO for D1, D4 and D5 once real events or adoptions exist (formats pinned via C1, C8 and C10). YES for the others.
+Affects natural persons: NO
+
+---
+
+## SDK capability inventory (2026-11-14)
+Three agents wrote every CLI surface into Layer B and pinned each behaviour with black-box conformance tests: `context/spec/sdk-lifecycle` (47), `sdk-session` (58) and `sdk-doc` (72). Each has a suite in `npm test` (`test-cap-lifecycle.js` 259 assertions, `test-cap-session.js` 205, `test-cap-doc.js` 175). **Behaviour coverage: 157 of 188 existing capabilities pinned by tests (84%), 11 unpinned, 20 defects** (each test pins today's behaviour with a `// DEFECT:` comment; listed by `sdk-health`). One defect was a chapter-6 regression of mine: `sdk-pre-tag` crashed on any project with a manifest (undefined `staleHours`). It is fixed in this commit, and the capability is now built. The worst open defects are: `disagreement resolve` on an already-resolved id silently resolves the *next* entry, corrupting history.md; `sdk-next` and `sdk-resume` print the table header instead of the activation phrase; `sdk-resume` reports gates as clean while they are BLOCKED; `sdk-ops clo-ciso-gate` disagrees with `sdk-gate-check`.

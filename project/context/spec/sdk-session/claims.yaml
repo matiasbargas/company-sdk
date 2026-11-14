@@ -1,0 +1,637 @@
+# Layer B capabilities — sdk-session (session & quality bins)
+#
+# What sdk-pre-tag, sdk-status, sdk-next, sdk-resume, sdk-health, sdk-validate, sdk-gate-check,
+# sdk-ops, sdk-daemon, sdk-consult and sdk-memory promise today, stated against their public
+# interface (args, exit codes, files written, stdout/stderr lines), independent of scripts/.
+#
+# Conformance: scripts/lib/test-cap-session.js (black-box, fixture projects in os.tmpdir()).
+# `built`  ⇒ a `@covers <id>` block in that file passes.
+# `defect` ⇒ the test pins CURRENT behaviour that differs from the help/docs (`// DEFECT:`); fix
+#            the source, flip the assertion, then set `built`.
+#
+# Not duplicated here (see project/context/spec/sdk-core/claims.yaml):
+#   cap-sdk-gate-001       CLO+CISO placeholder/Gate Status/pending-item rules of sdk-gate-check
+#   cap-sdk-staleness-001  commit/iteration-based staleness primitives (used by pre-tag + health)
+#   cap-sdk-state-001      header-aware current-status.md parser (used by status + pre-tag)
+#   cap-sdk-mapgate-001    material/exempt classification (used by health document-first drift)
+
+claims:
+  # ─── sdk-pre-tag ───────────────────────────────────────────────────────────
+  - id: cap-sess-pretag-001
+    kind: capability
+    status: built
+    statement: "`sdk-pre-tag` prints usage and exits 0 on --help or no args, and exits 2 when the project directory does not exist."
+    acceptance:
+      - given: "no arguments, or --help"
+        when: "sdk-pre-tag runs"
+        then: "stdout contains Usage with --fix and --json; exit 0"
+      - given: "a path that does not exist"
+        when: "sdk-pre-tag <path>"
+        then: "stderr 'project directory not found'; exit 2"
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 576-611
+    conformance: [cap-sess-pretag-001]
+
+  - id: cap-sess-pretag-002
+    kind: capability
+    status: built
+    statement: "The canonical release is .sdkrc `releaseId`, else current-status.md `**Release:**`; `--release-id X` that differs from it aborts with exit 1 before any check runs."
+    acceptance:
+      - given: ".sdkrc releaseId v2026.Q4.5 and current-status Release v2026.Q4.1"
+        when: "sdk-pre-tag <dir> --release-id v2026.Q4.1"
+        then: "stderr 'does not match canonical v2026.Q4.5'; exit 1"
+      - given: "a matching --release-id"
+        when: "sdk-pre-tag <dir> --release-id <canonical> --json"
+        then: "the review runs and JSON releaseId equals it"
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 151-157, 613-623
+    conformance: [cap-sess-pretag-002]
+
+  - id: cap-sess-pretag-003
+    kind: capability
+    status: built
+    statement: "`--json` prints one JSON object `{clean, releaseId, fixed, issues, byOwner}` where byOwner maps a responsible role to `[{type, file, message}]` and the lists total `issues`; exit 1 while issues remain."
+    acceptance:
+      - given: "a content-clean project without context-manifest.json"
+        when: "sdk-pre-tag <dir> --json"
+        then: "clean=false, exactly one health issue 'context-manifest.json not found', exit 1"
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 489-505, 639-641
+    conformance: [cap-sess-pretag-003]
+
+  - id: cap-sess-pretag-004
+    kind: capability
+    status: built
+    statement: "The text report groups remaining issues under COHERENCE / COHESION / VALIDATE / HEALTH headings (issue lines on stderr, tagged `[file]`), then a TEAM DISPATCH listing each responsible role with its issue count, then a footer count."
+    acceptance:
+      - given: "a project with an unknown Next Agent role and no manifest"
+        when: "sdk-pre-tag <dir>"
+        then: "stdout has '── COHERENCE', '── HEALTH', '── TEAM DISPATCH', 'Coordinator — 2 issues to resolve', '2 issues require agent action before tagging.'; exit 1"
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 52-72, 507-563
+    conformance: [cap-sess-pretag-004]
+
+  - id: cap-sess-pretag-005
+    kind: capability
+    status: built
+    statement: "Coherence: a release ID in current-status.md that differs from .sdkrc releaseId is a fixable coherence issue dispatched to the Coordinator."
+    acceptance:
+      - given: "current-status Release v2026.Q4.1, .sdkrc releaseId v2026.Q4.2"
+        when: "sdk-pre-tag <dir> --json"
+        then: "a coherence issue 'Release ID mismatch: current-status.md says \"v2026.Q4.1\", .sdkrc says \"v2026.Q4.2\"' under Coordinator"
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 186-207
+    conformance: [cap-sess-pretag-005]
+
+  - id: cap-sess-pretag-006
+    kind: capability
+    status: built
+    statement: "Coherence: every mission in current-status.md Active Missions must be mentioned (case-insensitive substring) somewhere in product-requirements.md, else a coherence issue for the PM."
+    acceptance:
+      - given: "active mission 'Checkout flow' absent from product-requirements.md"
+        when: "sdk-pre-tag <dir> --json"
+        then: "byOwner.PM has 'Mission \"Checkout flow\" is active ... no corresponding entry'"
+      - given: "product-requirements.md mentions 'checkout FLOW' in prose"
+        then: "no mission issue"
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 209-227
+    conformance: [cap-sess-pretag-006]
+
+  - id: cap-sess-pretag-007
+    kind: capability
+    status: built
+    statement: "Coherence: history.md must contain the current release ID, else a coherence issue telling the Coordinator to log the release decision."
+    acceptance:
+      - given: "history.md that never names v2026.Q4.1"
+        when: "sdk-pre-tag <dir> --json"
+        then: "issue 'No history.md entry found for release v2026.Q4.1' (file history.md)"
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 229-242
+    conformance: [cap-sess-pretag-007]
+
+  - id: cap-sess-pretag-008
+    kind: capability
+    status: built
+    statement: "Coherence: each role in the Next Agent To Activate table must be a recognised role (agent names in parentheses are ignored), else a coherence issue."
+    acceptance:
+      - given: "role cell 'Wizard (Ana Lagos)'"
+        then: "issue '\"Next Agent To Activate\" names \"Wizard (Ana Lagos)\" — not a recognized role'"
+      - given: "role cell 'Staff Engineer (Tariq Bishkek)'"
+        then: "no role issue"
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 244-270
+    conformance: [cap-sess-pretag-008]
+
+  - id: cap-sess-pretag-009
+    kind: capability
+    status: built
+    statement: "Cohesion: flags a Done/complete/shipped mission still in Active Missions, a product-requirements item present in both Done and Pending, and any `## ` history.md entry without a Made by attribution."
+    acceptance:
+      - given: "an Active Missions row with status Done, an item in Done and Pending, a history entry with no Made by"
+        when: "sdk-pre-tag <dir> --json"
+        then: "three cohesion issues; history entries that do have Made by are not flagged"
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 278-359
+    conformance: [cap-sess-pretag-009]
+
+  - id: cap-sess-pretag-010
+    kind: capability
+    status: built
+    statement: "Validate: every sdk-validate warning is surfaced verbatim as a `validate` issue (file `_validate`)."
+    acceptance:
+      - given: "engineering-requirements.md containing [RELEASE] on line 3"
+        then: "exactly one validate issue 'WARN  engineering-requirements.md ... unfilled placeholder on line 3'"
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 364-367
+    conformance: [cap-sess-pretag-010]
+
+  - id: cap-sess-pretag-011
+    kind: capability
+    status: built
+    statement: "Health: current-status.md more commits behind than `.sdkrc limits.statusStaleCommits` is a health issue; outside git staleness is not measured."
+    acceptance:
+      - given: "a git repo, statusStaleCommits 2, three commits since current-status.md changed"
+        then: "health issue 'current-status.md is 3 commits behind (threshold: 2)'"
+      - given: "two commits behind, or no git repo"
+        then: "no staleness issue"
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 375-387
+    conformance: [cap-sess-pretag-011]
+
+  - id: cap-sess-pretag-012
+    kind: capability
+    status: built
+    statement: "Health: a missing .sdkrc, malformed .sdkrc JSON, or a .sdkrc with neither sdkPath nor releaseId is a health issue on `.sdkrc`."
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 407-429
+    conformance: [cap-sess-pretag-012]
+
+  - id: cap-sess-pretag-013
+    kind: capability
+    status: built
+    statement: "`--fix` rewrites current-status.md `**Release:**` to the .sdkrc releaseId, counts it in `fixed`, and drops it from the remaining issues; without --fix no file is modified."
+    acceptance:
+      - given: "release drift v2026.Q4.1 (status) vs v2026.Q4.2 (.sdkrc)"
+        when: "sdk-pre-tag <dir> --fix --json"
+        then: "current-status.md reads '**Release:** v2026.Q4.2'; fixed=1; a re-run reports no drift"
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 190-207, 436-475
+    conformance: [cap-sess-pretag-013]
+
+  - id: cap-sess-pretag-014
+    kind: capability
+    status: defect
+    statement: "`--fix` creates a missing required file from project-template/ and reports it as auto-fixed, removing it from the issues that remain."
+    defect_note: "The file is created and listed under 'Auto-fixed', but the same issue is still printed as unresolved and counted in the footer ('2 issues require agent action') while the exit code is computed from 1 remaining. applyFixes pushes a copy ({...iss, fixNote}) so printReport's identity check never matches. Also: the template stub contains [RELEASE]/[PROJECT NAME] placeholders, so the next run raises validate issues for the file it just created."
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 450-467, 490, 640
+    conformance: [cap-sess-pretag-014]
+
+  - id: cap-sess-pretag-015
+    kind: capability
+    status: built
+    statement: "A project with a fresh context-manifest.json and no other findings gets 'All checks passed. Ready to tag.' and exit 0 (help: 'Exit 0 if clean')."
+    fixed_note: "2026-11-14: the undefined `staleHours` reference (a chapter-6 regression) is fixed; manifest staleness is commit-based."
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 389-405, 520-523
+    conformance: [cap-sess-pretag-015]
+
+  - id: cap-sess-pretag-016
+    kind: capability
+    status: defect
+    statement: "With --json, every outcome (including a --release-id mismatch) is reported as machine-readable output."
+    defect_note: "On --release-id mismatch with --json the process exits 1 with empty stdout AND empty stderr (the error print is suppressed in json mode and nothing replaces it)."
+    sources:
+      - file: scripts/pre-tag.js
+        lines: 617-623
+    conformance: [cap-sess-pretag-016]
+
+  # ─── sdk-status ────────────────────────────────────────────────────────────
+  - id: cap-sess-status-001
+    kind: capability
+    status: built
+    statement: "`sdk-status [dir]` defaults to the cwd; with no current-status.md it exits 1 with a hint; --help exits 0. Otherwise it exits 0 (informational)."
+    sources:
+      - file: scripts/status.js
+        lines: 31-57
+    conformance: [cap-sess-status-001]
+
+  - id: cap-sess-status-002
+    kind: capability
+    status: built
+    statement: "sdk-status prints the project name (title suffix after ' -- ' stripped), Release and Updated, the open missions only (Done hidden) with status/next/owner, unchecked Waiting On items, open decisions, and the activation phrase read from the Next Agent table."
+    acceptance:
+      - given: "one Active and one Done mission and a table-form Next Agent row"
+        when: "sdk-status <dir>"
+        then: "'MISSIONS (1)', the Done mission absent, 'To resume — paste this:' followed by the phrase"
+    sources:
+      - file: scripts/status.js
+        lines: 186-306
+    conformance: [cap-sess-status-002]
+
+  - id: cap-sess-status-003
+    kind: capability
+    status: built
+    statement: "sdk-status surfaces things to challenge first: the pre-mortem §4 assumption and first two Explicit Non-Goals (ACTIVE FRAMINGS), FRAMING-CHALLENGE Bus messages and OPEN DISAGREE entries (OPEN CHALLENGES); otherwise 'No framings to challenge. No open disagreements.'"
+    sources:
+      - file: scripts/status.js
+        lines: 68-157, 211-237
+    conformance: [cap-sess-status-003]
+
+  - id: cap-sess-status-004
+    kind: capability
+    status: built
+    statement: "sdk-status lists `DECISION BY: YYYY-MM-DD` deadlines that have passed as 'OVERDUE (n)' with file:line; future deadlines are not listed."
+    sources:
+      - file: scripts/status.js
+        lines: 287-293
+      - file: scripts/lib/overdue.js
+        lines: 37-43
+    conformance: [cap-sess-status-004]
+
+  - id: cap-sess-status-005
+    kind: capability
+    status: built
+    statement: "sdk-status shows the last kills for this project from ~/.claude/kill-log.json; --cross-project shows FRAMING_WRONG kills from all projects tagged with their project."
+    sources:
+      - file: scripts/status.js
+        lines: 161-182, 241-251
+    conformance: [cap-sess-status-005]
+
+  - id: cap-sess-status-006
+    kind: capability
+    status: built
+    statement: "When the Next Agent phrase is missing or still a template placeholder, sdk-status prints 'No activation phrase found.' and asks for a Coordinator handoff."
+    sources:
+      - file: scripts/status.js
+        lines: 297-305
+    conformance: [cap-sess-status-006]
+
+  # ─── sdk-next ──────────────────────────────────────────────────────────────
+  - id: cap-sess-next-001
+    kind: capability
+    status: built
+    statement: "`sdk-next` with no args exits 1 with usage; with no current-status.md exits 1."
+    sources:
+      - file: scripts/next.js
+        lines: 83-93
+    conformance: [cap-sess-next-001]
+
+  - id: cap-sess-next-002
+    kind: capability
+    status: built
+    statement: "sdk-next prints exactly 'Project: X / Active: a, b / Waiting on: first unchecked item / blank / To resume, paste this: / phrase', reading an 'Activation phrase: \"...\"' line; empty sections fall back to 'None', 'Nothing blocked', and a no-handoff message."
+    sources:
+      - file: scripts/next.js
+        lines: 22-115
+    conformance: [cap-sess-next-002]
+
+  - id: cap-sess-next-003
+    kind: capability
+    status: defect
+    statement: "sdk-next prints the activation phrase from the template's table-form Next Agent To Activate section (as sdk-status does)."
+    defect_note: "With the project-template table, sdk-next falls back to 'first non-empty line' and prints the header row '| Role | Activation phrase | Read first |' as the phrase. sdk-resume embeds this output, so every templated project's resume shows that row. sdk-next has its own parser instead of scripts/lib/project-state.js."
+    sources:
+      - file: scripts/next.js
+        lines: 55-79
+    conformance: [cap-sess-next-003]
+
+  # ─── sdk-resume ────────────────────────────────────────────────────────────
+  - id: cap-sess-resume-001
+    kind: capability
+    status: built
+    statement: "`sdk-resume` exits 1 when the project directory or its current-status.md does not exist."
+    sources:
+      - file: scripts/resume.js
+        lines: 14-26
+    conformance: [cap-sess-resume-001]
+
+  - id: cap-sess-resume-002
+    kind: capability
+    status: built
+    statement: "sdk-resume prints SDK / Gates / Drafts / Sessions / Manifest / Index / Overdue lines, regenerates context-manifest.json and context-index.json in the project, embeds the sdk-next block and a cockpit, ends with 'Ready. ...', and exits 0; a malformed .sdkrc is reported, not fatal."
+    sources:
+      - file: scripts/resume.js
+        lines: 28-152
+    conformance: [cap-sess-resume-002]
+
+  - id: cap-sess-resume-003
+    kind: capability
+    status: built
+    statement: "sdk-resume reports Night Watch findings (agent-drafts/*.md count, latest file, '- ' item count) and temp sessions (sessions/temp/*.md with frontmatter titles), or that the directories are absent."
+    sources:
+      - file: scripts/resume.js
+        lines: 60-99
+    conformance: [cap-sess-resume-003]
+
+  - id: cap-sess-resume-004
+    kind: capability
+    status: defect
+    statement: "sdk-resume's Gates line reports an issue when `sdk-gate-check --all` is blocked."
+    defect_note: "gate-check writes 'GATE BLOCKED' to stderr; resume reads `e.stdout || e.stderr`, and an empty stdout Buffer is truthy, so stderr is never scanned. A blocked gate is summarised as 'Gates:    ✓ 0 warning(s)'."
+    sources:
+      - file: scripts/resume.js
+        lines: 44-58
+    conformance: [cap-sess-resume-004]
+
+  # ─── sdk-health ────────────────────────────────────────────────────────────
+  - id: cap-sess-health-001
+    kind: capability
+    status: built
+    statement: "`sdk-health [dir] [--json]` defaults to the cwd; --json prints `{healthy, issues[], notices[]}`; exit 0 when there are no issues ('Project is healthy.'), 1 otherwise; --help exits 0."
+    sources:
+      - file: scripts/health.js
+        lines: 34-51, 355-385
+    conformance: [cap-sess-health-001]
+
+  - id: cap-sess-health-002
+    kind: capability
+    status: built
+    statement: "Every sdk-validate warning is a health issue; text mode prints issues to stderr and 'N issue(s) found. Fix before next session.'"
+    sources:
+      - file: scripts/health.js
+        lines: 75-83, 372-379
+    conformance: [cap-sess-health-002]
+
+  - id: cap-sess-health-003
+    kind: capability
+    status: built
+    statement: "current-status.md more commits behind than the threshold is a health issue; threshold = --stale-commits, else .sdkrc limits.statusStaleCommits, else 5; untracked files only get a notice."
+    sources:
+      - file: scripts/health.js
+        lines: 58-73
+    conformance: [cap-sess-health-003]
+
+  - id: cap-sess-health-004
+    kind: capability
+    status: built
+    statement: "sdk-health validates .sdkrc: malformed JSON, non-object `limits`, unknown limit keys, retired keys (surfaceStaleDays, with a pointer), and non-positive values (null allowed for nullable caps) are issues; a missing .sdkrc or sdkPath is a notice."
+    sources:
+      - file: scripts/health.js
+        lines: 177-189
+      - file: scripts/lib/limits.js
+        lines: 44-66
+    conformance: [cap-sess-health-004]
+
+  - id: cap-sess-health-005
+    kind: capability
+    status: built
+    statement: "Domain health: decisions in history.md with no domains/ dir, an empty domains/, a domain without summary.md, or a placeholder summary are issues; filled summaries with L1 files are a ✓ notice."
+    sources:
+      - file: scripts/health.js
+        lines: 97-140
+    conformance: [cap-sess-health-005]
+
+  - id: cap-sess-health-006
+    kind: capability
+    status: built
+    statement: "Framing drift: when more than half of idea.md §4 brief terms are missing from product-requirements.md, sdk-health reports 'Framing drift: Brief → product-requirements: N% ...'."
+    sources:
+      - file: scripts/health.js
+        lines: 191-261
+    conformance: [cap-sess-health-006]
+
+  - id: cap-sess-health-007
+    kind: capability
+    status: built
+    statement: "Document-first drift (§35 backstop): material commits since the last map change that neither touch the map nor carry [map-exempt: reason] are counted as an issue; a map update resets the count."
+    sources:
+      - file: scripts/health.js
+        lines: 263-298
+    conformance: [cap-sess-health-007]
+
+  - id: cap-sess-health-008
+    kind: capability
+    status: built
+    statement: "A surfaces/*.md in under-verification or reconciling for more commits than limits.surfaceStaleCommits is an issue; other states and _-prefixed files are ignored."
+    sources:
+      - file: scripts/health.js
+        lines: 300-316
+    conformance: [cap-sess-health-008]
+
+  - id: cap-sess-health-009
+    kind: capability
+    status: built
+    statement: "When CHARTER.md exists (project or parent dir), a CHARTER review is due once closed loops + graduated cycles since the last 'at iteration N' review reach limits.charterReviewEvery; otherwise a progress notice."
+    sources:
+      - file: scripts/health.js
+        lines: 318-331
+    conformance: [cap-sess-health-009]
+
+  - id: cap-sess-health-010
+    kind: capability
+    status: built
+    statement: "With context/spec present, sdk-health reports built-of-existing capability counts, lists `defect` capabilities as an issue, and reports a refactor discussion due for any non-test source file over limits.refactorReviewLines that is unacknowledged in _refactor-watch.json or grew past refactorReviewGrowthPct."
+    sources:
+      - file: scripts/health.js
+        lines: 333-353
+      - file: scripts/lib/complexity.js
+        lines: 50-62
+    conformance: [cap-sess-health-010]
+
+  # ─── sdk-validate ──────────────────────────────────────────────────────────
+  - id: cap-sess-validate-001
+    kind: capability
+    status: built
+    statement: "`sdk-validate <dir>` is advisory (exit 0 even with warnings); --strict exits 1 on any warning; a missing dir exits 2; no args prints usage; a clean project prints 'Project is clean.'"
+    sources:
+      - file: scripts/validate.js
+        lines: 141-195
+    conformance: [cap-sess-validate-001]
+
+  - id: cap-sess-validate-002
+    kind: capability
+    status: built
+    statement: "sdk-validate warns on missing required files, placeholder tokens (file, section, line; inline code ignored; '> TODO:' counts), and missing or empty required sections — each warning names the sdk-doc command that fixes it."
+    sources:
+      - file: scripts/validate.js
+        lines: 40-107
+      - file: packages/context/src/validate-config.js
+        lines: 12-48
+    conformance: [cap-sess-validate-002]
+
+  # ─── sdk-gate-check (CLO+CISO rules: cap-sdk-gate-001) ─────────────────────
+  - id: cap-sess-gate-001
+    kind: capability
+    status: built
+    statement: "`sdk-gate-check <dir> --mario` clears only when history.md has a '## Mario Gate' entry with Status COMPLETED or CLEARED; no entry or another status blocks (exit 1, 'Sprint 1 cannot start'); an entry with no Status only warns."
+    sources:
+      - file: scripts/gate-check.js
+        lines: 172-201, 346-353
+    conformance: [cap-sess-gate-001]
+
+  - id: cap-sess-gate-002
+    kind: capability
+    status: built
+    statement: "Negative scope: the discovery gate requires '## Explicit Non-Goals' with ≥2 top-level non-placeholder items in compliance-requirements.md; --mario requires the same in product- and engineering-requirements.md."
+    sources:
+      - file: scripts/gate-check.js
+        lines: 203-243
+    conformance: [cap-sess-gate-002]
+
+  - id: cap-sess-gate-003
+    kind: capability
+    status: built
+    statement: "`--pre-mortem` requires a '## Pre-Mortem' (pre-mortem.md or product-requirements.md) with ≥3 failure modes, ≥2 indicators, ≥1 non-goal drift item, a §4 assumption, ≥2 participants and '- [x] Owner reviewed pre-mortem'."
+    sources:
+      - file: scripts/gate-check.js
+        lines: 245-321
+    conformance: [cap-sess-gate-003]
+
+  - id: cap-sess-gate-004
+    kind: capability
+    status: built
+    statement: "`--all` runs discovery, Mario and pre-mortem gates and lists every failure numbered; which gates apply comes from the .sdkrc `type` (team/types/<type>.json; default product), e.g. content needs only CLO and no Mario gate; a missing dir blocks."
+    sources:
+      - file: scripts/gate-check.js
+        lines: 42-90, 323-391
+    conformance: [cap-sess-gate-004]
+
+  - id: cap-sess-gate-005
+    kind: capability
+    status: unpinned
+    statement: "After a cleared gate, sdk-gate-check prints 'Next: <activation phrase>' from current-status.md, only when stdout is a TTY."
+    unpinned_note: "Not pinned: child_process stdout is never a TTY; would need a pty."
+    sources:
+      - file: scripts/gate-check.js
+        lines: 390
+      - file: scripts/lib/next-stub.js
+        lines: 33-38
+    conformance: [cap-sess-gate-005]
+
+  # ─── sdk-ops ───────────────────────────────────────────────────────────────
+  - id: cap-sess-ops-001
+    kind: capability
+    status: built
+    statement: "`sdk-ops <dir>` runs 14 registered checks (✓/✗ per check), `--check <name>` runs one, `--list` names them, `--json` prints `{results, issues, notices}`; exit 1 iff any issue."
+    sources:
+      - file: scripts/ops.js
+        lines: 76-383
+    conformance: [cap-sess-ops-001]
+
+  - id: cap-sess-ops-002
+    kind: capability
+    status: defect
+    statement: "session-close-validation accepts a current-status.md that follows project-template/current-status.md."
+    defect_note: "It requires exact headings 'Completed' and 'Open Decisions'; the template has 'Completed Since Last Session' and 'Open Decisions (not yet logged to history.md)', so every scaffolded project fails it (and the Night Watch coordinator reports it). decision-deadlines / decision-needed-age read the same 'Open Decisions' section and so never see template decisions."
+    sources:
+      - file: scripts/ops.js
+        lines: 196-211, 76-91
+    conformance: [cap-sess-ops-002]
+
+  - id: cap-sess-ops-003
+    kind: capability
+    status: defect
+    statement: "sdk-ops clo-ciso-gate agrees with sdk-gate-check about whether the CLO and CISO gates are Done."
+    defect_note: "It matches /CLO.*?:\\s*(Done|...)/, but the template Gate Status table ('| Legal | CLO | Done |') has no colon, so on a compliance file that sdk-gate-check clears, sdk-ops (and the Night Watch CLO agent) report 'CLO gate not Done' and 'CISO gate not Done'. Should read through scripts/lib/project-state.js parseCompliance."
+    sources:
+      - file: scripts/ops.js
+        lines: 145-157
+    conformance: [cap-sess-ops-003]
+
+  - id: cap-sess-ops-004
+    kind: capability
+    status: defect
+    statement: "An unknown `--check <name>` is reported as an error consistently in the summary and the exit code."
+    defect_note: "Exit code is 1 and the check shows '? bogus / Unknown check', but the summary line says '✓ All checks passed (1 issues, 0 notices)' because status 'error' is not counted as a failure."
+    sources:
+      - file: scripts/ops.js
+        lines: 327-330, 378-380
+    conformance: [cap-sess-ops-004]
+
+  - id: cap-sess-ops-005
+    kind: capability
+    status: unpinned
+    statement: "sdk-ops time-based checks (blocker-age >4h, decision-needed-age >48h, current-status-staleness >48h by mtime, requirements-staleness >168h, research-backlog-aging, ceo-validation-pending) flag items older than the daemon-config thresholds."
+    unpinned_note: "Not pinned: depends on wall-clock dates and file mtimes. Also calendar-based, which conflicts with §2 work-based staleness (sdk-health measures commits) — a candidate for retirement or rewrite rather than pinning."
+    sources:
+      - file: scripts/ops.js
+        lines: 109-142, 213-279
+      - file: scripts/daemon-config.js
+        lines: 58-68
+    conformance: [cap-sess-ops-005]
+
+  # ─── sdk-daemon (Night Watch) ──────────────────────────────────────────────
+  - id: cap-sess-daemon-001
+    kind: capability
+    status: built
+    statement: "`sdk-daemon <dir> --init` writes agent-state.json (schemaVersion 1.0, every agent idle) and agent-drafts/, and prints each agent's cron and CronCreate prompt; no project prints usage (exit 0); no mode, --run without a role, or an unknown role exits 1."
+    sources:
+      - file: scripts/daemon.js
+        lines: 30-42, 104-131, 306-318
+    conformance: [cap-sess-daemon-001]
+
+  - id: cap-sess-daemon-002
+    kind: capability
+    status: built
+    statement: "`--run <role>` runs the role's sdk-ops checks when a watched file changed (or its inbox is non-empty), appends to agent-drafts/<role>-<date>.md (trigger, issues, notices, recommended actions), logs run-complete to agent-events.jsonl, and otherwise logs skip-no-change; missing state is reconstructed; `--status` shows states, last 5 events and drafts."
+    sources:
+      - file: scripts/daemon.js
+        lines: 135-302
+    conformance: [cap-sess-daemon-002]
+
+  - id: cap-sess-daemon-003
+    kind: capability
+    status: built
+    statement: "An agent left 'working' longer than the 5-minute stuck timeout is reset to idle with a recovery event and runs; one working within the timeout is skipped ('already working')."
+    sources:
+      - file: scripts/daemon.js
+        lines: 80-100, 145-157
+    conformance: [cap-sess-daemon-003]
+
+  # ─── sdk-consult ───────────────────────────────────────────────────────────
+  - id: cap-sess-consult-001
+    kind: capability
+    status: built
+    statement: "`sdk-consult --list-roles [--group g]` prints a JSON array of {key, title, domain, group}; a known group filters, an unknown group falls back to the full list."
+    sources:
+      - file: scripts/consult.js
+        lines: 39-51
+      - file: packages/cli/src/role-resolver.js
+        lines: 160-200
+    conformance: [cap-sess-consult-001]
+
+  - id: cap-sess-consult-002
+    kind: capability
+    status: built
+    statement: "`--suggest \"q\"` prints {suggestedRole} (GDPR → clo, database → cto); `--role-info <role>` prints role metadata with capability block and role file path; missing question or unknown role exits 1."
+    sources:
+      - file: scripts/consult.js
+        lines: 53-88
+    conformance: [cap-sess-consult-002]
+
+  - id: cap-sess-consult-003
+    kind: capability
+    status: built
+    statement: "`--role r --question q [--project dir]` prints a consultation payload {question, role, roleError, context, relevantFiles, roleFilePath, capability, busTrace}; project context is available only once context-index/manifest exist; an unknown role is reported in roleError with exit 0; no args prints usage."
+    sources:
+      - file: scripts/consult.js
+        lines: 90-119
+    conformance: [cap-sess-consult-003]
+
+  # ─── sdk-memory ────────────────────────────────────────────────────────────
+  - id: cap-sess-memory-001
+    kind: capability
+    status: built
+    statement: "`sdk-memory ingest <dir>` adds decisions/kills from history.md to $HOME/.team-sdk/memory idempotently; stats, list, query, decisions and kills (--class) read that corpus; ingest/query without an argument exit 1; no command prints help."
+    sources:
+      - file: scripts/memory.js
+        lines: 29-133
+      - file: packages/memory/src/store.js
+        lines: 16-40
+    conformance: [cap-sess-memory-001]

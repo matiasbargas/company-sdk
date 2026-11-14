@@ -10,6 +10,9 @@
  *      in `npm test` (a script named in package.json "test", or a packages/<pkg>/tests file).
  *   3. Every `@covers` names a capability that exists (no orphan tags after a rename).
  *   4. `planned` capabilities are listed, not failed; they are the build backlog.
+ *   5. `unpinned` = the behaviour exists but no test pins it yet (the inventory's honest debt);
+ *      `defect` = a test proved the behaviour differs from the spec (a known bug to fix).
+ *      Both are reported, not failed, so the denominator stays true.
  */
 
 'use strict';
@@ -47,6 +50,9 @@ for (const [id, files] of covers) {
   check(known.has(id) || isConformanceId, `@covers ${id} (in ${path.relative(root, files[0])}) names an existing capability`);
 }
 
+const pinned = caps.filter(c => c.status === 'built').length;
+const existing = caps.filter(c => ['built', 'unpinned', 'defect'].includes(c.status)).length;
+console.log(`  behaviour coverage: ${pinned} of ${existing} existing capabilities pinned by tests (${existing ? Math.round(100 * pinned / existing) : 0}%)`);
 const byStatus = caps.reduce((m, c) => (m[c.status] = (m[c.status] || 0) + 1, m), {});
 for (const f of failures) console.log(`  ✗  ${f}`);
 console.log(`  capability coverage: ${passed} passed, ${failures.length} failed  (${Object.entries(byStatus).map(([k, v]) => `${v} ${k}`).join(', ')})`);

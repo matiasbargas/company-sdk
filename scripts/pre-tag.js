@@ -394,12 +394,13 @@ function checkHealth(projectDir) {
       `context-manifest.json not found. Run: sdk-doc manifest ${projectDir}`
     ));
   } else {
-    const stat = fs.statSync(manifestPath);
-    const ageH = (Date.now() - stat.mtimeMs) / (1000 * 60 * 60);
-    if (ageH > staleHours * 3) {
+    // Work-based staleness (§2 timing): commits since the manifest last changed.
+    const behind = require('./lib/activity').commitsSince(manifestPath);
+    const threshold = require('./lib/limits').readLimits(projectDir).statusStaleCommits * 3;
+    if (behind !== null && behind > threshold) {
       issues.push(issue(
         'health', '_health',
-        `context-manifest.json is ${Math.round(ageH)}h old. Regenerate: sdk-doc manifest ${projectDir}`
+        `context-manifest.json is ${behind} commits behind (threshold: ${threshold}). Regenerate: sdk-doc manifest ${projectDir}`
       ));
     }
   }
