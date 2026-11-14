@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 /**
+ * @covers cap-sdk-mapgate-001  (project/context/spec/sdk-core/claims.yaml)
  * test-map-gate.js — pins the Document-First Gate classifier (protocol.md §35).
  *
  * This is the guard that stops the gate from silently rotting: if someone changes what

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 /**
+ * @covers cap-sdk-staleness-001  (project/context/spec/sdk-core/claims.yaml)
  * test-activity.js — work-based staleness (scripts/lib/activity.js).
  * Staleness counts commits and agent iterations, never calendar days (protocol.md §2).
  */

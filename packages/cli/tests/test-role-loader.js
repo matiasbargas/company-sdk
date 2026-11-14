@@ -1,3 +1,7 @@
+/**
+ * @covers cap-sdk-roles-001  (project/context/spec/sdk-core/claims.yaml)
+ */
+
 'use strict';
 
 const path = require('path');

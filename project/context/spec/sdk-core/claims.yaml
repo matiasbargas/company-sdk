@@ -1,0 +1,72 @@
+# Layer B capabilities — sdk-core (the harness itself)
+#
+# What the team-sdk machinery promises today, independent of how scripts/ implements it.
+# `status: built` ⇒ every id listed in `conformance` must appear as `@covers <capability-id>` in a
+# test or check that runs in `npm test` (scripts/lib/test-capability-coverage.js).
+
+claims:
+  - id: cap-sdk-sections-001
+    kind: capability
+    status: built
+    statement: "`sdk-doc` addresses sections level-aware (`## X` never matches `### X`), supports scoped paths (`## Parent > Child`), and scaffolds a missing domain section with the four status children."
+    conformance: [cap-sdk-sections-001]
+
+  - id: cap-sdk-iteration-001
+    kind: capability
+    status: built
+    statement: "`sdk-doc iteration` creates auto-numbered Guardian cycles pre-filled with §31.2 exit criteria, records GRADUATE/ITERATE verdicts (feedback required on ITERATE), and keeps pod names inside iterations/."
+    conformance: [cap-sdk-iteration-001]
+
+  - id: cap-sdk-gate-001
+    kind: capability
+    status: built
+    statement: "`sdk-gate-check` blocks while Jurisdictions hold placeholders or Gate Status is not Done, warns on pending CLO/CISO items, and clears a filled template."
+    conformance: [cap-sdk-gate-001]
+
+  - id: cap-sdk-state-001
+    kind: capability
+    status: built
+    statement: "Project state (release, missions, waiting, decisions, next agent, compliance gates) is read through one parser that reads tables by header name, so column order and template placeholders never corrupt it."
+    conformance: [cap-sdk-state-001]
+
+  - id: cap-sdk-staleness-001
+    kind: capability
+    status: built
+    statement: "Staleness is measured in work — commits since a file last changed and agent iterations (closed loops + graduated cycles) — never calendar days."
+    conformance: [cap-sdk-staleness-001]
+
+  - id: cap-sdk-docs-001
+    kind: capability
+    status: built
+    statement: "Harness docs cannot cite missing protocol sections, nonexistent commands, undefined tags, or claim enforcement without backing code or an explicit gap marker."
+    conformance: [cap-sdk-docs-001]
+
+  - id: cap-sdk-views-001
+    kind: capability
+    status: built
+    statement: "protocol.md is the only hand-edited protocol source; its core, reference, and per-section views are generated and cannot go stale."
+    conformance: [cap-sdk-views-001]
+
+  - id: cap-sdk-agents-001
+    kind: capability
+    status: built
+    statement: "Subagent definitions are generated from role files with role-scoped tools (consultation roles read-only) and cannot go stale."
+    conformance: [cap-sdk-agents-001]
+
+  - id: cap-sdk-mapgate-001
+    kind: capability
+    status: built
+    statement: "A material commit that does not touch the project map (or carry `[map-exempt: reason]`) is blocked; the material/exempt classification lives in code and is pinned."
+    conformance: [cap-sdk-mapgate-001]
+
+  - id: cap-sdk-roles-001
+    kind: capability
+    status: built
+    statement: "Role files resolve spawn-time placeholders ({{name}}, {{city}}, {{cultural_profile}}, {{company}}) when loaded."
+    conformance: [cap-sdk-roles-001]
+
+  - id: cap-sdk-capabilities-001
+    kind: capability
+    status: built
+    statement: "Every built capability is covered by at least one test that runs in `npm test`, so capabilities cannot be lost silently across rewrites."
+    conformance: [cap-sdk-capabilities-001]

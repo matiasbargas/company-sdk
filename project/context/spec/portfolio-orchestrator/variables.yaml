@@ -1,0 +1,99 @@
+# Problem variables — Portfolio Orchestrator
+#
+# The implementation-independent model of the problem: every entity, attribute, and invariant
+# the system must honour, whatever code implements it. A rewrite from scratch reads this file
+# and claims.yaml, never the old code. If a variable is not here, the system does not have it.
+#
+# Sources: intent/portfolio-orchestrator/brief.md, intent/portfolio-orchestrator/discovery-synthesis.md
+# Owner decisions: history.md → "Portfolio Orchestrator — Discovery decisions" (2026-11-13)
+
+entities:
+  Owner:
+    kinds: [holding, company]          # a human; never an agent (CHARTER Precedence #3, #8)
+    holding_owner: governs the fuel pool, the commons, kill switch; NOT company operations
+    company_owner: ratifies the company charter, approves its outward-facing acts and commons publications
+    invariant: every Company has exactly one company Owner; the holding has exactly one holding Owner
+
+  Company:
+    attributes: [id, name, owner, path, sdkPath, runner, commons.subscribe[], commons.publish]
+    is: an independent team-sdk instance in its own git repository (never a shared worktree)
+    invariant: no company reads or writes another company's repository
+
+  Holding:
+    is: a team-sdk instance whose product is the portfolio
+    holds: [portfolio registry, fuel ledger, commons, run records]
+    authority: allocate fuel, stop funding, halt (kill switch); never direct a company's operations
+
+  Fuel:
+    physical: API spend, one API key per company (Owner decision 2026-11-13)
+    unit: Fuel Unit (FU) = raw tokens × model/token-class price ratios (fuel.priceTable)
+    raw: {model, input, output, cache_write, cache_read}  # always stored; FU and USD are derived
+    invariant: non-transferable, non-redeemable, never a tradable token (CLO)
+
+  Pool:
+    funded_by: holding Owner only (ledger event `fund`)
+    model: envelope per holding cycle (Owner decision); `fuel.envelopePerCycle: null` = infinite fuel
+    invariant: balance never negative, unless infinite (then unbounded, still fully metered)
+
+  Cycle:
+    is: one Portfolio Betting Table period
+    invariant: measured in Betting cycles, never calendar days (§2 timing)
+
+  Grant:
+    attributes: [grant_id, company, mission_id, appetite_fu, tranches[], named_proof_per_tranche[], kill_condition]
+    lifecycle: request → table → ratify (holding Owner) → draw → proof → release → close|return|reclaim
+    invariant: a grant without tranches or a kill condition is malformed; every draw names a live grant + mission
+
+  Tranche:
+    unlock: pass/fail on its named proof (never on a weighted score)
+    invariant: one proof unlocks at most one tranche
+
+  Proof:
+    kinds: [verified_surface, graduated_cycle, owner_approved_ship]
+    verifier_v0: the company's own gates (Owner decision: autonomy now; accepted risk, see claims cap-po-proof-002)
+    checkable_by: commit SHA + state (Level 3, no content opinion)
+    invariant: proof reverted within fuel.proofRevertCommits commits is clawed back from the metric
+
+  UsageEvent:
+    source: runner (stream-json result / transcript backfill), never self-reported by an instance
+    shape: Agent SDK message usage schema (cloud seam)
+    unmetered: a session without a usage record is `unmetered`, never zero
+
+  Ledger:
+    file: holding/fuel/ledger.jsonl
+    events: [fund, grant, release, draw, proof, overrun, reclaim, return, close]
+    invariants: [append-only, hash-chained (prev_sha256), idempotent (idem_key), single writer = runner, corrections are new events]
+
+  Runner:
+    contract: [start(companyId, opts) → runId, stop(runId, mode), status(runId), meter(runId) → UsageEvent*]
+    implementations: [LocalRunner (v0), CloudRunner (later)]
+    invariant: the only metering and pre-flight authority; stops at a turn boundary, never mid-commit
+
+  CommonsItem:
+    classes: [skill, protocol-improvement, kill-log-class, ratchet-class, published-context]
+    identity: content hash + verifying surface id
+    distribution: copy + lockfile (commons.lock.json), pull-only, Owner-approved per adoption
+    never_carries: [settings, hooks, CHARTER, permission/MCP config, executable scripts]
+
+  ConsentRecord:
+    required_for: published-context
+    fields: [artifact_id, content_hash, source_company, approving_owner, timestamp, scope, recipients, license, revocability, attestations{no_pii, no_secrets, no_third_party_confidential}, competitively_sensitive, surface_id]
+
+  Limits:   # .sdkrc → limits.fuel.* (null = no cap; stop condition always required)
+    envelopePerCycle: null       # infinite fuel when null
+    trancheSize: null            # each grant declares its own
+    tranchesPerGrant: null       # kill condition governs
+    reclaimCyclesWithoutProof: 1
+    smallBetReserve: 0.2
+    overrunReserve: 0.05
+    proofRevertCommits: 10
+    concurrency: 2               # parallel instances (rate-limit contention is the real local bottleneck)
+
+metric:
+  VOF: "Σ weight(proof, not reverted) ÷ FU drawn (fully loaded: verifiers, loops, killed bets, overruns)"
+  weights: {verified_surface: 1, graduated_cycle: 2, owner_approved_ship: 3}
+  rule: guides the Betting Table, never decides alone; compared only within a bet class; shown with the company Owner's judgment column
+
+isolation_v0:   # Owner decision: light v0 (own ventures only), full before any other Owner
+  required: [separate clones, one API key per company with provider cap unless infinite, runner-owned settings/hooks, no skip-permissions, kill switch]
+  deferred_until_second_owner: [OS user / container per instance, adoption ledger + automated recall, signed commons commits]

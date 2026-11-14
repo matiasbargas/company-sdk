@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 /**
+ * @covers cap-sdk-state-001  (project/context/spec/sdk-core/claims.yaml)
  * test-project-state.js — the single markdown-state reader (scripts/lib/project-state.js).
  * Pins the two silent bugs it replaced: positional mission columns, and gate headings
  * that no longer matched the template.

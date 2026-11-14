@@ -857,6 +857,8 @@ Every amount or limit in this protocol is a key under `"limits"` in the project'
 | `guardianCyclesBeforeEscalation` | `3` | §31.6 escalation trigger. Not a cap: work continues once the CEO decides. |
 | `surfaceStaleCommits` | `10` | §34: commits that may land while a surface sits in verification before `sdk-health` flags it. |
 | `statusStaleCommits` | `5` | Commits that may land without `current-status.md` changing before `sdk-health` flags it. |
+| `refactorReviewLines` | `400` | Source-file size that makes a refactor discussion due (§30). |
+| `refactorReviewGrowthPct` | `25` | Growth past the acknowledged size that makes it due again. |
 | `charterReviewEvery` | `10` | Agent iterations (closed §32 loops + graduated §31 cycles) between CHARTER reviews. `sdk-health` flags a review as due. |
 
 **Staleness is measured in work, not time.** Agents do not experience days (§2), and file mtimes reset on every clone, so every staleness threshold counts commits or iterations (`scripts/lib/activity.js`).
@@ -1465,6 +1467,15 @@ When extending the SDK, test whether the addition is a domain or a constraint.
 
 If the answer to "should every agent think about this?" is yes, it is a constraint. Make it a protocol field, not an agent. Adding an agent for a constraint creates the illusion that someone else is watching — that illusion is the failure mode.
 
+
+### Specs outlive implementations
+
+Every capability the SDK or a project promises is written down independent of the code that delivers it, so the code can be rewritten from scratch without losing anything.
+
+- **The problem's variables** (entities, attributes, invariants) live in `context/spec/<slug>/variables.yaml` when a domain has them.
+- **Capabilities** live in `context/spec/<slug>/claims.yaml` as `kind: capability`, with given/when/then acceptance criteria against the public interface (CLI, files, contracts), never internals. Status is `planned`, `built`, or `retired` (a retirement states its reason; nothing disappears silently).
+- **Conformance:** every `built` capability is covered by at least one test that runs in `npm test` and declares `@covers <capability-id>`. `scripts/lib/test-capability-coverage.js` fails the build when a built capability has no covering test or a tag names no capability.
+- **Refactors are discussed, not forced.** `sdk-health` reports a refactor discussion as due when a source file passes `limits.refactorReviewLines`, or grows `limits.refactorReviewGrowthPct` past the size acknowledged in `context/spec/_refactor-watch.json`. The `refactor-review` skill runs the discussion: spec and cover the module's capabilities first, then refactor, split, or defer with a named prerequisite.
 
 ### Enforcement claims must be true
 

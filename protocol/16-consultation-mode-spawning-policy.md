@@ -67,6 +67,8 @@ Every amount or limit in this protocol is a key under `"limits"` in the project'
 | `guardianCyclesBeforeEscalation` | `3` | §31.6 escalation trigger. Not a cap: work continues once the CEO decides. |
 | `surfaceStaleCommits` | `10` | §34: commits that may land while a surface sits in verification before `sdk-health` flags it. |
 | `statusStaleCommits` | `5` | Commits that may land without `current-status.md` changing before `sdk-health` flags it. |
+| `refactorReviewLines` | `400` | Source-file size that makes a refactor discussion due (§30). |
+| `refactorReviewGrowthPct` | `25` | Growth past the acknowledged size that makes it due again. |
 | `charterReviewEvery` | `10` | Agent iterations (closed §32 loops + graduated §31 cycles) between CHARTER reviews. `sdk-health` flags a review as due. |
 
 **Staleness is measured in work, not time.** Agents do not experience days (§2), and file mtimes reset on every clone, so every staleness threshold counts commits or iterations (`scripts/lib/activity.js`).

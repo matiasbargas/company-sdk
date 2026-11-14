@@ -1,0 +1,193 @@
+# Layer B capabilities — portfolio-orchestrator
+#
+# Each capability is an implementation-independent promise with acceptance criteria written as
+# given/when/then against the public interface (CLI, files, runner contract), never internals.
+# `status: planned` may have no conformance tests yet; `status: built` MUST list ≥1 test id, and
+# every listed id must appear as `@covers <id>` in a test file (enforced by
+# scripts/lib/test-capability-coverage.js in npm test). Rewrite the code freely; keep these green.
+#
+# Variables: variables.yaml (same folder). Sources: intent/portfolio-orchestrator/*.
+
+claims:
+  - id: cap-po-registry-001
+    kind: capability
+    status: planned
+    statement: "The holding keeps a registry of companies, each with its own Owner, path, and runner; a company entry without an Owner is rejected."
+    acceptance:
+      - given: "a portfolio.json with a company missing `owner`"
+        when: "the registry is validated"
+        then: "validation fails naming the company and the missing field"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "The shape everyone converged on"}]
+    conformance: []
+
+  - id: cap-po-ledger-001
+    kind: capability
+    status: planned
+    statement: "The fuel ledger is append-only, hash-chained, and idempotent; replaying an event does not change any balance."
+    acceptance:
+      - given: "a ledger with N events"
+        when: "the same draw event (same idem_key) is ingested twice"
+        then: "the ledger has N+1 events and balances equal a single ingestion"
+      - given: "a ledger whose line k was edited"
+        when: "the chain is verified"
+        then: "verification fails at line k"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft, 3. Ledger"}]
+    conformance: []
+
+  - id: cap-po-ledger-002
+    kind: capability
+    status: planned
+    statement: "Only the holding Owner can fund the pool; no other actor can write a `fund` event."
+    acceptance:
+      - given: "a `fund` event authored by any role other than the holding Owner"
+        when: "it is appended"
+        then: "it is rejected and nothing is written"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "The shape everyone converged on"}]
+    conformance: []
+
+  - id: cap-po-fuel-001
+    kind: capability
+    status: planned
+    statement: "Fuel is metered from runner-captured usage in raw tokens by type and model; Fuel Units and USD are derived views recomputable from raw."
+    acceptance:
+      - given: "a run whose result carries usage {input, output, cache_write, cache_read, model}"
+        when: "the runner records it"
+        then: "the ledger draw stores raw counts and FU equals raw × fuel.priceTable"
+      - given: "a session with no usage record"
+        when: "it is reconciled"
+        then: "it is recorded as `unmetered`, never as zero"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft, 1. Units"}]
+    conformance: []
+
+  - id: cap-po-fuel-002
+    kind: capability
+    status: planned
+    statement: "Infinite fuel is an option: with `limits.fuel.envelopePerCycle: null` the pool never exhausts, while every draw is still metered and every grant still needs a kill condition."
+    acceptance:
+      - given: "envelopePerCycle is null"
+        when: "draws exceed any finite amount"
+        then: "no draw is refused for pool balance, every draw is in the ledger, and a grant without a kill condition is still malformed"
+    sources: [{file: history.md, section: "Portfolio Orchestrator — Discovery decisions (Owner: infinite fuel should be an option)"}]
+    conformance: []
+
+  - id: cap-po-grant-001
+    kind: capability
+    status: planned
+    statement: "A grant must declare tranches, a named proof per tranche, and a kill condition; only tranche 1 is drawable at grant time."
+    acceptance:
+      - given: "a grant request without a kill condition"
+        when: "it is submitted"
+        then: "it is rejected as malformed"
+      - given: "a ratified grant with three tranches"
+        when: "a draw is attempted beyond tranche 1"
+        then: "the draw is refused until tranche 1's named proof is recorded"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft, 2. Lifecycle"}]
+    conformance: []
+
+  - id: cap-po-proof-001
+    kind: capability
+    status: planned
+    statement: "A tranche releases on a pass/fail check of its named proof (verified surface, graduated cycle, or Owner-approved ship) identified by commit SHA; one proof unlocks at most one tranche."
+    acceptance:
+      - given: "tranche 1's named proof is a surface that reaches `verified` at SHA s"
+        when: "the proof is recorded"
+        then: "tranche 2 becomes drawable, and recording the same surface again unlocks nothing further"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft, 2. Lifecycle"}]
+    conformance: []
+
+  - id: cap-po-proof-002
+    kind: capability
+    status: planned
+    statement: "v0 accepts the company's own gates as proof (system autonomy, Owner decision 2026-11-13); the Goodhart risk is recorded and the outside-verifier rule activates when the revisit trigger fires."
+    acceptance:
+      - given: "a second human Owner is registered, OR VOF diverges from the company Owner's judgment column for 2 consecutive cycles"
+        when: "sdk-health runs on the holding"
+        then: "it reports that the outside-verifier decision is due (proof self-verification risk)"
+    sources: [{file: history.md, section: "Portfolio Orchestrator — Discovery decisions"}]
+    conformance: []
+
+  - id: cap-po-runner-001
+    kind: capability
+    status: planned
+    statement: "The runner refuses to start a run when the company has no open tranche (unless fuel is infinite), and stops at a turn boundary when the working budget is spent, leaving the repository committed or clean."
+    acceptance:
+      - given: "a company whose open tranche is exhausted (finite fuel)"
+        when: "start(companyId) is called"
+        then: "it returns a refusal naming the grant; no session starts"
+      - given: "a running session that exhausts its working budget"
+        when: "the next tool call is attempted"
+        then: "work tools are denied with a landing message; git/status writes still succeed; no .git/index.lock remains"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "v0 gates"}]
+    conformance: []
+
+  - id: cap-po-runner-002
+    kind: capability
+    status: planned
+    statement: "Instances never write the ledger or report their own burn; the runner is the single writer."
+    acceptance:
+      - given: "an agent inside a company attempts to append to holding/fuel/ledger.jsonl"
+        when: "the write is attempted"
+        then: "it is denied (path outside the company sandbox root)"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "The shape everyone converged on"}]
+    conformance: []
+
+  - id: cap-po-isolation-001
+    kind: capability
+    status: planned
+    statement: "Each company runs from its own clone with its own API key and runner-owned settings; no company can read another's repository or credentials."
+    acceptance:
+      - given: "two registered companies A and B"
+        when: "a session in A lists or reads B's path"
+        then: "access is denied"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "v0 gates"}]
+    conformance: []
+
+  - id: cap-po-commons-001
+    kind: capability
+    status: planned
+    statement: "The commons is pull-only: an item enters only through a verified §34 surface, is content-addressed, never carries settings/hooks/CHARTER/scripts, and is adopted by a company only on its Owner's approval; a local edit is never overwritten (conflict opens a reconciling surface)."
+    acceptance:
+      - given: "a verified skill item in the commons and company B subscribed to `skill`"
+        when: "B pulls with Owner approval"
+        then: "B's commons.lock.json records {item, hash, surface_id} and the file content matches the hash"
+      - given: "B edited that skill locally"
+        when: "B pulls a newer version"
+        then: "nothing is overwritten and a `reconciling` surface is opened"
+      - given: "an item that contains a settings.json or hook"
+        when: "it is published"
+        then: "it is rejected"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "The shape everyone converged on"}]
+    conformance: []
+
+  - id: cap-po-commons-002
+    kind: capability
+    status: planned
+    statement: "Publishing context to the commons requires a consent record signed by the company Owner and passes secret and PII scans; it is treated as irreversible."
+    acceptance:
+      - given: "a published-context item without a consent record, or failing the secret/PII scan"
+        when: "it is published"
+        then: "it is rejected with the failing check named"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "v0 gates"}]
+    conformance: []
+
+  - id: cap-po-killswitch-001
+    kind: capability
+    status: planned
+    statement: "The holding Owner can halt any instance and freeze the ledger; a frozen ledger accepts no draws."
+    acceptance:
+      - given: "the ledger is frozen"
+        when: "any draw is attempted"
+        then: "it is refused; running sessions reach landing mode at the next turn boundary"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "v0 gates"}]
+    conformance: []
+
+  - id: cap-po-metric-001
+    kind: capability
+    status: planned
+    statement: "VOF is reported per company and per bet, fully loaded, only compared within a bet class, always beside the company Owner's judgment; a cycle with unmetered sessions suppresses that company's VOF."
+    acceptance:
+      - given: "company A had one unmetered session in the cycle"
+        when: "the ledger report runs"
+        then: "A's VOF is shown as suppressed with the reason"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft, 6. Metric"}]
+    conformance: []

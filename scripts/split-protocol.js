@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 /**
+ * @covers cap-sdk-views-001  (project/context/spec/sdk-core/claims.yaml)
  * split-protocol.js — regenerate protocol-core.md and protocol-reference.md from protocol.md.
  *
  * protocol.md is the only hand-edited source. Generated from it, byte-for-byte:

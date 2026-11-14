@@ -1,0 +1,19 @@
+{
+  "$comment": "Refactor discussions (protocol.md §30, 'Specs outlive implementations'). A file over limits.refactorReviewLines is due for discussion; once discussed it is acknowledged here at its size, and is due again only after growing limits.refactorReviewGrowthPct past it. Read by sdk-health (scripts/lib/complexity.js).",
+  "files": {
+    "scripts/pre-tag.js": {
+      "lines": 642,
+      "date": "2026-11-13",
+      "decision": "defer",
+      "prerequisite": "Write its capabilities into context/spec/sdk-core (pre-tag review: coherence, cohesion, validate, health, --fix) with covering tests before any rewrite.",
+      "by": "Greg (CEO), baseline at adoption of the refactor watch"
+    },
+    "scripts/init.js": {
+      "lines": 620,
+      "date": "2026-11-13",
+      "decision": "defer",
+      "prerequisite": "Write its capabilities into context/spec/sdk-core (scaffold, squad/type maps, harness copy, .sdkrc + limits, settings + hooks) with covering tests before any rewrite.",
+      "by": "Greg (CEO), baseline at adoption of the refactor watch"
+    }
+  }
+}

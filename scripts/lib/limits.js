@@ -30,6 +30,10 @@ const DEFAULT_LIMITS = {
   // CHARTER review cadence: agent iterations (closed §32 loops + graduated §31 cycles) between
   // reviews. sdk-health flags a review as due; the charter-review skill runs it.
   charterReviewEvery: 10,
+  // Source-file size (lines) that makes a refactor discussion due, and the growth (%) past an
+  // acknowledged size that makes it due again (§30, "Specs outlive implementations").
+  refactorReviewLines: 400,
+  refactorReviewGrowthPct: 25,
 };
 
 // Renamed keys still accepted with a pointer to the new name.

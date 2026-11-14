@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 /**
+ * @covers cap-sdk-agents-001  (project/context/spec/sdk-core/claims.yaml)
  * gen-agents.js — generate Claude Code subagent definitions (.claude/agents/*.md).
  *
  * One subagent per role file in team/roles/, plus the fresh-context loop roles (critic,

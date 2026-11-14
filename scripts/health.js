@@ -28,6 +28,8 @@ const { validate } = require('./validate');
 const { classify, hasExemptTag } = require('./lib/map-gate-lib');
 const { validateLimits, readLimits } = require('./lib/limits');
 const { commitsSince, countIterations, lastCharterReviewAt } = require('./lib/activity');
+const { refactorDue } = require('./lib/complexity');
+const { loadCapabilities } = require('./lib/capabilities');
 
 const args         = process.argv.slice(2);
 const jsonMode     = args.includes('--json');
@@ -325,6 +327,25 @@ function gitOut(args, cwd) {
     issues.push(`CHARTER review due: ${since} agent iterations since the last review (every ${every}; ${loops} loops + ${cycles} cycles total) — run the charter-review skill`);
   } else {
     notices.push(`CHARTER review: ${since}/${every} iterations since last review ✓`);
+  }
+})();
+
+// 12. Specs outlive implementations (protocol.md §30)
+//     - capability inventory: built vs planned capabilities in context/spec
+//     - refactor discussion due: source files over limits.refactorReviewLines that were never
+//       discussed, or that grew limits.refactorReviewGrowthPct past their acknowledged size
+(function specsOutliveImplementations() {
+  const specRoot = path.join(projectDir, 'context', 'spec');
+  if (!fs.existsSync(specRoot)) return;
+  const caps = loadCapabilities(specRoot);
+  if (caps.length) {
+    const built = caps.filter(c => c.status === 'built').length;
+    notices.push(`capabilities: ${built} built, ${caps.length - built} planned or retired (context/spec) ✓`);
+  }
+  let codeRoot = projectDir;
+  try { codeRoot = require('child_process').execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: projectDir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || projectDir; } catch (_) { /* not a repo */ }
+  for (const d of refactorDue(codeRoot, path.join(specRoot, '_refactor-watch.json'), readLimits(projectDir))) {
+    issues.push(`refactor discussion due: ${d.file} is ${d.lines} lines (${d.reason}) — run the refactor-review skill; spec its capabilities first`);
   }
 })();
 

@@ -569,3 +569,33 @@ Alternatives considered: discard the surface — rejected, because the rule is s
 Implications: Surfaces still need someone to convene their roster. The signal suggests ritual 01 should spawn verifiers, not only report. The Charter is not load-bearing until the Owner signs it. The claims detector is regex-based, so unusual phrasing can still slip through; the registry plus the §30 rule make each miss a test fix, not a silent lie.
 Reversible: YES.
 Affects natural persons: NO
+
+---
+
+## Portfolio Orchestrator — Discovery decisions
+**Date:** 2026-11-13 · **Made by:** Owner (Matias Bargas), via Greg (CEO) · **Release:** v2026.Q2.3 · **Tag:** SDK-CHANGE
+
+DECISION: Become an orchestrator of parallel team-sdk companies; tokens are fuel allocated by protocol
+Context: The Owner's direction: "we need to become an orchestrator of several team-sdks running in parallel. Tokens are fuel that the company uses to share", plus "we can build an allocation protocol" and "infinite fuel should be an option". Discovery ran with five read-only spawns (CFO, CTO, CISO, CLO, Red-Team), synthesized in `context/intent/portfolio-orchestrator/discovery-synthesis.md`.
+Owner decisions:
+1. **Ownership:** each company has its own human Owner. The holding Owner governs fuel and the commons, not operations.
+2. **Fuel:** fund bets, release on proof, unspent fuel returns to the pool. Fuel is **API spend, with one API key per company**. The pool is an **envelope per holding cycle**, and **infinite fuel is an option** (`limits.fuel.envelopePerCycle: null`). Everything stays metered, and every grant still needs a kill condition.
+3. **Proof (accepted risk):** "for now the fuel is a matter of autonomy of the system". v0 accepts each company's own gates as proof that releases a tranche. The Red-Team rated self-verification critical (fuel flows to whoever is best at paperwork). That risk is accepted knowingly. **Revisit trigger:** a second human Owner joins, or VOF diverges from the company Owner's judgment for 2 consecutive cycles (capability `cap-po-proof-002`).
+4. **Isolation:** light v0 with the Owner's own ventures only: separate clones, a key per company, runner-owned settings and hooks, a kill switch. Full sandboxing becomes a gate before any other Owner joins.
+5. **Commons:** patterns, plus context a company opts in to publish (with a consent record, secret and PII scans, treated as irreversible).
+Alternatives considered: an outside-verifier proof rule (Red-Team, CISO), deferred by the Owner; a subscription rate-limit window as fuel, rejected in favour of API spend; full sandbox from day one, deferred.
+Implications: Before a company owned by someone else onboards, the CHARTER needs a holding-Owner vs company-Owner amendment, plus the CLO gate items. The CTO's six irreversible decisions go to Mario before build. §36 stays a draft until Discovery graduates.
+Reversible: YES (design stage).
+Affects natural persons: NO
+
+---
+
+## SDK-CHANGE — Specs outlive implementations (capability layer + refactor watch)
+**Date:** 2026-11-13 · **Made by:** Greg (CEO), Owner-directed · **Release:** v2026.Q2.3 · **Tag:** SDK-CHANGE
+
+DECISION: Describe every capability independent of its code, pin each built one with tests, and make refactors a triggered discussion
+Context: The Owner asked for layers in which every variable of the problem is described well enough that execution can be rewritten from scratch without losing capabilities, with tests that keep functionality from getting lost between versions. Large rewrites are not required now, but rising complexity must trigger a discussion, and we must be ready for it.
+Decision: (1) protocol §30 "Specs outlive implementations". (2) Layer B gets `kind: capability` claims with given/when/then acceptance against public interfaces, and status `planned | built | retired`. `context/spec/portfolio-orchestrator/variables.yaml` is the full problem model (entities, attributes, invariants), and its `claims.yaml` holds 15 planned capabilities, the v0 build backlog. `context/spec/sdk-core/claims.yaml` holds 11 built capabilities from today's work. (3) `scripts/lib/test-capability-coverage.js` runs in `npm test` and fails when a built capability has no `@covers` test that runs in `npm test`, or when a tag names no capability. A probe with a renamed tag failed as designed. (4) A refactor watch: `sdk-health` reports a refactor discussion as due when a source file passes `limits.refactorReviewLines` (400) or grows `limits.refactorReviewGrowthPct` (25%) past its acknowledged size in `context/spec/_refactor-watch.json`. The `refactor-review` skill runs the discussion (spec and cover first, then refactor, split, or defer). `pre-tag.js` (642 lines) and `init.js` (620) are baselined with the decision "defer; prerequisite: spec their capabilities first".
+Implications: Building the orchestrator is test-first: conformance tests are written from the planned capabilities before the code. Specs for `pre-tag.js` and `init.js` are owed before either is rewritten.
+Reversible: YES.
+Affects natural persons: NO

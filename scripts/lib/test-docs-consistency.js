@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 /**
+ * @covers cap-sdk-docs-001  (project/context/spec/sdk-core/claims.yaml)
  * test-docs-consistency.js — cross-file consistency of the harness docs.
  *
  * The harness review found §31 deleted while 17 files cited it, protocol views stuck two
@@ -177,6 +178,8 @@ const ENFORCEMENT_CLAIMS = [
   { id: 'bus-field-rules', claim: /`sdk-doc bus` rejects/, file: 'scripts/commands/bus.js', code: /SOLUTION_CLASS is required/ },
   { id: 'document-first-gate', claim: /§35 is enforced/, file: 'scripts/hooks/map-gate.js', code: /--commit-msg/ },
   { id: 'gate-check-blocks', claim: /`sdk-gate-check`(?: --[a-z-]+)? (?:enforces this|fails until)|compliance gates are enforced/, file: 'scripts/gate-check.js', code: /GATE BLOCKED/ },
+  { id: 'capability-coverage', claim: /test-capability-coverage\.js` fails the build/, file: 'scripts/lib/test-capability-coverage.js', code: /process\.exit\(failures\.length/ },
+  { id: 'refactor-due', claim: /`sdk-health` reports a refactor discussion/, file: 'scripts/health.js', code: /refactor discussion due/ },
   { id: 'claims-rule-itself', claim: /for example "`sdk-health` flags X"/, file: 'scripts/lib/test-docs-consistency.js', code: /ENFORCEMENT_CLAIMS/ },
 ];
 const claimHits = new Map(ENFORCEMENT_CLAIMS.map(c => [c.id, 0]));

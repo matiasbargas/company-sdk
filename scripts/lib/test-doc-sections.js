@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 /**
+ * @covers cap-sdk-sections-001 @covers cap-sdk-iteration-001 @covers cap-sdk-gate-001  (project/context/spec/sdk-core/claims.yaml)
  * test-doc-sections.js — section addressing in sdk-doc and the restored `sdk-doc iteration`.
  *
  * Guards two regressions found in the harness review:
