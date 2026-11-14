@@ -140,8 +140,11 @@ function section(dir, name, content) {
   const bare = run(['add-item', f, '--section', 'Notes', '--item', 'n1']);
   assert(bare.code === 0 && /### Notes\n\n- \[ \] n1\n$/.test(read(f)), 'add-item to a missing bare-name section creates it as an H3 at the end');
   run(['add-item', f, '--section', '## Risks', '--item', 'r1']);
-  // DEFECT: a missing "## Risks" is created as the malformed heading "### ## Risks" (append creates "## Risks").
-  assert(/### ## Risks\n\n- \[ \] r1/.test(read(f)), 'add-item to a missing "## X" section writes "### ## X" (defect pinned)');
+  assert(/\n\n## Risks\n\n- \[ \] r1\n$/.test(read(f)) && !/### ## Risks/.test(read(f)), 'add-item to a missing "## X" section creates "## X" as given (like append)');
+  // @covers cap-doc-dispatch-002  (dry-run assertions also sit under pod-update, study, session, domain, disagreement)
+  const dryItem = read(f);
+  const di = run(['add-item', f, '--section', '## Risks', '--item', 'dry', '--dry-run']);
+  assert(/DRY RUN/.test(di.out) && read(f) === dryItem, 'add-item --dry-run previews and writes nothing');
 }
 
 // ─── decision ────────────────────────────────────────────────────────────────
@@ -196,8 +199,7 @@ function section(dir, name, content) {
   assert(s.code === 0 && s.out.includes(read(path.join(dir, 'current-status.md')).split('\n')[0]) && /## Active Missions/.test(s.out), 'status prints current-status.md');
   // @covers cap-doc-status-003
   const cwd = run(['status'], dir);
-  // DEFECT: help documents `status [<project-dir>]` (defaults to cwd), but the dispatcher requires the argument.
-  assert(cwd.code === 1 && /Usage:/.test(cwd.out), 'status without a dir prints usage instead of reading cwd (defect pinned)');
+  assert(cwd.code === 0 && /## Active Missions/.test(cwd.out), 'status without a dir reads current-status.md from cwd');
   // @covers cap-doc-status-002
   const empty = mkProject(false);
   const e = run(['status', empty]);
@@ -223,8 +225,10 @@ function section(dir, name, content) {
   // @covers cap-doc-pod-update-003
   run(['pod-update', f, '--mission', 'Billing (v2)', '--status', 'Active', '--next', 'n1']);
   run(['pod-update', f, '--mission', 'Billing (v2)', '--status', 'Blocked', '--next', 'n2']);
-  // DEFECT: the mission name is used as a raw regex, so "(v2)" never matches its own row and a duplicate is added.
-  assert((read(f).match(/\| Billing \(v2\) \|/g) || []).length === 2, 'pod-update with regex metacharacters duplicates the row (defect pinned)');
+  const bt = read(f);
+  assert((bt.match(/\| Billing \(v2\) \|/g) || []).length === 1 && /\| Billing \(v2\) \| — \| — \| Blocked \| n2 \|/.test(bt), 'pod-update treats the mission name literally (regex metacharacters update their own row)');
+  const pd = run(['pod-update', f, '--mission', 'Billing (v2)', '--status', 'Done', '--next', 'x', '--dry-run']);
+  assert(/DRY RUN/.test(pd.out) && read(f) === bt, 'pod-update --dry-run writes nothing');
 }
 
 // ─── spawn / dissolve ────────────────────────────────────────────────────────
@@ -323,8 +327,7 @@ function section(dir, name, content) {
   const dry = mkProject(false);
   const ds = run(['study', dry, 'create', '--title', 'Dry', '--dry-run']);
   assert(/DRY RUN/.test(ds.out), 'study create --dry-run previews');
-  // DEFECT: --dry-run promises "without modifying any file" but study create still creates research/studies/.
-  assert(fs.existsSync(path.join(dry, 'research', 'studies')) && fs.readdirSync(path.join(dry, 'research', 'studies')).length === 0, 'study create --dry-run creates the studies dir (defect pinned)');
+  assert(!fs.existsSync(path.join(dry, 'research')), 'study create --dry-run creates no directory or file');
 }
 
 // ─── session ─────────────────────────────────────────────────────────────────
@@ -362,8 +365,12 @@ function section(dir, name, content) {
   run(['session', dir, 'save', '--title', 'Keep Temp']);
   const kn = `${today}-keep-temp.md`;
   run(['session', dir, 'promote', kn, '--dry-run']);
-  // DEFECT: promote ignores --dry-run and moves the file.
-  assert(fs.existsSync(path.join(dir, 'sessions', 'permanent', kn)) && !fs.existsSync(path.join(dir, 'sessions', 'temp', kn)), 'session promote --dry-run still moves the file (defect pinned)');
+  assert(!fs.existsSync(path.join(dir, 'sessions', 'permanent', kn)) && fs.existsSync(path.join(dir, 'sessions', 'temp', kn)), 'session promote --dry-run moves nothing');
+  run(['session', dir, 'clean', '--confirm', '--dry-run']);
+  assert(fs.existsSync(path.join(dir, 'sessions', 'temp', kn)), 'session clean --confirm --dry-run deletes nothing');
+  const dsd = mkProject(false);
+  run(['session', dsd, 'save', '--title', 'Dry', '--dry-run']);
+  assert(!fs.existsSync(path.join(dsd, 'sessions')), 'session save --dry-run creates no directory or file');
 }
 
 // ─── domain ──────────────────────────────────────────────────────────────────
@@ -393,11 +400,10 @@ function section(dir, name, content) {
   assert(run(['domain', dir, 'remove']).code === 1, 'unknown domain subcommand exits 1');
   // @covers cap-doc-domain-005
   run(['domain', dir, 'add', '--name', 'Dry Domain', '--dry-run']);
-  // DEFECT: --dry-run still creates domains/<slug>/ (and blocks the real add as a duplicate later).
-  assert(fs.existsSync(path.join(dir, 'domains', 'dry-domain')) && !fs.existsSync(path.join(dir, 'domains', 'dry-domain', 'summary.md')), 'domain add --dry-run creates the empty domain dir (defect pinned)');
+  assert(!fs.existsSync(path.join(dir, 'domains', 'dry-domain')), 'domain add --dry-run creates no directory');
+  assert(run(['domain', dir, 'add', '--name', 'Dry Domain']).code === 0, 'a real add after a dry run is not blocked as a duplicate');
   run(['domain', dir, 'update', '--name', 'Card Payments', '--lead', 'Nobody', '--dry-run']);
-  // DEFECT: update ignores --dry-run entirely.
-  assert(/lead: "Nobody"/.test(read(sf)), 'domain update --dry-run writes anyway (defect pinned)');
+  assert(/lead: "Mario"/.test(read(sf)) && !/Nobody/.test(read(sf)), 'domain update --dry-run writes nothing');
 }
 
 // ─── bus ─────────────────────────────────────────────────────────────────────
@@ -551,15 +557,20 @@ function section(dir, name, content) {
 
   // @covers cap-doc-disagreement-005
   const again = run(['disagreement', dir, 'resolve', '--id', 'DISAGREE-001', '--decision', 'second ruling', '--decided-by', 'CEO']);
-  // DEFECT: the usage says only OPEN entries resolve ("not found or not OPEN"), but re-resolving DISAGREE-001 matches the
-  // next entry's "Status: OPEN" and silently resolves DISAGREE-002 with the wrong decision, exit 0.
-  assert(again.code === 0 && /\[DISAGREE-002\] Region[\s\S]*?Status: RESOLVED[\s\S]*?\*\*Resolution:\*\* second ruling/.test(read(h)), 're-resolving a resolved id corrupts the next OPEN disagreement (defect pinned)');
+  assert(again.code === 1 && /DISAGREE-001 not found or not OPEN/.test(again.err), 're-resolving an already-resolved id exits 1');
+  assert(read(h) === t2, 're-resolving a resolved id changes nothing (never touches another entry)');
+  const dryRes = run(['disagreement', dir, 'resolve', '--id', 'DISAGREE-002', '--decision', 'd', '--decided-by', 'CEO', '--dry-run']);
+  assert(dryRes.code === 0 && /DRY RUN/.test(dryRes.out) && read(h) === t2, 'resolve --dry-run writes nothing');
 
   // @covers cap-doc-disagreement-004
   const help = run(['--help']).out;
   const docForm = run(['disagreement', dir, 'open', '--topic', 'Pricing', '--positions', 'CFO:raise,CRO:hold']);
-  // DEFECT: `sdk-doc --help` and the challenge skill document `open --positions "A:...,B:..."`; the command only accepts --position-a/--position-b.
-  assert(/--positions "A:\.\.\.,B:\.\.\."/.test(help) && docForm.code === 1 && /--position-a, and --position-b are required/.test(docForm.err), 'documented --positions form is rejected (defect pinned)');
+  assert(/--positions "A:\.\.\.,B:\.\.\."/.test(help) && docForm.code === 0 && /DISAGREE-003 — Pricing/.test(docForm.out) && /Positions: CFO vs CRO/.test(docForm.out), 'documented --positions "A:...,B:..." form opens a disagreement');
+  assert(/\[DISAGREE-003\] Pricing[\s\S]*?\| CFO \| raise \| \|\n\| CRO \| hold \| \|/.test(read(h)), '--positions writes both positions');
+  assert(run(['disagreement', dir, 'open', '--topic', 'T', '--positions', 'CFO:only one']).code === 1, '--positions with one entry exits 1');
+  const before = read(h);
+  const dryOpen = run(['disagreement', dir, 'open', '--topic', 'Dry', '--position-a', 'A: x', '--position-b', 'B: y', '--dry-run']);
+  assert(/DRY RUN/.test(dryOpen.out) && read(h) === before, 'open --dry-run writes nothing');
 }
 
 // ─── history ─────────────────────────────────────────────────────────────────
@@ -583,9 +594,9 @@ function section(dir, name, content) {
 
   // @covers cap-doc-history-003
   const upper = run(['history', dir, '--reversible', 'NO']);
-  // DEFECT: the irreversible-review skill runs `sdk-doc history . --reversible NO`; the filter is case-sensitive, so it finds nothing,
-  // and the [IRREVERSIBLE] marker only fires for `reversible: false`, never for the help-documented `--reversible no`.
-  assert(/Decisions \(0\/3\):/.test(upper.out) && !/\[IRREVERSIBLE\]/.test(all.out), '--reversible NO finds nothing and "no" is never marked [IRREVERSIBLE] (defect pinned)');
+  assert(/Decisions \(1\/3\):[\s\S]*Use Postgres/.test(upper.out), '--reversible NO is case-insensitive');
+  assert(/Decisions \(1\/3\):[\s\S]*Use Postgres/.test(run(['history', dir, '--reversible', 'false']).out), '--reversible false is treated as no');
+  assert(/Use Postgres \[IRREVERSIBLE\]/.test(all.out) && !/Launch in Brazil \[IRREVERSIBLE\]/.test(all.out), 'a decision logged with --reversible no is marked [IRREVERSIBLE]');
 }
 
 // ─── iteration (gaps beyond cap-sdk-iteration-001) ───────────────────────────

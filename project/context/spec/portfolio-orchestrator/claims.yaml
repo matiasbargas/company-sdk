@@ -11,18 +11,18 @@
 claims:
   - id: cap-po-registry-001
     kind: capability
-    status: planned
+    status: built
     statement: "The holding keeps a registry of companies, each with its own Owner, path, and runner; a company entry without an Owner is rejected."
     acceptance:
       - given: "a portfolio.json with a company missing `owner`"
         when: "the registry is validated"
         then: "validation fails naming the company and the missing field"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "The shape everyone converged on"}]
-    conformance: []
+    conformance: [cap-po-registry-001]
 
   - id: cap-po-ledger-001
     kind: capability
-    status: planned
+    status: built
     statement: "The fuel ledger is append-only, hash-chained, and idempotent; replaying an event does not change any balance."
     acceptance:
       - given: "a ledger with N events"
@@ -32,22 +32,22 @@ claims:
         when: "the chain is verified"
         then: "verification fails at line k"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft, 3. Ledger"}]
-    conformance: []
+    conformance: [cap-po-ledger-001]
 
   - id: cap-po-ledger-002
     kind: capability
-    status: planned
+    status: built
     statement: "Only the holding Owner can fund the pool; no other actor can write a `fund` event."
     acceptance:
       - given: "a `fund` event authored by any role other than the holding Owner"
         when: "it is appended"
         then: "it is rejected and nothing is written"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "The shape everyone converged on"}]
-    conformance: []
+    conformance: [cap-po-ledger-002]
 
   - id: cap-po-fuel-001
     kind: capability
-    status: planned
+    status: built
     statement: "Fuel is metered by the runner from stream-json `result.modelUsage` (per model), never from top-level `usage`, in raw tokens by type; each session's fixed overhead counts; Fuel Units and USD are derived views recomputable from raw."
     acceptance:
       - given: "a run whose result carries usage {input, output, cache_write, cache_read, model}"
@@ -60,22 +60,22 @@ claims:
         when: "it is reconciled"
         then: "it is recorded as `unmetered`, never as zero"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 1. Units"}, {file: record/experiments/2026-11-13-metering-spike/README.md, section: "Results"}]
-    conformance: []
+    conformance: [cap-po-fuel-001]
 
   - id: cap-po-fuel-002
     kind: capability
-    status: planned
+    status: built
     statement: "Infinite fuel is an option: with `limits.fuel.envelopePerCycle: null` the pool never exhausts, while every draw is still metered and tranche gating and kill conditions still apply."
     acceptance:
       - given: "envelopePerCycle is null"
         when: "draws exceed any finite amount"
         then: "no draw is refused for pool balance, every draw is in the ledger, a draw beyond an unproven tranche is still refused, and a grant without a kill condition is still malformed"
     sources: [{file: history.md, section: "Portfolio Orchestrator — Discovery decisions (Owner: infinite fuel should be an option)"}]
-    conformance: []
+    conformance: [cap-po-fuel-002]
 
   - id: cap-po-grant-001
     kind: capability
-    status: planned
+    status: built
     statement: "A grant must declare tranches, a named proof per tranche, and a kill condition; only tranche 1 is drawable at grant time."
     acceptance:
       - given: "a grant request without a kill condition"
@@ -85,18 +85,18 @@ claims:
         when: "a draw is attempted beyond tranche 1"
         then: "the draw is refused until tranche 1's named proof is recorded"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft, 2. Lifecycle"}]
-    conformance: []
+    conformance: [cap-po-grant-001]
 
   - id: cap-po-proof-001
     kind: capability
-    status: planned
+    status: built
     statement: "A tranche releases on a pass/fail check of its named proof (verified surface, graduated cycle, or Owner-approved ship) identified by commit SHA; one proof unlocks at most one tranche."
     acceptance:
       - given: "tranche 1's named proof is a surface that reaches `verified` at SHA s"
         when: "the proof is recorded"
         then: "tranche 2 becomes drawable, and recording the same surface again unlocks nothing further"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft, 2. Lifecycle"}]
-    conformance: []
+    conformance: [cap-po-proof-001]
 
   - id: cap-po-proof-002
     kind: capability
@@ -200,14 +200,14 @@ claims:
 
   - id: cap-po-budget-001
     kind: capability
-    status: planned
+    status: built
     statement: "A per-run budget flag is a soft ceiling (checked after a turn); overshoot is recorded as an `overrun` paid from the overrun reserve and recovered from the next tranche; the provider-side key cap is the hard ceiling."
     acceptance:
       - given: "a run capped at X whose single turn costs more than X (observed: $0.05 cap ended at $0.084)"
         when: "the runner records it"
         then: "the ledger has a `draw` up to the cap and an `overrun` for the excess, and the next tranche is reduced by the overrun"
     sources: [{file: record/experiments/2026-11-13-metering-spike/README.md, section: "Results"}]
-    conformance: []
+    conformance: [cap-po-budget-001]
 
   - id: cap-po-grant-002
     kind: capability
@@ -266,14 +266,14 @@ claims:
 
   - id: cap-po-registry-002
     kind: capability
-    status: planned
+    status: built
     statement: "The registry refuses a company whose Owner differs from the holding Owner until the second-Owner gates hold (OS-level isolation, ratified multi-Owner CHARTER amendment, CLO gate items), and refuses any company whose CHARTER is unratified."
     acceptance:
       - given: "the gates are not met"
         when: "a company with a different Owner is added"
         then: "it is refused, naming each unmet gate"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "Regulatory map (CLO), with confidence"}]
-    conformance: []
+    conformance: [cap-po-registry-002]
 
   - id: cap-po-commons-003
     kind: capability

@@ -31,7 +31,9 @@ module.exports = function cmdAddItem({ filePath, opts, dryRun }) {
   }
 
   if (startIdx === -1) {
-    const newContent = content.trimEnd() + `\n\n### ${opts.section}\n\n${item}\n`;
+    // A "## X" heading is written as given (like append); a bare name becomes an H3.
+    const heading = /^#{1,6}\s/.test(opts.section) ? opts.section : `### ${opts.section}`;
+    const newContent = content.trimEnd() + `\n\n${heading}\n\n${item}\n`;
     writeFile(filePath, newContent, dryRun);
     console.log(`\u2713 Created section "${opts.section}" and added item.`);
     return;

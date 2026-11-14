@@ -625,3 +625,28 @@ Affects natural persons: NO
 
 ## SDK capability inventory (2026-11-14)
 Three agents wrote every CLI surface into Layer B and pinned each behaviour with black-box conformance tests: `context/spec/sdk-lifecycle` (47), `sdk-session` (58) and `sdk-doc` (72). Each has a suite in `npm test` (`test-cap-lifecycle.js` 259 assertions, `test-cap-session.js` 205, `test-cap-doc.js` 175). **Behaviour coverage: 157 of 188 existing capabilities pinned by tests (84%), 11 unpinned, 20 defects** (each test pins today's behaviour with a `// DEFECT:` comment; listed by `sdk-health`). One defect was a chapter-6 regression of mine: `sdk-pre-tag` crashed on any project with a manifest (undefined `staleHours`). It is fixed in this commit, and the capability is now built. The worst open defects are: `disagreement resolve` on an already-resolved id silently resolves the *next* entry, corrupting history.md; `sdk-next` and `sdk-resume` print the table header instead of the activation phrase; `sdk-resume` reports gates as clean while they are BLOCKED; `sdk-ops clo-ciso-gate` disagrees with `sdk-gate-check`.
+
+---
+
+## SDK-CHANGE — Defect batch (20 → 0) + Portfolio Orchestrator core (`packages/holding`) (2026-11-14)
+**Made by:** Greg (CEO), Owner-directed ("both") · **Release:** v2026.Q2.3 · **Tag:** SDK-CHANGE
+
+DECISION: Fix every defect the inventory found, and start the orchestrator build test-first under the Mario conditions
+Context: The capability inventory pinned 20 defects (each as a `// DEFECT:` test). The Mario gate cleared the ledger library, meter and validator to start under C1–C3 and C5–C11.
+Decision: (1) **Defect batch:** four engineers fixed all 20, plus the ones found along the way. Each test was flipped from pinning the wrong behaviour to asserting the spec, and each claim is now `built` with a `fixed_note`. Highlights:
+- `disagreement resolve` no longer resolves a different entry, which had corrupted history.md;
+- `sdk-next` and `sdk-resume` read the activation phrase from the table, and `init` fills that row;
+- `sdk-resume` shows BLOCKED gates;
+- `sdk-ops` reads the same parsers as `sdk-gate-check`, and its file staleness is commit-based;
+- `sdk-pre-tag` `--fix` and `--json` are consistent;
+- `--dry-run` no longer writes anything in study, session, domain or disagreement (it had even deleted files);
+- `sdk-update` works in generated projects (linked mode);
+- `sdk-ship` and `sdk-github release` accept their own hint's history form, and `sdk-github` validates `--release-id`;
+- `bootstrap` matches `init`'s harness;
+- `retro` reads piped input.
+
+New defect found and fixed during integration: `init` substituted `[YEAR]` and `[YYYY-MM-DD]` inside the law docs, which rewrote `v[YEAR].Q[QUARTER]` format rules. Law docs are now copied byte-for-byte (`cap-life-init-018`), and `update` syncs them verbatim. Removed the dead hour thresholds from `daemon-config.js`.
+(2) **`packages/holding` (test-first, 217 assertions)** contains: canonical JSON + SHA-256 (C1); an append-only, hash-chained, idempotent ledger with a single-writer lock (C2); the full event list (C3); an owner-only `fund`; a freeze; fold balances; a meter that reads `modelUsage`, keeps raw usage verbatim, fails closed to `unmetered` on an unknown schema or version (C5), and records the priceTable version; overruns; the portfolio validator (owner required; a second Owner and an unratified CHARTER refused; holding and company paths never nested, C7); and grants (tranches, named proof, kill condition, one proof per tranche). Nine orchestrator capabilities are now `built`. Seven deliberate mutations to the code each turned the suite red.
+Implications: **Behaviour coverage is 189 of 199 existing capabilities pinned (95%), with 0 open defects** (was 157/188, 20 defects). `npm test` runs about 4,200 assertions. Still `planned` for the orchestrator: runner, landing mode, reserves, reclaim, commons, judgment column. The two-company run is still blocked on C4, C12, C13 and C14. Design choices to review: a stale ledger lock is never broken automatically (a human removes it); there is no default price table (the caller must pass one); overruns draw from the general pool until the overrun reserve exists.
+Reversible: YES (code + tests).
+Affects natural persons: NO

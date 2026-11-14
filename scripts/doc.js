@@ -20,7 +20,7 @@ const filePath = args[1];
 const projectDirCommands = [
   'spawn', 'dissolve', 'manifest', 'index', 'study',
   'session', 'domain', 'bus', 'cockpit', 'discovery',
-  'disagreement', 'history', 'iteration',
+  'disagreement', 'history', 'iteration', 'status',
 ];
 
 if (!command || (!filePath && !projectDirCommands.includes(command)) || command === '--help' || command === '-h') {
@@ -52,7 +52,6 @@ const commands = {
   'discovery':    require('./commands/discovery'),
   'disagreement': require('./commands/disagreement'),
   'history':      require('./commands/history'),
-  'iteration':    require('./commands/iteration'),
   'iteration':    require('./commands/iteration'),
 };
 
@@ -104,10 +103,10 @@ Commands:
   session     <project-dir> clean [--confirm]                Delete all temp sessions
   cockpit     <project-dir> --role <role>                     Role-specific session briefing (replaces 6-read startup)
   bus         <project-dir> --from <role> --to <role>         Send a Bus message: logs to bus-log.md + intent resolution
+                     --message "..." [--priority INFO|BLOCKER|DECISION NEEDED|CONTEXT REQUEST]
   disagreement <project-dir> open --topic "..." --positions "A:...,B:..."  Open a structured disagreement
   history      <project-dir> [--domain X] [--search Y] [--reversible Z]  Query structured decisions
   iteration    <project-dir> create|review|list|graduate --loop <type>   Iteration Loop cycles (protocol §31)
-                     --message "..." [--priority INFO|BLOCKER|DECISION NEEDED|CONTEXT REQUEST]
   domain      <project-dir> add --name <name> --lead <role>  Create a new project domain
                      [--summary "..."] [--spawn-when "..."]
                      [--context-provides "..."]

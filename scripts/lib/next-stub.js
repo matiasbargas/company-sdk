@@ -18,6 +18,14 @@ function getNextAgentStub(projectDir) {
   try {
     const content = safeReadFile(projectDir, 'current-status.md');
     if (!content) return null;
+    // Prefer the shared reader (handles the template's table form). It may be absent in a
+    // vendored layout that copies only this file, so fall back to the inline regexes.
+    let parseStatus = null;
+    try { ({ parseStatus } = require('./project-state')); } catch (_) { /* vendored copy */ }
+    if (parseStatus) {
+      const next = parseStatus(content).nextAgent;
+      if (next && next.phrase) return next.phrase;
+    }
     const match = content.match(/##\s+Next Agent To Activate[\s\S]*?\*\*Activation phrase:\*\*\s*"([^"]+)"/i);
     if (match) return match[1].trim();
     const bare = content.match(/##\s+Next Agent To Activate[\s\S]*?Activation phrase:\s*"([^"]+)"/i);

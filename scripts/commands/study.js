@@ -47,6 +47,7 @@ module.exports = function cmdStudy({ args, filePath, dryRun }) {
   // create — re-parse options starting from args[3] since args[2] is 'create'
   const studyOpts = {};
   for (let i = 3; i < args.length; i++) {
+    if (args[i] === '--dry-run') continue;
     if (args[i].startsWith('--') && args[i + 1]) {
       studyOpts[args[i].slice(2)] = args[++i];
     }
@@ -67,7 +68,7 @@ module.exports = function cmdStudy({ args, filePath, dryRun }) {
   const filename = `${today}-${slug}.md`;
 
   // Ensure directories exist
-  fs.mkdirSync(studiesDir, { recursive: true });
+  if (!dryRun) fs.mkdirSync(studiesDir, { recursive: true });
 
   const tagsYaml = tags.length > 0 ? `[${tags.map(t => `"${t}"`).join(', ')}]` : '[]';
 

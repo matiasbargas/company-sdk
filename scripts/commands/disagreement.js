@@ -6,13 +6,14 @@ const path = require('path');
 /**
  * cmdDisagreement — Open, resolve, or list structured disagreements in history.md.
  */
-module.exports = function cmdDisagreement({ args, filePath }) {
+module.exports = function cmdDisagreement({ args, filePath, dryRun }) {
   const projectDir = filePath ? path.resolve(filePath) : process.cwd();
   const subcommand = args[2]; // open | resolve | list
   const historyPath = path.join(projectDir, 'history.md');
 
   if (!subcommand || !['open', 'resolve', 'list'].includes(subcommand)) {
     console.error(`Usage:
+  sdk-doc disagreement <project-dir> open --topic "..." --positions "A:...,B:..."
   sdk-doc disagreement <project-dir> open --topic "..." --position-a "Role: position" --position-b "Role: position"
   sdk-doc disagreement <project-dir> resolve --id DISAGREE-NNN --decision "..." --decided-by Role --reasoning "..."
   sdk-doc disagreement <project-dir> list`);
@@ -21,6 +22,7 @@ module.exports = function cmdDisagreement({ args, filePath }) {
 
   const opts = {};
   for (let i = 3; i < args.length; i++) {
+    if (args[i] === '--dry-run') continue;
     if (args[i].startsWith('--') && args[i + 1]) {
       opts[args[i].slice(2)] = args[++i];
     }
@@ -28,11 +30,21 @@ module.exports = function cmdDisagreement({ args, filePath }) {
 
   if (subcommand === 'open') {
     const topic     = opts.topic;
-    const posA      = opts['position-a'];
-    const posB      = opts['position-b'];
+    let posA        = opts['position-a'];
+    let posB        = opts['position-b'];
+
+    // --positions "A:...,B:..." (the documented form): split on a comma that starts a new "Role:".
+    if (opts.positions && !posA && !posB) {
+      const parts = opts.positions.split(/,(?=\s*[^,:]+:)/).map(p => p.trim()).filter(Boolean);
+      if (parts.length !== 2) {
+        console.error('Error: --positions must hold exactly two "Role: position" entries, e.g. "CFO: raise,CRO: hold".');
+        process.exit(1);
+      }
+      [posA, posB] = parts;
+    }
 
     if (!topic || !posA || !posB) {
-      console.error('Error: --topic, --position-a, and --position-b are required.');
+      console.error('Error: --topic and --positions "A:...,B:..." (or --position-a and --position-b) are required.');
       process.exit(1);
     }
 
@@ -81,7 +93,11 @@ Status: OPEN
 **Dissent on record:** \u2014
 `;
 
-    if (!fs.existsSync(historyPath)) {
+    if (dryRun) {
+      console.log(`\nDRY RUN \u2014 no files modified`);
+      console.log(`  Would append ${id} to: ${historyPath}`);
+      return;
+    } else if (!fs.existsSync(historyPath)) {
       fs.writeFileSync(historyPath, `# History\n${entry}`, 'utf8');
     } else {
       fs.appendFileSync(historyPath, entry, 'utf8');
@@ -113,34 +129,37 @@ Status: OPEN
     let content = fs.readFileSync(historyPath, 'utf8');
     const date = new Date().toISOString().slice(0, 10);
 
-    // Find the disagreement entry and update it
-    const pattern = new RegExp(`(### \\[${id}\\][\\s\\S]*?)Status: OPEN`, 'i');
-    if (!pattern.test(content)) {
+    // Locate exactly this entry's block (heading up to the next "### " heading or "---" rule).
+    // Edits are confined to the block so a resolved id can never touch another entry.
+    const escId = String(id).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const headRe = new RegExp(`^### \\[${escId}\\][^\\n]*$`, 'im');
+    const head = headRe.exec(content);
+    let blockEnd = -1;
+    if (head) {
+      const rest = content.slice(head.index + head[0].length);
+      const next = rest.search(/\n(?:### |---\s*(?:\n|$))/);
+      blockEnd = next === -1 ? content.length : head.index + head[0].length + next;
+    }
+    const block = head ? content.slice(head.index, blockEnd) : '';
+    if (!head || !/^Status: OPEN\s*$/m.test(block)) {
       console.error(`Error: ${id} not found or not OPEN.`);
       process.exit(1);
     }
 
-    content = content.replace(pattern, `$1Status: RESOLVED`);
-    content = content.replace(
-      new RegExp(`(### \\[${id}\\][\\s\\S]*?)Date resolved: \u2014`),
-      `$1Date resolved: ${date}`
-    );
-    content = content.replace(
-      new RegExp(`(### \\[${id}\\][\\s\\S]*?)\\*\\*Resolution:\\*\\* Pending`),
-      `$1**Resolution:** ${decision}`
-    );
-    content = content.replace(
-      new RegExp(`(### \\[${id}\\][\\s\\S]*?)\\*\\*Decided by:\\*\\* \u2014`),
-      `$1**Decided by:** ${decidedBy}`
-    );
-    content = content.replace(
-      new RegExp(`(### \\[${id}\\][\\s\\S]*?)\\*\\*Reasoning:\\*\\* \u2014`),
-      `$1**Reasoning:** ${reasoning}`
-    );
-    content = content.replace(
-      new RegExp(`(### \\[${id}\\][\\s\\S]*?)\\*\\*Dissent on record:\\*\\* \u2014`),
-      `$1**Dissent on record:** ${dissent}`
-    );
+    const newBlock = block
+      .replace(/^Status: OPEN\s*$/m, 'Status: RESOLVED')
+      .replace('Date resolved: \u2014', () => `Date resolved: ${date}`)
+      .replace('**Resolution:** Pending', () => `**Resolution:** ${decision}`)
+      .replace('**Decided by:** \u2014', () => `**Decided by:** ${decidedBy}`)
+      .replace('**Reasoning:** \u2014', () => `**Reasoning:** ${reasoning}`)
+      .replace('**Dissent on record:** \u2014', () => `**Dissent on record:** ${dissent}`);
+    content = content.slice(0, head.index) + newBlock + content.slice(blockEnd);
+
+    if (dryRun) {
+      console.log(`\nDRY RUN \u2014 no files modified`);
+      console.log(`  Would resolve ${id} in: ${historyPath}`);
+      return;
+    }
 
     fs.writeFileSync(historyPath, content, 'utf8');
     console.log(`\u2713 Disagreement resolved: ${id}`);

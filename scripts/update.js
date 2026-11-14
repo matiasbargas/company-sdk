@@ -54,6 +54,9 @@ Usage:
 
 Run from the project folder that contains a team-sdk/ subdirectory.
 If no path is given, reads .sdkrc in the current directory for the SDK path.
+For an sdk-init / sdk-bootstrap project (no team-sdk/ copy; .sdkrc sdkPath is the SDK),
+run sdk-update from the project folder: it syncs the SDK docs, protocol/, team/ and the
+.claude harness that init copied into the project root.
 
 Arguments:
   <sdk-source-path>   Path to the team-sdk source to sync from (optional if .sdkrc exists)
@@ -93,10 +96,18 @@ if (args[0] && !args[0].startsWith('--')) {
 
 // ─── Locate target team-sdk ───────────────────────────────────────────────────
 
-// This script runs from within <project>/team-sdk/scripts/
-// The target team-sdk/ is two levels up from this script
-const targetSdk = path.resolve(__dirname, '..');
-const projectDir = path.resolve(targetSdk, '..');
+// Vendored mode: this script runs from within <project>/team-sdk/scripts/, so the target
+// team-sdk/ is one level up and the project is the folder above it.
+// Linked mode: sdk-init / sdk-bootstrap projects carry no team-sdk/ copy; their .sdkrc sdkPath
+// IS the SDK this script lives in. Then the target is the project in the cwd, and only the
+// harness files those commands copied into it are synced (see LINKED_* below).
+const scriptSdk  = path.resolve(__dirname, '..');
+const cwd        = path.resolve(process.cwd());
+const linkedMode = path.resolve(sourcePath) === scriptSdk
+  && cwd !== scriptSdk
+  && fs.existsSync(path.join(cwd, '.sdkrc'));
+const targetSdk  = linkedMode ? cwd : scriptSdk;
+const projectDir = linkedMode ? cwd : path.resolve(targetSdk, '..');
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
@@ -129,9 +140,10 @@ function readFile(filePath) {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : null;
 }
 
-function syncFile(src, dest) {
-  const srcContent  = readFile(src);
-  if (srcContent === null) return { status: 'missing' };
+function syncFile(src, dest, transform) {
+  const raw         = readFile(src);
+  if (raw === null) return { status: 'missing' };
+  const srcContent  = transform ? transform(raw) : raw;
 
   const destContent = readFile(dest);
   if (srcContent === destContent) return { status: 'unchanged' };
@@ -188,6 +200,20 @@ const DIRECTORIES = [
   'project-template',
 ];
 
+// Linked mode: exactly what sdk-init copies from the SDK into the project root. Project-owned
+// files (CLAUDE.md, history.md, current-status.md, .claude/settings.json, ...) are never touched.
+const LINKED_TOP_LEVEL_FILES = ['SDK.md', 'protocol.md', 'protocol-core.md', 'protocol-reference.md', 'AGENTS.md', 'STRATEGY.md', 'CHARTER.md'];
+const LINKED_DIRECTORIES     = ['protocol', 'team'];
+const LINKED_REMOVE_DIRS     = ['protocol']; // generated views only; team/ may hold project-added roles
+
+// Law docs and generated views are synced verbatim, exactly as sdk-init copies them: their
+// [YEAR] / [YYYY-MM-DD] tokens are format templates, not fill-ins.
+const linkedTransform = null;
+
+const topLevelFiles = linkedMode ? LINKED_TOP_LEVEL_FILES : TOP_LEVEL_FILES;
+const syncDirs      = linkedMode ? LINKED_DIRECTORIES : DIRECTORIES;
+const removeDirs    = linkedMode ? LINKED_REMOVE_DIRS : DIRECTORIES;
+
 // ─── Run ─────────────────────────────────────────────────────────────────────
 
 // Legacy .claude/commands/ paths (commands are skills now; see the harness sync below)
@@ -199,21 +225,22 @@ console.log(`\nteam-sdk update`);
 console.log(`  Source: ${sourcePath}`);
 console.log(`  Target: ${targetSdk}`);
 console.log(`  Project: ${projectDir}`);
+if (linkedMode) console.log('  Mode: linked project (.sdkrc sdkPath is this SDK; syncing copied harness files)');
 if (dryRun) console.log('  Mode: DRY RUN (no files written)\n');
 else console.log('');
 
 const allResults = [];
 
 // Sync top-level files
-for (const file of TOP_LEVEL_FILES) {
+for (const file of topLevelFiles) {
   const src    = path.join(sourcePath, file);
   const dest   = path.join(targetSdk, file);
-  const result = syncFile(src, dest);
+  const result = syncFile(src, dest, linkedTransform);
   allResults.push({ file, ...result });
 }
 
 // Sync directories
-for (const dir of DIRECTORIES) {
+for (const dir of syncDirs) {
   const srcDir  = path.join(sourcePath, dir);
   const destDir = path.join(targetSdk, dir);
   const results = syncDir(srcDir, destDir);
@@ -238,7 +265,7 @@ for (const sub of ['skills', 'agents', 'output-styles', 'commands']) {
 
 const SKIP_REMOVE = new Set(['CLAUDE.md']); // project-level CLAUDE.md should never be touched
 
-for (const dir of DIRECTORIES) {
+for (const dir of removeDirs) {
   const destDir = path.join(targetSdk, dir);
   if (!fs.existsSync(destDir)) continue;
 

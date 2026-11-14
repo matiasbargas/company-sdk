@@ -106,6 +106,16 @@ try {
   const initRun = run('init.js', ['demo-proj', '--output', P, '--squad', 'startup', '--idea', longIdea, '--domains', 'Platform Core:CTO, lending', '--source', srcDoc]);
   assert(initRun.code === 0, `init (product, startup) exits 0 — ${initRun.err.slice(0, 200)}`);
 
+  // @covers cap-life-init-018
+  {
+    for (const f of ['protocol.md', 'protocol-core.md', 'SDK.md', 'AGENTS.md', 'CHARTER.md']) {
+      const sdkCopy = path.join(SCRIPTS, '..', f);
+      if (!exists(sdkCopy)) continue;
+      assert(fs.readFileSync(path.join(P, f), 'utf8') === fs.readFileSync(sdkCopy, 'utf8'), `init copies ${f} verbatim`);
+    }
+    assert(/v\[YEAR\]\.Q\[QUARTER\]/.test(fs.readFileSync(path.join(P, 'protocol.md'), 'utf8')), 'protocol.md keeps its v[YEAR].Q[QUARTER] format template');
+  }
+
   // @covers cap-life-init-003
   {
     for (const f of ['idea.md', 'current-status.md', 'history.md', 'project-map.md', 'CLAUDE.md', 'DISCLAIMER.md', '.gitignore', 'team.md', 'project.md', 'START_HERE.md', 'liaison-log.md', 'SQUAD.md']) {
@@ -228,13 +238,12 @@ try {
 
   // @covers cap-life-init-011
   {
-    // DEFECT: the template's Next Agent To Activate is now a table; init still targets the old
-    // "**[Role name]** — because ..." line, so the row keeps its placeholder and never names Greg.
     const st = read(path.join(P, 'current-status.md'));
     const section = (st.split('## Next Agent To Activate')[1] || '').split('\n## ')[0];
-    assert(/\| \[Role name\] \|/.test(section) && !/Greg \(CEO\)/.test(section), 'DEFECT (pinned): Next Agent To Activate keeps the [Role name] placeholder after init');
+    assert(!/\[Role name\]/.test(section) && /^\| Greg \(CEO\) \| "[^"]*Greg[^"]*idea\.md Section 4[^"]*" \| idea\.md \|$/m.test(section), 'Next Agent To Activate table row names Greg (CEO) with the idea.md Section 4 activation phrase');
+    const phrase = (section.match(/^\| Greg \(CEO\) \| "([^"]+)"/m) || [])[1];
     const nx = run('next.js', [P]);
-    assert(/\| Role \| Activation phrase \| Read first \|/.test(nx.out), 'DEFECT (pinned): sdk-next on a fresh init prints the table header as the resume phrase');
+    assert(phrase && nx.out.includes(phrase) && !/\| Role \| Activation phrase \| Read first \|/.test(nx.out), 'sdk-next on a fresh init prints the Greg activation phrase, not the table header');
   }
 
   // @covers cap-life-init-012
@@ -302,16 +311,25 @@ try {
     const B = path.join(d, 'b');
     const r = run('bootstrap.js', ['boot-proj', '--output', B]);
     assert(r.code === 0 && /bootstrapped/.test(r.out), 'bootstrap exits 0');
-    const tpl = fs.readdirSync(path.join(SDK, 'project-template')).filter(f => fs.statSync(path.join(SDK, 'project-template', f)).isFile());
+    const tpl = fs.readdirSync(path.join(SDK, 'project-template')).filter(f => fs.statSync(path.join(SDK, 'project-template', f)).isFile() && f !== 'surface-template.md');
     assert(tpl.every(f => exists(path.join(B, f))), 'bootstrap copies every project-template file unfiltered (no type map)');
+    assert(exists(path.join(B, 'surfaces', '_template.md')) && !exists(path.join(B, 'surface-template.md')), 'bootstrap moves the surface template to surfaces/_template.md (as init does)');
     assert(exists(path.join(B, 'SQUAD.md')) && read(path.join(B, 'SQUAD.md')).split('\n')[0] === read(path.join(SDK, 'team/squads/startup.md')).split('\n')[0], 'bootstrap writes SQUAD.md from the default squad (startup)');
     assert(/Squad:\s+startup/.test(r.out), 'bootstrap default squad is startup');
-    for (const f of ['protocol.md', 'AGENTS.md', 'STRATEGY.md']) assert(exists(path.join(B, f)), `bootstrap copies ${f}`);
+    for (const f of ['SDK.md', 'protocol.md', 'protocol-core.md', 'protocol-reference.md', 'AGENTS.md', 'STRATEGY.md', 'CHARTER.md']) {
+      if (exists(path.join(SDK, f))) assert(exists(path.join(B, f)), `bootstrap copies SDK doc ${f}`);
+    }
+    const views = fs.readdirSync(path.join(SDK, 'protocol')).filter(n => n.endsWith('.md'));
+    assert(views.length > 0 && views.every(f => read(path.join(B, 'protocol', f)) === read(path.join(SDK, 'protocol', f))), 'bootstrap copies the protocol/ per-section views');
     assert(sameTree(path.join(SDK, 'team'), path.join(B, 'team')), 'bootstrap copies team/');
     assert(exists(path.join(B, '.claude', 'skills')) && exists(path.join(B, '.claude', 'agents')), 'bootstrap copies the .claude harness');
     const rc = JSON.parse(read(path.join(B, '.sdkrc')));
     assert(path.resolve(rc.sdkPath) === SDK && rc.limits && 'peerSpawns' in rc.limits, '.sdkrc records sdkPath + limits');
-    assert(!exists(path.join(B, '.git')) && !exists(path.join(B, '.claude', 'settings.json')) && !exists(path.join(B, 'protocol')), 'bootstrap does not git-init, write settings.json, or copy protocol/ views (init does)');
+    const bs = JSON.parse(read(path.join(B, '.claude', 'settings.json')));
+    const is = JSON.parse(read(path.join(P, '.claude', 'settings.json')));
+    assert(JSON.stringify(bs.permissions) === JSON.stringify(is.permissions) && JSON.stringify(bs.hooks) === JSON.stringify(is.hooks) && bs.outputStyle === 'Greg', 'bootstrap writes settings.json with the same scoped permissions, hooks and output style as init');
+    assert(bs.projectName === 'boot-proj' && bs.squad === 'startup' && bs.releaseId === RELEASE, 'bootstrap settings.json records project, squad, release');
+    assert(!exists(path.join(B, '.git')), 'bootstrap does not git-init (init does)');
   }
 
   // @covers cap-life-bootstrap-002
@@ -388,13 +406,27 @@ try {
 
   // @covers cap-life-update-003
   {
-    // DEFECT: an sdk-init project has .sdkrc sdkPath = the SDK and no team-sdk/ copy, so the
-    // documented zero-arg `sdk-update` resolves source == target and refuses to run.
+    // An sdk-init project has .sdkrc sdkPath = the SDK and no team-sdk/ copy: zero-arg
+    // sdk-update syncs the harness files init copied into the project root.
     const d = tmp('upd-init');
     const I = path.join(d, 'p');
     run('init.js', ['u', '--output', I, '--no-git']);
+    fs.writeFileSync(path.join(I, 'team', 'roles', 'cto.md'), 'stale');
+    fs.writeFileSync(path.join(I, 'protocol', 'zz-obsolete.md'), 'gone');
+    fs.rmSync(path.join(I, '.claude', 'skills'), { recursive: true, force: true });
+    const keepClaude = read(path.join(I, 'CLAUDE.md'));
+    const keepSettings = read(path.join(I, '.claude', 'settings.json'));
+    const keepStatus = read(path.join(I, 'current-status.md'));
     const r = run('update.js', [], { cwd: I });
-    assert(r.code === 1 && /Source and target are the same directory/.test(r.err), 'DEFECT (pinned): sdk-update from an sdk-init project exits 1 (source == target)');
+    assert(r.code === 0 && /linked project/.test(r.out) && /✅ Done:/.test(r.out), `zero-arg sdk-update in an sdk-init project exits 0 (linked mode) — ${r.err.slice(0, 200)}`);
+    assert(read(path.join(I, 'team', 'roles', 'cto.md')) === read(path.join(SDK, 'team', 'roles', 'cto.md')), 'linked update restores team/ from sdkPath');
+    assert(!exists(path.join(I, 'protocol', 'zz-obsolete.md')) && sameTree(path.join(SDK, '.claude', 'skills'), path.join(I, '.claude', 'skills')), 'linked update prunes stale protocol/ views and re-syncs .claude/skills');
+    assert(read(path.join(I, 'CLAUDE.md')) === keepClaude && read(path.join(I, '.claude', 'settings.json')) === keepSettings && read(path.join(I, 'current-status.md')) === keepStatus, 'project-owned files (CLAUDE.md, settings.json, current-status.md) are untouched');
+    assert(!exists(path.join(I, 'team-sdk')) && !exists(path.join(I, 'scripts')), 'linked update creates no team-sdk/ or scripts/ copy');
+    const again = run('update.js', [], { cwd: I });
+    assert(again.code === 0 && /Already up to date/.test(again.out), 'a second linked update is a no-op');
+    const self = run('update.js', [SDK], { cwd: tmp('upd-self') });
+    assert(self.code === 1 && /Source and target are the same directory/.test(self.err), 'outside a linked project, source == SDK still refuses');
   }
 
   // ════════════════════════════════════════════════════════════════════ sdk-squad
@@ -637,15 +669,20 @@ try {
 
   // @covers cap-life-ship-006
   {
-    // DEFECT: the remediation ship prints ("sdk-doc decision history.md --decision 'Release vX'")
-    // writes "### Decision: Release vX", which ship's release-entry matcher does not accept.
+    // The remediation ship prints writes "### Decision: Release vX"; ship accepts that form.
     const d = shipFixture('# History\n');
     const hint = run('ship.js', [d, 'v2026.Q2.1', '--dry-run']);
     assert(/sdk-doc decision history\.md --decision "Release v2026\.Q2\.1"/.test(hint.err), 'ship prints the sdk-doc decision remediation');
     run('doc.js', ['decision', path.join(d, 'history.md'), '--decision', 'Release v2026.Q2.1', '--context', 'ctx', '--made-by', 'Coordinator']);
     assert(read(path.join(d, 'history.md')).includes('Release v2026.Q2.1'), 'the remediation command wrote an entry naming the release');
     const after = run('ship.js', [d, 'v2026.Q2.1', '--dry-run']);
-    assert(after.code === 1 && /No history\.md entry found for v2026\.Q2\.1/.test(after.err), 'DEFECT (pinned): after following its own remediation, ship still blocks');
+    assert(after.code === 0 && /history\.md: entry found/.test(after.out) && /### Full log/.test(after.out) && /Release v2026\.Q2\.1/.test(after.out), `after following its own remediation, ship finds the entry — ${after.err.slice(0, 200)}`);
+    const other = run('ship.js', [d, 'v2026.Q2.10', '--dry-run']);
+    assert(other.code === 1 && /No history\.md entry found for v2026\.Q2\.10/.test(other.err), 'a decision for v2026.Q2.1 does not satisfy v2026.Q2.10');
+    const env = { TEAM_SDK_GITHUB_TOKEN: 'dummy-offline' };
+    fs.writeFileSync(path.join(d, '.sdkrc'), JSON.stringify({ github: { repo: 'acme/x' } }));
+    const gh = run('github.js', ['release', d, '--release-id', 'v2026.Q2.10'], { env });
+    assert(gh.code === 1 && /No history\.md entry found for v2026\.Q2\.10/.test(gh.err), 'sdk-github release applies the same decision-form matcher (no false match on a prefix id)');
   }
 
   // ════════════════════════════════════════════════════════════════════ sdk-github (offline only)
@@ -688,6 +725,12 @@ try {
     fs.writeFileSync(path.join(l, '.sdkrc'), JSON.stringify({ github: { repo: 'acme/x' } }));
     const nr = run('github.js', ['release', l], { env });
     assert(nr.code === 1 && /No release ID found in \.sdkrc/.test(nr.err), 'release with no id in .sdkrc and no --release-id → exit 1');
+    for (const bad of ['2026.Q2.1', 'v2026.Q5.1', '../x']) {
+      const b = run('github.js', ['release', l, '--release-id', bad], { env });
+      assert(b.code === 2 && /invalid --release-id/.test(b.err), `release rejects malformed --release-id "${bad}" (exit 2) before any network call`);
+    }
+    const missing = run('github.js', ['release', l, '--release-id'], { env });
+    assert(missing.code === 2 && /invalid --release-id/.test(missing.err), 'release rejects a valueless --release-id (exit 2)');
     fs.writeFileSync(path.join(l, 'history.md'), '# H\n## v2026.Q2.1\n- shipped\n');
     const nh = run('github.js', ['release', l, '--release-id', 'v2026.Q2.1'], { env });
     assert(nh.code === 1 && /No history\.md entry found for v2026\.Q2\.1/.test(nh.err), 'release requires a "## [vX]" history entry (bracketed) before any network call');
@@ -713,13 +756,15 @@ try {
 
   // @covers cap-life-retro-002
   {
-    // DEFECT: interactive mode with non-TTY stdin consumes only the first answer; later lines are
-    // dropped, the process exits 0 and nothing is written.
     const d = tmp('retro-int');
     fs.writeFileSync(path.join(d, '.sdkrc'), JSON.stringify({ releaseId: 'v2026.Q2.1' }));
     const r = run('retro.js', [d], { input: '\nworked\nslowed\nchange\n\n' });
     assert(/Release ID \[v2026\.Q2\.1\]/.test(r.out), 'interactive mode suggests the .sdkrc release');
-    assert(r.code === 0 && !exists(path.join(d, 'strategy-log.md')), 'DEFECT (pinned): piped interactive answers are dropped; exit 0, nothing written');
+    assert(r.code === 0 && /Retrospective written to strategy-log\.md/.test(r.out), `piped interactive answers exit 0 — ${r.err.slice(0, 200)}`);
+    const log = exists(path.join(d, 'strategy-log.md')) ? read(path.join(d, 'strategy-log.md')) : '';
+    assert(log.includes('## Retrospective — v2026.Q2.1') && /### What worked\nworked/.test(log) && /### What slowed us down\nslowed/.test(log) && /### One thing to change next cycle\nchange/.test(log) && !log.includes('### Additional notes'), 'every piped answer lands in its section (empty first line takes the suggested release)');
+    const short = run('retro.js', [tmp('retro-eof')], { input: 'v2026.Q2.1\nworked\n' });
+    assert(short.code === 1 && /Required\./.test(short.err), 'stdin ending before a required answer exits 1');
   }
 } finally {
   fs.rmSync(sandbox, { recursive: true, force: true });

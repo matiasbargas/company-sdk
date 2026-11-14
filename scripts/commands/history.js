@@ -60,6 +60,7 @@ module.exports = function cmdHistory({ args, filePath }) {
   // Apply filters
   const filterOpts = {};
   for (let i = 2; i < args.length; i++) {
+    if (args[i] === '--dry-run') continue;
     if (args[i].startsWith('--') && args[i + 1]) {
       filterOpts[args[i].slice(2)] = args[++i];
     }
@@ -86,15 +87,24 @@ module.exports = function cmdHistory({ args, filePath }) {
   }
 
   if (filterOpts.reversible) {
-    filtered = filtered.filter(d => String(d.reversible) === filterOpts.reversible);
+    const want = normReversible(filterOpts.reversible);
+    filtered = filtered.filter(d => normReversible(d.reversible) === want);
   }
 
   // Output
   console.log(`\nDecisions (${filtered.length}/${decisions.length}):\n`);
   for (const d of filtered) {
-    const rev = d.reversible === 'false' ? ' [IRREVERSIBLE]' : '';
+    const rev = normReversible(d.reversible) === 'no' ? ' [IRREVERSIBLE]' : '';
     console.log(`  ${d.date || '?'}  ${(d.domain || '?').padEnd(16)}  ${d.title}${rev}`);
     if (d.made_by) console.log(`  ${' '.repeat(10)}${' '.repeat(16)}  by ${d.made_by}`);
   }
   console.log('');
 };
+
+// `decision --reversible` writes yes|no|unknown; older entries may say true/false. Compare case-insensitively.
+function normReversible(v) {
+  const s = String(v == null ? '' : v).trim().toLowerCase();
+  if (s === 'no' || s === 'false') return 'no';
+  if (s === 'yes' || s === 'true') return 'yes';
+  return s;
+}

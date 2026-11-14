@@ -30,14 +30,14 @@ claims:
 
   - id: cap-doc-dispatch-002
     kind: capability
-    status: unpinned
+    status: built
     statement: 'Every file-writing command honours --dry-run by printing a DRY RUN preview and modifying no file.'
     acceptance:
       - given: 'any writing command'
         when: 'invoked with --dry-run'
-        then: 'stdout shows DRY RUN and no file or directory changes (append, iteration create are pinned; study, session promote, domain are known defects)'
+        then: 'stdout shows DRY RUN and no file or directory changes (pinned: append, add-item, pod-update, study create, session save/promote/clean, domain add/update, disagreement open/resolve, iteration create)'
     sources: [{file: scripts/doc.js, lines: '15,130-131'}, {file: scripts/lib/doc-utils.js, lines: '54-63'}]
-    conformance: []
+    conformance: [cap-doc-dispatch-002]
 
   # ─── list / read ────────────────────────────────────────────────────────────
   - id: cap-doc-list-001
@@ -145,13 +145,13 @@ claims:
 
   - id: cap-doc-add-item-002
     kind: capability
-    status: defect
+    status: built
     statement: 'add-item to a missing plain section creates that section at the end of the file with the item.'
-    defect_note: 'A bare name (Notes) is created as ### Notes, but a level-qualified "## Risks" is written as the malformed heading "### ## Risks" (append creates "## Risks" correctly).'
+    fixed_note: "2026-11-14: a missing section given with its own \"#\" level (e.g. \"## Risks\") is created as written, like append; only a bare name gets \"### \"."
     acceptance:
       - given: 'no Notes / ## Risks section'
         when: 'sdk-doc add-item <file> --section Notes --item n1; then --section "## Risks" --item r1'
-        then: 'file ends with ### Notes + - [ ] n1, and with ## Risks + - [ ] r1 (today: ### ## Risks)'
+        then: 'file ends with ### Notes + - [ ] n1, and with ## Risks + - [ ] r1'
     sources: [{file: scripts/commands/add-item.js, lines: '33-37'}]
     conformance: [cap-doc-add-item-002]
 
@@ -239,13 +239,13 @@ claims:
 
   - id: cap-doc-status-003
     kind: capability
-    status: defect
+    status: built
     statement: 'status with no argument reads current-status.md from the current directory (help: status [<project-dir>]).'
-    defect_note: 'status is not in the dispatcher projectDirCommands list, so `sdk-doc status` with no dir prints usage and exits 1 instead of using cwd.'
+    fixed_note: "2026-11-14: status is in the dispatcher projectDirCommands list, so `sdk-doc status` with no dir reads current-status.md from cwd."
     acceptance:
       - given: 'cwd is a project'
         when: 'sdk-doc status'
-        then: 'current-status.md printed, exit 0 (today: usage, exit 1)'
+        then: 'current-status.md printed, exit 0'
     sources: [{file: scripts/doc.js, lines: '20-29,90'}, {file: scripts/commands/status.js, lines: '9'}]
     conformance: [cap-doc-status-003]
 
@@ -284,13 +284,13 @@ claims:
 
   - id: cap-doc-pod-update-003
     kind: capability
-    status: defect
+    status: built
     statement: 'pod-update matches the mission name literally, whatever characters it contains.'
-    defect_note: 'The mission name is interpolated into a RegExp unescaped: "Billing (v2)" never matches its own row, so each update appends a duplicate; a name with an unbalanced [ or ( would throw.'
+    fixed_note: "2026-11-14: the mission name is regex-escaped before matching, so \"Billing (v2)\" updates its own row and metacharacters cannot throw."
     acceptance:
       - given: 'a Billing (v2) row'
         when: 'pod-update --mission "Billing (v2)" again'
-        then: 'one row updated (today: two rows)'
+        then: 'one row updated'
     sources: [{file: scripts/commands/pod-update.js, lines: '21'}]
     conformance: [cap-doc-pod-update-003]
 
@@ -409,13 +409,13 @@ claims:
 
   - id: cap-doc-study-004
     kind: capability
-    status: defect
+    status: built
     statement: 'study create --dry-run previews the study without modifying the project.'
-    defect_note: 'The file is not written, but research/studies/ is created (mkdirSync runs before the dry-run check), contradicting "without modifying any file".'
+    fixed_note: "2026-11-14: study create skips mkdir under --dry-run (and --dry-run is no longer parsed as an option key)."
     acceptance:
       - given: 'a project without research/'
         when: 'sdk-doc study <dir> create --title Dry --dry-run'
-        then: 'stdout DRY RUN; no research/ dir (today: empty research/studies/ created)'
+        then: 'stdout DRY RUN; no research/ dir'
     sources: [{file: scripts/commands/study.js, lines: '69-70,152-153'}]
     conformance: [cap-doc-study-004]
 
@@ -466,13 +466,13 @@ claims:
 
   - id: cap-doc-session-005
     kind: capability
-    status: defect
+    status: built
     statement: 'session promote --dry-run previews the move without touching files.'
-    defect_note: 'promote ignores --dry-run: it writes to permanent/ and deletes the temp file.'
+    fixed_note: "2026-11-14: promote --dry-run prints the would-be move and touches nothing; save --dry-run no longer creates sessions/temp/, and clean --confirm --dry-run deletes nothing."
     acceptance:
       - given: 'a temp session'
         when: 'sdk-doc session <dir> promote <file> --dry-run'
-        then: 'file still in temp/ (today: moved)'
+        then: 'file still in temp/'
     sources: [{file: scripts/commands/session.js, lines: '156-164'}]
     conformance: [cap-doc-session-005]
 
@@ -523,13 +523,13 @@ claims:
 
   - id: cap-doc-domain-005
     kind: capability
-    status: defect
+    status: built
     statement: 'domain add/update --dry-run modify nothing.'
-    defect_note: 'add --dry-run still creates the empty domains/<slug>/ dir (which then blocks the real add as "already exists"); update ignores --dry-run and writes.'
+    fixed_note: "2026-11-14: add --dry-run skips the mkdir; update writes through writeFile(..., dryRun), so --dry-run modifies nothing."
     acceptance:
       - given: 'a project'
         when: 'domain add --name "Dry Domain" --dry-run; domain update --name X --lead Y --dry-run'
-        then: 'no dir created, summary unchanged (today: both modified)'
+        then: 'no dir created, summary unchanged'
     sources: [{file: scripts/commands/domain.js, lines: '85,145'}]
     conformance: [cap-doc-domain-005]
 
@@ -741,25 +741,25 @@ claims:
 
   - id: cap-doc-disagreement-004
     kind: capability
-    status: defect
+    status: built
     statement: 'disagreement open accepts the documented positions syntax.'
-    defect_note: 'sdk-doc --help and .claude/skills/challenge/SKILL.md document open --positions "A:...,B:..."; the command only accepts --position-a/--position-b (as protocol §29 shows) and rejects the documented form with exit 1.'
+    fixed_note: "2026-11-14: open accepts --positions \"A:...,B:...\" (split on the comma that starts the next \"Role:\", exactly two required); --position-a/--position-b still work."
     acceptance:
       - given: 'any project'
         when: 'sdk-doc disagreement <dir> open --topic Pricing --positions "CFO:raise,CRO:hold"'
-        then: 'DISAGREE entry opened (today: --topic, --position-a, and --position-b are required, exit 1)'
+        then: 'DISAGREE entry opened'
     sources: [{file: scripts/doc.js, lines: '107'}, {file: scripts/commands/disagreement.js, lines: '30-37'}]
     conformance: [cap-doc-disagreement-004]
 
   - id: cap-doc-disagreement-005
     kind: capability
-    status: defect
+    status: built
     statement: 'Only an OPEN disagreement can be resolved; resolving a non-OPEN id fails with "not found or not OPEN" and changes nothing.'
-    defect_note: 'The resolve regex is lazy across entries: re-resolving an already-resolved DISAGREE-001 matches the next entry''s Status: OPEN and silently resolves DISAGREE-002 with the wrong decision (exit 0).'
+    fixed_note: "2026-11-14: resolve locates the exact [ID] entry block and edits only inside it; a missing or non-OPEN id exits 1 with history.md unchanged."
     acceptance:
       - given: 'DISAGREE-001 RESOLVED, DISAGREE-002 OPEN'
         when: 'resolve --id DISAGREE-001 --decision "second ruling" --decided-by CEO'
-        then: 'exit 1, history.md unchanged (today: exit 0 and DISAGREE-002 resolved as "second ruling")'
+        then: 'exit 1, history.md unchanged'
     sources: [{file: scripts/commands/disagreement.js, lines: '117-143'}]
     conformance: [cap-doc-disagreement-005]
 
@@ -788,13 +788,13 @@ claims:
 
   - id: cap-doc-history-003
     kind: capability
-    status: defect
+    status: built
     statement: 'Irreversible decisions are findable: `sdk-doc history . --reversible NO` (irreversible-review skill) lists decisions logged with --reversible no, and they are marked [IRREVERSIBLE].'
-    defect_note: 'The --reversible filter is an exact case-sensitive match, so NO finds nothing for decisions logged as no (help documents yes|no); [IRREVERSIBLE] only fires for reversible: false, a value decision never writes from the documented options.'
+    fixed_note: "2026-11-14: --reversible is matched case-insensitively with no/false and yes/true normalised; [IRREVERSIBLE] marks reversible: no (what decision writes) and legacy false."
     acceptance:
       - given: 'decision logged with --reversible no'
         when: 'sdk-doc history <dir> --reversible NO'
-        then: 'it is listed with [IRREVERSIBLE] (today: Decisions (0/N), no marker)'
+        then: 'it is listed with [IRREVERSIBLE]'
     sources: [{file: scripts/commands/history.js, lines: '88-96'}, {file: .claude/skills/irreversible-review/SKILL.md, lines: '11'}]
     conformance: [cap-doc-history-003]
 

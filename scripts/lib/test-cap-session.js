@@ -294,9 +294,10 @@ ${o.reviewed === false ? '- [ ] Owner reviewed pre-mortem' : '- [x] Owner review
   const r = run('pre-tag.js', [d, '--fix']);
   assert(fs.existsSync(path.join(d, 'general-requirements.md')) && read(d, 'general-requirements.md') === tmpl('general-requirements.md'), '--fix creates a missing required file from project-template/');
   assert(/Auto-fixed 1 issue:/.test(r.out) && /Created from project-template\/general-requirements\.md/.test(r.out), 'the creation is reported as auto-fixed');
-  // DEFECT: the created-from-template issue is still listed as unresolved (fixed copy ≠ original object),
-  // so the footer says 2 issues while the exit code is computed from 1 remaining.
-  assert(/general-requirements\.md is missing/.test(r.err) && /2 issues require agent action/.test(r.out), 'DEFECT: fixed missing-file issue is still reported as unresolved');
+  // Fixed 2026-11-14: the created file is no longer listed as unresolved, and the footer agrees with the exit code.
+  assert(!/general-requirements\.md is missing/.test(r.err), `a fixed missing-file issue is not reported as unresolved: ${r.err.slice(-300)}`);
+  const footer = r.out.match(/(\d+) issues? require agent action/);
+  assert(footer ? (r.code === 1 && +footer[1] > 0) : (r.code === 0 && /All checks passed/.test(r.out)), `footer count agrees with exit code (exit ${r.code}): ${r.out.slice(-300)}`);
   const j = json(run('pre-tag.js', [project(mkdir('pretag-fix-missing-json')), '--json']).out);
   assert(j && j.fixed === 0, 'baseline: clean fixture has nothing to fix');
 }
@@ -317,9 +318,10 @@ ${o.reviewed === false ? '- [ ] Owner reviewed pre-mortem' : '- [x] Owner review
 {
   const d = project(mkdir('pretag-json-relid'));
   const r = run('pre-tag.js', [d, '--release-id', 'v2026.Q4.9', '--json']);
-  // DEFECT: --json promises machine-readable output, but the release-id mismatch path exits 1 with
-  // empty stdout and empty stderr.
-  assert(r.code === 1 && r.out.trim() === '' && r.err.trim() === '', 'DEFECT: --json release-id mismatch exits 1 with no output at all');
+  // Fixed 2026-11-14: --json release-id mismatch prints a JSON verdict on stdout.
+  const j = json(r.out);
+  assert(r.code === 1 && j && j.clean === false && j.issues === 1 && /does not match canonical v2026\.Q4\.1/.test(j.error), `--json release-id mismatch exits 1 with a JSON verdict: ${r.out}${r.err}`);
+  assert(Object.values(j ? j.byOwner : {}).flat().some(i => /--release-id v2026\.Q4\.9/.test(i.message)), 'the mismatch is listed in byOwner like any other issue');
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -425,9 +427,13 @@ ${o.reviewed === false ? '- [ ] Owner reviewed pre-mortem' : '- [x] Owner review
 {
   const d = project(mkdir('next-table'));
   const r = run('next.js', [d]);
-  // DEFECT: the template's Next Agent section is a table; sdk-next prints its header row
-  // instead of the phrase (sdk-status reads the same file correctly).
-  assert(/To resume, paste this:\n\| Role \| Activation phrase \| Read first \|/.test(r.out), 'DEFECT: table-form Next Agent prints the table header as the phrase');
+  // Fixed 2026-11-14: the table is read by header (lib/project-state.js), like sdk-status.
+  assert(r.code === 0 && /To resume, paste this:\nHey CTO, design the checkout architecture\n$/.test(r.out), `table-form Next Agent prints the activation phrase cell: ${r.out}`);
+  const rr = run('resume.js', [d]);
+  assert(/To resume, paste this:\nHey CTO, design the checkout architecture\n/.test(rr.out) && !/\| Role \| Activation phrase/.test(rr.out), 'sdk-resume shows the same phrase, not the header row');
+  const t = mkdir('next-template');
+  write(t, 'current-status.md', tmpl('current-status.md'));
+  assert(/No handoff phrase found/.test(run('next.js', [t]).out), 'the template\'s placeholder row is not a phrase');
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -479,9 +485,9 @@ ${o.reviewed === false ? '- [ ] Owner reviewed pre-mortem' : '- [x] Owner review
   const g = run('gate-check.js', [d, '--all']);
   assert(g.code === 1 && /GATE BLOCKED/.test(g.err), 'precondition: gate-check --all is blocked');
   const r = run('resume.js', [d]);
-  // DEFECT: gate-check writes GATE BLOCKED to stderr, but resume only scans stdout, so a blocked
-  // gate is summarised as a green check with zero warnings.
-  assert(/Gates: {4}✓ 0 warning\(s\)/.test(r.out), 'DEFECT: resume reports a blocked gate as "✓ 0 warning(s)"');
+  // Fixed 2026-11-14: resume reads the exit code and both streams, so a blocked gate is shown as blocked.
+  assert(/Gates: {4}✗ BLOCKED/.test(r.out) && !/Gates: {4}✓/.test(r.out), `resume reports a blocked gate as BLOCKED: ${(r.out.match(/^Gates:.*$/m) || [''])[0]}`);
+  assert(r.code === 0, 'resume stays advisory (exit 0) when a gate is blocked');
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -774,10 +780,11 @@ function gateProject(name, o = {}) {
   const d = mkdir('ops-template');
   write(d, 'current-status.md', tmpl('current-status.md'));
   const j = json(run('ops.js', [d, '--check', 'session-close-validation', '--json']).out);
-  // DEFECT: the template's own headings are "## Completed Since Last Session" and
-  // "## Open Decisions (not yet logged to history.md)"; the check wants exact names, so a
-  // freshly scaffolded project always fails session-close validation.
-  assert(j.issues.includes('Missing required section: Completed') && j.issues.includes('Missing required section: Open Decisions'), 'DEFECT: session-close-validation rejects the template\'s own headings');
+  // Fixed 2026-11-14: section names match the template's suffixed headings by prefix.
+  assert(!j.issues.some(i => /Missing required section/.test(i)), `session-close-validation accepts the template's own headings: ${j.issues.join('; ')}`);
+  const dd = project(mkdir('ops-template-decisions'), { decisions: '- Pick DB | DECISION BY: 2020-01-01' });
+  const jd = json(run('ops.js', [dd, '--check', 'decision-deadlines', '--json']).out);
+  assert(jd.issues.some(i => /Past-due decision: - Pick DB/.test(i)), 'decision-deadlines reads the template-suffixed Open Decisions heading');
   assert(!j.issues.includes('Missing required section: Active Missions') && !j.issues.some(i => /Last updated/.test(i)), 'the sections/fields that do match are accepted');
 }
 
@@ -787,16 +794,41 @@ function gateProject(name, o = {}) {
   write(d, 'compliance-requirements.md', filledCompliance());
   assert(run('gate-check.js', [d]).code === 0, 'precondition: sdk-gate-check clears this compliance file');
   const j = json(run('ops.js', [d, '--check', 'clo-ciso-gate', '--json']).out);
-  // DEFECT: clo-ciso-gate looks for "CLO ...: Done"; the template's Gate Status table has no colon,
-  // so sdk-ops (and the Night Watch CLO agent) report both gates not Done when sdk-gate-check clears.
-  assert(j.issues.includes('CLO gate not Done — CTO cannot activate') && j.issues.includes('CISO gate not Done — CTO cannot activate'), 'DEFECT: ops clo-ciso-gate disagrees with sdk-gate-check');
+  // Fixed 2026-11-14: clo-ciso-gate reads the Gate Status table through lib/project-state.js parseCompliance.
+  assert(j.issues.length === 0 && j.notices.includes('CLO + CISO gate: CLEAR'), `ops clo-ciso-gate agrees with sdk-gate-check (clear): ${j.issues.join('; ')}`);
+  const p = mkdir('ops-clo-pending');
+  write(p, 'compliance-requirements.md', filledCompliance().replace('| Security | CISO | Done', '| Security | CISO | Pending'));
+  assert(run('gate-check.js', [p]).code === 1, 'precondition: sdk-gate-check blocks a Pending CISO gate');
+  const jp = json(run('ops.js', [p, '--check', 'clo-ciso-gate', '--json']).out);
+  assert(jp.issues.length === 1 && jp.issues[0] === 'CISO gate not Done — CTO cannot activate', 'ops clo-ciso-gate agrees with sdk-gate-check (blocked)');
 }
 
 // @covers cap-sess-ops-004
 {
   const r = run('ops.js', [project(mkdir('ops-unknown')), '--check', 'bogus']);
-  // DEFECT: an unknown check is an issue (exit 1) but the summary line still says "All checks passed".
-  assert(r.code === 1 && /\? bogus/.test(r.out) && /Unknown check: bogus/.test(r.out) && /✓ All checks passed \(1 issues/.test(r.out), 'DEFECT: unknown --check prints "All checks passed" while exiting 1');
+  // Fixed 2026-11-14: an unknown check is an error on stderr and counts as a failed check in the summary.
+  assert(r.code === 1 && /\? bogus/.test(r.out) && /Unknown check: bogus/.test(r.out) && /✗ 1 check\(s\) with issues/.test(r.out) && !/All checks passed/.test(r.out), `unknown --check exits 1 without claiming success: ${r.out}`);
+  assert(/Error: unknown check "bogus"\. Available: decision-deadlines/.test(r.err), 'unknown --check prints an error naming the available checks');
+}
+
+// @covers cap-sess-ops-005
+{
+  const d = project(mkdir('ops-work-stale'));
+  write(d, 'project-map.md', '# Map\n');
+  const g = gitInit(d);
+  g.commit('init');
+  const names = ['current-status-staleness', 'requirements-staleness', 'ceo-validation-pending'];
+  const check = (n) => json(run('ops.js', [d, '--check', n, '--json']).out);
+  for (const n of names) assert(check(n).issues.length === 0, `${n}: a file changed in the last commit is fresh`);
+  for (let k = 0; k < 11; k++) { write(d, `work-${k}.txt`, String(k)); g.commit(`work ${k}`); }
+  const cs = check('current-status-staleness');
+  assert(cs.issues.some(i => /current-status\.md is 11 commits behind \(threshold: 5\)/.test(i)), `current-status-staleness counts commits, not hours: ${cs.issues}`);
+  assert(check('requirements-staleness').issues.some(i => /general-requirements\.md is 11 commits behind \(>10\)/.test(i)), 'requirements-staleness uses limits.surfaceStaleCommits');
+  assert(check('ceo-validation-pending').issues.some(i => /project-map\.md not validated by CEO and 11 commits behind/.test(i)), 'ceo-validation-pending is commit-based');
+  const u = project(mkdir('ops-work-untracked'));
+  write(u, 'project-map.md', '# Map\n');
+  const ju = json(run('ops.js', [u, '--check', 'current-status-staleness', '--json']).out);
+  assert(ju.issues.length === 0 && ju.notices.some(n => /not tracked by git/.test(n)), 'outside git, staleness is not measured (notice, no issue)');
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

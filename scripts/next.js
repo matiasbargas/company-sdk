@@ -4,6 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { parseStatus } = require('./lib/project-state');
 
 // --- helpers ---
 
@@ -53,11 +54,20 @@ function extractWaitingOn(content) {
 }
 
 function extractActivationPhrase(content) {
+  // The template's Next Agent section is a table; read it by header via the shared reader
+  // (same as sdk-status), so the header row is never mistaken for the phrase.
+  const next = parseStatus(content).nextAgent;
+  if (next && next.phrase) return next.phrase;
+  return legacyActivationPhrase(content);
+}
+
+function legacyActivationPhrase(content) {
   // Find the "Next Agent To Activate" section heading
   const sectionMatch = content.match(/##\s+Next Agent To Activate\s*\n([\s\S]*?)(?:\n##|\n---|\s*$)/);
   if (!sectionMatch) return null;
 
   const block = sectionMatch[1];
+  if (/^\s*\|/m.test(block)) return null;   // a table with no usable phrase: no free-text fallback
 
   // Try: line starting with "Activation phrase:" and grab quoted text
   const phraseMatch = block.match(/^\**Activation phrase:\**\s+"([^"]+)"/m)

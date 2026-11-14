@@ -136,15 +136,15 @@ claims:
 
   - id: cap-life-init-011
     kind: capability
-    status: defect
+    status: built
     statement: "`sdk-init` names Greg (CEO) in current-status.md 'Next Agent To Activate' so sdk-next / sdk-resume can print the Day 0 activation phrase (init.js header: 'Pre-fills current-status.md with Day 0 state (ready for Greg)')."
-    defect_note: "The template's Next Agent section is now a table (| [Role name] | [e.g. ...] | ...); init.js still replaces the old '**[Role name]** — because ...' line, so the row keeps its placeholder and `sdk-next` on a fresh project prints the table header '| Role | Activation phrase | Read first |' as the phrase to paste."
+    fixed_note: "2026-11-14: init fills the template's Next Agent table row (| Greg (CEO) | \"Hey Greg, start Discovery. The brief is in idea.md Section 4.\" | idea.md |) and adds an **Activation phrase:** line, so sdk-next prints the phrase, not the header."
     acceptance:
       given: "a fresh init"
       when: "reading '## Next Agent To Activate' and running node scripts/next.js <p>"
       then: "the row names Greg (CEO) with the idea.md Section 4 activation phrase; sdk-next prints that phrase"
     sources:
-      - { file: scripts/init.js, lines: "458-461" }
+      - { file: scripts/init.js, lines: "458-466" }
       - { file: project-template/current-status.md, section: "Next Agent To Activate" }
     conformance: [cap-life-init-011]
 
@@ -220,18 +220,32 @@ claims:
       - { file: scripts/init.js, lines: "546-564" }
     conformance: [cap-life-init-017]
 
+  - id: cap-life-init-018
+    kind: capability
+    status: built
+    statement: "`sdk-init` copies the law docs (SDK.md, protocol*.md, AGENTS.md, STRATEGY.md, CHARTER.md) byte-for-byte: their [YEAR] / [YYYY-MM-DD] tokens are format templates, never filled in."
+    acceptance:
+      given: "a fresh init"
+      when: "comparing <p>/protocol.md and <p>/SDK.md with the SDK's copies"
+      then: "they are identical, and `v[YEAR].Q[QUARTER]` is still present"
+    sources:
+      - { file: scripts/init.js, section: "Law docs are copied verbatim" }
+    fixed_note: "2026-11-14: init used to substitute these tokens, which rewrote the protocol's own format rules (found by the lifecycle engineer via update-003)."
+    conformance: [cap-life-init-018]
+
   # ──────────────────────────────────────────────────────── sdk-bootstrap (scripts/bootstrap.js)
 
   - id: cap-life-bootstrap-001
     kind: capability
     status: built
-    statement: "`sdk-bootstrap` (legacy scaffold) copies every project-template file unfiltered, SQUAD.md (default squad startup), protocol.md/AGENTS.md/STRATEGY.md, team/, the .claude harness, and .sdkrc {sdkPath, limits}; unlike sdk-init it does not git-init, write .claude/settings.json, copy protocol/ views, or move the surface template to surfaces/."
+    statement: "`sdk-bootstrap` (legacy scaffold) copies every project-template file unfiltered (the surface template goes to surfaces/_template.md), SQUAD.md (default squad startup), the same SDK docs as sdk-init (SDK.md, protocol*.md, AGENTS.md, STRATEGY.md, CHARTER.md) plus protocol/ views, team/, the .claude harness, a .claude/settings.json with init's scoped permissions, hooks and Greg output style, and .sdkrc {sdkPath, limits}; unlike sdk-init it does not git-init or apply a project type."
+    fixed_note: "2026-11-14: harness drift vs sdk-init closed: bootstrap now writes settings.json (scoped permissions + SessionStart/PreToolUse hooks), copies protocol/ and the full SDK doc set, and moves surface-template.md to surfaces/_template.md."
     acceptance:
       given: "an empty target"
       when: "node scripts/bootstrap.js boot-proj --output <tmp>/b"
-      then: "exit 0; every project-template file present; SQUAD.md from startup.md; team/ identical; .claude/skills + agents present; .sdkrc has sdkPath + limits; no .git, no settings.json, no protocol/"
+      then: "exit 0; every project-template file present (surface template at surfaces/_template.md); SQUAD.md from startup.md; protocol/ views + SDK docs; team/ identical; .claude/skills + agents present; settings.json permissions/hooks equal init's; .sdkrc has sdkPath + limits; no .git"
     sources:
-      - { file: scripts/bootstrap.js, lines: "136-201" }
+      - { file: scripts/bootstrap.js, lines: "136-250" }
     conformance: [cap-life-bootstrap-001]
 
   - id: cap-life-bootstrap-002
@@ -274,13 +288,13 @@ claims:
 
   - id: cap-life-update-003
     kind: capability
-    status: defect
+    status: built
     statement: "Run with no args from a project created by sdk-init or sdk-bootstrap, `sdk-update` uses the .sdkrc sdkPath those commands persist ('SDK path persisted for sdk-update') to refresh the project."
-    defect_note: "init/bootstrap projects have no team-sdk/ copy and .sdkrc sdkPath points at the SDK itself, so target (the script's own SDK) == source and update exits 1 'Source and target are the same directory'. Projects created by the current init can never receive harness/protocol updates via sdk-update."
+    fixed_note: "2026-11-14: linked mode. When sdkPath is the SDK running update.js and the cwd holds a .sdkrc, update targets the cwd project: SDK.md/protocol*.md/AGENTS.md/STRATEGY.md/CHARTER.md (with init's [PROJECT NAME]/[YEAR] substitution), protocol/ (stale views pruned), team/ (add/update only) and .claude/{skills,agents,output-styles}. Project-owned files and settings.json are untouched; in the SDK itself the same-directory refusal stands."
     acceptance:
       given: "a fresh sdk-init project"
       when: "cd <p> && node <sdk>/scripts/update.js"
-      then: "exit 0 and the project's .claude harness / protocol copies refresh from sdkPath"
+      then: "exit 0 'linked project'; team/, protocol/ and .claude harness refresh from sdkPath; CLAUDE.md, settings.json, current-status.md untouched; second run 'Already up to date'"
     sources:
       - { file: scripts/update.js, lines: "93-118" }
       - { file: scripts/init.js, lines: "476-487" }
@@ -482,9 +496,9 @@ claims:
 
   - id: cap-life-ship-006
     kind: capability
-    status: defect
+    status: built
     statement: "The remediation `sdk-ship` prints when a release entry is missing (`sdk-doc decision history.md --decision \"Release <id>\" …`) produces an entry that `sdk-ship` then accepts."
-    defect_note: "sdk-doc decision writes '### Decision: Release <id>' under '## Decision History'; ship's matcher requires a heading '## [<id>]' or '## <id>', so after following its own hint ship still exits 1 'No history.md entry found'. Same mismatch for sdk-github release (needs '## [<id>]')."
+    fixed_note: "2026-11-14: lib/release-notes.js matchReleaseDecision accepts '### Decision: Release <id>' (to the next ##/### heading; no prefix match on <id>0); sdk-ship and sdk-github release both fall back to it."
     acceptance:
       given: "a history.md without an entry; the printed sdk-doc command is run"
       when: "ship <dir> <id> --dry-run"
@@ -492,6 +506,7 @@ claims:
     sources:
       - { file: scripts/ship.js, lines: "88-108" }
       - { file: scripts/lib/release-notes.js }
+      - { file: scripts/github.js, lines: "170-181" }
       - { file: scripts/commands/decision.js }
     conformance: [cap-life-ship-006]
 
@@ -536,11 +551,12 @@ claims:
   - id: cap-life-github-003
     kind: capability
     status: built
-    statement: "`sdk-github` pre-network guards: sync-issues/release with no linked repo (.sdkrc github.repo) exit 1; status with no linked repo prints the link hint (exit 0); release with no id (flag or .sdkrc) exits 1; release with no '## [<id>]' history entry exits 1."
+    statement: "`sdk-github` pre-network guards: sync-issues/release with no linked repo (.sdkrc github.repo) exit 1; status with no linked repo prints the link hint (exit 0); release with no id (flag or .sdkrc) exits 1; a malformed --release-id (not vYYYY.QN.N, or no value) exits 2; release with no '## [<id>]' or '### Decision: Release <id>' history entry exits 1."
+    fixed_note: "2026-11-14: the RELEASE_RE validator github.js defined but never used now guards --release-id (exit 2, before auth/network)."
     acceptance:
-      given: "dummy token; unlinked dir | linked dir without releaseId | history with unbracketed '## <id>'"
-      when: "sync-issues | release | status | release --release-id <id>"
-      then: "1 | 1 | 0 + hint | 1 'No release ID' | 1 'No history.md entry found'"
+      given: "dummy token; unlinked dir | linked dir without releaseId | malformed id | history with unbracketed '## <id>'"
+      when: "sync-issues | release | status | release --release-id <bad> | release --release-id <id>"
+      then: "1 | 1 | 0 + hint | 1 'No release ID' | 2 'invalid --release-id' | 1 'No history.md entry found'"
     sources:
       - { file: scripts/github.js, lines: "167-176, 196-274, 276-284" }
     conformance: [cap-life-github-003]
@@ -597,9 +613,9 @@ claims:
 
   - id: cap-life-retro-002
     kind: capability
-    status: defect
+    status: built
     statement: "`sdk-retro <dir>` interactive mode prompts for release (suggesting .sdkrc/current-status), what worked, what slowed, one change, optional notes, then writes the entry; an empty required answer exits 1."
-    defect_note: "With non-TTY stdin (piped answers), readline delivers all lines before later rl.question calls attach, so only the first answer is consumed; the process exits 0 having written nothing (silent data loss). Not tested with a real TTY."
+    fixed_note: "2026-11-14: retro queues stdin lines itself (readline 'line' events + waiters) instead of rl.question, so piped answers are all consumed; stdin ending before a required answer exits 1 'Required.'."
     acceptance:
       given: ".sdkrc releaseId v2026.Q2.1; stdin '\\nworked\\nslowed\\nchange\\n\\n'"
       when: "node scripts/retro.js <dir>"

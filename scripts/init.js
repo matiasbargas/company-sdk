@@ -345,10 +345,12 @@ if (fs.existsSync(protocolSectionsSrc)) {
   }
   console.log(`    ✓  protocol/  (per-section views)`);
 }
+// Law docs are copied verbatim: their [YEAR] / [YYYY-MM-DD] tokens are format templates
+// (e.g. "v[YEAR].Q[QUARTER].[INCREMENT]"), not fill-ins. Substituting them rewrote the rules.
 for (const extra of ['SDK.md', 'protocol.md', 'protocol-core.md', 'protocol-reference.md', 'AGENTS.md', 'STRATEGY.md', 'CHARTER.md']) {
   const src = path.join(sdkRoot, extra);
   if (fs.existsSync(src)) {
-    copyAndProcess(src, path.join(outputDir, extra), vars);
+    fs.copyFileSync(src, path.join(outputDir, extra));
     console.log(`    ✓  ${extra}`);
     count++;
   }
@@ -455,9 +457,12 @@ statusContent = statusContent.replace(
   `- Project scaffolded | By: init.js | Completed: ${dateStr}`
 );
 
+// Next Agent To Activate is a table in the template: fill its placeholder row with Greg, and add
+// an explicit "Activation phrase:" line so sdk-next / sdk-resume print the phrase, not the header.
+const day0Phrase = 'Hey Greg, start Discovery. The brief is in idea.md Section 4.';
 statusContent = statusContent.replace(
-  '**[Role name]** — because [reason: what they need to do next]',
-  `**Greg (CEO)** — paste the brief from idea.md Section 4 to start Discovery`
+  /^\| \[Role name\] \|[^\n]*\|$/m,
+  `| Greg (CEO) | "${day0Phrase}" | idea.md |\n\n**Activation phrase:** "${day0Phrase}"`
 );
 
 statusContent = statusContent.replace(

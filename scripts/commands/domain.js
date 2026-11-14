@@ -59,6 +59,7 @@ module.exports = function cmdDomain({ args, filePath, dryRun }) {
   if (subcommand === 'add') {
     const domainOpts = {};
     for (let i = 3; i < args.length; i++) {
+      if (args[i] === '--dry-run') continue;
       if (args[i].startsWith('--') && args[i + 1]) {
         domainOpts[args[i].slice(2)] = args[++i];
       }
@@ -82,7 +83,7 @@ module.exports = function cmdDomain({ args, filePath, dryRun }) {
       process.exit(1);
     }
 
-    fs.mkdirSync(domainDir, { recursive: true });
+    if (!dryRun) fs.mkdirSync(domainDir, { recursive: true });
 
     const body = `---
 lead: "${lead}"
@@ -106,6 +107,7 @@ ${summary}
   if (subcommand === 'update') {
     const domainOpts = {};
     for (let i = 3; i < args.length; i++) {
+      if (args[i] === '--dry-run') continue;
       if (args[i].startsWith('--') && args[i + 1]) {
         domainOpts[args[i].slice(2)] = args[++i];
       }
@@ -142,7 +144,7 @@ ${summary}
       });
     }
 
-    fs.writeFileSync(summaryPath, content, 'utf8');
+    writeFile(summaryPath, content, dryRun);
     console.log(`\u2713 Domain updated: ${slug}`);
     return;
   }

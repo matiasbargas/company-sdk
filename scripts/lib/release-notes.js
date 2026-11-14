@@ -29,11 +29,12 @@ function parseHistoryForRelease(historyPath, releaseId) {
   );
 
   const match = content.match(sectionRe);
-  if (!match) {
+  const decision = match ? null : matchReleaseDecision(content, releaseId);
+  if (!match && !decision) {
     return _fallback(releaseId, 'no entry found');
   }
 
-  const body = match[1].trim();
+  const body = (match ? match[1] : decision.body).trim();
   if (!body) {
     return _fallback(releaseId, 'entry is empty');
   }
@@ -81,6 +82,18 @@ function parseHistoryForRelease(historyPath, releaseId) {
   return parts.join('\n');
 }
 
+/**
+ * Match the entry `sdk-doc decision history.md --decision "Release <id>"` writes
+ * ("### Decision: Release <id>"), the form sdk-ship's own remediation hint produces.
+ * Returns { heading, body } (body runs to the next ##/### heading) or null.
+ */
+function matchReleaseDecision(content, releaseId) {
+  const escaped = releaseId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`^###\\s+Decision:\\s*Release\\s+\\[?${escaped}\\]?(?!\\d)[^\\n]*\\n([\\s\\S]*?)(?=\\n###?\\s|$(?![\\s\\S]))`, 'mi');
+  const m = content.match(re);
+  return m ? { heading: m[0].split('\n')[0], body: m[1], text: m[0].trim() } : null;
+}
+
 function _fallback(releaseId, reason) {
   process.stderr.write(`release-notes: ${reason} for ${releaseId}\n`);
   return (
@@ -90,4 +103,4 @@ function _fallback(releaseId, reason) {
   );
 }
 
-module.exports = { parseHistoryForRelease };
+module.exports = { parseHistoryForRelease, matchReleaseDecision };

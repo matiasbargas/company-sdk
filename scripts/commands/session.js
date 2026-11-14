@@ -23,6 +23,7 @@ module.exports = function cmdSession({ args, filePath, dryRun }) {
   if (subcommand === 'save') {
     const sessionOpts = {};
     for (let i = 3; i < args.length; i++) {
+      if (args[i] === '--dry-run') continue;
       if (args[i].startsWith('--') && args[i + 1]) {
         sessionOpts[args[i].slice(2)] = args[++i];
       }
@@ -51,7 +52,7 @@ module.exports = function cmdSession({ args, filePath, dryRun }) {
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
     const filename = `${today}-${slug}.md`;
 
-    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+    if (!dryRun && !fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
     const body = `---
 title: "${title}"
@@ -138,7 +139,7 @@ tags: "${tags}"
 
   // -- promote --
   if (subcommand === 'promote') {
-    const filename = args[3];
+    const filename = args.slice(3).find(a => a !== '--dry-run');
     if (!filename) {
       console.error('Usage: sdk-doc session <project-dir> promote <filename>');
       process.exit(1);
@@ -153,13 +154,19 @@ tags: "${tags}"
       process.exit(1);
     }
 
+    const dest = path.join(permDir, filename);
+    if (dryRun) {
+      console.log(`\nDRY RUN \u2014 no files modified`);
+      console.log(`  Would move: ${src} \u2192 ${dest}`);
+      return;
+    }
+
     if (!fs.existsSync(permDir)) fs.mkdirSync(permDir, { recursive: true });
 
     let content = fs.readFileSync(src, 'utf8');
     content = content.replace(/status:\s*"temp"/, 'status: "permanent"');
     content = content.replace(/Status: temp/, 'Status: permanent');
 
-    const dest = path.join(permDir, filename);
     fs.writeFileSync(dest, content, 'utf8');
     fs.unlinkSync(src);
     console.log(`\u2713 Session promoted: ${filename}`);
@@ -190,6 +197,11 @@ tags: "${tags}"
 
     if (!confirm) {
       console.log(`\nRe-run with --confirm to delete all ${files.length} temp session(s).`);
+      return;
+    }
+
+    if (dryRun) {
+      console.log(`\nDRY RUN \u2014 no files modified (would delete ${files.length} temp session(s)).`);
       return;
     }
 

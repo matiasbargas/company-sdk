@@ -458,7 +458,8 @@ function applyFixes(projectDir, allIssues) {
           try {
             fs.mkdirSync(path.dirname(dest), { recursive: true });
             fs.writeFileSync(dest, stub, 'utf8');
-            fixed.push({ ...iss, fixNote: `Created from project-template/${rel}` });
+            iss.fixNote = `Created from project-template/${rel}`;
+            fixed.push(iss);   // same object, so the report can subtract it from allIssues
           } catch (e) {
             iss.fixError = e.message;
             unfixed.push(iss);
@@ -616,8 +617,14 @@ const canonical = canonicalReleaseId(projectDir);
 const releaseId = releaseFlag || canonical;
 
 if (releaseFlag && canonical && releaseFlag !== canonical) {
-  if (!jsonMode) {
-    console.error(`\nError: --release-id ${releaseFlag} does not match canonical ${canonical}`);
+  const msg = `--release-id ${releaseFlag} does not match canonical ${canonical}`;
+  if (jsonMode) {
+    console.log(JSON.stringify({
+      clean: false, releaseId: releaseFlag, canonical, error: msg, fixed: 0, issues: 1,
+      byOwner: { [ownerFor('.sdkrc')]: [{ type: 'coherence', file: '.sdkrc', message: msg }] },
+    }, null, 2));
+  } else {
+    console.error(`\nError: ${msg}`);
     console.error(`Run: sdk-version ${projectDir} set ${releaseFlag} to update first.\n`);
   }
   process.exit(1);
@@ -638,5 +645,5 @@ const fixedIssues = fixMode ? applyFixes(projectDir, allIssues).fixed : [];
 printReport({ projectDir, allIssues, fixedIssues, releaseId, jsonMode });
 
 // Exit code
-const remaining = allIssues.length - fixedIssues.length;
+const remaining = allIssues.filter(i => !fixedIssues.includes(i)).length;
 process.exit(remaining > 0 ? 1 : 0);

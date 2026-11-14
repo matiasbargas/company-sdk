@@ -10,6 +10,7 @@ const fs   = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { getNextAgentStub } = require('./lib/next-stub');
+const { readStatus } = require('./lib/project-state');
 
 const projectDir = path.resolve(process.argv[2] || process.cwd());
 
@@ -47,13 +48,15 @@ try {
   execSync(`node "${gateCheckScript}" "${projectDir}" --all`, { stdio: 'pipe' });
   console.log('Gates:    ✓ all clear');
 } catch (e) {
-  const output = (e.stdout || e.stderr || '').toString().slice(0, 300);
-  const warningCount = (output.match(/warning/gi) || []).length;
-  const errorCount   = (output.match(/GATE BLOCKED|error/gi) || []).length;
-  if (errorCount > 0) {
-    console.log(`Gates:    ⚠ issues found — run sdk-gate-check ${projectDir} for details`);
+  // A non-zero exit from gate-check means a gate is blocked. GATE BLOCKED goes to stderr,
+  // so read both streams, and never report a failing exit as a green check.
+  const output = `${e.stdout || ''}${e.stderr || ''}`;
+  const blocked = (output.match(/^\s*\d+\.\s/gm) || []).length;
+  if (typeof e.status === 'number' && e.status !== 0) {
+    const n = blocked ? ` (${blocked} failure${blocked > 1 ? 's' : ''})` : '';
+    console.log(`Gates:    ✗ BLOCKED${n} — run sdk-gate-check ${projectDir} --all for details`);
   } else {
-    console.log(`Gates:    ✓ ${warningCount} warning(s) — run sdk-gate-check ${projectDir} for details`);
+    console.log(`Gates:    ⚠ gate check could not run — run sdk-gate-check ${projectDir} for details`);
   }
 }
 
@@ -129,9 +132,10 @@ try {
   const output = execSync(`node "${nextScript}" "${projectDir}"`, { encoding: 'utf8' });
   console.log('');
   console.log(output.trim());
-  // Extract role from output
-  const roleMatch = output.match(/\*\*(\w[\w\s]*?)[\s]*[(\*]/);
-  if (roleMatch) nextRole = roleMatch[1].trim();
+  // Role comes from the shared reader (table or line form), not from next.js's printed output.
+  const next = readStatus(projectDir).nextAgent;
+  const roleMatch = next && next.role && next.role.replace(/\*\*/g, '').match(/^\s*([A-Za-z][\w\s]*?)\s*(?:\(|—|-|$)/);
+  if (roleMatch && roleMatch[1]) nextRole = roleMatch[1].trim();
 } catch (e) {
   console.log('\nCould not read session state — check current-status.md manually.');
 }

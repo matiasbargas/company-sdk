@@ -21,6 +21,7 @@
 const fs    = require('fs');
 const path  = require('path');
 const https = require('https');
+const { matchReleaseDecision } = require('./lib/release-notes');
 
 const RELEASE_RE = /^v\d{4}\.Q[1-4]\.\d+$/;
 
@@ -173,7 +174,10 @@ function parseLatestHistoryEntry(projectDir, releaseId) {
   const content   = fs.readFileSync(historyFile, 'utf8');
   const headingRe = new RegExp(`## \\[${releaseId.replace(/\./g, '\\.')}\\][^\\n]*\\n([\\s\\S]*?)(?=\\n## |$)`);
   const m         = content.match(headingRe);
-  return m ? m[0].trim() : null;
+  if (m) return m[0].trim();
+  // Also accept the entry sdk-ship's remediation writes: "### Decision: Release <id>".
+  const d = matchReleaseDecision(content, releaseId);
+  return d ? d.text : null;
 }
 
 // ─── Commands ────────────────────────────────────────────────────────────────
@@ -362,9 +366,15 @@ function getFlag(flag) {
       case 'sync-issues':
         await cmdSyncIssues(projectDir);
         break;
-      case 'release':
-        await cmdRelease(projectDir, getFlag('--release-id'));
+      case 'release': {
+        const releaseIdFlag = getFlag('--release-id');
+        if (args.includes('--release-id') && !RELEASE_RE.test(releaseIdFlag || '')) {
+          console.error(`Error: invalid --release-id "${releaseIdFlag || ''}". Expected vYYYY.QN.N (e.g. v2026.Q2.1)`);
+          process.exit(2);
+        }
+        await cmdRelease(projectDir, releaseIdFlag);
         break;
+      }
       case 'status':
         await cmdStatus(projectDir);
         break;

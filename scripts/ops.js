@@ -23,7 +23,10 @@
 const fs   = require('fs');
 const path = require('path');
 const config = require('./daemon-config');
-const { safeReadFile, findSection: ctxFindSection, calculateStaleness } = require('../packages/context/src');
+const { safeReadFile, findSection: ctxFindSection } = require('../packages/context/src');
+const { h2, parseCompliance } = require('./lib/project-state');
+const { commitsSince } = require('./lib/activity');
+const { readLimits } = require('./lib/limits');
 
 // ── Utilities (delegating to @team-sdk/context) ──────────────────────────────
 
@@ -32,18 +35,28 @@ function safeRead(filePath) {
   return fs.readFileSync(filePath, 'utf8');
 }
 
-function fileAgeHours(filePath) {
-  const result = calculateStaleness(filePath);
-  return result ? result.ageHours : -1;
+/**
+ * Work-based staleness (protocol.md §2 timing): commits that landed since the file last changed.
+ * Returns null when the file is missing or not tracked by git (staleness not measured).
+ */
+function commitsBehind(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  return commitsSince(filePath);
 }
 
 function findSection(content, heading) {
   if (!content) return '';
   const result = ctxFindSection(content, heading);
-  if (!result) return '';
-  // Return content without the heading line itself
-  const lines = result.content.split('\n');
-  return lines.slice(1).join('\n').trim();
+  let body;
+  if (result) {
+    // Return content without the heading line itself
+    body = result.content.split('\n').slice(1).join('\n');
+  } else {
+    // Template headings carry suffixes ("Completed Since Last Session",
+    // "Open Decisions (not yet logged to history.md)"): fall back to an H2 prefix match.
+    body = h2(content, heading) || '';
+  }
+  return body.replace(/\n-{3,}\s*$/, '').trim();
 }
 
 function parseChecklistItems(sectionContent) {
@@ -146,10 +159,10 @@ registerCheck('clo-ciso-gate', (projectDir) => {
   const issues = [], notices = [];
   const content = safeRead(path.join(projectDir, 'compliance-requirements.md'));
   if (!content) { notices.push('compliance-requirements.md not found.'); return { name: 'clo-ciso-gate', status: 'pass', issues, notices }; }
-  const cloMatch = content.match(/CLO.*?:\s*(Done|Pending|In Progress|Blocked)/i);
-  const cisoMatch = content.match(/CISO.*?:\s*(Done|Pending|In Progress|Blocked)/i);
-  const cloDone = cloMatch && /done/i.test(cloMatch[1]);
-  const cisoDone = cisoMatch && /done/i.test(cisoMatch[1]);
+  // Same reader as sdk-gate-check (scripts/lib/project-state.js), so the two never disagree.
+  const { gates } = parseCompliance(content);
+  const cloDone = !!gates.legal && gates.legal.toLowerCase() === 'done';
+  const cisoDone = !!gates.security && gates.security.toLowerCase() === 'done';
   if (!cloDone) issues.push('CLO gate not Done — CTO cannot activate');
   if (!cisoDone) issues.push('CISO gate not Done — CTO cannot activate');
   if (cloDone && cisoDone) notices.push('CLO + CISO gate: CLEAR');
@@ -217,9 +230,14 @@ registerCheck('ceo-validation-pending', (projectDir) => {
   if (/Section 11.*validated|CEO.*validated|validated.*CEO/i.test(content)) {
     notices.push('CEO project-map validation: found');
   } else {
-    const age = fileAgeHours(path.join(projectDir, 'project-map.md'));
-    if (age > config.thresholds.ceoValidationPending) {
-      issues.push(`project-map.md not validated by CEO and ${Math.round(age)}h old (threshold: ${config.thresholds.ceoValidationPending}h)`);
+    const threshold = readLimits(projectDir).statusStaleCommits;
+    const behind = commitsBehind(path.join(projectDir, 'project-map.md'));
+    if (behind === null) {
+      notices.push('project-map.md not validated by CEO; not tracked by git — staleness not measured');
+    } else if (behind > threshold) {
+      issues.push(`project-map.md not validated by CEO and ${behind} commits behind (threshold: ${threshold})`);
+    } else {
+      notices.push(`project-map.md not yet validated by CEO (${behind} commit(s) behind)`);
     }
   }
   return { name: 'ceo-validation-pending', status: issues.length ? 'fail' : 'pass', issues, notices };
@@ -230,12 +248,15 @@ registerCheck('ceo-validation-pending', (projectDir) => {
 registerCheck('current-status-staleness', (projectDir) => {
   const issues = [], notices = [];
   const fp = path.join(projectDir, 'current-status.md');
-  const age = fileAgeHours(fp);
-  if (age < 0) { issues.push('current-status.md missing'); }
-  else if (age > config.thresholds.currentStatusStale) {
-    issues.push(`current-status.md is ${Math.round(age)}h old (threshold: ${config.thresholds.currentStatusStale}h)`);
+  const threshold = readLimits(projectDir).statusStaleCommits;
+  const behind = commitsBehind(fp);
+  if (!fs.existsSync(fp)) { issues.push('current-status.md missing'); }
+  else if (behind === null) {
+    notices.push('current-status.md: not tracked by git — staleness not measured');
+  } else if (behind > threshold) {
+    issues.push(`current-status.md is ${behind} commits behind (threshold: ${threshold})`);
   } else {
-    notices.push(`current-status.md: fresh (${Math.round(age)}h old)`);
+    notices.push(`current-status.md: fresh (${behind} commit(s) behind)`);
   }
   return { name: 'current-status-staleness', status: issues.length ? 'fail' : 'pass', issues, notices };
 });
@@ -247,11 +268,12 @@ registerCheck('requirements-staleness', (projectDir) => {
     'engineering-requirements.md', 'product-requirements.md', 'design-requirements.md',
     'business-requirements.md', 'research-requirements.md',
   ];
+  const threshold = readLimits(projectDir).surfaceStaleCommits;
   for (const f of reqFiles) {
-    const age = fileAgeHours(path.join(projectDir, f));
-    if (age < 0) continue; // file doesn't exist, skip
-    if (age > config.thresholds.requirementsStale) {
-      issues.push(`${f} is ${Math.round(age)}h old (>${config.thresholds.requirementsStale}h)`);
+    const behind = commitsBehind(path.join(projectDir, f));
+    if (behind === null) continue; // missing or not tracked by git: not measured
+    if (behind > threshold) {
+      issues.push(`${f} is ${behind} commits behind (>${threshold})`);
     }
   }
   if (issues.length === 0) notices.push('All requirements files within freshness threshold');
@@ -365,6 +387,9 @@ Available checks: ${Object.keys(CHECKS).join(', ')}
   const checkIdx = args.indexOf('--check');
   const checkFilter = checkIdx >= 0 ? [args[checkIdx + 1]] : undefined;
   const { results, issues, notices } = runChecks(projectDir, { checks: checkFilter });
+  for (const r of results) {
+    if (r.status === 'error') console.error(`Error: unknown check "${r.name}". Available: ${Object.keys(CHECKS).join(', ')}`);
+  }
 
   if (jsonMode) {
     console.log(JSON.stringify({ results, issues, notices }, null, 2));
@@ -376,7 +401,7 @@ Available checks: ${Object.keys(CHECKS).join(', ')}
       for (const i of r.issues) console.log(`    ⚠ ${i}`);
       for (const n of r.notices) console.log(`    · ${n}`);
     }
-    const failCount = results.filter(r => r.status === 'fail').length;
+    const failCount = results.filter(r => r.status !== 'pass').length;
     console.log(`\n  ${failCount === 0 ? '✓ All checks passed' : `✗ ${failCount} check(s) with issues`} (${issues.length} issues, ${notices.length} notices)\n`);
   }
 

@@ -55,14 +55,12 @@ const config = {
     },
   },
 
-  // ── Temporal thresholds (hours) ──────────────────────────────────────────
+  // ── Temporal thresholds (hours) — only for checks that compare dates written into the text.
+  //    File-staleness checks are work-based (commits; .sdkrc limits, §2 timing).
   thresholds: {
     blockerUnresolved: 4,
     decisionNeeded: 48,
-    currentStatusStale: 48,
-    requirementsStale: 168,       // 7 days
     researchBacklogAging: 168,    // 7 days
-    ceoValidationPending: 24,
     marioReviewPending: 48,
     waitingOnDefault: 72,
   },

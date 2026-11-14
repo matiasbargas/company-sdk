@@ -143,6 +143,14 @@ for (const file of templateFiles) {
   const stat = fs.statSync(src);
 
   if (stat.isFile()) {
+    // Collaboration Surface template → surfaces/_template.md, as sdk-init does (§34).
+    if (file === 'surface-template.md') {
+      ensureDir(path.join(outputDir, 'surfaces'));
+      copyAndProcess(src, path.join(outputDir, 'surfaces', '_template.md'), vars);
+      console.log(`  ✓ surfaces/_template.md`);
+      count++;
+      continue;
+    }
     copyAndProcess(src, dest, vars);
     console.log(`  ✓ ${file}`);
     count++;
@@ -158,8 +166,16 @@ if (fs.existsSync(squadSrc)) {
   count++;
 }
 
-// Copy protocol, AGENTS, and STRATEGY
-const extras = ['protocol.md', 'AGENTS.md', 'STRATEGY.md'];
+// Shared SDK docs + protocol/ per-section views — the same set sdk-init copies.
+const protocolSectionsSrc = path.join(sdkRoot, 'protocol');
+if (fs.existsSync(protocolSectionsSrc)) {
+  ensureDir(path.join(outputDir, 'protocol'));
+  for (const f of fs.readdirSync(protocolSectionsSrc).filter(n => n.endsWith('.md'))) {
+    fs.copyFileSync(path.join(protocolSectionsSrc, f), path.join(outputDir, 'protocol', f));
+  }
+  console.log(`  ✓ protocol/  (per-section views)`);
+}
+const extras = ['SDK.md', 'protocol.md', 'protocol-core.md', 'protocol-reference.md', 'AGENTS.md', 'STRATEGY.md', 'CHARTER.md'];
 for (const extra of extras) {
   const src = path.join(sdkRoot, extra);
   if (fs.existsSync(src)) {
@@ -195,6 +211,28 @@ for (const sub of ['skills', 'agents', 'output-styles', 'commands']) {
     count++;
   }
 }
+
+// .claude/settings.json — same shape as sdk-init (keep in sync with scripts/init.js §2):
+// permissions scoped to the SDK's own scripts (never blanket Bash(node:*)), Greg output style,
+// and hooks that run the SDK's scripts by absolute path (projects carry no scripts/).
+const claudeSettings = {
+  projectName,
+  releaseId,
+  createdAt: dateStr,
+  squad: squadType,
+  permissions: {
+    allow: ['doc', 'consult', 'status', 'gate-check', 'validate', 'health', 'next', 'resume']
+      .map(name => `Bash(node ${path.join(sdkRoot, 'scripts', name + '.js')}:*)`)
+  },
+  outputStyle: 'Greg',
+  hooks: {
+    SessionStart: [{ matcher: 'startup|resume|clear|compact', hooks: [{ type: 'command', command: `node "${path.join(sdkRoot, 'scripts', 'hooks', 'session-start.js')}"` }] }],
+    PreToolUse: [{ matcher: 'Edit|Write|NotebookEdit', hooks: [{ type: 'command', command: `node "${path.join(sdkRoot, 'scripts', 'hooks', 'protect-files.js')}"` }] }],
+  }
+};
+ensureDir(path.join(outputDir, '.claude'));
+fs.writeFileSync(path.join(outputDir, '.claude', 'settings.json'), JSON.stringify(claudeSettings, null, 2) + '\n', 'utf8');
+console.log(`  ✓ .claude/settings.json`);
 
 // Write .sdkrc — persists SDK source path for sdk-update
 const sdkrcPath = path.join(outputDir, '.sdkrc');

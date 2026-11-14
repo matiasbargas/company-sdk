@@ -133,12 +133,22 @@ if (flagMode) {
 
 // ─── Interactive mode ─────────────────────────────────────────────────────────
 
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+// Queue every input line ourselves: rl.question() drops lines that arrive before the next
+// question is asked, which loses all but the first answer when stdin is piped (non-TTY).
+const rl = readline.createInterface({ input: process.stdin, terminal: false });
+const pendingLines = [];
+const waiters = [];
+let inputEnded = false;
+rl.on('line', line => { const w = waiters.shift(); w ? w(line) : pendingLines.push(line); });
+rl.on('close', () => { inputEnded = true; while (waiters.length) waiters.shift()(''); });
 
 function ask(prompt) {
+  process.stdout.write(prompt);
   return new Promise(resolve => {
-    rl.question(prompt, answer => resolve(answer.trim()));
-  });
+    if (pendingLines.length) resolve(pendingLines.shift());
+    else if (inputEnded) resolve('');
+    else waiters.push(resolve);
+  }).then(answer => answer.trim());
 }
 
 async function runInteractive() {

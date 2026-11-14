@@ -1,0 +1,10 @@
+{
+  "name": "@team-sdk/holding",
+  "version": "0.1.0",
+  "description": "Portfolio Orchestrator core — canonical JSON, hash-chained fuel ledger, runner meter, portfolio registry and grant validation (no network, no spawning)",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node tests/run.js"
+  },
+  "license": "MIT"
+}

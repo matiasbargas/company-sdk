@@ -193,12 +193,12 @@ claims:
 
   - id: cap-sess-pretag-014
     kind: capability
-    status: defect
+    status: built
     statement: "`--fix` creates a missing required file from project-template/ and reports it as auto-fixed, removing it from the issues that remain."
-    defect_note: "The file is created and listed under 'Auto-fixed', but the same issue is still printed as unresolved and counted in the footer ('2 issues require agent action') while the exit code is computed from 1 remaining. applyFixes pushes a copy ({...iss, fixNote}) so printReport's identity check never matches. Also: the template stub contains [RELEASE]/[PROJECT NAME] placeholders, so the next run raises validate issues for the file it just created."
+    fixed_note: "2026-11-14: applyFixes records the fix on the original issue object, so printReport and the exit code subtract the same set; the created file is no longer listed as unresolved and the footer agrees with the exit code. (The created stub is the template verbatim, so its placeholders surface as validate issues on the next run; that is intended: an agent fills it.)"
     sources:
       - file: scripts/pre-tag.js
-        lines: 450-467, 490, 640
+        lines: 437-477, 490-491, 647-649
     conformance: [cap-sess-pretag-014]
 
   - id: cap-sess-pretag-015
@@ -213,12 +213,12 @@ claims:
 
   - id: cap-sess-pretag-016
     kind: capability
-    status: defect
+    status: built
     statement: "With --json, every outcome (including a --release-id mismatch) is reported as machine-readable output."
-    defect_note: "On --release-id mismatch with --json the process exits 1 with empty stdout AND empty stderr (the error print is suppressed in json mode and nothing replaces it)."
+    fixed_note: "2026-11-14: with --json, a --release-id mismatch prints {clean:false, releaseId, canonical, error, fixed:0, issues:1, byOwner} on stdout and exits 1."
     sources:
       - file: scripts/pre-tag.js
-        lines: 617-623
+        lines: 615-632
     conformance: [cap-sess-pretag-016]
 
   # ─── sdk-status ────────────────────────────────────────────────────────────
@@ -303,12 +303,12 @@ claims:
 
   - id: cap-sess-next-003
     kind: capability
-    status: defect
+    status: built
     statement: "sdk-next prints the activation phrase from the template's table-form Next Agent To Activate section (as sdk-status does)."
-    defect_note: "With the project-template table, sdk-next falls back to 'first non-empty line' and prints the header row '| Role | Activation phrase | Read first |' as the phrase. sdk-resume embeds this output, so every templated project's resume shows that row. sdk-next has its own parser instead of scripts/lib/project-state.js."
+    fixed_note: "2026-11-14: sdk-next reads Next Agent To Activate through scripts/lib/project-state.js parseStatus().nextAgent (table by header, line form, or **Activation phrase:**); the free-text fallback no longer applies to a table. lib/next-stub.js uses the same reader (with its regex fallback for vendored copies), and sdk-resume takes the cockpit role from it."
     sources:
       - file: scripts/next.js
-        lines: 55-79
+        lines: 56-92
     conformance: [cap-sess-next-003]
 
   # ─── sdk-resume ────────────────────────────────────────────────────────────
@@ -341,12 +341,12 @@ claims:
 
   - id: cap-sess-resume-004
     kind: capability
-    status: defect
+    status: built
     statement: "sdk-resume's Gates line reports an issue when `sdk-gate-check --all` is blocked."
-    defect_note: "gate-check writes 'GATE BLOCKED' to stderr; resume reads `e.stdout || e.stderr`, and an empty stdout Buffer is truthy, so stderr is never scanned. A blocked gate is summarised as 'Gates:    ✓ 0 warning(s)'."
+    fixed_note: "2026-11-14: resume treats a non-zero gate-check exit as blocked and reads both stdout and stderr; the line reads 'Gates:    ✗ BLOCKED (N failures)'. Resume stays advisory (exit 0)."
     sources:
       - file: scripts/resume.js
-        lines: 44-58
+        lines: 45-61
     conformance: [cap-sess-resume-004]
 
   # ─── sdk-health ────────────────────────────────────────────────────────────
@@ -526,45 +526,57 @@ claims:
 
   - id: cap-sess-ops-002
     kind: capability
-    status: defect
+    status: built
     statement: "session-close-validation accepts a current-status.md that follows project-template/current-status.md."
-    defect_note: "It requires exact headings 'Completed' and 'Open Decisions'; the template has 'Completed Since Last Session' and 'Open Decisions (not yet logged to history.md)', so every scaffolded project fails it (and the Night Watch coordinator reports it). decision-deadlines / decision-needed-age read the same 'Open Decisions' section and so never see template decisions."
+    fixed_note: "2026-11-14: ops findSection falls back to an H2 prefix match (lib/project-state.js h2) when no exact heading exists, so the template's 'Completed Since Last Session' and 'Open Decisions (not yet logged to history.md)' are accepted, and decision-deadlines / decision-needed-age see template decisions."
     sources:
       - file: scripts/ops.js
-        lines: 196-211, 76-91
+        lines: 47-61, 89-104, 209-224
     conformance: [cap-sess-ops-002]
 
   - id: cap-sess-ops-003
     kind: capability
-    status: defect
+    status: built
     statement: "sdk-ops clo-ciso-gate agrees with sdk-gate-check about whether the CLO and CISO gates are Done."
-    defect_note: "It matches /CLO.*?:\\s*(Done|...)/, but the template Gate Status table ('| Legal | CLO | Done |') has no colon, so on a compliance file that sdk-gate-check clears, sdk-ops (and the Night Watch CLO agent) report 'CLO gate not Done' and 'CISO gate not Done'. Should read through scripts/lib/project-state.js parseCompliance."
+    fixed_note: "2026-11-14: clo-ciso-gate reads the Gate Status table through scripts/lib/project-state.js parseCompliance, the same reader as sdk-gate-check; tests pin agreement for both a cleared and a Pending CISO gate."
     sources:
       - file: scripts/ops.js
-        lines: 145-157
+        lines: 158-170
     conformance: [cap-sess-ops-003]
 
   - id: cap-sess-ops-004
     kind: capability
-    status: defect
+    status: built
     statement: "An unknown `--check <name>` is reported as an error consistently in the summary and the exit code."
-    defect_note: "Exit code is 1 and the check shows '? bogus / Unknown check', but the summary line says '✓ All checks passed (1 issues, 0 notices)' because status 'error' is not counted as a failure."
+    fixed_note: "2026-11-14: a check with status 'error' counts as failed in the summary ('✗ 1 check(s) with issues'), and the CLI prints 'Error: unknown check \"<name>\". Available: ...' on stderr."
     sources:
       - file: scripts/ops.js
-        lines: 327-330, 378-380
+        lines: 343-346, 389-405
     conformance: [cap-sess-ops-004]
 
   - id: cap-sess-ops-005
     kind: capability
-    status: unpinned
-    statement: "sdk-ops time-based checks (blocker-age >4h, decision-needed-age >48h, current-status-staleness >48h by mtime, requirements-staleness >168h, research-backlog-aging, ceo-validation-pending) flag items older than the daemon-config thresholds."
-    unpinned_note: "Not pinned: depends on wall-clock dates and file mtimes. Also calendar-based, which conflicts with §2 work-based staleness (sdk-health measures commits) — a candidate for retirement or rewrite rather than pinning."
+    status: built
+    statement: "sdk-ops file-staleness checks are work-based (protocol.md §2 timing): current-status-staleness and ceo-validation-pending flag a file more than .sdkrc limits.statusStaleCommits commits behind HEAD, requirements-staleness flags requirements files more than limits.surfaceStaleCommits behind; outside git (or untracked) staleness is not measured and is reported as a notice, not an issue."
+    fixed_note: "2026-11-14: converted from file mtimes and daemon-config hour thresholds to scripts/lib/activity.js commitsSince + scripts/lib/limits.js, matching sdk-health. The text-dated checks are split out to cap-sess-ops-006."
     sources:
       - file: scripts/ops.js
-        lines: 109-142, 213-279
+        lines: 36-45, 226-281
+      - file: scripts/lib/activity.js
+        lines: 24-37
+    conformance: [cap-sess-ops-005]
+
+  - id: cap-sess-ops-006
+    kind: capability
+    status: unpinned
+    statement: "sdk-ops text-dated checks (waiting-on-age, blocker-age >4h, decision-needed-age >48h, research-backlog-aging) flag items whose written YYYY-MM-DD date is older than the daemon-config hour thresholds."
+    unpinned_note: "Not converted: these read dates agents write into the line (Since:, DECISION BY:), not file history, so commitsSince has nothing to anchor to without per-line git blame. They stay calendar-based, which conflicts with §2 work-based staleness; a candidate for a blame-based rewrite or retirement. waiting-on-age's 2020/2999 extremes are pinned under cap-sess-ops-001."
+    sources:
+      - file: scripts/ops.js
+        lines: 106-154, 283-301
       - file: scripts/daemon-config.js
         lines: 58-68
-    conformance: [cap-sess-ops-005]
+    conformance: [cap-sess-ops-006]
 
   # ─── sdk-daemon (Night Watch) ──────────────────────────────────────────────
   - id: cap-sess-daemon-001

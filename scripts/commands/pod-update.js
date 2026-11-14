@@ -18,7 +18,8 @@ module.exports = function cmdPodUpdate({ filePath, opts, dryRun }) {
   );
 
   // Try to find and update the mission row in the Active Missions table
-  const missionRegex = new RegExp(`(\\|[^|]*${opts.mission}[^|]*\\|[^|]*\\|[^|]*\\|)[^|]*(\\|)[^|]*(\\|)`, 'i');
+  const escaped = String(opts.mission).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const missionRegex = new RegExp(`(\\|[^|]*${escaped}[^|]*\\|[^|]*\\|[^|]*\\|)[^|]*(\\|)[^|]*(\\|)`, 'i');
   if (missionRegex.test(updated)) {
     updated = updated.replace(missionRegex, (match, p1, p2, p3) => {
       return `${p1} ${opts.status} ${p2} ${opts.next} ${p3}`;
