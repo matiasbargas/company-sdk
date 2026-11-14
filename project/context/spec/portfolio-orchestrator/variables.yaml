@@ -33,6 +33,7 @@ entities:
   Pool:
     funded_by: holding Owner only (ledger event `fund`)
     model: envelope per holding cycle (Owner decision); `fuel.envelopePerCycle: null` = infinite fuel
+    infinite_means: no pool limit only — every draw metered; tranche gating and kill conditions still apply (§16.1)
     invariant: balance never negative, unless infinite (then unbounded, still fully metered)
 
   Cycle:
@@ -50,12 +51,15 @@ entities:
 
   Proof:
     kinds: [verified_surface, graduated_cycle, owner_approved_ship]
-    verifier_v0: the company's own gates (Owner decision: autonomy now; accepted risk, see claims cap-po-proof-002)
+    verifier_v0_fuel: the company's own gates (Owner decision: autonomy now; accepted risk, see cap-po-proof-002)
+    verifier_commons: another company's roster + CISO, always (Owner decision 2026-11-14)
     checkable_by: commit SHA + state (Level 3, no content opinion)
     invariant: proof reverted within fuel.proofRevertCommits commits is clawed back from the metric
 
   UsageEvent:
-    source: runner (stream-json result / transcript backfill), never self-reported by an instance
+    source: runner (stream-json `result.modelUsage` per model / transcript backfill), never self-reported by an instance
+    spike_2026_11_13: top-level `result.usage` was all zeros; `modelUsage` carried the real counts — read modelUsage
+    session_floor: each session's fixed overhead (~16.7k cache-creation tokens on Opus) counts against the grant
     shape: Agent SDK message usage schema (cloud seam)
     unmetered: a session without a usage record is `unmetered`, never zero
 
@@ -68,6 +72,8 @@ entities:
     contract: [start(companyId, opts) → runId, stop(runId, mode), status(runId), meter(runId) → UsageEvent*]
     implementations: [LocalRunner (v0), CloudRunner (later)]
     invariant: the only metering and pre-flight authority; stops at a turn boundary, never mid-commit
+    budget_ceiling: --max-budget-usd is checked after a turn (spike: $0.05 cap ended at $0.084) — soft; the provider key cap is the hard ceiling; overshoot = `overrun`
+    concurrency: global semaphore (limits.fuel.concurrency) + one lock per company (one writer session per repository)
 
   CommonsItem:
     classes: [skill, protocol-improvement, kill-log-class, ratchet-class, published-context]
@@ -87,7 +93,13 @@ entities:
     smallBetReserve: 0.2
     overrunReserve: 0.05
     proofRevertCommits: 10
-    concurrency: 2               # parallel instances (rate-limit contention is the real local bottleneck)
+    concurrency: 2               # parallel instances. ASSUMPTION (untested at scale): rate-limit contention is the local bottleneck
+
+judgment_column:
+  is: each cycle, the company Owner rates every funded bet advanced | flat | regressed
+  divergence: within a bet class, in a cycle, ≥ 50% of the bets with VOF above that class's median are rated flat or regressed (computed only when the class has ≥ 3 funded bets)
+  missing_rating: an unrated funded bet counts as divergence for that cycle, and sdk-health flags the unfilled column (so the trigger cannot be silenced by not rating)
+  revisit_trigger: divergence in 2 consecutive cycles OR a second human Owner registered → outside-verifier decision due
 
 metric:
   VOF: "Σ weight(proof, not reverted) ÷ FU drawn (fully loaded: verifiers, loops, killed bets, overruns)"
@@ -96,4 +108,5 @@ metric:
 
 isolation_v0:   # Owner decision: light v0 (own ventures only), full before any other Owner
   required: [separate clones, one API key per company with provider cap unless infinite, runner-owned settings/hooks, no skip-permissions, kill switch]
+  honest_limit: isolation is permission rules + separate clones under one OS user — NOT OS-enforced; Bash can still reach a sibling
   deferred_until_second_owner: [OS user / container per instance, adoption ledger + automated recall, signed commons commits]

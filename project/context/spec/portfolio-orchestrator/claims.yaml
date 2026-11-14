@@ -48,25 +48,28 @@ claims:
   - id: cap-po-fuel-001
     kind: capability
     status: planned
-    statement: "Fuel is metered from runner-captured usage in raw tokens by type and model; Fuel Units and USD are derived views recomputable from raw."
+    statement: "Fuel is metered by the runner from stream-json `result.modelUsage` (per model), never from top-level `usage`, in raw tokens by type; each session's fixed overhead counts; Fuel Units and USD are derived views recomputable from raw."
     acceptance:
       - given: "a run whose result carries usage {input, output, cache_write, cache_read, model}"
         when: "the runner records it"
-        then: "the ledger draw stores raw counts and FU equals raw × fuel.priceTable"
+        then: "the ledger draw stores raw counts from modelUsage and FU equals raw × fuel.priceTable"
+      - given: "a result whose top-level `usage` is all zeros but `modelUsage` has counts (observed in the 2026-11-13 spike)"
+        when: "the runner records it"
+        then: "the draw uses the modelUsage counts, not zero"
       - given: "a session with no usage record"
         when: "it is reconciled"
         then: "it is recorded as `unmetered`, never as zero"
-    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft, 1. Units"}]
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 1. Units"}, {file: record/experiments/2026-11-13-metering-spike/README.md, section: "Results"}]
     conformance: []
 
   - id: cap-po-fuel-002
     kind: capability
     status: planned
-    statement: "Infinite fuel is an option: with `limits.fuel.envelopePerCycle: null` the pool never exhausts, while every draw is still metered and every grant still needs a kill condition."
+    statement: "Infinite fuel is an option: with `limits.fuel.envelopePerCycle: null` the pool never exhausts, while every draw is still metered and tranche gating and kill conditions still apply."
     acceptance:
       - given: "envelopePerCycle is null"
         when: "draws exceed any finite amount"
-        then: "no draw is refused for pool balance, every draw is in the ledger, and a grant without a kill condition is still malformed"
+        then: "no draw is refused for pool balance, every draw is in the ledger, a draw beyond an unproven tranche is still refused, and a grant without a kill condition is still malformed"
     sources: [{file: history.md, section: "Portfolio Orchestrator — Discovery decisions (Owner: infinite fuel should be an option)"}]
     conformance: []
 
@@ -100,7 +103,7 @@ claims:
     status: planned
     statement: "v0 accepts the company's own gates as proof (system autonomy, Owner decision 2026-11-13); the Goodhart risk is recorded and the outside-verifier rule activates when the revisit trigger fires."
     acceptance:
-      - given: "a second human Owner is registered, OR VOF diverges from the company Owner's judgment column for 2 consecutive cycles"
+      - given: "a second human Owner is registered, OR in 2 consecutive cycles divergence is flagged (within a bet class of ≥ 3 bets, ≥ 50% of above-class-median-VOF bets rated flat/regressed, unrated bets counting as divergent)"
         when: "sdk-health runs on the holding"
         then: "it reports that the outside-verifier decision is due (proof self-verification risk)"
     sources: [{file: history.md, section: "Portfolio Orchestrator — Discovery decisions"}]
@@ -109,9 +112,9 @@ claims:
   - id: cap-po-runner-001
     kind: capability
     status: planned
-    statement: "The runner refuses to start a run when the company has no open tranche (unless fuel is infinite), and stops at a turn boundary when the working budget is spent, leaving the repository committed or clean."
+    statement: "The runner refuses to start a run when the company has no open tranche (with or without infinite fuel), and stops at a turn boundary when the working budget is spent, leaving the repository committed or clean."
     acceptance:
-      - given: "a company whose open tranche is exhausted (finite fuel)"
+      - given: "a company whose open tranche is exhausted"
         when: "start(companyId) is called"
         then: "it returns a refusal naming the grant; no session starts"
       - given: "a running session that exhausts its working budget"
@@ -127,25 +130,25 @@ claims:
     acceptance:
       - given: "an agent inside a company attempts to append to holding/fuel/ledger.jsonl"
         when: "the write is attempted"
-        then: "it is denied (path outside the company sandbox root)"
+        then: "it is denied by the runner-owned permission rules (v0: permission deny rules + separate clones, not OS-enforced; OS-level enforcement is gated before a second Owner)"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "The shape everyone converged on"}]
     conformance: []
 
   - id: cap-po-isolation-001
     kind: capability
     status: planned
-    statement: "Each company runs from its own clone with its own API key and runner-owned settings; no company can read another's repository or credentials."
+    statement: "Each company runs from its own clone with its own API key and runner-owned settings that deny access outside the company root; in v0 this is permission-level isolation under one OS user, and OS-level isolation (OS user or container) is required before any company of another Owner is registered."
     acceptance:
       - given: "two registered companies A and B"
-        when: "a session in A lists or reads B's path"
-        then: "access is denied"
+        when: "a session in A attempts to read or edit B's path through Read/Edit/Write tools"
+        then: "the runner-owned permission rules deny it (Bash reach is a documented v0 limit)"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "v0 gates"}]
     conformance: []
 
   - id: cap-po-commons-001
     kind: capability
     status: planned
-    statement: "The commons is pull-only: an item enters only through a verified §34 surface, is content-addressed, never carries settings/hooks/CHARTER/scripts, and is adopted by a company only on its Owner's approval; a local edit is never overwritten (conflict opens a reconciling surface)."
+    statement: "The commons is pull-only: an item enters only through a §34 surface verified by another company's roster plus the CISO (never only its own), sits in quarantine until verified, is content-addressed, never carries settings/hooks/CHARTER/scripts, and is adopted by a company only on its Owner's approval; a local edit is never overwritten (conflict opens a reconciling surface)."
     acceptance:
       - given: "a verified skill item in the commons and company B subscribed to `skill`"
         when: "B pulls with Owner approval"
@@ -153,6 +156,9 @@ claims:
       - given: "B edited that skill locally"
         when: "B pulls a newer version"
         then: "nothing is overwritten and a `reconciling` surface is opened"
+      - given: "a commons item whose verifying surface roster contains only the publishing company's roles"
+        when: "admission is attempted"
+        then: "it is refused: an outside verifier (another company) and the CISO are required"
       - given: "an item that contains a settings.json or hook"
         when: "it is published"
         then: "it is rejected"
@@ -190,4 +196,120 @@ claims:
         when: "the ledger report runs"
         then: "A's VOF is shown as suppressed with the reason"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft, 6. Metric"}]
+    conformance: []
+
+  - id: cap-po-budget-001
+    kind: capability
+    status: planned
+    statement: "A per-run budget flag is a soft ceiling (checked after a turn); overshoot is recorded as an `overrun` paid from the overrun reserve and recovered from the next tranche; the provider-side key cap is the hard ceiling."
+    acceptance:
+      - given: "a run capped at X whose single turn costs more than X (observed: $0.05 cap ended at $0.084)"
+        when: "the runner records it"
+        then: "the ledger has a `draw` up to the cap and an `overrun` for the excess, and the next tranche is reduced by the overrun"
+    sources: [{file: record/experiments/2026-11-13-metering-spike/README.md, section: "Results"}]
+    conformance: []
+
+  - id: cap-po-grant-002
+    kind: capability
+    status: planned
+    statement: "A grant becomes drawable only after the holding Owner ratifies it; agents can propose but never ratify."
+    acceptance:
+      - given: "a grant approved at the Betting Table but not ratified by the holding Owner"
+        when: "a draw is attempted"
+        then: "it is refused"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 2. Lifecycle"}]
+    conformance: []
+
+  - id: cap-po-grant-003
+    kind: capability
+    status: planned
+    statement: "Unspent fuel returns to the pool on close or kill, and is reclaimed after `fuel.reclaimCyclesWithoutProof` Betting cycles without new proof; returned fuel is credited to the company's next request."
+    acceptance:
+      - given: "a grant with undrawn FU and no proof for reclaimCyclesWithoutProof cycles"
+        when: "the cycle closes"
+        then: "a `reclaim` event returns the undrawn FU to the pool"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 7. Guardrails"}]
+    conformance: []
+
+  - id: cap-po-proof-003
+    kind: capability
+    status: planned
+    statement: "Proof reverted within `fuel.proofRevertCommits` commits is clawed back from the metric and cannot unlock a further tranche."
+    acceptance:
+      - given: "a verified surface that unlocked tranche 2 and is reverted 3 commits later"
+        when: "the ledger report runs"
+        then: "its weight is removed from VOF and a `proof` reversal event is recorded"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 7. Guardrails"}]
+    conformance: []
+
+  - id: cap-po-reserve-001
+    kind: capability
+    status: planned
+    statement: "With a finite envelope, `fuel.smallBetReserve` of the pool is held for grants up to `fuel.smallBetMax`, and `fuel.overrunReserve` for overruns; overruns stop when the reserve is empty."
+    acceptance:
+      - given: "a finite envelope where large grants would consume all non-reserved fuel"
+        when: "a small grant is requested"
+        then: "it is funded from the small-bet reserve"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 6–7"}]
+    conformance: []
+
+  - id: cap-po-runner-003
+    kind: capability
+    status: planned
+    statement: "The runner caps parallel sessions at `limits.fuel.concurrency` and holds one lock per company, so a repository never has two writer sessions; it never runs with skip-permissions."
+    acceptance:
+      - given: "concurrency 2 and three queued runs"
+        when: "the runner schedules them"
+        then: "at most two run at once, never two in the same company, and no run uses --dangerously-skip-permissions or bypassPermissions"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "v0 gates"}]
+    conformance: []
+
+  - id: cap-po-registry-002
+    kind: capability
+    status: planned
+    statement: "The registry refuses a company whose Owner differs from the holding Owner until the second-Owner gates hold (OS-level isolation, ratified multi-Owner CHARTER amendment, CLO gate items), and refuses any company whose CHARTER is unratified."
+    acceptance:
+      - given: "the gates are not met"
+        when: "a company with a different Owner is added"
+        then: "it is refused, naming each unmet gate"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "Regulatory map (CLO), with confidence"}]
+    conformance: []
+
+  - id: cap-po-commons-003
+    kind: capability
+    status: planned
+    statement: "Any commons item can be recalled by publishing a revocation entry; companies that adopted it are told, and history is never rewritten."
+    acceptance:
+      - given: "an adopted item is revoked"
+        when: "a subscribed company pulls"
+        then: "it sees the revocation, the item is quarantined locally, and its lockfile records the revocation"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "The shape everyone converged on"}]
+    conformance: []
+
+  - id: cap-po-data-001
+    kind: capability
+    status: planned
+    statement: "In v0 no personal data enters any company or the commons; publication runs deterministic secret and PII scans and is refused on any finding."
+    acceptance:
+      - given: "a published-context item containing an email address or an API key pattern"
+        when: "it is published"
+        then: "it is refused naming the finding"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "Regulatory map (CLO), with confidence"}]
+    conformance: []
+
+  - id: cap-po-judgment-001
+    kind: capability
+    status: planned
+    statement: "Each cycle the company Owner rates every funded bet advanced | flat | regressed; the ledger report shows the rating beside VOF and flags divergence (≥ 50% of above-median-VOF bets rated flat or regressed)."
+    acceptance:
+      - given: "a bet class with 6 funded bets where 2 of the 3 above-class-median-VOF bets are rated flat"
+        when: "the ledger report runs"
+        then: "divergence is flagged for that class and cycle"
+      - given: "a funded bet with no Owner rating at cycle close"
+        when: "the ledger report runs"
+        then: "the bet counts as divergent and sdk-health flags the unfilled judgment column"
+      - given: "a bet class with only 2 funded bets"
+        when: "the ledger report runs"
+        then: "divergence is not computed for that class (below the minimum)"
+    sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 8. Metric and the judgment column"}]
     conformance: []

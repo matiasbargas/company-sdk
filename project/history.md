@@ -599,3 +599,11 @@ Decision: (1) protocol §30 "Specs outlive implementations". (2) Layer B gets `k
 Implications: Building the orchestrator is test-first: conformance tests are written from the planned capabilities before the code. Specs for `pre-tag.js` and `init.js` are owed before either is rewritten.
 Reversible: YES.
 Affects natural persons: NO
+
+**Addendum — 2026-11-14 (Discovery cycle 2):**
+- **Commons admission needs an outside verifier** (Owner decision): another company's roster plus the CISO, always. The accepted own-gates risk covers **fuel release only**, not the commons, because a commons item reaches every company.
+- **Metering spike** (Owner-approved spend, about $0.17; `record/experiments/2026-11-13-metering-spike/`): meter from `result.modelUsage`, since top-level `usage` came back all zeros. `--max-budget-usd` is a soft ceiling checked after a turn ($0.05 cap ended at $0.084), so the provider key cap is the hard ceiling and overshoot is an `overrun`. Each bare session has about 16.7k tokens of fixed overhead on Opus.
+- **Infinite fuel removes the pool limit only.** Tranche gating and kill conditions still apply (§16.1).
+- **The revisit trigger is now measurable.** The company Owner rates each funded bet advanced / flat / regressed. Divergence means ≥ 50% of the bets with VOF above the portfolio median are rated flat or regressed. Two consecutive cycles of divergence, or a second Owner, makes the outside-verifier decision for fuel due.
+
+**Discovery GRADUATED — 2026-11-14 (cycle 2, 6/6; `project/iterations/discovery/iter-002.md`).** Carry-forward items settled by Greg: (1) divergence is computed within a bet class of ≥ 3 funded bets, against that class's VOF median; (2) an unrated funded bet counts as divergent, and sdk-health flags the unfilled judgment column; (5) rate-limit contention is marked as an untested assumption; (6) the brief now says v0 proof is own-gates. Routed to owners: CLO reads the live provider terms before the first two-instance run; CTO tests per-company keys and rate limits at scale; Mario plus a §32 Red-Team look at how the ledger stays out of reach of company sessions (Bash) under light v0. Next gate: Mario's irreversibility review of the six decisions.

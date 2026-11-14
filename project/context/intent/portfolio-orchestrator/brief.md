@@ -17,12 +17,12 @@ A holding layer, itself a team-sdk instance, that runs many team-sdk companies i
 ## Step 1 answers (ceo.md)
 - **Market truth:** agent teams are cheap to start and expensive to keep honest. The scarce thing is not tokens but *verified* work per token, plus the discipline that compounds across projects.
 - **Customer:** a builder running several ventures at once (first, the Owner) who wants each to have a full team without being each team's bottleneck.
-- **Winning at 18 months:** 5+ companies run from one holding. Fuel follows verified output. A lesson learned in one company reaches the others within one heartbeat. No company's Owner is surprised by what its agents did.
+- **Winning at 18 months:** 5+ companies run from one holding. Fuel follows verified output. A lesson learned in one company reaches the others within one heartbeat. No company's Owner is surprised by what its agents did (measured: zero outward-facing or Autonomy-Limit acts without that Owner's recorded approval, per the run log).
 - **What would make this unnecessary in 3 years:** model vendors shipping native multi-project agent orchestration. Our hedge is the governance and verification layer (charter, gates, surfaces, commons), not the scheduling.
-- **NOT building (v0):** cloud runners; a marketplace; billing or payments; cross-company raw context sharing; any holding authority over a company's operations; autonomous spend outside the ledger.
+- **NOT building (v0):** the reasoned exclusions (billing, raw cross-company context, holding authority over operations, spend outside the ledger, a marketplace) and the deferrals with their revisit triggers (cloud runner, OS-level isolation, outside-verifier fuel proof, automated recall, signed commons) are listed in `discovery-synthesis.md` → Non-goals / Deferred, with trigger.
 
 ## Smallest proof
-Two instances run in parallel from one orchestrator. A fuel ledger meters both and shows burn next to verified output. One lesson crosses between them through the commons, via a verified surface.
+Two instances run in parallel from one orchestrator. A fuel ledger meters both and shows burn next to proof (in v0, each company's own gates: an accepted risk, see `discovery-synthesis.md` → "What v0 proves, and what it does not"). One lesson crosses between them through the commons, via a verified surface.
 
 ## Open for Discovery
 CTO: runner and scheduler architecture · CFO: fuel ledger and tranche economics · CISO: isolation, secrets and the commons boundary · CLO: consent and confidentiality for opt-in sharing · Red-Team: the one assumption that kills it.
