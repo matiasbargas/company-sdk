@@ -42,7 +42,14 @@
  *   - start refuses a maxBudgetUsd below opts.sessionFloorUsd[model] (no defaults: a model missing
  *     from the map is refused); --max-budget-usd is passed through as the soft ceiling;
  *   - a session that started before a freeze still owes its draw: the runner retries a draw refused
- *     with LEDGER_FROZEN as { after_freeze: true, run_started_seq } (needs the fold change in the report).
+ *     with LEDGER_FROZEN as { after_freeze: true, run_started_seq }.
+ *
+ * Iteration 2 (config in the chain): fuel limits (concurrency, reserves), the price table, the
+ * Claude Code pin and the session floors are read from the folded ledger (`limits`, `price_table`,
+ * `runner_pin` events) at every pre-flight. Constructor opts priceTable / pinnedVersion /
+ * sessionFloorUsd / limits are a legacy fallback used only while the ledger lacks the event; when
+ * both exist they must agree (CONFIG_MISMATCH). Pre-flight is preflight.js, shared with sdk-holding,
+ * so reserve and overrun enforcement (OVERRUN_RESERVE_EMPTY) live in one place.
  */
 
 const fs = require('fs');
@@ -50,6 +57,8 @@ const path = require('path');
 const crypto = require('crypto');
 const { spawn, execFileSync } = require('child_process');
 const { openLedger, LedgerError } = require('./ledger');
+const { preflightRun } = require('./preflight');
+const { canonicalize } = require('./canonical');
 const { meterStream, priceFu, toLedgerEvents } = require('./meter');
 const { hashCanonical } = require('./canonical');
 
@@ -98,30 +107,59 @@ function checkExtraArgs(extraArgs) {
 }
 
 /**
- * opts: { holdingDir, companies: [{ id, path }], limits: { envelopePerCycle, concurrency? }, priceTable,
- *         pinnedVersion, sessionFloorUsd: { [model]: usd }, model?, claudeBin?: string | [cmd, ...prefixArgs], extraArgs?, env?, now?,
+ * opts: { holdingDir, companies: [{ id, path }], model?,
+ *         legacy fallback while the ledger lacks the event: limits (genesis), priceTable, pinnedVersion, sessionFloorUsd, claudeBin?: string | [cmd, ...prefixArgs], extraArgs?, env?, now?,
  *         freezePollMs?, lockRetryMs?, landingTimeoutMs?, hardKillGraceMs?, statusFiles?, ledgerFile?, runsDir? }
  */
 function createLocalRunner(opts = {}) {
   if (!isNonEmptyString(opts.holdingDir)) fail('INVALID_OPTION', 'holdingDir is required');
-  if (!isNonEmptyString(opts.pinnedVersion)) fail('PIN_REQUIRED', 'pinnedVersion (the Claude Code version this runner meters) is required (C5)');
-  if (!opts.priceTable) fail('INVALID_OPTION', 'priceTable is required');
-  const floors = opts.sessionFloorUsd;
-  if (!floors || typeof floors !== 'object' || Array.isArray(floors)
-    || !Object.values(floors).every(v => typeof v === 'number' && Number.isFinite(v) && v >= 0)) {
-    fail('SESSION_FLOOR_REQUIRED', 'sessionFloorUsd { [model]: usd } is required (the fixed per-session cost; no defaults)');
-  }
   if (!Array.isArray(opts.companies)) fail('INVALID_OPTION', 'companies [{ id, path }] is required');
   const extraArgs = opts.extraArgs || [];
   checkExtraArgs(extraArgs);
-  const limits = opts.limits || {};
-  const concurrency = limits.concurrency ?? 1;
-  if (!Number.isSafeInteger(concurrency) || concurrency < 1) fail('INVALID_OPTION', 'limits.concurrency must be a positive integer');
+  const legacyLimits = opts.limits && 'envelopePerCycle' in opts.limits ? opts.limits : undefined;
+  if (opts.limits && opts.limits.concurrency !== undefined && (!Number.isSafeInteger(opts.limits.concurrency) || opts.limits.concurrency < 1)) {
+    fail('INVALID_OPTION', 'limits.concurrency must be a positive integer');
+  }
 
   const holdingDir = path.resolve(opts.holdingDir);
   const runsDir = opts.runsDir || path.join(holdingDir, 'runs');
   const ledgerFile = opts.ledgerFile || path.join(holdingDir, 'fuel', 'ledger.jsonl');
-  const ledger = openLedger(ledgerFile, { limits: { envelopePerCycle: limits.envelopePerCycle }, now: opts.now });
+  let ledger;
+  try { ledger = openLedger(ledgerFile, { limits: legacyLimits, now: opts.now }); } catch (err) {
+    if (err instanceof LedgerError) fail('INVALID_OPTION', err.message);
+    throw err;
+  }
+
+  /** Runner config from the folded ledger, legacy opts only where the ledger has nothing. */
+  function resolveConfig(state) {
+    const pt = state.config.price_table;
+    const pin = state.config.runner_pin;
+    if (pt && opts.priceTable && opts.priceTable.version !== pt.version) {
+      fail('CONFIG_MISMATCH', `runner opts priceTable ${opts.priceTable.version} differs from the ledger's ${pt.version}; the ledger wins — drop the option`);
+    }
+    if (pin && opts.pinnedVersion && opts.pinnedVersion !== pin.claude_code_version) {
+      fail('CONFIG_MISMATCH', `runner opts pinnedVersion ${opts.pinnedVersion} differs from the ledger's ${pin.claude_code_version}`);
+    }
+    if (pin && opts.sessionFloorUsd && canonicalize(opts.sessionFloorUsd) !== canonicalize(pin.session_floor_usd)) {
+      fail('CONFIG_MISMATCH', 'runner opts sessionFloorUsd differs from the ledger\'s runner pin');
+    }
+    const cfg = {
+      priceTable: pt ? { version: pt.version, models: pt.models } : opts.priceTable,
+      pinnedVersion: pin ? pin.claude_code_version : opts.pinnedVersion,
+      floors: pin ? pin.session_floor_usd : opts.sessionFloorUsd,
+      concurrency: (state.limits && state.limits.concurrency) || 1,
+      fromLedger: { priceTable: !!pt, runnerPin: !!pin },
+    };
+    if (!isNonEmptyString(cfg.pinnedVersion)) fail('PIN_REQUIRED', 'pinnedVersion (the Claude Code version this runner meters) is required (C5): record a runner_pin');
+    if (!cfg.priceTable) fail('INVALID_OPTION', 'priceTable is required: record a price_table');
+    const f = cfg.floors;
+    if (!f || typeof f !== 'object' || Array.isArray(f) || !Object.values(f).every(v => typeof v === 'number' && Number.isFinite(v) && v >= 0)) {
+      fail('SESSION_FLOOR_REQUIRED', 'sessionFloorUsd { [model]: usd } is required (the fixed per-session cost; no defaults)');
+    }
+    return cfg;
+  }
+  const foldOrFail = () => { try { return ledger.fold(); } catch (err) { fail('LEDGER_INVALID', `cannot fold the fuel ledger: ${err.message}`); } };
+  let cfg = resolveConfig(foldOrFail());
   const freezeFlag = path.join(runsDir, 'FROZEN');
   const claudeBin = Array.isArray(opts.claudeBin) ? opts.claudeBin : [opts.claudeBin || 'claude'];
   const env = {};
@@ -140,7 +178,7 @@ function createLocalRunner(opts = {}) {
   const queue = [];           // queued runs, FIFO
   const active = new Set();   // running/landing runs
   const busy = new Set();     // companies with an active run in this process
-  let versionOk = false;
+  let versionOk = null; // the pinned version last verified against `claude --version`
   let retryTimer = null;
   let pollTimer = null;
 
@@ -160,38 +198,31 @@ function createLocalRunner(opts = {}) {
     if (!frozen && exists) fs.unlinkSync(freezeFlag);
   }
 
-  function preflight(companyId, grantId, missionId, model) {
-    let state;
-    try { state = ledger.fold(); } catch (err) { fail('LEDGER_INVALID', `cannot fold the fuel ledger: ${err.message}`); }
+  // The shared pre-flight (preflight.js) over the folded ledger; refreshes the runner config too.
+  function preflight(companyId, grantId, missionId, model, maxBudgetUsd) {
+    const state = foldOrFail();
     syncFreezeFlag(state.frozen);
-    if (state.frozen) fail('LEDGER_FROZEN', `the fuel ledger is frozen; no run for grant ${grantId} starts`);
-    const g = state.grants[grantId];
-    if (!g || g.status !== 'open') {
-      fail('NO_LIVE_GRANT', `no open grant ${JSON.stringify(grantId)} in the ledger${g ? ` (status ${g.status})` : ''}; grants are ratified by the holding Owner`);
-    }
-    if (g.company !== companyId) fail('COMPANY_MISMATCH', `grant ${grantId} belongs to ${g.company}, not ${companyId}`);
-    if (g.mission_id !== missionId) fail('MISSION_MISMATCH', `grant ${grantId} funds mission ${g.mission_id}, not ${missionId}`);
-    if (g.model && g.model !== model) fail('MODEL_MISMATCH', `grant ${grantId} funds model ${g.model}, not ${model}`);
-    const availableFu = g.released_fu - g.drawn_fu;
-    if (availableFu <= 0) {
-      fail('TRANCHE_EXHAUSTED', `grant ${grantId} has no FU left in its open tranche (released ${g.released_fu}, drawn ${g.drawn_fu}); `
-        + 'its named proof must unlock the next tranche');
+    cfg = resolveConfig(state);
+    let availableFu;
+    try { ({ availableFu } = preflightRun(state, { companyId, grantId, missionId, model, maxBudgetUsd })); } catch (err) {
+      if (err instanceof LedgerError) fail(err.code, err.message.replace(`${err.code}: `, ''));
+      throw err;
     }
     const company = companies.get(companyId);
     if (!fs.existsSync(company.path)) fail('COMPANY_PATH_MISSING', `company ${companyId} clone ${company.path} does not exist`);
-    return { availableFu };
+    return { availableFu, cfg };
   }
 
   function checkVersion() {
-    if (versionOk) return;
+    if (versionOk === cfg.pinnedVersion) return;
     let out;
     try {
       out = execFileSync(claudeBin[0], [...claudeBin.slice(1), '--version'], { encoding: 'utf8', timeout: 15000, env });
     } catch (err) { fail('VERSION_CHECK_FAILED', `could not run ${claudeBin.join(' ')} --version: ${err.message}`); }
     const m = String(out).match(/\d+\.\d+\.\d+/);
     const v = m ? m[0] : 'unknown';
-    if (v !== opts.pinnedVersion) fail('VERSION_MISMATCH', `claude reports ${v}; this runner is pinned to ${opts.pinnedVersion} (C5)`);
-    versionOk = true;
+    if (v !== cfg.pinnedVersion) fail('VERSION_MISMATCH', `claude reports ${v}; this runner is pinned to ${cfg.pinnedVersion} (C5)`);
+    versionOk = cfg.pinnedVersion;
   }
 
   function settingsFor(run) {
@@ -239,7 +270,7 @@ function createLocalRunner(opts = {}) {
       byModel.set(r.model, acc);
     }
     let spent;
-    try { spent = priceFu([...byModel.values()], opts.priceTable).fu; } catch {
+    try { spent = priceFu([...byModel.values()], run.cfg.priceTable).fu; } catch {
       spent = run.capFu; // unpriced model: fail closed into landing
     }
     if (spent === run.spentFu) return;
@@ -295,10 +326,10 @@ function createLocalRunner(opts = {}) {
   function pump() {
     let waitingForLock = false;
     for (const run of [...queue]) {
-      if (active.size >= concurrency) break;
+      if (active.size >= cfg.concurrency) break;
       if (busy.has(run.company)) { run.record.waiting_for = `company ${run.company} has an active run in this runner`; continue; }
       let pf;
-      try { pf = preflight(run.company, run.record.grant_id, run.record.mission_id, run.model); checkVersion(); } catch (err) {
+      try { pf = preflight(run.company, run.record.grant_id, run.record.mission_id, run.model, run.record.max_budget_usd); checkVersion(); } catch (err) {
         if (!(err instanceof RunnerError)) throw err;
         finishWithoutSpawn(run, 'failed', reasonForRefusal(err.code), err.message);
         continue;
@@ -309,6 +340,7 @@ function createLocalRunner(opts = {}) {
         continue;
       }
       queue.splice(queue.indexOf(run), 1);
+      run.cfg = pf.cfg; // the price table and pin this session is metered with
       launch(run, pf.availableFu);
     }
     if (waitingForLock && !retryTimer) retryTimer = setTimeout(() => { retryTimer = null; pump(); }, lockRetryMs);
@@ -382,7 +414,7 @@ function createLocalRunner(opts = {}) {
     const usage = { fu_drawn: 0, fu_overrun: 0, unmetered: 0, records: records.length };
     const pending = [];
     const warnings = [];
-    const ctx = { runId: run.id, grantId: run.record.grant_id, missionId: run.record.mission_id, company: run.company, priceTable: opts.priceTable };
+    const ctx = { runId: run.id, grantId: run.record.grant_id, missionId: run.record.mission_id, company: run.company, priceTable: run.cfg.priceTable };
     let remainingCap = run.capFu;
     const append = (e) => {
       try { ledger.append(e); return null; } catch (err) {
@@ -457,7 +489,7 @@ function createLocalRunner(opts = {}) {
     let usage = { fu_drawn: 0, fu_overrun: 0, unmetered: 0, records: 0 };
     let pending = [];
     if (!spawnErr) {
-      records = meterStream(text, { pinnedVersion: opts.pinnedVersion });
+      records = meterStream(text, { pinnedVersion: run.cfg.pinnedVersion });
       const r = recordUsage(run, records);
       usage = r.usage; pending = r.pending; warnings.push(...r.warnings);
     }
@@ -498,6 +530,8 @@ function createLocalRunner(opts = {}) {
     if (typeof o.maxBudgetUsd !== 'number' || !Number.isFinite(o.maxBudgetUsd) || o.maxBudgetUsd <= 0) {
       fail('MAX_BUDGET_REQUIRED', 'start needs maxBudgetUsd (a positive number, passed as --max-budget-usd)');
     }
+    cfg = resolveConfig(foldOrFail());
+    const floors = cfg.floors;
     if (!Object.prototype.hasOwnProperty.call(floors, model)) {
       fail('NO_SESSION_FLOOR', `sessionFloorUsd has no floor for model ${model}; record one before running it`);
     }
@@ -516,13 +550,14 @@ function createLocalRunner(opts = {}) {
     const existing = loadRecord(runId);
     if (existing) return same(existing);
 
-    preflight(companyId, o.grantId, o.missionId, model);
+    preflight(companyId, o.grantId, o.missionId, model, o.maxBudgetUsd);
 
     const record = {
       schema_version: RECORD_SCHEMA_VERSION, runner_contract_version: RUNNER_CONTRACT_VERSION, run_id: runId,
       company: companyId, grant_id: o.grantId, mission_id: o.missionId, max_turns: o.maxTurns, idempotency_key: key,
       model, max_budget_usd: o.maxBudgetUsd,
-      params_sha256: params, prompt_sha256: sha256(o.prompt), claude_code_version_pinned: opts.pinnedVersion,
+      params_sha256: params, prompt_sha256: sha256(o.prompt), claude_code_version_pinned: cfg.pinnedVersion,
+      price_table_version: cfg.priceTable.version,
       state: 'queued', terminal_reason: null, waiting_for: null, created_at: now(),
     };
     try {

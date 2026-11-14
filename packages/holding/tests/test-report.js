@@ -173,7 +173,7 @@ const judge = (L, id, rating, cycle = 1) => L.append({ type: 'judgment', actor: 
   t.eq(r.companies.find(c => c.id === 'beta').vof, 2500, 'B unaffected');
   t.assert(/suppressed/.test(formatReport(r)), 'text report says suppressed');
   // the next cycle starts clean
-  closeCycle(L, { limits: { envelopePerCycle: null, reclaimCyclesWithoutProof: null } });
+  closeCycle(L);
   L.append(draw(100, { grant_id: 'a1', mission_id: 'm-a1', company: 'acme', run_id: 'r-c2' }));
   t.eq(buildReport(L.fold(), { cycle: 2 }).companies.find(c => c.id === 'acme').vof_suppressed, null, 'suppression is per cycle');
 }
@@ -226,7 +226,7 @@ const judge = (L, id, rating, cycle = 1) => L.append({ type: 'judgment', actor: 
   const ids = ['e1', 'e2', 'e3'];
   ids.forEach((id, i) => bet(L, id, { fu: (i + 1) * 100 }));
   judge(L, 'e1', 'regressed'); judge(L, 'e2', 'advanced'); judge(L, 'e3', 'advanced');
-  closeCycle(L, { limits: lim });
+  closeCycle(L);
   let r = buildReport(L.fold(), {});
   t.eq(r.revisit_trigger.due, false, 'one divergent cycle is not enough');
   t.deepEq(r.divergence_by_cycle, [{ cycle: 1, flagged: true }], 'cycle 1 divergence recorded');
@@ -237,7 +237,7 @@ const judge = (L, id, rating, cycle = 1) => L.append({ type: 'judgment', actor: 
   });
   judge(L, 'e2', 'advanced', 2); judge(L, 'e3', 'advanced', 2); // e1 (top VOF) left unrated in cycle 2
   t.eq(buildReport(L.fold(), {}).revisit_trigger.due, false, 'an open cycle does not count yet');
-  closeCycle(L, { limits: lim });
+  closeCycle(L);
   r = buildReport(L.fold(), { cycle: 2 });
   t.eq(r.revisit_trigger.due, true, 'two consecutive divergent cycles: outside-verifier decision due');
   t.assert(r.revisit_trigger.reasons.some(x => /cycles 1 and 2/.test(x)), 'reason names the cycles');

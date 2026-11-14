@@ -16,6 +16,8 @@
  *   proofs     — deterministic proof checks in a company repo (commit SHA + state) and revert detection
  *   cycle      — Betting-cycle close (reclaim, envelope top-up) and grant close/kill
  *   report     — ledger report: fully loaded VOF, suppression, judgment column, divergence, revisit trigger
+ *   preflight  — the one run pre-flight + readiness, shared by the runner and sdk-holding
+ *   health     — holdingHealth(holdingDir): read-only issues for scripts/health.js
  *   CLI        — bin/sdk-holding.js (main(argv, deps) exported for tests)
  */
 
@@ -28,6 +30,9 @@ const runner = require('./runner');
 const proofs = require('./proofs');
 const cycle = require('./cycle');
 const report = require('./report');
+const preflight = require('./preflight');
+const health = require('./health');
+const fold = require('./fold');
 
 module.exports = {
   // canonical JSON
@@ -86,4 +91,11 @@ module.exports = {
   buildReport: report.buildReport,
   formatReport: report.formatReport,
   VOF_WEIGHTS: report.WEIGHTS,
+
+  // limits in the chain, pre-flight, health
+  LIMIT_KEYS: fold.LIMIT_KEYS,
+  validateLimits: fold.validateLimits,
+  preflightRun: preflight.preflightRun,
+  readiness: preflight.readiness,
+  holdingHealth: health.holdingHealth,
 };

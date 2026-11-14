@@ -28,12 +28,14 @@ const { GENESIS_SHA256, LedgerError, createFoldContext, applyEvent, drawIdemKey,
 
 const SCHEMA_VERSION = 1;
 const EVENT_TYPES = ['fund', 'grant', 'release', 'draw', 'proof', 'proof_revert', 'overrun', 'reclaim',
-  'return', 'close', 'freeze', 'unfreeze', 'unmetered', 'checkpoint', 'ratify', 'judgment', 'cycle_close'];
+  'return', 'close', 'freeze', 'unfreeze', 'unmetered', 'checkpoint', 'ratify', 'judgment', 'cycle_close',
+  'limits', 'price_table', 'runner_pin'];
 const HOLDING_OWNER = 'holding-owner';
 const RUNNER = 'runner';
 const ACTORS_BY_TYPE = {
   fund: [HOLDING_OWNER], freeze: [HOLDING_OWNER], unfreeze: [HOLDING_OWNER],
   ratify: [HOLDING_OWNER], cycle_close: [HOLDING_OWNER],
+  limits: [HOLDING_OWNER], price_table: [HOLDING_OWNER], runner_pin: [HOLDING_OWNER], // replay inputs live in the chain
   // anyone in the company may propose a grant; only the holding Owner's own grant is ratified on entry
   grant: [HOLDING_OWNER, 'agent', 'company-owner'],
   judgment: ['company-owner'], // the judgment column is the company Owner's rating
@@ -115,12 +117,14 @@ function payloadOf(e) {
 }
 
 /**
- * Open a ledger file. opts.limits.envelopePerCycle is required (number, or null = infinite fuel).
+ * Open a ledger file. Fuel limits come from the ledger's own `limits` events. opts.limits, when
+ * given, is only the default before the first `limits` event (tests, pre-iteration-2 ledgers);
+ * it must name envelopePerCycle explicitly (number, or null = infinite fuel).
  * opts.now() → ISO timestamp (injectable for tests); opts.lockTimeoutMs (default 5000).
  */
 function openLedger(file, opts = {}) {
   const limits = opts.limits;
-  createFoldContext(limits); // validates limits up front
+  createFoldContext(limits); // validates genesis limits up front (when given)
   const now = opts.now || (() => new Date().toISOString());
   const lockTimeoutMs = opts.lockTimeoutMs ?? 5000;
   const lockFile = `${file}.lock`;

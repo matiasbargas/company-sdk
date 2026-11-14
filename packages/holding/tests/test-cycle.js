@@ -50,10 +50,10 @@ const ratify = (id = 'g1', actor = 'holding-owner') => ({ type: 'ratify', actor,
     tranches: [{ size_fu: 100, proof: { kind: 'verified_surface', ref: 'beta/S-1' } }] }));
   L.append(draw(30));
   L.append({ ...proof(1, 'beta/S-1'), grant_id: 'g2' });
-  const plan = planCycleClose(L.fold(), LIMITS);
+  const plan = planCycleClose(L.fold());
   t.deepEq(plan.reclaims.map(r => [r.grant_id, r.undrawn_fu]), [['g1', 70]], 'plan reclaims g1 only (g2 proved this cycle)');
   const before = L.fold().pool.balance_fu;
-  const res = closeCycle(L, { limits: LIMITS });
+  const res = closeCycle(L);
   t.eq(res.closed_cycle, 1, 'cycle 1 closed');
   const s = L.fold();
   t.eq(s.cycle, 2, 'cycle counter advanced');
@@ -69,10 +69,10 @@ const ratify = (id = 'g1', actor = 'holding-owner') => ({ type: 'ratify', actor,
   t.eq(fundEv.cycle, 2, 'top-up fund names the next cycle');
   t.eq(s.pool.balance_fu, 1000, `pool topped up to envelope (was ${before + 70} after reclaim)`);
   // g2 dry in cycle 2 → reclaimed at close of cycle 2
-  closeCycle(L, { limits: LIMITS });
+  closeCycle(L);
   t.eq(L.fold().grants.g2.status, 'reclaimed', 'g2 reclaimed after one dry cycle');
   // re-running a close does not double-reclaim (cycle 3 has nothing open)
-  const r3 = closeCycle(L, { limits: LIMITS });
+  const r3 = closeCycle(L);
   t.eq(r3.reclaims.length, 0, 'nothing left to reclaim');
 }
 
@@ -82,15 +82,15 @@ const ratify = (id = 'g1', actor = 'holding-owner') => ({ type: 'ratify', actor,
   const L = open(lim2);
   L.append(fund(1000));
   L.append(grant());
-  closeCycle(L, { limits: lim2 });
+  closeCycle(L);
   t.eq(L.fold().grants.g1.status, 'open', 'one dry cycle < 2: kept');
-  closeCycle(L, { limits: lim2 });
+  closeCycle(L);
   t.eq(L.fold().grants.g1.status, 'reclaimed', 'two dry cycles: reclaimed');
   const limN = { ...LIMITS, reclaimCyclesWithoutProof: null };
   const L2 = open(limN);
   L2.append(fund(1000));
   L2.append(grant());
-  closeCycle(L2, { limits: limN }); closeCycle(L2, { limits: limN });
+  closeCycle(L2); closeCycle(L2);
   t.eq(L2.fold().grants.g1.status, 'open', 'null: never reclaimed by cycle count');
 }
 
@@ -149,7 +149,7 @@ const ratify = (id = 'g1', actor = 'holding-owner') => ({ type: 'ratify', actor,
   L.append(fund(1000));
   L.append(grant({ appetite_fu: 750, tranches: [{ size_fu: 750, proof: { kind: 'verified_surface', ref: 'acme/X' } }] }));
   L.append(proof(1, 'acme/X'));
-  closeCycle(L, { limits: lim });
+  closeCycle(L);
   const p = L.fold().pool;
   t.deepEq([p.balance_fu, p.reserves.small_bet_fu, p.reserves.overrun_fu, p.general_fu], [1000, 200, 50, 750],
     'reserves stay at target; top-up restores the envelope');
@@ -182,6 +182,50 @@ const ratify = (id = 'g1', actor = 'holding-owner') => ({ type: 'ratify', actor,
   L.append(draw(5, { after_freeze: true, run_started_seq: startedAt }));
   t.eq(L.fold().grants.g1.drawn_fu, 5, 'pre-freeze session spend counts against its grant');
   t.throwsCode(() => L.append(draw(500, { after_freeze: true, run_started_seq: startedAt })), 'TRANCHE_EXHAUSTED', 'tranche gating still applies');
+}
+
+// @covers cap-po-reserve-001 — fuel limits are ledger events, replayed at each point of history; a caller's copy never changes replay
+{
+  const FULL = { envelopePerCycle: 1000, reclaimCyclesWithoutProof: 1, smallBetReserve: 0.2, smallBetMax: 100, overrunReserve: 0.05,
+    proofRevertCommits: 10, concurrency: 1 };
+  const lim = (limits, idem) => ({ type: 'limits', actor: 'holding-owner', idem_key: idem, limits });
+  const file = ledgerFile();
+  const L = openLedger(file, { now: FIXED_NOW });
+  t.throwsCode(() => L.append(fund(100)), 'LIMITS_REQUIRED', 'no limits event yet: fund refused (fail closed)');
+  t.throwsCode(() => L.append({ ...lim(FULL, 'l0'), actor: 'agent' }), 'OWNER_ONLY', 'only the holding Owner sets limits');
+  t.throwsCode(() => L.append(lim({ envelopePerCycle: 1000 }, 'l0')), 'LIMITS_INVALID', 'every limit is explicit (null = no cap)');
+  t.throwsCode(() => L.append(lim({ ...FULL, smallBetReserve: 0.7, overrunReserve: 0.4 }, 'l0')), 'LIMITS_INVALID', 'reserves must sum below 1');
+  L.append(lim(FULL, 'l1'));
+  L.append(fund(1000));
+  t.deepEq([L.fold().pool.reserves.small_bet_fu, L.fold().pool.reserves.overrun_fu], [200, 50], 'reserves carved under the first limits');
+  L.append(lim({ ...FULL, smallBetReserve: 0, overrunReserve: 0 }, 'l2'));
+  t.eq(L.fold().pool.reserves, null, 'reserves dropped from this event on: they fold into general fuel');
+  t.eq(L.fold().pool.general_fu, 1000, 'nothing lost');
+  L.append(lim({ ...FULL, envelopePerCycle: null }, 'l3'));
+  const s = L.fold();
+  t.eq(s.pool.infinite, true, 'switched to infinite fuel');
+  t.eq(s.limits_source, 4, 'the limits in force name their ledger seq');
+  const other = openLedger(file, { limits: { envelopePerCycle: 5, overrunReserve: 0.5 } }).fold();
+  t.eq(JSON.stringify(other.pool), JSON.stringify(s.pool), 'a caller-supplied limits copy does not change replay after the first limits event');
+}
+
+// @covers cap-po-fuel-001 — once the ledger carries a price table and runner pin, every draw names them (FU recomputable from the ledger)
+{
+  const L = open({ envelopePerCycle: null });
+  L.append(grant());
+  L.append({ type: 'price_table', actor: 'holding-owner', idem_key: 'pt1', price_table: { version: 'p1', models: { 'claude-opus-5-5': { in: 1, out: 5, cw: 1.25, cr: 0.1 } } } });
+  t.throwsCode(() => L.append({ type: 'price_table', actor: 'holding-owner', idem_key: 'pt2', price_table: { version: 'p2', models: {} } }),
+    'PRICE_TABLE_INVALID', 'an empty price table is refused');
+  t.throwsCode(() => L.append(draw(5)), 'PRICE_TABLE_MISMATCH', 'a draw priced with another table is refused');
+  L.append(draw(5, { price_table_version: 'p1' }));
+  t.throwsCode(() => L.append({ type: 'runner_pin', actor: 'holding-owner', idem_key: 'rp0', claude_code_version: 'latest', session_floor_usd: { m: 1 } }),
+    'RUNNER_PIN_INVALID', 'the pin is an exact version');
+  L.append({ type: 'runner_pin', actor: 'holding-owner', idem_key: 'rp1', claude_code_version: '2.1.292', session_floor_usd: { 'claude-opus-5-5': 0.08 } });
+  t.throwsCode(() => L.append(draw(5, { price_table_version: 'p1', claude_code_version: '9.9.9' })), 'RUNNER_PIN_MISMATCH',
+    'a draw metered from an unpinned Claude Code version is refused');
+  L.append(draw(5, { price_table_version: 'p1', claude_code_version: '2.1.292' }));
+  t.eq(L.fold().grants.g1.drawn_fu, 10, 'matching draws accepted');
+  t.eq(L.fold().config.runner_pin.session_floor_usd['claude-opus-5-5'], 0.08, 'session floors folded from the ledger');
 }
 
 module.exports = t.done();

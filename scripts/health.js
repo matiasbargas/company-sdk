@@ -352,6 +352,24 @@ function gitOut(args, cwd) {
   }
 })();
 
+// 13. Portfolio holding (packages/holding): chain integrity, unfilled judgment column,
+//     accepted-risk revisit trigger, unmetered spend. Runs only where a holding exists:
+//     .sdkrc "holdingPath", or <project>/holding.
+(function holding() {
+  let holdingDir = path.join(projectDir, 'holding');
+  try { const rc = JSON.parse(fs.readFileSync(path.join(projectDir, '.sdkrc'), 'utf8')); if (rc.holdingPath) holdingDir = path.resolve(projectDir, rc.holdingPath); } catch (_) { /* default */ }
+  if (!fs.existsSync(holdingDir)) return;
+  let holdingHealth;
+  try { ({ holdingHealth } = require('../packages/holding/src/health')); } catch (_) { return; }
+  const res = holdingHealth(holdingDir);
+  const list = Array.isArray(res) ? res : (res && res.issues) || [];
+  for (const i of list) {
+    const line = `holding: ${i.code || 'ISSUE'} — ${i.message || ''}${i.capability ? ` (${i.capability})` : ''}`;
+    if ((i.severity || 'error') === 'info' || i.code === 'NO_HOLDING') notices.push(line); else issues.push(line);
+  }
+  if (!list.length) notices.push('holding: ledger chain verified, no open holding issues ✓');
+})();
+
 // ─── Output ───────────────────────────────────────────────────────────────────
 
 const healthy = issues.length === 0;

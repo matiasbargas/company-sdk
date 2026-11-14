@@ -12,6 +12,8 @@
  *   3. finite envelope only: `fund` the pool back up to `envelopePerCycle` for cycle n + 1
  *      (top-up, not additive: the envelope is the most a cycle can hold; reserves refill first).
  * Proof-revert scanning needs the company repositories, so callers run proofs.scanReverts first.
+ * Limits (reclaimCyclesWithoutProof, envelopePerCycle) are the ones in force in the ledger
+ * (`limits` events, fold.js) — never a caller's or settings.json's copy.
  *
  * Re-running after a partial failure is safe: reclaimed grants are no longer open, and every
  * event carries an idem_key derived from the cycle number.
@@ -26,8 +28,9 @@ function dryCycles(g, cycle) {
   return cycle - lastGood;
 }
 
-/** Pure plan for closing the current cycle of a folded state. */
-function planCycleClose(state, limits) {
+/** Pure plan for closing the current cycle of a folded state (limits default to the ledger's). */
+function planCycleClose(state, limits = state.limits) {
+  if (!limits) { const err = new Error('LIMITS_REQUIRED: the ledger has no fuel limits'); err.code = 'LIMITS_REQUIRED'; throw err; }
   const cycle = state.cycle;
   const threshold = limits.reclaimCyclesWithoutProof ?? null;
   const reclaims = [];
@@ -48,13 +51,11 @@ function planCycleClose(state, limits) {
   return { cycle, reclaims };
 }
 
-/**
- * Close the current cycle on an open ledger. opts.limits = the holding's fuel limits.
- * Returns { closed_cycle, reclaims, funded_fu }.
- */
-function closeCycle(ledger, opts = {}) {
-  const limits = opts.limits || {};
-  const plan = planCycleClose(ledger.fold(), limits);
+/** Close the current cycle on an open ledger. Returns { closed_cycle, reclaims, funded_fu }. */
+function closeCycle(ledger) {
+  const state = ledger.fold();
+  const limits = state.limits;
+  const plan = planCycleClose(state, limits);
   const n = plan.cycle;
   for (const r of plan.reclaims) {
     ledger.append({

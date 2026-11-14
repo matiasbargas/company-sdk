@@ -52,20 +52,49 @@ function overrunIdemKey(runId, sessionId, resultUuid) {
   return `${drawIdemKey(runId, sessionId, resultUuid)}:overrun`;
 }
 
-function createFoldContext(limits) {
-  if (!limits || !('envelopePerCycle' in limits)) {
-    fail('LIMITS_REQUIRED', 'limits.envelopePerCycle must be set explicitly (a number, or null for infinite fuel)');
+/**
+ * Fuel limits: the `limits` ledger event is the only authority (Mario C3 spirit: anything that
+ * changes how events replay lives in the chain). `genesisLimits` (openLedger opts.limits) is the
+ * default *before the first `limits` event* — for tests and pre-iteration-2 ledgers only; a
+ * holding created by sdk-holding starts with a `limits` event and passes none. Missing genesis
+ * keys default to no reserves and the spec defaults otherwise (GENESIS_DEFAULTS).
+ */
+const LIMIT_KEYS = ['envelopePerCycle', 'reclaimCyclesWithoutProof', 'smallBetReserve', 'smallBetMax', 'overrunReserve',
+  'proofRevertCommits', 'concurrency'];
+const GENESIS_DEFAULTS = { reclaimCyclesWithoutProof: 1, smallBetReserve: 0, smallBetMax: null, overrunReserve: 0,
+  proofRevertCommits: 10, concurrency: 1 };
+
+/** Validate a complete limits object (every LIMIT_KEYS key present). Returns a clean copy. */
+function validateLimits(l, where = 'limits') {
+  if (!l || typeof l !== 'object' || Array.isArray(l)) fail('LIMITS_INVALID', `${where} must be an object`);
+  const missing = LIMIT_KEYS.filter(k => !(k in l));
+  if (missing.length) fail('LIMITS_INVALID', `${where} is missing ${missing.join(', ')} (null means "no cap" and must be explicit)`);
+  const out = {};
+  for (const k of LIMIT_KEYS) out[k] = l[k];
+  if (out.envelopePerCycle !== null && !isPosInt(out.envelopePerCycle)) fail('LIMITS_INVALID', 'envelopePerCycle must be a positive integer or null (infinite)');
+  if (out.reclaimCyclesWithoutProof !== null && !isPosInt(out.reclaimCyclesWithoutProof)) fail('LIMITS_INVALID', 'reclaimCyclesWithoutProof must be a positive integer or null');
+  if (!isPosInt(out.proofRevertCommits)) fail('LIMITS_INVALID', 'proofRevertCommits must be a positive integer');
+  if (!isPosInt(out.concurrency)) fail('LIMITS_INVALID', 'concurrency must be a positive integer');
+  reserveConfig(out, out.envelopePerCycle === null); // validates reserve fractions and smallBetMax
+  return out;
+}
+
+function createFoldContext(genesisLimits) {
+  let limits = null;
+  if (genesisLimits !== undefined && genesisLimits !== null) {
+    if (!('envelopePerCycle' in genesisLimits)) {
+      fail('LIMITS_REQUIRED', 'limits.envelopePerCycle must be set explicitly (a number, or null for infinite fuel)');
+    }
+    limits = validateLimits({ ...GENESIS_DEFAULTS, ...genesisLimits }, 'genesis limits');
   }
-  const infinite = limits.envelopePerCycle === null;
-  const reserveCfg = reserveConfig(limits, infinite);
-  return {
+  const ctx = {
     state: {
+      limits: null,
+      limits_source: null,  // 'genesis' | seq of the `limits` event in force
+      config: { price_table: null, runner_pin: null },
       pool: {
-        infinite, funded_fu: 0, balance_fu: 0, general_fu: 0,
-        reserves: reserveCfg ? { small_bet_fu: 0, overrun_fu: 0 } : null,
-        reserve_targets: reserveCfg ? { small_bet_fu: reserveCfg.smallTarget, overrun_fu: reserveCfg.overrunTarget } : null,
-        small_bet_max_fu: reserveCfg ? reserveCfg.smallBetMax : null,
-        overrun_reserve_empty: false,
+        infinite: false, funded_fu: 0, balance_fu: 0, general_fu: 0,
+        reserves: null, reserve_targets: null, small_bet_max_fu: null, overrun_reserve_empty: false,
       },
       cycle: 1,
       closed_cycles: [],
@@ -82,6 +111,55 @@ function createFoldContext(limits) {
     head: GENESIS_SHA256,   // sha256 of the last applied event (set by the ledger after hashing)
     count: 0,
   };
+  if (limits) applyLimits(ctx, limits, 'genesis');
+  return ctx;
+}
+
+/** Put limits in force from this point of history on. Reserves are re-shaped, never invented. */
+function applyLimits(ctx, limits, source) {
+  const pool = ctx.state.pool;
+  const infinite = limits.envelopePerCycle === null;
+  const cfg = reserveConfig(limits, infinite);
+  pool.infinite = infinite;
+  if (!cfg) {
+    pool.reserves = null; pool.reserve_targets = null; pool.small_bet_max_fu = null; // reserves fold into general fuel
+  } else {
+    pool.reserves = pool.reserves || { small_bet_fu: 0, overrun_fu: 0 };
+    pool.reserve_targets = { small_bet_fu: cfg.smallTarget, overrun_fu: cfg.overrunTarget };
+    pool.small_bet_max_fu = cfg.smallBetMax;
+    for (const k of ['small_bet_fu', 'overrun_fu']) pool.reserves[k] = Math.min(pool.reserves[k], pool.reserve_targets[k]);
+  }
+  ctx.state.limits = { ...limits };
+  ctx.state.limits_source = source;
+  recomputeGeneral(pool);
+}
+
+function requireLimits(ctx, what) {
+  if (!ctx.state.limits) fail('LIMITS_REQUIRED', `${what} needs fuel limits; the ledger has no \`limits\` event yet (sdk-holding init writes the first)`);
+}
+
+const isNonNegNumber = (v) => typeof v === 'number' && Number.isFinite(v) && v >= 0;
+
+function validatePriceTable(pt) {
+  if (!pt || typeof pt !== 'object' || !isNonEmptyString(pt.version) || !pt.models || typeof pt.models !== 'object' || Array.isArray(pt.models)) {
+    fail('PRICE_TABLE_INVALID', 'price_table needs { version: string, models: { [model]: { in, out, cw, cr } } }');
+  }
+  const models = Object.keys(pt.models);
+  if (models.length === 0) fail('PRICE_TABLE_INVALID', 'price_table.models is empty');
+  for (const m of models) {
+    const r = pt.models[m];
+    if (!r || !['in', 'out', 'cw', 'cr'].every(k => isNonNegNumber(r[k]))) fail('PRICE_TABLE_INVALID', `price_table.models.${m} needs non-negative in, out, cw, cr`);
+  }
+}
+
+function validateRunnerPin(e) {
+  if (typeof e.claude_code_version !== 'string' || !/^\d+\.\d+\.\d+$/.test(e.claude_code_version)) {
+    fail('RUNNER_PIN_INVALID', 'runner_pin.claude_code_version must be a semantic version like 2.1.292 (C5)');
+  }
+  const f = e.session_floor_usd;
+  if (!f || typeof f !== 'object' || Array.isArray(f) || Object.keys(f).length === 0 || !Object.values(f).every(isNonNegNumber)) {
+    fail('RUNNER_PIN_INVALID', 'runner_pin.session_floor_usd must map each runnable model to its fixed per-session cost in USD');
+  }
 }
 
 const isFraction = (v) => typeof v === 'number' && v >= 0 && v < 1;
@@ -102,9 +180,12 @@ function reserveConfig(limits, infinite) {
   return { smallTarget, overrunTarget: Math.floor(over * limits.envelopePerCycle), smallBetMax };
 }
 
-const recomputeGeneral = (pool) => {
+// overrun_reserve_empty: reserves apply, the overrun target is > 0, and the reserve holds nothing —
+// overruns stop, so pre-flight refuses new runs (cap-po-reserve-001).
+function recomputeGeneral(pool) {
   pool.general_fu = pool.balance_fu - (pool.reserves ? pool.reserves.small_bet_fu + pool.reserves.overrun_fu : 0);
-};
+  pool.overrun_reserve_empty = !!pool.reserves && pool.reserve_targets.overrun_fu > 0 && pool.reserves.overrun_fu <= 0;
+}
 
 function liveGrant(ctx, id) {
   const g = ctx.state.grants[id];
@@ -123,6 +204,7 @@ function trancheOf(g, n) {
 }
 
 function debitPool(ctx, fu, what, small) {
+  requireLimits(ctx, what);
   const pool = ctx.state.pool;
   if (pool.infinite) { pool.balance_fu -= fu; recomputeGeneral(pool); return; }
   if (!pool.reserves) {
@@ -146,7 +228,6 @@ function refillOverrunReserve(pool, fu) {
   const room = pool.reserve_targets.overrun_fu - pool.reserves.overrun_fu;
   const moved = Math.max(0, Math.min(fu, room, pool.general_fu));
   pool.reserves.overrun_fu += moved;
-  if (pool.reserves.overrun_fu > 0) pool.overrun_reserve_empty = false;
   recomputeGeneral(pool);
 }
 
@@ -168,6 +249,7 @@ const available = (g) => g.released_fu - g.drawn_fu;
 const handlers = {
   fund(ctx, e) {
     if (!isPosInt(e.amount_fu)) fail('INVALID_AMOUNT', 'fund amount_fu must be a positive integer');
+    requireLimits(ctx, 'fund');
     const pool = ctx.state.pool;
     pool.funded_fu += e.amount_fu;
     pool.balance_fu += e.amount_fu;
@@ -178,7 +260,6 @@ const handlers = {
         pool.reserves[k] += add;
         left -= add;
       }
-      if (pool.reserves.overrun_fu > 0) pool.overrun_reserve_empty = false;
     }
     recomputeGeneral(pool);
   },
@@ -202,6 +283,20 @@ const handlers = {
     };
     if (e.actor === HOLDING_OWNER) ratifyGrant(ctx, g); // the holding Owner's own grant is ratified by its author
     ctx.state.grants[g.grant_id] = g;
+  },
+
+  limits(ctx, e) {
+    applyLimits(ctx, validateLimits(e.limits, 'limits event'), e.seq);
+  },
+
+  price_table(ctx, e) {
+    validatePriceTable(e.price_table);
+    ctx.state.config.price_table = { version: e.price_table.version, models: e.price_table.models, seq: e.seq };
+  },
+
+  runner_pin(ctx, e) {
+    validateRunnerPin(e);
+    ctx.state.config.runner_pin = { claude_code_version: e.claude_code_version, session_floor_usd: { ...e.session_floor_usd }, seq: e.seq };
   },
 
   ratify(ctx, e) {
@@ -284,6 +379,7 @@ const handlers = {
     if (!isNonNegInt(e.fu)) fail('DRAW_INVALID', 'draw.fu must be a non-negative integer');
     if (!Array.isArray(e.raw) || e.raw.length === 0) fail('DRAW_INVALID', 'draw.raw (normalized per-model counts) is required');
     if (!e.model_usage || typeof e.model_usage !== 'object') fail('DRAW_INVALID', 'draw.model_usage (verbatim) is required');
+    checkConfigRefs(ctx, e);
     const g = liveGrant(ctx, e.grant_id);
     if (g.mission_id !== e.mission_id) fail('MISSION_MISMATCH', `grant ${g.grant_id} funds mission ${g.mission_id}, not ${e.mission_id}`);
     if (g.company !== e.company) fail('COMPANY_MISMATCH', `grant ${g.grant_id} belongs to ${g.company}, not ${e.company}`);
@@ -302,6 +398,7 @@ const handlers = {
     const d = ctx.idem.get(drawKey);
     if (!d || d.type !== 'draw') fail('OVERRUN_WITHOUT_DRAW', `no draw ${drawKey} precedes this overrun`);
     if (!isPosInt(e.fu)) fail('INVALID_AMOUNT', 'overrun.fu must be a positive integer');
+    checkConfigRefs(ctx, e);
     const g = ctx.state.grants[d.grant_id];
     g.overrun_fu += e.fu;
     g.overrun_outstanding_fu += e.fu;
@@ -311,7 +408,6 @@ const handlers = {
     if (pool.reserves) {
       const fromReserve = Math.min(e.fu, pool.reserves.overrun_fu);
       pool.reserves.overrun_fu -= fromReserve;
-      if (pool.reserves.overrun_fu === 0) pool.overrun_reserve_empty = true;
       if (fromReserve < e.fu) {
         ctx.state.warnings.push(`seq ${e.seq}: overrun of ${e.fu} FU exceeded the overrun reserve by ${e.fu - fromReserve} FU (taken from general fuel)`);
       }
@@ -342,6 +438,18 @@ const handlers = {
     }
   },
 };
+
+// Once the ledger carries a price table / runner pin, every draw must name the ones in force, so
+// its FU is recomputable from the ledger alone (raw × the named table).
+function checkConfigRefs(ctx, e) {
+  const { price_table: pt, runner_pin: pin } = ctx.state.config;
+  if (pt && e.price_table_version !== pt.version) {
+    fail('PRICE_TABLE_MISMATCH', `${e.type} priced with ${JSON.stringify(e.price_table_version)}; the ledger's price table is ${pt.version}`);
+  }
+  if (pin && e.claude_code_version !== undefined && e.claude_code_version !== pin.claude_code_version) {
+    fail('RUNNER_PIN_MISMATCH', `${e.type} metered from Claude Code ${e.claude_code_version}; the ledger pins ${pin.claude_code_version}`);
+  }
+}
 
 function ratifyGrant(ctx, g) {
   g.status = 'open';
@@ -376,4 +484,5 @@ function applyEvent(ctx, e) {
   ctx.count += 1;
 }
 
-module.exports = { GENESIS_SHA256, LedgerError, createFoldContext, applyEvent, drawIdemKey, overrunIdemKey, handlers, RATINGS };
+module.exports = { GENESIS_SHA256, LedgerError, createFoldContext, applyEvent, drawIdemKey, overrunIdemKey, handlers, RATINGS,
+  LIMIT_KEYS, GENESIS_DEFAULTS, validateLimits };

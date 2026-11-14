@@ -100,14 +100,14 @@ claims:
 
   - id: cap-po-proof-002
     kind: capability
-    status: planned
+    status: built
     statement: "v0 accepts the company's own gates as proof (system autonomy, Owner decision 2026-11-13); the Goodhart risk is recorded and the outside-verifier rule activates when the revisit trigger fires."
     acceptance:
       - given: "a second human Owner is registered, OR in 2 consecutive cycles divergence is flagged (within a bet class of ≥ 3 bets, ≥ 50% of above-class-median-VOF bets rated flat/regressed, unrated bets counting as divergent)"
         when: "sdk-health runs on the holding"
         then: "it reports that the outside-verifier decision is due (proof self-verification risk)"
     sources: [{file: history.md, section: "Portfolio Orchestrator — Discovery decisions"}]
-    # pinned at the report level (report.revisit_trigger); stays planned until sdk-health reports it
+    # sdk-health surface: packages/holding/src/health.js holdingHealth() (scripts/health.js calls it)
     conformance: [cap-po-proof-002]
 
   - id: cap-po-runner-001
@@ -252,7 +252,7 @@ claims:
         when: "a small grant is requested"
         then: "it is funded from the small-bet reserve"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 6–7"}]
-    # overrun stop = pre-flight in sdk-holding `run` (pool.overrun_reserve_empty); runner.js does not check it yet
+    # overrun stop = shared pre-flight (src/preflight.js, OVERRUN_RESERVE_EMPTY) used by the runner and sdk-holding; limits come from ledger `limits` events
     conformance: [cap-po-reserve-001]
 
   - id: cap-po-runner-003
@@ -301,7 +301,7 @@ claims:
 
   - id: cap-po-judgment-001
     kind: capability
-    status: planned
+    status: built
     statement: "Each cycle the company Owner rates every funded bet advanced | flat | regressed; the ledger report shows the rating beside VOF and flags divergence (≥ 50% of above-median-VOF bets rated flat or regressed)."
     acceptance:
       - given: "a bet class with 6 funded bets where 2 of the 3 above-class-median-VOF bets are rated flat"
@@ -314,7 +314,7 @@ claims:
         when: "the ledger report runs"
         then: "divergence is not computed for that class (below the minimum)"
     sources: [{file: intent/portfolio-orchestrator/discovery-synthesis.md, section: "§36 draft v0.2, 8. Metric and the judgment column"}]
-    # pinned at the report level (report.unrated + divergence); stays planned until sdk-health flags the unfilled column
+    # sdk-health surface: packages/holding/src/health.js holdingHealth() (scripts/health.js calls it)
     conformance: [cap-po-judgment-001]
 
   - id: cap-po-runner-004

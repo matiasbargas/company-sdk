@@ -32,7 +32,8 @@ const lines = (file) => fs.existsSync(file) ? fs.readFileSync(file, 'utf8').spli
   t.eq(sha256, hashCanonical(body), 'sha256 = sha256(canonical(event without sha256))');
   t.eq(e1.ts, FIXED_NOW(), 'timestamp comes from the injected clock');
   t.deepEq(EVENT_TYPES, ['fund', 'grant', 'release', 'draw', 'proof', 'proof_revert', 'overrun', 'reclaim',
-    'return', 'close', 'freeze', 'unfreeze', 'unmetered', 'checkpoint', 'ratify', 'judgment', 'cycle_close'],
+    'return', 'close', 'freeze', 'unfreeze', 'unmetered', 'checkpoint', 'ratify', 'judgment', 'cycle_close',
+    'limits', 'price_table', 'runner_pin'],
     'C3 event set + ratify (cap-po-grant-002), judgment (cap-po-judgment-001), cycle_close (cap-po-grant-003)');
   t.deepEq(L.verify(), { ok: true, count: 2 }, 'fresh ledger verifies');
 }

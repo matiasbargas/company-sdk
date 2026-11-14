@@ -508,6 +508,37 @@ async function main() {
     t.eq(starts(s.log).length, 1, 'only the at-floor run spawned');
   }
 
+  // @covers cap-po-reserve-001 — the runner itself (shared pre-flight, limits from the ledger) refuses a run once the overrun reserve is empty
+  {
+    const holdingDir = tmpDir('holding-reserve-');
+    const ledgerFile = path.join(holdingDir, 'fuel', 'ledger.jsonl');
+    const L = openLedger(ledgerFile, { now: FIXED_NOW }); // no genesis: every limit comes from the chain
+    L.append({ type: 'limits', actor: 'holding-owner', idem_key: 'limits:1', limits: { envelopePerCycle: 1000000, reclaimCyclesWithoutProof: 1,
+      smallBetReserve: 0, smallBetMax: null, overrunReserve: 0.05, proofRevertCommits: 10, concurrency: 1 } });
+    L.append({ type: 'price_table', actor: 'holding-owner', idem_key: 'pt:1', price_table: PRICE });
+    L.append({ type: 'runner_pin', actor: 'holding-owner', idem_key: 'pin:1', claude_code_version: '2.1.292', session_floor_usd: FLOORS });
+    L.append({ type: 'fund', actor: 'holding-owner', idem_key: 'fund:1', amount_fu: 1000000 });
+    L.append(grant({ grant_id: 'g-acme', idem_key: 'grant-g-acme', company: 'acme', mission_id: 'm-acme', appetite_fu: 200000,
+      tranches: [{ size_fu: 200000, proof: { kind: 'verified_surface', ref: 'acme/S-1' } }] }));
+    t.eq(L.fold().pool.reserves.overrun_fu, 50000, 'the ledger limits carve the overrun reserve');
+    const co = tmpDir('co-reserve-');
+    const log = path.join(holdingDir, 'fake.log');
+    const runner = createLocalRunner({ holdingDir, companies: [{ id: 'acme', path: co }], claudeBin: [process.execPath, FAKE], model: 'claude-opus-5-5',
+      env: { FAKE_CLAUDE_SCENARIO: 'ok', FAKE_CLAUDE_LOG: log } }); // no priceTable / pin / floors / limits options: all from the ledger
+    const d = draw(10, { grant_id: 'g-acme', mission_id: 'm-acme', company: 'acme', run_id: 'prior', session_id: 'ps', result_uuid: 'pu',
+      price_table_version: PRICE.version });
+    L.append(d);
+    L.append({ type: 'overrun', actor: 'runner', idem_key: `${d.idem_key}:overrun`, run_id: 'prior', session_id: 'ps', result_uuid: 'pu',
+      fu: 50000, price_table_version: PRICE.version });
+    t.eq(L.fold().pool.overrun_reserve_empty, true, 'the reserve is empty');
+    const e = codeOf(() => runner.start('acme', startOpts('acme', { maxBudgetUsd: 1, model: 'claude-opus-5-5' })));
+    t.eq(e && e.code, 'OVERRUN_RESERVE_EMPTY', 'the runner refuses: overruns stop when the reserve is empty');
+    t.eq(starts(log).length, 0, 'no session spawned');
+    const bad = codeOf(() => createLocalRunner({ holdingDir, companies: [{ id: 'acme', path: co }], priceTable: { ...PRICE, version: 'other' } }));
+    t.eq(bad && bad.code, 'CONFIG_MISMATCH', 'a runner option that contradicts the ledger is refused (the ledger wins)');
+    runner.close();
+  }
+
   return t.done();
 }
 
