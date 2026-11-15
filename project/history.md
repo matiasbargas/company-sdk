@@ -685,3 +685,18 @@ Affects natural persons: NO
 - **Visibility:** denials, provisional and uncharged FU, and unreconciled periods appear in the report and in health.
 - **README** with a first-run checklist.
 - **Totals:** 918 holding assertions; behaviour coverage is 204 of 214 (95%).
+
+**Implementation Guardian cycle 2: ITERATE (2026-11-15).** All cycle-1 items are closed, and 5 of the 6 criteria pass. One blocker: under D7 the landing/freeze hook fails open. The hook command (the Owner's node running a file in the repo) sits under the Owner's 0750 home, which the sandbox user cannot reach. Claude Code treats a hook that fails to run as non-blocking, and the runner sets no deadline on budget or freeze landing. Cycle 3 (the last before escalation) fixes:
+- install the runtime and hook where the sandbox user can reach them;
+- check that access in both `doctor` and the runner pre-flight;
+- add a hard-kill deadline to budget and freeze landing;
+- read `sessionDir` from the ledger;
+- deny Edit/Write on `.git/**` and `.claude/**` (a carry-forward, done now).
+
+**Orchestrator cycle 3 — 2026-11-15** (answers Guardian cycle 2: the hook failed open under D7):
+- **Reachable runtime:** `src/sandbox-access.js` walks every parent folder for the sandbox user. The setup script installs a self-contained hook and a reachable node in an Owner-owned 0755 runtime folder, and records the runtime paths in the `sandbox` ledger event.
+- **Access checked twice:** `doctor` and the runner pre-flight (SANDBOX_ACCESS) both check node, the hook, claude, the clone and the session folder.
+- **Fail closed without the hook:** every landing (budget, freeze, stop, hook failure) arms a runner-side hard-kill deadline, so budget and freeze are bounded even if the hook never runs. Hook errors force landing.
+- **Session folder** is read from the ledger.
+- **Persistence route closed:** Edit/Write is denied on `.git/**` and `.claude/**`, and git hooks/config flags are refused.
+- 993 holding assertions.

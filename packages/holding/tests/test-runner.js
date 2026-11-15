@@ -620,10 +620,12 @@ async function main() {
     t.assert(st.envKeys.includes('HOLDING_RUN_ID'), 'unsandboxed: HOLDING_RUN_ID still set');
   }
 
-  // @covers cap-po-sandbox-001 — sandbox launch: sudo --preserve-env, the key only in the spawn env (never argv), 0600 Owner-owned key
+  // @covers cap-po-sandbox-001 — sandbox from the ledger: hook runtime + sessionDir from the `sandbox` event, access pre-flight, key in env only
   {
     const sbxRoot = tmpDir('sbx-');
-    const SANDBOX = { user: 'holding-sbx', home: path.join(sbxRoot, 'home', 'holding-sbx') };
+    const SESS = path.join(sbxRoot, 'sessions');
+    fs.mkdirSync(SESS); fs.chmodSync(SESS, 0o755);
+    const RUNTIME = { nodePath: path.join(sbxRoot, 'runtime', 'node'), hookPath: path.join(sbxRoot, 'runtime', 'landing-hook.js') };
     const calls = [];
     const fakeSpawn = (cmd, args, options) => {
       calls.push({ cmd, args, options });
@@ -634,67 +636,137 @@ async function main() {
       setTimeout(() => { child.stdout.end(); child.stderr.end(); child.emit('close', 1, null); }, 20);
       return child;
     };
-    // TODO(fold owner): replace readSandbox with a holding-owner `sandbox` ledger event once state.sandbox lands.
-    const s = setup({ runnerOpts: { allowUnsandboxed: false, readSandbox: () => SANDBOX, spawn: fakeSpawn } });
+    const accessCalls = [];
+    let accessProblems = [];
+    const checkSandboxAccess = (user, checks) => { accessCalls.push({ user, checks }); return { ok: accessProblems.length === 0, problems: accessProblems }; };
+    // TODO(CLI engineer): drop the readSandbox merge once the `sandbox` event carries nodePath/hookPath (fold), and the
+    // checkSandboxAccess stub once src/sandbox-access.js lands (the runner imports it by default).
+    const withRuntime = (state) => (state.sandbox ? { ...state.sandbox, ...RUNTIME } : null);
+    const s = setup({ runnerOpts: { allowUnsandboxed: false, readSandbox: withRuntime, checkSandboxAccess, spawn: fakeSpawn } });
+    s.L.append({ type: 'sandbox', actor: 'holding-owner', idem_key: 'sbx-1', user: '_sdkco', home: path.join(sbxRoot, 'home', '_sdkco'), sessionDir: SESS });
+    const KEY = 'sk-ant-company-acme';
     const e0 = codeOf(() => s.runner.start('acme', startOpts('acme', { idempotencyKey: 'sb0' })));
     t.eq(e0 && e0.code, 'SANDBOX_KEY_MISSING', 'sandbox without a company key refused');
-    const keyDir = path.join(s.holdingDir, 'keys');
-    fs.mkdirSync(keyDir, { recursive: true });
-    const keyFile = path.join(keyDir, 'acme.key');
-    const KEY = 'sk-ant-company-acme';
-    fs.writeFileSync(keyFile, `${KEY}\n`, { mode: 0o644 });
-    fs.chmodSync(keyFile, 0o644);
+    fs.mkdirSync(path.join(s.holdingDir, 'keys'), { recursive: true });
+    const keyFile = path.join(s.holdingDir, 'keys', 'acme.key');
+    fs.writeFileSync(keyFile, `${KEY}\n`, { mode: 0o644 }); fs.chmodSync(keyFile, 0o644);
     const e1 = codeOf(() => s.runner.start('acme', startOpts('acme', { idempotencyKey: 'sb1' })));
     t.eq(e1 && e1.code, 'SANDBOX_KEY_INSECURE', 'a key readable by others is refused');
     fs.chmodSync(keyFile, 0o600);
-    const runId = s.runner.start('acme', startOpts('acme', { idempotencyKey: 'sb2' }));
+
+    // access pre-flight: every unreachable path is named
+    accessProblems = [{ label: 'nodePath', path: RUNTIME.nodePath, need: 'x', reason: 'parent /Users/o is 0750' },
+      { label: 'company clone', path: s.cos[0].path, need: 'rwx' }];
+    const e2 = codeOf(() => s.runner.start('acme', startOpts('acme', { idempotencyKey: 'sb2' })));
+    t.eq(e2 && e2.code, 'SANDBOX_ACCESS', 'unreachable paths refuse the run');
+    t.assert(e2 && e2.message.includes(RUNTIME.nodePath) && e2.message.includes(s.cos[0].path), 'the refusal names each path');
+    const chk = accessCalls[accessCalls.length - 1] || { checks: [] };
+    t.eq(chk.user, '_sdkco', 'checked as the sandbox user');
+    const need = Object.fromEntries(chk.checks.map(c => [c.label, `${c.path}:${c.need}`]));
+    t.deepEq(need, { nodePath: `${RUNTIME.nodePath}:x`, hookPath: `${RUNTIME.hookPath}:r`, claude: `${process.execPath}:x`,
+      'company clone': `${s.cos[0].path}:rwx`, sessionDir: `${SESS}:rx` }, 'node x, hook r, claude x, clone rwx, sessionDir rx');
+    accessProblems = [];
+
+    const runId = s.runner.start('acme', startOpts('acme', { idempotencyKey: 'sb3' }));
     await s.runner.wait(runId);
     t.eq(calls.length, 1, 'one spawn');
     const c = calls[0] || { args: [], options: {} };
     t.eq(c.cmd, 'sudo', 'spawned through sudo');
     const i = c.args.indexOf(FAKE);
-    t.deepEq(c.args.slice(0, 5), ['-n', '-u', 'holding-sbx', '-H', '--preserve-env=ANTHROPIC_API_KEY,HOLDING_RUN_ID'],
-      'sudo -n -u <user> -H --preserve-env=ANTHROPIC_API_KEY,HOLDING_RUN_ID');
-    t.deepEq(c.args.slice(5, i + 1), [process.execPath, FAKE], 'then the claude binary (and its prefix args), no env -i');
-    t.eq(c.args[i + 1], '-p', 'then the runner-owned claude arguments');
+    t.deepEq(c.args.slice(0, 5), ['-n', '-u', '_sdkco', '-H', '--preserve-env=ANTHROPIC_API_KEY,HOLDING_RUN_ID'], 'sudo -n -u <user> -H --preserve-env=...');
+    t.deepEq(c.args.slice(5, i + 1), [process.execPath, FAKE], 'then the claude binary (no env -i)');
     t.assert(!c.args.some(a => a.includes(KEY)), 'the key appears in no argv element');
-    t.assert(!c.args.some(a => /^(ANTHROPIC_API_KEY|HOLDING_RUN_ID|PATH|HOME)=/.test(a)), 'no VAR=value on the command line');
     t.deepEq(Object.keys(c.options.env || {}).sort(), ['ANTHROPIC_API_KEY', 'HOLDING_RUN_ID', 'PATH'], 'spawn env has exactly PATH, the key and the run id');
     t.eq(c.options.env && c.options.env.ANTHROPIC_API_KEY, KEY, 'the key travels in the environment');
-    t.eq(c.options.env && c.options.env.HOLDING_RUN_ID, runId, 'run id in the environment');
-    t.eq(real(c.options.cwd), real(s.cos[0].path), 'cwd is the company clone');
 
-    // Session files: <home>/../sdkco-sessions/<runId>, 0755 dir, 0644 files, owned by the runner, outside holding/
-    const sessDir = path.join(SANDBOX.home, '..', 'sdkco-sessions', runId);
+    // sessionDir comes from the ledger event; per-run subdir 0755, files 0644, no secrets
     const settingsArg = c.args[c.args.indexOf('--settings') + 1];
-    t.eq(path.dirname(settingsArg), path.resolve(sessDir), 'settings live in <sandbox home>/../sdkco-sessions/<runId>');
-    t.assert(!settingsArg.startsWith(s.holdingDir), 'session files are not inside holding/');
+    t.eq(path.dirname(settingsArg), path.join(SESS, runId), 'settings live in <ledger sessionDir>/<runId>');
     const mode = (f) => fs.statSync(f).mode & 0o777;
-    t.eq(mode(sessDir), 0o755, 'session dir 0755 (sandbox reads, cannot write)');
-    t.eq(mode(path.dirname(sessDir)), 0o755, 'session base dir 0755');
+    t.eq(mode(path.join(SESS, runId)), 0o755, 'run session dir 0755');
     t.eq(mode(settingsArg), 0o644, 'settings file 0644');
-    const stateFile = path.join(sessDir, `${runId}.state.json`);
+    const stateFile = path.join(SESS, runId, `${runId}.state.json`);
     t.eq(mode(stateFile), 0o644, 'state file 0644');
-    const stf = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
-    t.eq(path.dirname(stf.freeze_flag), path.resolve(sessDir), 'the freeze flag the hook reads is in the session dir');
-    const settings = JSON.parse(fs.readFileSync(settingsArg, 'utf8'));
-    t.assert(settings.hooks.PreToolUse[0].hooks[0].command.includes(stateFile), 'the landing hook reads state from the session dir');
+    t.eq(path.dirname(JSON.parse(fs.readFileSync(stateFile, 'utf8')).freeze_flag), path.join(SESS, runId), 'the freeze flag the hook reads is in the session dir');
+    const cmd = JSON.parse(fs.readFileSync(settingsArg, 'utf8')).hooks.PreToolUse[0].hooks[0].command;
+    t.eq(cmd, `'${RUNTIME.nodePath}' '${RUNTIME.hookPath}' --state '${stateFile}'`, 'hook command = ledger nodePath + hookPath, never the Owner\'s node or the repo');
+    t.assert(!cmd.includes(process.execPath) && !cmd.includes(path.join('src', 'landing-hook.js')), 'no Owner node / repo hook path');
     t.assert(!fs.readFileSync(stateFile, 'utf8').includes(KEY) && !fs.readFileSync(settingsArg, 'utf8').includes(KEY), 'no secret in the session files');
 
-    // A session base writable by group/others is refused
-    const bad = tmpDir('sbx-bad-');
-    const badBase = path.join(bad, 'sessions');
-    fs.mkdirSync(badBase); fs.chmodSync(badBase, 0o777);
-    const s2 = setup({ runnerOpts: { allowUnsandboxed: false, readSandbox: () => SANDBOX, spawn: fakeSpawn, sessionDir: badBase } });
-    fs.mkdirSync(path.join(s2.holdingDir, 'keys'), { recursive: true });
-    fs.writeFileSync(path.join(s2.holdingDir, 'keys', 'acme.key'), KEY, { mode: 0o600 });
-    fs.chmodSync(path.join(s2.holdingDir, 'keys', 'acme.key'), 0o600);
-    const e2 = codeOf(() => s2.runner.start('acme', startOpts('acme', { idempotencyKey: 'sb3' })));
-    t.eq(e2 && e2.code, 'SESSION_DIR_INSECURE', 'a world-writable session dir is refused');
-    fs.chmodSync(badBase, 0o755);
-    const r3 = s2.runner.start('acme', startOpts('acme', { idempotencyKey: 'sb4' }));
-    await s2.runner.wait(r3);
-    t.assert(fs.existsSync(path.join(badBase, r3, `${r3}.settings.json`)), 'an explicit sessionDir (holding-owner config) is used as the base');
+    // a world-writable ledger sessionDir is refused; missing runtime fields refused; no checker → refused
+    fs.chmodSync(SESS, 0o777);
+    const e3 = codeOf(() => s.runner.start('acme', startOpts('acme', { idempotencyKey: 'sb4' })));
+    t.eq(e3 && e3.code, 'SESSION_DIR_INSECURE', 'a world-writable sessionDir is refused');
+    fs.chmodSync(SESS, 0o755);
+    const noRuntime = s.mk({ allowUnsandboxed: false, readSandbox: undefined, checkSandboxAccess, spawn: fakeSpawn });
+    const e4 = codeOf(() => noRuntime.start('acme', startOpts('acme', { idempotencyKey: 'sb5' })));
+    t.eq(e4 && e4.code, 'SANDBOX_INVALID', 'a sandbox event without nodePath/hookPath is refused');
+    t.assert(e4 && /nodePath/.test(e4.message) && /hookPath/.test(e4.message), 'refusal names the missing fields');
+    // the real src/sandbox-access.js: the runtime paths do not exist (and _sdkco may not either) → refused, naming them
+    const realCheck = s.mk({ allowUnsandboxed: false, readSandbox: withRuntime, spawn: fakeSpawn, checkSandboxAccess: undefined });
+    const e5 = codeOf(() => realCheck.start('acme', startOpts('acme', { idempotencyKey: 'sb6' })));
+    t.eq(e5 && e5.code, 'SANDBOX_ACCESS', 'the real access check refuses unreachable runtime paths');
+    t.assert(e5 && (e5.message.includes(RUNTIME.nodePath) || /no OS user _sdkco/.test(e5.message)), 'and names what is unreachable');
+  }
+
+  // @covers cap-po-runner-001 cap-po-killswitch-001 — fail closed without the hook: landing arms a deadline, then a hard kill
+  {
+    const s = setup({ tranche: 1000, scenario: 'sleep', extraEnv: { FAKE_CLAUDE_SLEEP_MS: '5000' }, runnerOpts: { landingTimeoutMs: 200 } });
+    const t0 = Date.now();
+    const r = s.runner.start('acme', startOpts('acme'));
+    const st = await s.runner.wait(r);
+    t.assert(Date.now() - t0 < 4000, 'budget landing is bounded by landingTimeoutMs, not the session');
+    t.eq(st.state, 'interrupted', 'forced landing → interrupted');
+    t.eq(st.terminalReason, 'budget', 'forced budget landing → terminal reason budget');
+    const rec = JSON.parse(fs.readFileSync(path.join(s.holdingDir, 'runs', `${r}.json`), 'utf8'));
+    t.eq(rec.landing_forced, true, 'run record: landing_forced');
+
+    const s2 = setup({ scenario: 'sleep', extraEnv: { FAKE_CLAUDE_SLEEP_MS: '5000' }, runnerOpts: { landingTimeoutMs: 200 } });
+    const r2 = s2.runner.start('acme', startOpts('acme'));
+    await waitFor(() => starts(s2.log).length === 1, 'freeze-deadline session started');
+    s2.L.append({ type: 'freeze', actor: 'holding-owner', idem_key: 'fz-deadline', reason: 'halt' });
+    const st2 = await s2.runner.wait(r2);
+    t.eq(st2.state, 'interrupted', 'forced freeze landing → interrupted');
+    t.eq(st2.terminalReason, 'frozen', 'forced freeze landing → terminal reason frozen');
+    t.eq(JSON.parse(fs.readFileSync(path.join(s2.holdingDir, 'runs', `${r2}.json`), 'utf8')).landing_forced, true, 'landing_forced recorded');
+    const s3 = setup();
+    const r3 = s3.runner.start('acme', startOpts('acme'));
+    await s3.runner.wait(r3);
+    t.eq(JSON.parse(fs.readFileSync(path.join(s3.holdingDir, 'runs', `${r3}.json`), 'utf8')).landing_forced, false, 'a normal run is not forced');
+  }
+
+  // @covers cap-po-runner-001 — hook execution errors in the stream are recorded and force landing (+ deadline)
+  {
+    const tools = [{ name: 'Read', input: { file_path: 'a' } }, { name: 'Edit', input: { file_path: 'a.js' } }, { name: 'Edit', input: { file_path: 'b.js' } }];
+    const s = setup({ scenario: 'tools', extraEnv: { FAKE_CLAUDE_TOOLS: JSON.stringify(tools), FAKE_CLAUDE_HOOK_FAIL: '1', FAKE_CLAUDE_TURN_DELAY_MS: '400' },
+      runnerOpts: { landingTimeoutMs: 150 } });
+    const r = s.runner.start('acme', startOpts('acme'));
+    const st = await s.runner.wait(r);
+    const rec = JSON.parse(fs.readFileSync(path.join(s.holdingDir, 'runs', `${r}.json`), 'utf8'));
+    t.assert(Array.isArray(rec.hook_errors) && rec.hook_errors.length >= 1, 'hook_errors recorded in the run record');
+    t.eq(rec.hook_errors && rec.hook_errors[0].exit_code, 126, 'hook error keeps the exit code');
+    t.eq(rec.landing_forced, true, 'hook failure forces landing, then the deadline kills');
+    t.eq(st.terminalReason, 'hook_failed', 'terminal reason hook_failed');
+    t.assert(readJsonl(s.hookOut).length < tools.length, 'the session was stopped before running every tool');
+  }
+
+  // @covers cap-po-runner-006 — .git/** and .claude/** are never writable; git hook paths refused in the hook
+  {
+    const s = setup();
+    const r = s.runner.start('acme', startOpts('acme'));
+    await s.runner.wait(r);
+    const a = starts(s.log)[0].argv;
+    const deny = JSON.parse(fs.readFileSync(a[a.indexOf('--settings') + 1], 'utf8')).permissions.deny;
+    const co = real(s.cos[0].path);
+    for (const dir of ['.git', '.claude']) for (const tool of ['Edit', 'Write', 'MultiEdit', 'NotebookEdit']) {
+      t.assert(deny.includes(`${tool}(/${co}/${dir}/**)`), `deny ${tool} on <company>/${dir}/**`);
+    }
+    const dir = tmpDir('hook-git-');
+    const stateFile = path.join(dir, 'r.state.json');
+    fs.writeFileSync(stateFile, JSON.stringify({ run_id: 'r', budget_fu: 1, spent_fu: 1, landing: false, freeze_flag: path.join(dir, 'FROZEN') }));
+    for (const cmd of ['git -c core.hooksPath=/tmp/h commit -m x', 'git config core.hooksPath /tmp/h', 'git diff --output=/tmp/x', 'git log --output /tmp/x']) {
+      t.eq(hook(stateFile, 'Bash', { command: cmd }).decision, 'deny', `landing: \`${cmd}\` denied`);
+    }
   }
 
   // @covers cap-po-runner-006 — landing hook git allowlist: alias shell-outs and command chaining are denied

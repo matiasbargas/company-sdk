@@ -32,12 +32,17 @@ init → add-company → sandbox setup (run the script) → key set → price-ta
 
 Do these in order. Each step either names its result or refuses with the fix.
 
-1. **Sandbox (D7).** Run `sdk-holding sandbox setup --user _sdkco --home /Users/Shared/sdkco [--session-dir /Users/Shared/sdkco-sessions] --claude-bin $(which claude)`.
+1. **Sandbox (D7).** Run `sdk-holding sandbox setup --user _sdkco --home /Users/Shared/sdkco [--session-dir /Users/Shared/sdkco-sessions] [--runtime-dir /Users/Shared/sdkco-runtime] --claude-bin $(which claude)`.
    - It records the `sandbox` event and writes `holding/sandbox/setup-_sdkco.sh`. **Read the script**, then run `sudo sh holding/sandbox/setup-_sdkco.sh`.
    - The script creates a hidden user and group and gives the company clone to that user.
    - It sets `holding/` to 0700 under you, and the session dir to 0755 under you.
    - It installs a sudoers drop-in, validated with `visudo -cf`, that lets you run *only* that claude path as `_sdkco`. The environment is reset except `ANTHROPIC_API_KEY` and `HOLDING_RUN_ID`.
+   - **Hook runtime.** It copies `landing-hook.js` (node built-ins only) into an Owner-owned 0755 runtime dir. It uses an existing node whose every parent is world-traversable (`/opt/homebrew/bin/node`, `/usr/local/bin/node`); if there is none, it copies your node next to the hook.
+   - Why the runtime matters: the landing/freeze hook runs *as `_sdkco`*. A hook that user cannot execute exits non-zero, Claude Code treats that as non-blocking, and **landing and freeze fail open**.
+   - The script ends by proving reachability as `_sdkco` with `sudo -u _sdkco test`: node, hook, claude, the clone and the session dir.
    - Then, as yourself, run `git config --global --add safe.directory <company clone>` and `sdk-holding sandbox doctor`. Every check must say `ok`.
+   - **Access checks.** Doctor walks every parent directory of node, the hook, claude, the clone and the session dir. It names any directory `_sdkco` cannot traverse, for example a `drwxr-x---` Owner home it is not in the group of, and gives the fix: move the path under `/Users/Shared`, or `chmod o+x` on that one directory.
+   - **Keep the company clone outside your home** (e.g. `/Users/Shared/<company>`) unless you grant traverse on it.
 2. **Key.** Run `sdk-holding key set <company> --from-stdin < keyfile`, then delete keyfile. The key is stored 0600 and never echoed. The runner passes it to the session through the environment, never on the command line.
 3. **Price table.** Run `sdk-holding price-table set prices.json`, where the file is `{ version, models: { <model>: { in, out, cw, cr } }, usd_per_fu }`.
    - Include **every model a session may use**, subagents included. A session that touches an unpriced model is recorded `unmetered`.
@@ -92,4 +97,5 @@ Do these in order. Each step either names its result or refuses with the fix.
 - `src/proofs.js` checks proofs in the company repo at a commit SHA.
 - `src/cycle.js` closes a cycle (reclaim, envelope top-up).
 - `src/report.js` and `src/health.js` are the views. `holdingHealth()` is called by `scripts/health.js`.
-- `src/cli/` holds the commands by group: setup, grants, run, views, reconcile, sandbox.
+- `src/sandbox-access.js` answers whether the sandbox user can reach a path (every parent x, the target's bits, the first matching class decides). Doctor and the runner pre-flight use it.
+- `src/cli/` holds the commands by group: setup, grants, run, views, reconcile, sandbox (`sandbox-script.js` is the generated sudo script).

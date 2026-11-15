@@ -18,6 +18,8 @@
  *     unknown  a result whose modelUsage uses an unknown field schema
  *     sleep    init + one assistant turn, sleeps FAKE_CLAUDE_SLEEP_MS (default 1500), then success
  *   FAKE_CLAUDE_TOOLS        JSON [{ name, input }] for the tools scenario
+ *   FAKE_CLAUDE_HOOK_FAIL    any value: PreToolUse hooks "fail to execute" (exit 126); a system hook_error line is
+ *                            emitted and the tool proceeds, as Claude Code treats non-2 hook failures as non-blocking
  *   FAKE_CLAUDE_DENY         comma list of tool names Claude Code's permission rules deny (before hooks run);
  *                            denials land in the tool_result and in result.permission_denials
  *   FAKE_CLAUDE_TURN_DELAY_MS  pause before each tool's hooks run (lets the runner see the turn's usage)
@@ -157,7 +159,14 @@ async function main() {
       writeLine(assistant(turn, [{ type: 'tool_use', id, name: tool.name, input: tool.input }]));
       await sleep(Number(env.FAKE_CLAUDE_TURN_DELAY_MS || 0));
       const ruleDenied = (env.FAKE_CLAUDE_DENY || '').split(',').map(x => x.trim()).filter(Boolean).includes(tool.name);
-      const d = ruleDenied ? { decision: 'deny', reason: `Permission to use ${tool.name} has been denied.` } : runHooks(tool.name, tool.input);
+      let d;
+      if (ruleDenied) d = { decision: 'deny', reason: `Permission to use ${tool.name} has been denied.` };
+      else if (env.FAKE_CLAUDE_HOOK_FAIL) {
+        // The hook could not execute (e.g. node unreachable by the sandbox user): non-blocking, the tool runs.
+        writeLine({ type: 'system', subtype: 'hook_error', session_id: sessionId, hook_event_name: 'PreToolUse', tool_name: tool.name,
+          exit_code: 126, stderr: '/bin/sh: node: Permission denied' });
+        d = { decision: 'allow', hook_failed: true };
+      } else d = runHooks(tool.name, tool.input);
       if (env.FAKE_CLAUDE_HOOK_OUT) fs.appendFileSync(env.FAKE_CLAUDE_HOOK_OUT, JSON.stringify({ tool: tool.name, input: tool.input, ...d }) + '\n');
       if (d.decision === 'deny') denials.push({ tool_name: tool.name, tool_use_id: id, tool_input: tool.input });
       writeLine({ type: 'user', session_id: sessionId, uuid: crypto.randomUUID(), parent_tool_use_id: null,

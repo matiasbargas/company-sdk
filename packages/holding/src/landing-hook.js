@@ -32,7 +32,7 @@ const DEFAULT_STATUS_FILES = ['current-status.md'];
 
 const GIT_SUBCOMMANDS = new Set(['add', 'commit', 'stash', 'status', 'diff', 'log', 'restore']);
 // Options that make git run configured programs or rewrite its config for this one command.
-const GIT_FORBIDDEN_ARGS = /^(-c|--config-env(=.*)?|--exec-path(=.*)?|--ext-diff|--textconv|--upload-pack(=.*)?|--receive-pack(=.*)?)$/;
+const GIT_FORBIDDEN_ARGS = /^(-c|--config-env(=.*)?|--exec-path(=.*)?|--ext-diff|--textconv|--upload-pack(=.*)?|--receive-pack(=.*)?|--output(=.*)?|--template(=.*)?)$/;
 
 /** Split a command into words, honouring single and double quotes. Returns null if quoting is unbalanced. */
 function words(command) {

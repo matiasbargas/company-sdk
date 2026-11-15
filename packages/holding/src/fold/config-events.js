@@ -17,7 +17,15 @@ module.exports = {
     const absolute = (p) => typeof p === 'string' && p.startsWith('/') && !p.split('/').some(x => x === '..');
     if (!absolute(e.home)) fail('SANDBOX_INVALID', 'sandbox.home must be an absolute path without ".."');
     if (!absolute(e.sessionDir)) fail('SANDBOX_INVALID', 'sandbox.sessionDir (Owner-owned, 0755: per-run settings the sandbox user reads) must be an absolute path without ".."');
-    ctx.state.sandbox = { user: e.user, home: e.home, sessionDir: e.sessionDir, seq: e.seq };
+    // Hook runtime (Guardian cycle 2): where the sandbox user execs the landing/freeze hook.
+    // Optional for events recorded before the runtime step; `sandbox doctor` flags their absence.
+    const runtime = {};
+    for (const k of ['runtimeDir', 'nodePath', 'hookPath']) {
+      if (e[k] === undefined) continue;
+      if (!absolute(e[k])) fail('SANDBOX_INVALID', `sandbox.${k} must be an absolute path without ".."`);
+      runtime[k] = e[k];
+    }
+    ctx.state.sandbox = { user: e.user, home: e.home, sessionDir: e.sessionDir, ...runtime, seq: e.seq };
   },
 
   fund(ctx, e) {

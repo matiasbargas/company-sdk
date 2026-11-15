@@ -18,6 +18,7 @@
  *   report     — ledger report: fully loaded VOF, suppression, judgment column, divergence, revisit trigger
  *   preflight  — the one run pre-flight + readiness, shared by the runner and sdk-holding
  *   health     — holdingHealth(holdingDir): read-only issues for scripts/health.js
+ *   sandbox-access — can the D7 sandbox user reach a path (every parent x, target bits)
  *   CLI        — bin/sdk-holding.js (main(argv, deps) exported for tests)
  */
 
@@ -33,6 +34,7 @@ const report = require('./report');
 const preflight = require('./preflight');
 const health = require('./health');
 const fold = require('./fold');
+const sandboxAccess = require('./sandbox-access');
 
 module.exports = {
   // canonical JSON
@@ -98,4 +100,9 @@ module.exports = {
   preflightRun: preflight.preflightRun,
   readiness: preflight.readiness,
   holdingHealth: health.holdingHealth,
+
+  // D7 reachability (the runner's pre-flight imports these)
+  checkSandboxAccess: sandboxAccess.checkSandboxAccess,
+  resolveUserGroups: sandboxAccess.resolveUserGroups,
+  resolveUserUid: sandboxAccess.resolveUserUid,
 };

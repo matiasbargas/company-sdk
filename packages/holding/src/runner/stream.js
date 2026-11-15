@@ -49,9 +49,26 @@ function lastResult(text) {
   return result;
 }
 
+/**
+ * A hook that failed to execute (exit not 0/2) is NON-blocking in Claude Code: the tool runs anyway.
+ * Recognised shapes: { type:'system', subtype:'hook_error', ... } and a hook_response with such an exit
+ * code. ASSUMPTION: the real CLI's event shape is unverified until the first real run (C4).
+ */
+function hookErrorOf(m) {
+  if (!m || m.type !== 'system') return null;
+  const failed = m.subtype === 'hook_error'
+    || (m.subtype === 'hook_response' && Number.isInteger(m.exit_code) && m.exit_code !== 0 && m.exit_code !== 2);
+  if (!failed) return null;
+  return { hook_event_name: m.hook_event_name || null, tool_name: m.tool_name || null,
+    exit_code: Number.isInteger(m.exit_code) ? m.exit_code : null, stderr: String(m.stderr || m.error || '').slice(0, 500) };
+}
+
 /** [state, terminalReason] for a finished session. denials = denialSummary(run, result). */
 function terminalOf(run, code, signal, result, denials) {
   if (run.modelMismatch) return ['interrupted', 'model_mismatch'];
+  if (run.landingForced) {
+    return ['interrupted', run.frozenSeen ? 'frozen' : run.budgetSpent ? 'budget' : run.hookErrors.length ? 'hook_failed' : 'killed'];
+  }
   if (run.stopRequested === 'hard') return ['interrupted', 'killed'];
   if (!result) return signal ? ['interrupted', 'killed'] : ['failed', 'error'];
   if (run.frozenSeen) return ['done', 'frozen'];
@@ -128,4 +145,4 @@ function recordUsage(ledger, run, records) {
   return { usage, pending, warnings };
 }
 
-module.exports = { liveEstimate, trackToolUses, denialSummary, lastResult, terminalOf, recordUsage };
+module.exports = { liveEstimate, trackToolUses, hookErrorOf, denialSummary, lastResult, terminalOf, recordUsage };

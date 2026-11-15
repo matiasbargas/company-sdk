@@ -10,12 +10,9 @@
  *   env:  { PATH, ANTHROPIC_API_KEY, HOLDING_RUN_ID } — nothing else
  * The key is never on any argv (argv is visible to `ps`). sudo's env_reset starts the session from a
  * clean env, and the generated sudoers rule env_keeps exactly those two variables for that command;
- * -H sets HOME to the sandbox user's home. The key is read by the runner (Owner's user) from
- * <holding>/keys/<company>.key, refused unless mode 0600 and owned by the runner's uid.
+ * -H sets HOME to the sandbox user's home. The key itself is read and checked in sandbox.js.
  */
 
-const fs = require('fs');
-const path = require('path');
 const { spawn: nodeSpawn, execFileSync } = require('child_process');
 const { fail } = require('./state');
 
@@ -45,30 +42,6 @@ function spawnSession({ spawnFn = nodeSpawn, command, args, cwd, env }) {
   return spawnFn(command, args, { cwd, env, stdio: ['ignore', 'pipe', 'pipe'], detached: true });
 }
 
-const USER_RE = /^[a-z_][a-z0-9_-]{0,31}$/i;
-
-/** Validate state.sandbox. Returns { user, home } or throws SANDBOX_INVALID. */
-function checkSandbox(sb) {
-  if (!sb || typeof sb !== 'object' || !USER_RE.test(sb.user || '') || typeof sb.home !== 'string' || !path.isAbsolute(sb.home)) {
-    fail('SANDBOX_INVALID', `the sandbox must name a plain OS user and an absolute home, got ${JSON.stringify(sb)}`);
-  }
-  return { user: sb.user, home: sb.home };
-}
-
-/** The company's provider key: <holdingDir>/keys/<company>.key, mode 0600, owned by this process's uid. */
-function readCompanyKey(holdingDir, company) {
-  const file = path.join(holdingDir, 'keys', `${company}.key`);
-  let st;
-  try { st = fs.statSync(file); } catch { fail('SANDBOX_KEY_MISSING', `no key for ${company} at ${file} (mode 0600, owned by the runner's user)`); }
-  if ((st.mode & 0o777) !== 0o600) fail('SANDBOX_KEY_INSECURE', `${file} has mode ${(st.mode & 0o777).toString(8)}; it must be 0600`);
-  if (typeof process.getuid === 'function' && st.uid !== process.getuid()) {
-    fail('SANDBOX_KEY_INSECURE', `${file} is owned by uid ${st.uid}, not the runner's uid ${process.getuid()}`);
-  }
-  const key = fs.readFileSync(file, 'utf8').trim();
-  if (!key || /\s/.test(key)) fail('SANDBOX_KEY_INVALID', `${file} must hold exactly one key`);
-  return key;
-}
-
 /**
  * Compose the process launch. Unsandboxed: claude directly with the clean env + HOLDING_RUN_ID.
  * Sandboxed: through sudo/env -i so nothing of the Owner's environment crosses except what is listed.
@@ -89,4 +62,4 @@ function killGroup(child, signal) {
   try { process.kill(-child.pid, signal); } catch { try { child.kill(signal); } catch { /* gone */ } }
 }
 
-module.exports = { ENV_ALLOWLIST, baseEnv, checkVersion, checkSandbox, readCompanyKey, buildLaunch, spawnSession, killGroup };
+module.exports = { ENV_ALLOWLIST, baseEnv, checkVersion, buildLaunch, spawnSession, killGroup };

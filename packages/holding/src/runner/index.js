@@ -45,8 +45,9 @@ const { meterStream } = require('../meter');
 const S = require('./state');
 const { resolveRunnerConfig, validateStart } = require('./config');
 const { checkExtraArgs, buildSettings, buildArgs } = require('./settings');
-const { ENV_ALLOWLIST, baseEnv, checkVersion, checkSandbox, readCompanyKey, buildLaunch, spawnSession, killGroup } = require('./spawn');
-const { liveEstimate, trackToolUses, denialSummary, lastResult, terminalOf, recordUsage } = require('./stream');
+const { ENV_ALLOWLIST, baseEnv, checkVersion, buildLaunch, spawnSession, killGroup } = require('./spawn');
+const { liveEstimate, trackToolUses, hookErrorOf, denialSummary, lastResult, terminalOf, recordUsage } = require('./stream');
+const { resolveSandbox } = require('./sandbox');
 
 const { RunnerError, fail, isNonEmptyString, sha256, TERMINAL_STATES } = S;
 const RUNNER_CONTRACT_VERSION = 1;
@@ -95,14 +96,12 @@ function createLocalRunner(opts = {}) {
   const env = baseEnv(opts.env || {});
   const freezePollMs = opts.freezePollMs ?? 1000;
   const lockRetryMs = opts.lockRetryMs ?? 1000;
-  const landingTimeoutMs = opts.landingTimeoutMs ?? 10 * 60 * 1000;
+  const landingTimeoutMs = opts.landingTimeoutMs ?? 5 * 60 * 1000; // forced hard kill after any landing (fail closed if the hook never runs)
   const hardKillGraceMs = opts.hardKillGraceMs ?? 2000;
   const statusFiles = opts.statusFiles || ['current-status.md'];
   const now = opts.now || (() => new Date().toISOString());
   const companies = new Map(opts.companies.map(c => [c.id, c]));
   const stateCtx = (run) => ({ freezeFlag: run.freezeFlag || freezeFlag, statusFiles });
-  // Sandboxed sessions get their own Owner-owned, sandbox-readable directory (never inside holding/, which is 0700).
-  const sandboxSessionBase = (sandbox) => opts.sessionDir || path.resolve(sandbox.home, '..', 'sdkco-sessions');
   fs.mkdirSync(runsDir, { recursive: true, mode: 0o755 });
   fs.mkdirSync(sessionDir, { recursive: true, mode: 0o755 });
 
@@ -134,13 +133,8 @@ function createLocalRunner(opts = {}) {
     }
     const company = companies.get(companyId);
     if (!fs.existsSync(company.path)) fail('COMPANY_PATH_MISSING', `company ${companyId} clone ${company.path} does not exist`);
-    const sb = readSandbox(state);
-    if (!sb && !opts.allowUnsandboxed) {
-      fail('SANDBOX_REQUIRED', 'no sandbox user is configured (holding-owner `sandbox` event); sessions do not run as the Owner\'s user');
-    }
-    const sandbox = sb ? checkSandbox(sb) : null;
-    const key = sandbox ? readCompanyKey(holdingDir, companyId) : null;
-    if (sandbox) S.ensureSecureDir(sandboxSessionBase(sandbox)); // refuse early: SESSION_DIR_INSECURE / _UNAVAILABLE
+    const { sandbox, key } = resolveSandbox({ state, readSandbox, allowUnsandboxed: opts.allowUnsandboxed, holdingDir, companyId,
+      companyPath: company.path, claudeBin, checkAccess: opts.checkSandboxAccess });
     return { availableFu, cfg, sandbox, key };
   }
 
@@ -150,9 +144,15 @@ function createLocalRunner(opts = {}) {
     versionOk = cfg.pinnedVersion;
   }
 
+  // Any landing (budget, freeze, stop, hook failure) arms a deadline: if the session has not ended when it
+  // expires, the process group is hard-killed (landing_forced). Bounds a hook that never runs (fail closed).
   function enterLanding(run, reason) {
     if (!run.landing) { run.landing = true; run.landingReason = reason; S.writeRunState(run, stateCtx(run)); }
     if (run.record.state === 'running') setState(run, 'landing');
+    if (!run.landingTimer && !run.finalized) {
+      run.landingTimer = setTimeout(() => { run.landingForced = true; hardKill(run); }, landingTimeoutMs);
+      run.landingTimer.unref();
+    }
   }
 
   function hardKill(run) {
@@ -170,6 +170,8 @@ function createLocalRunner(opts = {}) {
       hardKill(run);
       return;
     }
+    const hookErr = hookErrorOf(m);
+    if (hookErr) { run.hookErrors.push(hookErr); enterLanding(run, 'the landing hook failed to run; landing forced'); return; }
     const spent = liveEstimate(run, m, run.cfg.priceTable);
     trackToolUses(run, m);
     if (spent === null || spent === run.spentFu) return;
@@ -214,7 +216,7 @@ function createLocalRunner(opts = {}) {
       try {
         pf = preflight(run.company, run.record.grant_id, run.record.mission_id, run.model, run.record.max_budget_usd);
         ensureVersion();
-        pf.sessionDir = pf.sandbox ? S.ensureSecureDir(path.join(sandboxSessionBase(pf.sandbox), run.id)) : sessionDir;
+        pf.sessionDir = pf.sandbox ? S.ensureSecureDir(path.join(pf.sandbox.sessionDir, run.id)) : sessionDir;
       } catch (err) {
         if (!(err instanceof RunnerError)) throw err;
         finishWithoutSpawn(run, 'failed', reasonForRefusal(err.code), err.message);
@@ -244,7 +246,8 @@ function createLocalRunner(opts = {}) {
     try { run.startedSeq = ledger.verify().count; } catch { run.startedSeq = undefined; }
     S.writeRunState(run, stateCtx(run));
     S.writeJsonAtomic(run.settingsFile, buildSettings({ holdingDir, companyPath: company.path, model: run.model, stateFile: run.stateFile,
-      testCommand: run.record.test_command || undefined, statusFiles }), 0o644);
+      testCommand: run.record.test_command || undefined, statusFiles,
+      hookRuntime: sandbox ? { node: sandbox.nodePath, script: sandbox.hookPath } : undefined }), 0o644);
     const args = buildArgs({ prompt: run.prompt, maxTurns: run.record.max_turns, model: run.model,
       maxBudgetUsd: run.record.max_budget_usd, settingsFile: run.settingsFile, extraArgs });
     run.streamFd = fs.openSync(run.streamFile, 'a', 0o600);
@@ -301,6 +304,7 @@ function createLocalRunner(opts = {}) {
       error: spawnErr ? spawnErr.message : run.modelMismatch ? `MODEL_MISMATCH: ${run.modelMismatch}` : (state === 'failed' && run.stderr ? run.stderr.slice(-2000) : null),
       usage, usage_events: records, ledger_pending: pending, warnings, ...denials,
       live_estimate: { spent_fu: run.spentFu ?? null, estimate: true, caveat: S.ESTIMATE_CAVEAT },
+      landing_forced: !!run.landingForced, hook_errors: run.hookErrors,
     });
     settle(run);
     pump();
@@ -338,7 +342,7 @@ function createLocalRunner(opts = {}) {
       state: 'queued', terminal_reason: null, waiting_for: null, created_at: now(),
     };
     if (!S.createRecordExclusive(recFile(runId), record)) return same(S.readJson(recFile(runId)));
-    const run = { id: runId, company: companyId, prompt: o.prompt, model, record, waiters: [], usageById: new Map(), toolUseIds: new Set(), stderr: '',
+    const run = { id: runId, company: companyId, prompt: o.prompt, model, record, waiters: [], usageById: new Map(), toolUseIds: new Set(), hookErrors: [], stderr: '',
       landing: false, landingReason: null, finalized: false };
     runs.set(runId, run);
     queue.push(run);
@@ -360,7 +364,6 @@ function createLocalRunner(opts = {}) {
     if (mode === 'hard') { hardKill(run); return S.statusOf(run.record); }
     if (run.stopRequested !== 'hard') run.stopRequested = 'landing';
     enterLanding(run, 'the holding asked this run to land');
-    if (!run.landingTimer) { run.landingTimer = setTimeout(() => hardKill(run), landingTimeoutMs); run.landingTimer.unref(); }
     return S.statusOf(run.record);
   }
 

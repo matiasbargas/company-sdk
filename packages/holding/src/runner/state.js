@@ -10,7 +10,7 @@ const crypto = require('crypto');
 
 const RECORD_SCHEMA_VERSION = 1;
 const STATES = ['queued', 'running', 'landing', 'done', 'interrupted', 'failed'];
-const TERMINAL_REASONS = ['done', 'budget', 'tranche_exhausted', 'killed', 'frozen', 'error', 'max_turns', 'model_mismatch', 'no_work_denied'];
+const TERMINAL_REASONS = ['done', 'budget', 'tranche_exhausted', 'killed', 'frozen', 'error', 'max_turns', 'model_mismatch', 'no_work_denied', 'hook_failed'];
 const TERMINAL_STATES = new Set(['done', 'interrupted', 'failed']);
 
 class RunnerError extends Error {

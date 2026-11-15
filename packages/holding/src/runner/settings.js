@@ -38,9 +38,10 @@ const realRoots = (p) => [...new Set([p, fs.realpathSync(p)])];
  *          Bash for git add|commit|stash|status|diff|log and the run's test command (if named).
  *   deny:  file tools on the holding directory; Bash naming the holding path or sdk-holding
  *          (defence in depth — a tripwire, not a barrier: D7's OS user is the barrier).
+ *          Edit/Write/MultiEdit/NotebookEdit on <company>/.git/** and <company>/.claude/**.
  * defaultMode stays `default`; bypass is disabled; the landing hook runs on every PreToolUse.
  */
-function buildSettings({ holdingDir, companyPath, model, stateFile, testCommand, statusFiles = ['current-status.md'] }) {
+function buildSettings({ holdingDir, companyPath, model, stateFile, testCommand, statusFiles = ['current-status.md'], hookRuntime }) {
   const allow = ['Read', 'Glob', 'Grep'];
   for (const co of realRoots(companyPath)) {
     for (const tool of ['Edit', 'Write', 'MultiEdit']) allow.push(`${tool}(/${co}/**)`);
@@ -49,16 +50,23 @@ function buildSettings({ holdingDir, companyPath, model, stateFile, testCommand,
   for (const g of GIT_LANDING) allow.push(`Bash(git ${g}:*)`);
   if (testCommand) allow.push(`Bash(${testCommand}:*)`);
   const deny = [];
+  // .git (hooks run by the allowed `git commit`) and .claude (settings loaded next run) are never writable.
+  for (const co of realRoots(companyPath)) {
+    for (const dir of ['.git', '.claude']) for (const tool of ['Edit', 'Write', 'MultiEdit', 'NotebookEdit']) deny.push(`${tool}(/${co}/${dir}/**)`);
+  }
   for (const r of realRoots(holdingDir)) {
     for (const tool of ['Read', 'Edit', 'Write', 'MultiEdit', 'NotebookEdit']) deny.push(`${tool}(/${r}/**)`);
     deny.push(`Bash(*${r}*)`);
   }
   deny.push('Bash(sdk-holding:*)', `Bash(node ${SDK_HOLDING_BIN}:*)`, 'Bash(*sdk-holding*)');
+  // Under a sandbox the hook runs as the sandbox user: its node and script come from the ledger's sandbox
+  // event (paths that user can reach), never the Owner's node or a repo path behind a 0750 home.
+  const hook = hookRuntime || { node: process.execPath, script: HOOK_SCRIPT };
   return {
     model,
     permissions: { defaultMode: 'default', disableBypassPermissionsMode: 'disable', allow, deny },
     hooks: { PreToolUse: [{ matcher: '*', hooks: [{ type: 'command', timeout: 10,
-      command: `${shq(process.execPath)} ${shq(HOOK_SCRIPT)} --state ${shq(stateFile)}` }] }] },
+      command: `${shq(hook.node)} ${shq(hook.script)} --state ${shq(stateFile)}` }] }] },
   };
 }
 

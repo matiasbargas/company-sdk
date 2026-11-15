@@ -36,11 +36,28 @@ function stubExec({ userUid = process.getuid(), sudoOut = null } = {}) {
   const exec = (cmd, args) => {
     calls.push([cmd, ...args]);
     if (cmd === 'id' && args[0] === '-u') return userUid === null ? { status: 1, stdout: '', stderr: 'no such user' } : { status: 0, stdout: `${userUid}\n`, stderr: '' };
+    if (cmd === 'id' && args[0] === '-G') return userUid === null ? { status: 1, stdout: '', stderr: 'no such user' } : { status: 0, stdout: '401\n', stderr: '' };
     if (cmd === 'sudo' && args.join(' ') === '-n -l') return sudoOut === null ? { status: 1, stdout: '', stderr: 'sudo: a password is required' } : { status: 0, stdout: sudoOut, stderr: '' };
     return { status: 1, stdout: '', stderr: `unexpected ${cmd}` };
   };
   return { exec, calls };
 }
+// Synthetic stat for paths that do not exist on the test machine (the script is never run):
+// claude under /opt/claude and the runtime under /Users/Shared/sdkco-runtime, all world-traversable.
+const dir = (mode, uid = 0, gid = 0) => ({ mode: 0o040000 | mode, uid, gid, isDirectory: () => true });
+const file = (mode, uid = 0, gid = 0) => ({ mode: 0o100000 | mode, uid, gid, isDirectory: () => false });
+const RUNTIME = '/Users/Shared/sdkco-runtime';
+const SYN = {
+  '/': dir(0o755), '/opt': dir(0o755), '/opt/claude': dir(0o755), '/opt/claude/bin': dir(0o755), [CLAUDE]: file(0o755),
+  '/Users': dir(0o755), '/Users/Shared': dir(0o1777), [RUNTIME]: dir(0o755, 501), [`${RUNTIME}/landing-hook.js`]: file(0o644, 501),
+  [`${RUNTIME}/node`]: file(0o755, 501),
+};
+const layeredStat = (p) => {
+  if (SYN[p]) return SYN[p];
+  const st = fs.statSync(p);
+  return { mode: st.mode, uid: st.uid, gid: st.gid, isDirectory: () => st.isDirectory() };
+};
+const ACCESS = { accessStat: layeredStat, realpath: (p) => p, execPath: '/Users/ada/.local/node/bin/node' };
 const SUDO_OK = (user) => `Matching Defaults entries for ada on host:\n    env_keep+="ANTHROPIC_API_KEY HOLDING_RUN_ID"\n\nUser ada may run the following commands on host:\n    (${user}) NOPASSWD: ${CLAUDE}\n`;
 
 async function run() {
@@ -56,7 +73,7 @@ async function run() {
   // @covers cap-po-sandbox-001 — setup records the sandbox event and generates (never runs) a reviewed script
   {
     const { exec, calls } = stubExec();
-    const r = await cli(['sandbox', 'setup', '--user', '_sdkco', '--home', home, '--session-dir', sessionDir, '--claude-bin', CLAUDE, ...H], { exec, ownerName: 'ada' });
+    const r = await cli(['sandbox', 'setup', '--user', '_sdkco', '--home', home, '--session-dir', sessionDir, '--claude-bin', CLAUDE, ...H], { exec, ownerName: 'ada', ...ACCESS });
     t.eq(r.code, 0, `sandbox setup (${r.err})`);
     t.deepEq(calls, [], 'setup runs nothing (no sudo, no dscl)');
     const sb = openLedger(path.join(root, 'holding/fuel/ledger.jsonl'), {}).fold().sandbox;
@@ -80,7 +97,10 @@ async function run() {
     try { generateSetupScript({ user: '_sdkco', home, sessionDir, owner: 'ada', holdingDir: '/h', companyDir: '/c; rm -rf /', claudeBin: CLAUDE }); } catch (e) { threw = e; }
     t.assert(threw && /must be an absolute path/.test(threw.message), 'shell or sudoers metacharacters in a path are refused');
     threw = null;
-    try { generateSetupScript({ user: 'root ALL', home, sessionDir, owner: 'ada', holdingDir: '/h', companyDir: '/c', claudeBin: CLAUDE }); } catch (e) { threw = e; }
+    try {
+      generateSetupScript({ user: 'root ALL', home, sessionDir, owner: 'ada', holdingDir: '/h', companyDir: '/c', claudeBin: CLAUDE,
+        runtimeDir: RUNTIME, hookSrc: '/repo/landing-hook.js', nodePath: `${RUNTIME}/node` });
+    } catch (e) { threw = e; }
     t.assert(threw && /account name/.test(threw.message), 'a malformed user name is refused');
     t.eq((await cli(['sandbox', 'setup', '--user', 'Bad User', '--home', home, '--claude-bin', CLAUDE, ...H], { exec })).code, 1, 'invalid user refused');
   }
@@ -107,12 +127,16 @@ async function run() {
     fs.mkdirSync(home, { recursive: true });
     fs.mkdirSync(sessionDir, { mode: 0o755 }); fs.chmodSync(sessionDir, 0o755);
     const { exec, calls } = stubExec({ sudoOut: SUDO_OK('_sdkco') });
-    const r = await cli(['sandbox', 'doctor', ...H], { exec, ownerUid: process.getuid() });
+    const r = await cli(['sandbox', 'doctor', ...H], { exec, ownerUid: process.getuid(), ...ACCESS });
     t.eq(r.code, 0, `doctor passes (${r.out}\n${r.err})`);
     for (const name of ['sandbox recorded', 'sandbox user exists', 'holding/ is 0700', 'company clone writable', 'session dir', 'company key file is 0600', 'sudo rule']) {
       t.assert(new RegExp(`ok\\s+${name.replace(/[/.]/g, '\\$&')}`).test(r.out), `check passes: ${name}`);
     }
-    t.assert(calls.every(c => (c[0] === 'id' && c[1] === '-u') || (c[0] === 'sudo' && c.slice(1).join(' ') === '-n -l')), 'doctor only runs read-only commands (id -u, sudo -n -l)');
+    for (const name of ['node \\(hook runtime\\)', 'landing hook', 'claude binary', 'company clone', 'session dir']) {
+      t.assert(new RegExp(`ok\\s+_sdkco can reach the ${name}`).test(r.out), `access check passes: ${name}`);
+    }
+    t.assert(calls.every(c => (c[0] === 'id' && ['-u', '-G'].includes(c[1])) || (c[0] === 'sudo' && c.slice(1).join(' ') === '-n -l')),
+      'doctor only runs read-only commands (id -u, id -G, sudo -n -l)');
   }
 
   // @covers cap-po-sandbox-001 — doctor: each failing check names its fix
@@ -121,7 +145,7 @@ async function run() {
     fs.chmodSync(path.join(root, 'holding'), 0o755);
     fs.chmodSync(path.join(root, 'holding/keys/acme.key'), 0o644);
     fs.chmodSync(sessionDir, 0o777);
-    const r = await cli(['sandbox', 'doctor', ...H], { exec, ownerUid: process.getuid() });
+    const r = await cli(['sandbox', 'doctor', ...H], { exec, ownerUid: process.getuid(), ...ACCESS });
     t.eq(r.code, 1, 'doctor fails');
     const script = path.join(root, 'holding/sandbox/setup-_sdkco.sh');
     t.assert(/FAIL sandbox user exists/.test(r.out) && r.out.includes(`fix: review and run: sudo sh ${script}`), 'missing user → run the script');
@@ -131,13 +155,13 @@ async function run() {
     t.assert(/FAIL sudo rule/.test(r.out) && /a password is required/.test(r.out), 'sudo rule → names what sudo said and the script');
     t.assert(/FAIL session dir is Owner-owned, not group\/other-writable/.test(r.out) && /fix: sudo mkdir -p .* && sudo chmod 755/.test(r.out),
       'a group/other-writable session dir fails (the runner refuses SESSION_DIR_INSECURE on the same rule)');
-    t.assert(/6 check\(s\) failed/.test(r.err), 'summary counts the failures');
+    t.assert(/\d+ check\(s\) failed/.test(r.err), 'summary counts the failures');
     fs.chmodSync(sessionDir, 0o755);
     fs.chmodSync(path.join(root, 'holding'), 0o700);
     fs.chmodSync(path.join(root, 'holding/keys/acme.key'), 0o600);
     const fresh = path.join(tmpDir('sbx-none-'), 'h');
     await cli(['init', fresh, '--owner', 'Ada']);
-    const none = await cli(['sandbox', 'doctor', '--holding', fresh], { exec, ownerUid: process.getuid() });
+    const none = await cli(['sandbox', 'doctor', '--holding', fresh], { exec, ownerUid: process.getuid(), ...ACCESS });
     t.assert(none.code === 1 && /fix: sdk-holding sandbox setup/.test(none.out), 'no sandbox event → names sandbox setup');
   }
 

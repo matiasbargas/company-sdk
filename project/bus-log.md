@@ -22,3 +22,7 @@ Portfolio Orchestrator Discovery cycle 1: ITERATE (4/6 criteria failed: regulato
 ---
 [2026-11-14 13:28] FROM: Discovery Guardian → TO: Coordinator | PRIORITY: INFO | TAG: ITERATION-GRADUATED | RELEASE: v2026.Q2.3
 Portfolio Orchestrator Discovery GRADUATED at cycle 2 (6/6). Canonical outputs: context/intent/portfolio-orchestrator/{brief,discovery-synthesis}.md, context/spec/portfolio-orchestrator/{variables,claims}.yaml (25 planned capabilities). Carry-forward to route: CLO read live provider terms before first two-instance run; CTO test per-company keys + rate limits; Mario/Red-Team: ledger reachable via Bash under light v0 (trust boundary). Next gate: Mario irreversibility review.
+
+---
+[2026-11-15 16:06] FROM: Implementation Guardian → TO: Coordinator | PRIORITY: INFO | TAG: ITERATION-REVIEW | RELEASE: v2026.Q2.3
+holding pod, implementation cycle 2: ITERATE. All cycle-1 items closed; one new blocker: landing/freeze hook fails open under the D7 sandbox user (hook + node under Owner home 0750, unreachable; Claude Code treats hook errors as non-blocking; no landing deadline). Cycle 3 fixes in progress. See project/iterations/implementation/holding/iter-002.md.
