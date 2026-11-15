@@ -18,9 +18,19 @@
  * the median (the report says how many). The revisit trigger (outside-verifier decision due) fires
  * on divergence in 2 consecutive *closed* cycles, or when a company Owner differs from the holding
  * Owner. VOF guides the Betting Table; it never decides alone.
+ *
+ * Visibility (Guardian finding 5): provisional debits for unmetered sessions (charged and
+ * uncharged FU, per company and cycle), periods not yet reconciled against the provider, the
+ * provider-vs-ledger differences, and runs whose tools were denied (opts.runs = run records with
+ * `permission_denials` and terminal_reason `no_work_denied`). Provisional FU rests on the runner's
+ * live estimate, which undercounts (spike 2: 16 vs 73 output tokens), or the session floor: it is
+ * an estimate until reconciled, and the report says so (LIVE_ESTIMATE_CAVEAT).
  */
 
 const WEIGHTS = Object.freeze({ verified_surface: 1, graduated_cycle: 2, owner_approved_ship: 3 });
+const LIVE_ESTIMATE_CAVEAT = 'provisional FU is an estimate: the runner\'s live estimate undercounts (assistant-event snapshots; '
+  + 'spike 2 saw 16 of 73 output tokens) and the session floor is a minimum; reconcile against the provider console '
+  + '(sdk-holding reconcile) before reading these numbers as true';
 const MIN_CLASS = 3;
 
 const round2 = (x) => Math.round(x * 100) / 100;
@@ -50,6 +60,7 @@ function betRow(g, c, weights, suppressedReason) {
   return {
     grant_id: g.grant_id, company: g.company, mission_id: g.mission_id, bet_class: g.bet_class || 'default', status: g.status,
     fu_loaded: fu, proofs, weight,
+    provisional_fu: num(g.provisional_by_cycle, key), provisional_open: g.provisional_open || 0,
     vof: suppressedReason ? null : (raw === null ? null : round2(raw)),
     vof_suppressed: suppressedReason || null,
     judgment: (g.judgments && g.judgments[key]) || 'unrated',
@@ -117,8 +128,13 @@ function buildReport(state, opts = {}) {
       vof_suppressed: suppressed,
       unmetered: (view.unmeteredBy[id] || []).map(u => ({ run_id: u.run_id, session_id: u.session_id, reason: u.reason })),
       credit_fu: num(state.credits, id),
+      provisional_fu: (state.provisional || []).filter(p => p.company === id && p.cycle === c).reduce((s, p) => s + p.charged_fu, 0),
+      uncharged_fu: (state.provisional || []).filter(p => p.company === id && p.cycle === c).reduce((s, p) => s + p.uncharged_fu, 0),
+      reconciled: (state.reconciliations || []).some(r => r.company === id && r.period === c),
     };
   });
+  const unreconciled = unreconciledPeriods(state);
+  const runs = runVisibility(opts.runs || []);
 
   const divergenceByCycle = (state.closed_cycles || []).map(cc => ({
     cycle: cc, flagged: cycleView(state, cc, weights).classes.some(k => k.divergence.flagged),
@@ -152,8 +168,43 @@ function buildReport(state, opts = {}) {
       reasons,
       decision: reasons.length ? 'outside-verifier decision for fuel proofs is due (proof self-verification risk, cap-po-proof-002)' : null,
     },
+    provisional: {
+      open_fu: (state.provisional || []).filter(p => !p.settled).reduce((s, p) => s + p.fu, 0),
+      unreconciled,
+      caveat: (state.provisional || []).length ? LIVE_ESTIMATE_CAVEAT : null,
+    },
+    reconciliations: (state.reconciliations || []).map(r => ({ ...r })),
+    runs,
     warnings: [...(state.warnings || [])],
   };
+}
+
+/** Company × cycle groups of unsettled provisional debits. */
+function unreconciledPeriods(state) {
+  const by = new Map();
+  for (const p of state.provisional || []) {
+    if (p.settled) continue;
+    const k = `${p.company}\u0000${p.cycle}`;
+    const g = by.get(k) || { company: p.company, cycle: p.cycle, sessions: 0, fu: 0, charged_fu: 0, uncharged_fu: 0, runs: [] };
+    g.sessions++; g.fu += p.fu; g.charged_fu += p.charged_fu; g.uncharged_fu += p.uncharged_fu; g.runs.push(p.run_id);
+    by.set(k, g);
+  }
+  return [...by.values()].sort((a, b) => a.company.localeCompare(b.company) || a.cycle - b.cycle);
+}
+
+/** Runs whose tools were denied: count per run, and `no_work_denied` (achieved nothing). */
+function runVisibility(records) {
+  const out = [];
+  for (const r of records) {
+    const pd = r.permission_denials;
+    const denials = Array.isArray(pd) ? pd.length : (Number.isSafeInteger(pd) ? pd : 0);
+    const noWork = r.terminal_reason === 'no_work_denied';
+    if (!denials && !noWork) continue;
+    const tools = Array.isArray(pd) ? [...new Set(pd.map(d => (d && (d.tool_name || d.tool)) || 'unknown'))] : [];
+    out.push({ run_id: r.run_id, company: r.company || null, grant_id: r.grant_id || null, state: r.state || null,
+      terminal_reason: r.terminal_reason || null, denials, denied_tools: tools, no_work: noWork });
+  }
+  return out.sort((a, b) => String(a.run_id).localeCompare(String(b.run_id)));
 }
 
 const fmtVof = (v, why) => (why ? `suppressed (${why})` : v === null ? 'n/a (no FU drawn)' : String(v));
@@ -167,7 +218,27 @@ function formatReport(r) {
   L.push('');
   L.push('Companies (VOF = Σ proof weight ÷ FU × 1e6, fully loaded):');
   for (const c of r.companies) {
-    L.push(`  ${c.id}: ${c.bets} bet(s), ${c.fu_loaded} FU, weight ${c.weight}, VOF ${fmtVof(c.vof, c.vof_suppressed)}${c.credit_fu ? `, credit ${c.credit_fu} FU` : ''}`);
+    L.push(`  ${c.id}: ${c.bets} bet(s), ${c.fu_loaded} FU, weight ${c.weight}, VOF ${fmtVof(c.vof, c.vof_suppressed)}${c.credit_fu ? `, credit ${c.credit_fu} FU` : ''}` +
+      (c.provisional_fu || c.uncharged_fu ? `, provisional ${c.provisional_fu} FU charged + ${c.uncharged_fu} FU uncharged${c.reconciled ? ' (reconciled)' : ' (UNRECONCILED)'}` : ''));
+  }
+  if (r.provisional.unreconciled.length) {
+    L.push('');
+    L.push('Unreconciled unmetered spend (next tranche blocked until reconciled):');
+    for (const u of r.provisional.unreconciled) {
+      L.push(`  ${u.company} cycle ${u.cycle}: ${u.sessions} session(s), ${u.fu} FU provisional (${u.charged_fu} charged, ${u.uncharged_fu} uncharged); runs ${u.runs.join(', ')}`);
+      L.push(`    sdk-holding reconcile --company ${u.company} --provider-usd <from the provider console> --period ${u.cycle} --evidence <ref>`);
+    }
+  }
+  if (r.provisional.caveat) L.push(`note: ${r.provisional.caveat}`);
+  for (const x of r.reconciliations) {
+    L.push(`reconciled ${x.company} cycle ${x.period}: provider $${x.provider_usd} = ${x.provider_fu} FU vs metered ${x.metered_fu} FU → difference ${x.difference_fu} FU${x.evidence ? ` (evidence ${x.evidence})` : ''}`);
+  }
+  if (r.runs.length) {
+    L.push('');
+    L.push('Runs with denied tools:');
+    for (const x of r.runs) {
+      L.push(`  ${x.run_id} [${x.company || '?'}] ${x.terminal_reason || x.state || ''}: ${x.denials} denial(s)${x.denied_tools.length ? ` (${x.denied_tools.join(', ')})` : ''}${x.no_work ? ' — ACHIEVED NOTHING (no_work_denied)' : ''}`);
+    }
   }
   for (const k of r.classes) {
     L.push('');
@@ -189,4 +260,4 @@ function formatReport(r) {
   return L.join('\n');
 }
 
-module.exports = { buildReport, formatReport, WEIGHTS, MIN_CLASS };
+module.exports = { buildReport, formatReport, WEIGHTS, MIN_CLASS, LIVE_ESTIMATE_CAVEAT };

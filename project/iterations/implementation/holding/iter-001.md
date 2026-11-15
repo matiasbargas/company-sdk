@@ -1,0 +1,52 @@
+---
+loop: "implementation"
+cycle: 1
+pod: "holding"
+guardian: "Implementation Guardian"
+status: "rework"
+created: "2026-11-14"
+graduated: ""
+---
+
+## Input
+
+Portfolio Orchestrator v0, single company (Owner direction 2026-11-14). Commits e0a23ba, e0e167c.
+- Code: `packages/holding/` (src: canonical, ledger, fold, meter, portfolio, grants, runner, landing-hook, preflight, proofs, cycle, report, health; bin/sdk-holding.js)
+- Tests: `packages/holding/tests/` (11 suites, 722 assertions, zero tokens; fake-claude double from recorded streams), incl. `test-e2e.js` (the whole single-company story through the real CLI)
+- Spec: `project/context/spec/portfolio-orchestrator/{variables,claims}.yaml` (capability status = what's built), `mario_conditions` C1–C14
+- Discovery (graduated): `project/iterations/discovery/iter-002.md`; Architecture: Mario gate in `project/history.md` ("Mario gate — Portfolio Orchestrator")
+- Evidence: `project/record/experiments/2026-11-13-metering-spike/`, `.../2026-11-14-metering-spike-2/`
+- Owner scope for v0: ONE company (two-company blockers C12/C13/C14 deferred; registry refuses a second Owner)
+
+## Guardian Review
+
+[Implementation Guardian, cycle 1, 2026-11-14. Scope: Owner's single-company v0 (history.md:654). Evidence: `node packages/holding/tests/run.js` 722/722 pass; capability coverage 604/0 (201 built, 7 planned); `sdk-holding --help` lists the full lifecycle. The lifecycle is green against the fake CLI double. It is not yet safe to read a real run's numbers as true.]
+
+| Criterion | PASS/FAIL | Evidence (file:section) | Required change |
+|---|---|---|---|
+| Deliverables match the graduated Architecture spec | FAIL | Built capabilities are covered (`@covers` in tests/test-e2e.js:105-270), and C1-C3, C5-C9 and C11 are visible in the code (ledger.js:1-21, meter.js:1-20, portfolio.js:62 C7, runner.js:521-577 C9, sdk-holding.js:158 C11). Gap: in cap-po-runner-001 the landing step ("commit, leave the repo committed or clean") can only pass against the fake. The runner forces `defaultMode: 'default'` with no allow list (runner.js:228-237), and in headless `-p` mode every unapproved tool is denied. With the team-sdk project allow list (.claude/settings.json) a real session cannot Edit/Write or run `git commit`: it can neither work nor land. `permission_denials` in the result is never read. | Give runner-owned settings an explicit session permission profile: work tools, plus the landing set (`git add/commit/stash/status`, Edit of status files). Assert it in test-runner. Record `result.permission_denials` in the run record and report. |
+| No security shortcuts | FAIL | Clean env allowlist (runner.js:71,165-167), `--setting-sources project` (runner.js:363), bypass refused (runner.js:77,101-107), model abort at init (runner.js:257-261). All good. Gaps: (1) D7 is unbuilt (runner-002 planned), so sessions run as the Owner's user, and the "owner-only" events are a declared string (ledger.js:17-21). Mario's second layer, deny rules, covers file tools only (runner.js:231). Bash can still run `sdk-holding ratify/fund/unfreeze --by holding-owner`, append to the ledger, rewrite `runs/*.state.json` (0644) or delete `runs/FROZEN`. (2) The landing/freeze git exception (landing-hook.js:38-43) accepts `git -c alias.x='!cmd' x` and `git config core.hooksPath`, which run arbitrary commands while landed or frozen. | Add Bash deny rules for the holding paths and for `sdk-holding`/`node .../holding/bin` in settingsFor. Make sdk-holding refuse owner-only commands when `HOLDING_RUN_ID` is set (a tripwire, not a barrier; document it as such). Restrict the git exception to an allowlist of subcommands and refuse `-c`, `config`, `--exec-path`, aliases. Add tests for each. |
+| Maintainable by a team that did not write it | FAIL | src/runner.js 632 lines, src/fold.js 488, bin/sdk-holding.js 492: all over limits.refactorReviewLines 400 (scripts/lib/complexity.js:16 scans packages/) and not acknowledged in context/spec/_refactor-watch.json. The package has no README or operator runbook. test-e2e.js:83-101 still carries the dead E2E-BUG #1 bridge although the fix landed (sdk-holding.js:335). Header comments are good and every capability is spec'd and covered, so the §30 prerequisite for a split is met. | Run the refactor-review: split runner.js (settings/permission profile, process/kill, recordUsage) and decide fold.js and the CLI (split or acknowledge with a reason). Delete the stale bridge. Add packages/holding/README.md: lifecycle, first-run checklist (price table incl. every model a session may use, runner pin, floors, budget), and what each terminalReason means. |
+| Pre-mortem edge cases handled or deferred with reason | FAIL | Spike findings serve as the pre-mortem. Handled: model override, session floor, soft cap → overrun, freeze mid-run (after_freeze). Not handled: (1) a killed or no-result run is `unmetered`, and fold.js:421-426 charges nothing to the grant or pool. history.md:661 says per-key reconciliation is "required even with one company", yet reconcile-001 is `planned` with no deferral reason. (2) Multi-model/subagent is unproven. Readiness checks only the grant's model (preflight.js:33), and any unpriced model in modelUsage turns the whole session unmetered (meter.js:128-131), so it is uncharged. Tranche gating leaks: repeated unmetered runs never exhaust a tranche, and the runner does not stop on them. | Charge unmetered sessions provisionally: debit max_budget_usd converted to FU (or the session floor when no output is seen) against the grant, marked `provisional`, reversible by reconciliation. Or block further runs on a grant with an open unmetered session until the Owner reconciles it. Build reconcile-001 as a manual Owner command taking provider-usage evidence, or record the deferral with a reason and trigger in history.md. |
+| Instrumentation covers the friction points | FAIL | product-requirements.md names no orchestrator friction points, so I measured against Discovery's need: "burn next to proof, visible to the Owner". Present: report VOF/judgment/divergence (report.js), sdk-health wiring (scripts/health.js:355-359), unmetered suppression. Missing: a session that achieved nothing because of denied tools reports `done` (runner.js:400-410). The live landing estimate uses assistant-event snapshots, which spike 2 showed undercount (16 vs 73 output), and this is not flagged. Subagent usage visibility is unknown. | Surface permission_denials, the unmetered-but-uncharged FU, and the provisional/reconciled state in `report` and `sdk-health`. Mark the live estimate as an estimate. Run one Owner-budgeted real session (multi-turn, one Task subagent) on the pinned model as the C4 completion before any further real spend. |
+| Creates user capability, not dependency (Constraint 1) | PASS | Owner keeps ratify, fund, freeze and judgment (ledger.js ACTORS_BY_TYPE); judgment sits beside VOF and divergence is flagged (cap-po-judgment-001); refusals name the fix command (preflight.js:22-35, 45-60). Caveat carried into the rows above: numbers that look metered but are not (uncharged unmetered sessions, `done` after denials) would mislead the Owner's judgment. | None for this row; fixing rows 1, 4 and 5 protects it. |
+
+First real single-company run, unsafe or misleading until fixed: (a) the session cannot work or land under real permissions (row 1); (b) an agent can self-ratify, fund or unfreeze through Bash as the Owner's user (row 2); (c) unmetered or multi-model sessions burn without debiting the grant, so the tranche never closes (row 4); (d) when auth comes from the Owner's login (no key is injected, runner.js:165-167), there is no provider-side hard cap, and `--max-budget-usd` is soft (spike: $0.02 → $0.085). The Owner's approved budget must be enforced by the Owner at the provider/account level, and the run should use concurrency 1, `--max-turns` ≤ 5 and a price table covering every model.
+
+## Exit Criteria
+
+- [ ] Deliverables match the spec from the graduated Architecture output (not a drifted interpretation)
+- [ ] No security shortcuts taken (auth, data handling, secrets management)
+- [ ] Code is maintainable by a team that did not write it
+- [ ] Edge cases from the pre-mortem are handled or explicitly deferred with reason
+- [ ] Instrumentation covers the friction points PM identified in product-requirements.md
+- [ ] The output creates user capability, not dependency (Constraint 1 check)
+
+## Verdict
+
+ITERATE — 1) Runner-owned settings need an explicit permission profile (work tools + git add/commit/stash/status + status-file Edit); record result.permission_denials; a real -p session today can neither work nor land. 2) Bash deny rules for holding/ paths and sdk-holding; sdk-holding refuses owner-only commands under HOLDING_RUN_ID; landing-hook git exception becomes a subcommand allowlist refusing -c/config/aliases. 3) Unmetered sessions (killed, unpriced subagent model) debit the grant provisionally or block further runs until Owner reconciliation; build reconcile-001 as a manual command or record its deferral with reason and trigger. 4) Refactor-review runner.js (632), fold.js (488), sdk-holding.js (492); delete stale E2E-BUG bridge; add packages/holding/README.md with first-run checklist. 5) Report/health surface denials, uncharged unmetered FU, live-estimate caveat; one Owner-budgeted real run (multi-turn + Task subagent) completes C4 before further real spend.
+
+## Feedback
+
+- 1) Runner-owned settings need an explicit permission profile (work tools + git add/commit/stash/status + status-file Edit); record result.permission_denials; a real -p session today can neither work nor land. 2) Bash deny rules for holding/ paths and sdk-holding; sdk-holding refuses owner-only commands under HOLDING_RUN_ID; landing-hook git exception becomes a subcommand allowlist refusing -c/config/aliases. 3) Unmetered sessions (killed, unpriced subagent model) debit the grant provisionally or block further runs until Owner reconciliation; build reconcile-001 as a manual command or record its deferral with reason and trigger. 4) Refactor-review runner.js (632), fold.js (488), sdk-holding.js (492); delete stale E2E-BUG bridge; add packages/holding/README.md with first-run checklist. 5) Report/health surface denials, uncharged unmetered FU, live-estimate caveat; one Owner-budgeted real run (multi-turn + Task subagent) completes C4 before further real spend.
+

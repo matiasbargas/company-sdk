@@ -31,7 +31,9 @@ const SEG_RE = /^[A-Za-z0-9._-]+$/;
 const isSafeSeg = (s) => SEG_RE.test(s) && s !== '.' && s !== '..';
 
 function git(repo, args) {
-  return execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 16 * 1024 * 1024 });
+  // Read-only reads of a clone owned by the sandbox user (D7) would fail git's ownership check;
+  // trust exactly this repository for this one invocation instead of changing global config.
+  return execFileSync('git', ['-c', `safe.directory=${repo}`, '-C', repo, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 16 * 1024 * 1024 });
 }
 
 /** Full commit SHA for a revision, or null when it does not name a commit in the repo. */

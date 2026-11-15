@@ -16,7 +16,7 @@
  *            tools, `git` commands and writes to the status file(s) pass; everything else is denied
  *            with the landing message (commit or stash, update current-status.md, stop).
  *   frozen   the freeze flag file exists (the runner mirrors a frozen ledger) → every tool except
- *            `git` is denied.
+ *            an allowlisted `git` command is denied (see isAllowedGit).
  * Fail closed: an unreadable or missing state file is treated as landing.
  *
  * Under D7 this runs as the sandbox user, so the state file and freeze flag must be readable by it
@@ -30,16 +30,51 @@ const READ_ONLY_TOOLS = new Set(['Read', 'Glob', 'Grep', 'LS', 'TodoWrite']);
 const STATUS_WRITE_TOOLS = new Set(['Edit', 'Write', 'MultiEdit']);
 const DEFAULT_STATUS_FILES = ['current-status.md'];
 
+const GIT_SUBCOMMANDS = new Set(['add', 'commit', 'stash', 'status', 'diff', 'log', 'restore']);
+// Options that make git run configured programs or rewrite its config for this one command.
+const GIT_FORBIDDEN_ARGS = /^(-c|--config-env(=.*)?|--exec-path(=.*)?|--ext-diff|--textconv|--upload-pack(=.*)?|--receive-pack(=.*)?)$/;
+
+/** Split a command into words, honouring single and double quotes. Returns null if quoting is unbalanced. */
+function words(command) {
+  const out = [];
+  let cur = '';
+  let quote = null;
+  let any = false;
+  for (const ch of command) {
+    if (quote) { if (ch === quote) quote = null; else cur += ch; continue; }
+    if (ch === "'" || ch === '"') { quote = ch; any = true; continue; }
+    if (/\s/.test(ch)) { if (cur || any) out.push(cur); cur = ''; any = false; continue; }
+    cur += ch;
+  }
+  if (quote) return null;
+  if (cur || any) out.push(cur);
+  return out;
+}
+
 /**
- * True when every segment of a shell command is a plain `git ...` invocation.
- * Refuses command substitution, process substitution and redirection, so `git log $(rm x)` or
- * `git diff > f` cannot smuggle work through the git exception.
+ * True only for ONE plain git command whose subcommand is on the landing allowlist
+ * (add, commit, stash, status, diff, log, restore --staged). Refuses chaining (; && || | newline),
+ * command/process substitution, redirection, `!` (alias shell-outs), `-c`/`--config-env`/`--exec-path`,
+ * `config`, aliases and any other global option except `-C <path>`.
+ * Honest limit: git still honours the repository's own hooks and config (e.g. a pre-commit hook
+ * written before landing); the OS sandbox (D7) is the barrier for that, not this hook.
  */
-function isGitOnly(command) {
+function isAllowedGit(command) {
   if (typeof command !== 'string' || !command.trim()) return false;
-  if (/[`<>]|\$\(/.test(command)) return false;
-  const segments = command.split(/&&|\|\||;|\||\n/).map(s => s.trim()).filter(Boolean);
-  return segments.length > 0 && segments.every(s => /^git(\s|$)/.test(s));
+  if (/[`<>;&|!\n\r]|\$\(|\$\{/.test(command)) return false;
+  const w = words(command.trim());
+  if (!w || w[0] !== 'git') return false;
+  let i = 1;
+  while (i < w.length && w[i].startsWith('-')) {
+    if (w[i] !== '-C' || i + 1 >= w.length) return false; // the only global option allowed
+    i += 2;
+  }
+  const sub = w[i];
+  if (!GIT_SUBCOMMANDS.has(sub)) return false;
+  const rest = w.slice(i + 1);
+  if (rest.some(a => GIT_FORBIDDEN_ARGS.test(a))) return false;
+  if (sub === 'restore' && !rest.includes('--staged')) return false; // never discard working-tree changes
+  return true;
 }
 
 function readState(file) {
@@ -51,7 +86,7 @@ function readState(file) {
 
 /** Decide for one tool call. Returns null (stay silent) or { reason } to deny. Pure apart from fs reads. */
 function decide(state, toolName, toolInput = {}) {
-  const isGit = toolName === 'Bash' && isGitOnly(toolInput.command);
+  const isGit = toolName === 'Bash' && isAllowedGit(toolInput.command);
   if (isGit) return null;
 
   if (state && typeof state.freeze_flag === 'string' && fs.existsSync(state.freeze_flag)) {
@@ -90,4 +125,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { decide, isGitOnly, READ_ONLY_TOOLS };
+module.exports = { decide, isAllowedGit, words, READ_ONLY_TOOLS, GIT_SUBCOMMANDS };

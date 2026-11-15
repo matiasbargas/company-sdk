@@ -216,6 +216,7 @@ async function run() {
     const g2 = (/grant (\S+) /.exec(g.out) || [])[1];
     t.eq(g.code, 0, `holding-Owner grant is ratified on entry (${g.err})`);
     const live = createLocalRunner({ holdingDir: path.join(root, 'holding'), companies: [{ id: 'acme', path: repo }], model: MODEL,
+      allowUnsandboxed: true, // tests only: no sandbox user here (runner contract, iteration 3)
       claudeBin: [process.execPath, FAKE], freezePollMs: 5000, env: { FAKE_CLAUDE_SCENARIO: 'sleep', FAKE_CLAUDE_SLEEP_MS: '4000' } });
     const stops = [];
     const spy = { ...live, stop: (id, o) => { stops.push([id, o]); return live.stop(id, o); } };

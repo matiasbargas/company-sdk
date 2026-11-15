@@ -341,12 +341,43 @@ claims:
 
   - id: cap-po-reconcile-001
     kind: capability
-    status: planned
+    status: built
     statement: "Each cycle, ledger draws per company key are reconciled against the provider's usage for that key; the difference (e.g. killed runs with no visible usage) is recorded as an `unmetered` reconciliation event, never ignored."
     acceptance:
       - given: "provider usage for a key exceeds the ledger's draws for that key in a cycle"
         when: "reconciliation runs"
         then: "an unmetered event records the difference with the provider evidence reference"
     sources: [{file: record/experiments/2026-11-14-metering-spike-2/README.md, section: "Observations"}]
-    conformance: []
+    conformance: [cap-po-reconcile-001]
+
+  - id: cap-po-sandbox-001
+    kind: capability
+    status: built
+    statement: "Company sessions run as a dedicated sandbox OS user launched through a narrow sudo rule with a clean env and the company key injected per session; holding/ (ledger, keys, settings, freeze flag) is owned by the Owner (0700) and unreachable by the sandbox user; `run` refuses without a configured sandbox (Owner decision D7, one company, 2026-11-15)."
+    acceptance:
+      - given: "a holding with a `sandbox` event {user, home} and a 0600 key file"
+        when: "a run starts"
+        then: "the spawn is `sudo -n -u <user> -H --preserve-env=ANTHROPIC_API_KEY,HOLDING_RUN_ID <claude> ...` with the key only in the spawn environment (never in any argv element), the spawn env is exactly {PATH, ANTHROPIC_API_KEY, HOLDING_RUN_ID}, and session files live in an Owner-owned 0755/0644 directory outside holding/"
+      - given: "no sandbox configured"
+        when: "a run is requested"
+        then: "it is refused with SANDBOX_REQUIRED"
+      - given: "the sandbox is configured"
+        when: "`sdk-holding sandbox doctor` runs"
+        then: "each check (user, holding mode/owner, company writable, key 0600, sudo rule) passes or names its fix"
+    sources: [{file: history.md, section: "Implementation Guardian cycle 1 + Owner clarification (2026-11-15)"}]
+    conformance: [cap-po-sandbox-001]
+
+  - id: cap-po-runner-006
+    kind: capability
+    status: built
+    statement: "Runner-owned settings carry an explicit permission profile (read, edit within the company root, a git subcommand allowlist, the project test command) so a real headless session can work and land; permission denials are recorded, and a session that achieved nothing because of denials ends `no_work_denied`, never `done`; the landing hook's git exception refuses -c/config/aliases/command chaining."
+    acceptance:
+      - given: "a session whose every tool call was denied"
+        when: "it ends"
+        then: "terminalReason is no_work_denied and the denials are in the run record"
+      - given: "landing mode"
+        when: "the session runs `git -c alias.x='!cmd' x` or `git commit -m x; rm -rf .`"
+        then: "the hook denies it"
+    sources: [{file: iterations/implementation/holding/iter-001.md, section: "Guardian Review"}]
+    conformance: [cap-po-runner-006]
 

@@ -29,17 +29,19 @@ const { GENESIS_SHA256, LedgerError, createFoldContext, applyEvent, drawIdemKey,
 const SCHEMA_VERSION = 1;
 const EVENT_TYPES = ['fund', 'grant', 'release', 'draw', 'proof', 'proof_revert', 'overrun', 'reclaim',
   'return', 'close', 'freeze', 'unfreeze', 'unmetered', 'checkpoint', 'ratify', 'judgment', 'cycle_close',
-  'limits', 'price_table', 'runner_pin'];
+  'limits', 'price_table', 'runner_pin', 'sandbox', 'reconcile'];
 const HOLDING_OWNER = 'holding-owner';
 const RUNNER = 'runner';
 const ACTORS_BY_TYPE = {
   fund: [HOLDING_OWNER], freeze: [HOLDING_OWNER], unfreeze: [HOLDING_OWNER],
   ratify: [HOLDING_OWNER], cycle_close: [HOLDING_OWNER],
   limits: [HOLDING_OWNER], price_table: [HOLDING_OWNER], runner_pin: [HOLDING_OWNER], // replay inputs live in the chain
+  sandbox: [HOLDING_OWNER], reconcile: [HOLDING_OWNER],
   // anyone in the company may propose a grant; only the holding Owner's own grant is ratified on entry
   grant: [HOLDING_OWNER, 'agent', 'company-owner'],
   judgment: ['company-owner'], // the judgment column is the company Owner's rating
-  draw: [RUNNER], overrun: [RUNNER], unmetered: [RUNNER],
+  draw: [RUNNER], overrun: [RUNNER],
+  unmetered: [RUNNER, HOLDING_OWNER], // the holding Owner only for reconciliation differences (fold checks source)
   release: [HOLDING_OWNER, RUNNER], proof: [HOLDING_OWNER, RUNNER], proof_revert: [HOLDING_OWNER, RUNNER],
   close: [HOLDING_OWNER, RUNNER], return: [HOLDING_OWNER, RUNNER], reclaim: [HOLDING_OWNER, RUNNER],
   checkpoint: [HOLDING_OWNER, RUNNER],

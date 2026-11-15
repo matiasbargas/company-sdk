@@ -3,7 +3,9 @@
 /**
  * health.js — holdingHealth(holdingDir): read-only health of a holding, for scripts/health.js.
  * cap-po-judgment-001 (unfilled judgment column), cap-po-proof-002 (revisit trigger),
- * cap-po-metric-001 (unmetered sessions this cycle), cap-po-ledger-001 (chain).
+ * cap-po-metric-001 (unmetered sessions this cycle), cap-po-ledger-001 (chain), cap-po-reconcile-001
+ * (provisional debits not yet reconciled against the provider), cap-po-runner-006 (runs whose tools
+ * were denied, incl. `no_work_denied`).
  *
  * Pure in effect: it reads portfolio.json and the ledger and never writes (no revert scan, no
  * lock). `holdingDir` is the holding root (the directory holding `holding/`) or `holding/` itself.
@@ -14,7 +16,22 @@
 const fs = require('fs');
 const path = require('path');
 const { openLedger } = require('./ledger');
-const { buildReport } = require('./report');
+const { buildReport, LIVE_ESTIMATE_CAVEAT } = require('./report');
+
+/** Run records under <holding>/runs (the runner's <runId>.json; state/settings side files skipped). */
+function readRunRecords(holdingSubdir) {
+  const dir = path.join(holdingSubdir, 'runs');
+  if (!fs.existsSync(dir)) return [];
+  const out = [];
+  for (const f of fs.readdirSync(dir).sort()) {
+    if (!f.endsWith('.json') || /\.(state|settings)\.json$/.test(f)) continue;
+    try {
+      const r = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+      if (r && typeof r === 'object' && r.run_id) out.push(r);
+    } catch { /* a half-written record is the runner's concern */ }
+  }
+  return out;
+}
 
 function locate(dir) {
   const root = path.resolve(dir);
@@ -58,7 +75,7 @@ function holdingHealth(holdingDir) {
         + 'the company Owner rates with: sdk-holding judge <grantId> advanced|flat|regressed --cycle ' + lastClosed);
     }
   }
-  const current = buildReport(state, { portfolio });
+  const current = buildReport(state, { portfolio, runs: readRunRecords(h) });
   if (current.revisit_trigger.due) {
     add('warn', 'REVISIT_TRIGGER', 'cap-po-proof-002',
       `outside-verifier decision due (proof self-verification risk): ${current.revisit_trigger.reasons.join('; ')}`);
@@ -71,7 +88,18 @@ function holdingHealth(holdingDir) {
       `${unmetered.length} unmetered session(s) in cycle ${state.cycle}: ${Object.entries(byCo).map(([c, r]) => `${c} (runs ${r.join(', ')})`).join('; ')}; `
       + 'their VOF is suppressed for the cycle');
   }
+  for (const u of current.provisional.unreconciled) {
+    add('warn', 'PROVISIONAL_UNRECONCILED', 'cap-po-reconcile-001',
+      `${u.company} cycle ${u.cycle}: ${u.sessions} unmetered session(s), ${u.fu} FU provisional (${u.charged_fu} charged to the grant, `
+      + `${u.uncharged_fu} uncharged); the grant's next tranche is blocked until the Owner runs: sdk-holding reconcile --company ${u.company} `
+      + `--provider-usd <usd> --period ${u.cycle} --evidence <ref>. Caveat: ${LIVE_ESTIMATE_CAVEAT}`);
+  }
+  for (const r of current.runs) {
+    add('warn', r.no_work ? 'RUN_NO_WORK_DENIED' : 'RUN_DENIALS', 'cap-po-runner-006',
+      `run ${r.run_id} (${r.company || '?'}): ${r.denials} permission denial(s)${r.denied_tools.length ? ` on ${r.denied_tools.join(', ')}` : ''}`
+      + (r.no_work ? ' — the session achieved nothing (no_work_denied); check the runner permission profile' : ''));
+  }
   return { ok: !issues.some(i => i.severity === 'error'), holding: h, cycle: state.cycle, issues };
 }
 
-module.exports = { holdingHealth };
+module.exports = { holdingHealth, readRunRecords };

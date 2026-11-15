@@ -5,16 +5,16 @@
 // Every claude session is tests/fixtures/fake-claude.js, configured through settings.json
 // `runner.claudeBin` (the CLI spreads settings.runner into createLocalRunner). No tokens, no network.
 //
-// Bugs found are pinned by failing assertions marked `// E2E-BUG:`. Where a bug blocks the CLI path,
-// the step is bridged through the library runner (same settings) so the rest of the story is still
-// checked; the failing assertion stays red until the CLI is fixed.
+// Bugs found are pinned by failing assertions marked `// E2E-BUG:` (none open: E2E-BUG #1, the
+// missing --max-budget-usd/--model on `run`, is fixed and its library bridge removed).
+// The D7 sandbox user is not provisioned on test machines, so the runner is configured with
+// `allowUnsandboxed: true` (tests only); the sandbox launch itself is pinned in test-runner.js.
 //
 // Standalone: node packages/holding/tests/test-e2e.js
 
 const fs = require('fs');
 const path = require('path');
 const { spawn, spawnSync, execFileSync } = require('child_process');
-const { createLocalRunner } = require('../src/runner');
 const { openLedger } = require('../src/ledger');
 const { createSuite, tmpDir } = require('./_helpers');
 
@@ -64,41 +64,21 @@ function configureRunner(scenario, extraEnv = {}) {
   s.priceTable = PRICE;
   s.claude = { pinnedVersion: '2.1.292' };
   s.runner = {
-    claudeBin: [process.execPath, FAKE], model: MODEL, sessionFloorUsd: { [MODEL]: 0.08 }, freezePollMs: 50,
+    claudeBin: [process.execPath, FAKE], model: MODEL, sessionFloorUsd: { [MODEL]: 0.08 }, freezePollMs: 50, allowUnsandboxed: true,
     env: { FAKE_CLAUDE_SCENARIO: scenario, FAKE_CLAUDE_LOG: fakeLog, ...extraEnv },
   };
   fs.writeFileSync(settingsFile, JSON.stringify(s, null, 2));
 }
 
-/** The library runner built exactly as the CLI's makeRunner does (used only to bridge a CLI bug). */
-function libraryRunner() {
-  const s = JSON.parse(fs.readFileSync(settingsFile, 'utf8'));
-  const portfolio = JSON.parse(fs.readFileSync(path.join(root, 'holding', 'portfolio.json'), 'utf8'));
-  return createLocalRunner({ ...s.runner, holdingDir: path.join(root, 'holding'),
-    companies: portfolio.companies.map(c => ({ id: c.id, path: c.path })), limits: s.limits.fuel,
-    priceTable: s.priceTable, pinnedVersion: s.claude.pinnedVersion });
-}
-
-/**
- * `sdk-holding run` with a per-run budget. Returns { code, out, err, bridged }.
- * E2E-BUG #1 bridge: the CLI's `run` passes neither maxBudgetUsd nor model to runner.start, and the
- * runner requires maxBudgetUsd (cap-po-runner-005), so every CLI run is refused MAX_BUDGET_REQUIRED.
- */
-async function runStep(label, grant, mission, { during, bridge = true } = {}) {
+/** `sdk-holding run` with a per-run budget; `during` runs while the CLI process is alive. */
+async function runStep(label, grant, mission, { during } = {}) {
   const args = ['run', 'acme', '--grant', grant, '--mission', mission, '--prompt', `e2e ${label}`, '--max-turns', '5',
     '--max-budget-usd', '1', '--model', MODEL, ...H];
   const p = cliAsync(args);
   if (during) await during();
   const r = await p;
-  // E2E-BUG: #1 `sdk-holding run` cannot start any session: no --max-budget-usd/--model reach runner.start
   t.assert(r.code === 0, `${label}: \`sdk-holding run\` exits 0 (code ${r.code}: ${r.err.trim().split('\n')[0]})`);
-  if (r.code === 0 || !/MAX_BUDGET_REQUIRED/.test(r.err)) return { ...r, bridged: false };
-  if (!bridge) return { ...r, bridged: true };
-  const runner = libraryRunner();
-  const runId = runner.start('acme', { prompt: `e2e ${label}`, grantId: grant, missionId: mission, maxTurns: 5, model: MODEL, maxBudgetUsd: 1 });
-  const st = await runner.wait(runId);
-  runner.close();
-  return { code: 0, out: `run ${runId}: ${st.state} (${st.terminalReason})`, err: '', bridged: true, status: st, runId };
+  return r;
 }
 
 async function main() {
@@ -192,31 +172,17 @@ async function main() {
     configureRunner('sleep', { FAKE_CLAUDE_SLEEP_MS: '1500' });
     const before = sessions();
     let frozeOk = false;
-    const r = await runStep('freeze mid-run', 'G2', 'm2', { bridge: false,
+    const r = await runStep('freeze mid-run', 'G2', 'm2', {
       during: async () => {
-        // The bridge (E2E-BUG #1) starts its session only after the CLI exits, so freeze from there instead.
-        const end = Date.now() + 3000;
+        const end = Date.now() + 5000;
         while (Date.now() < end && sessions() === before) await sleep(20);
         if (sessions() === before) return;
-        frozeOk = cli(['freeze', '--reason', 'e2e halt', ...H]).code === 0;
+        frozeOk = (await cliAsync(['freeze', '--reason', 'e2e halt', ...H])).code === 0;
       },
     });
-    if (r.bridged) {
-      // Bridged run: freeze from a second process while the library runner's session sleeps.
-      const runner = libraryRunner();
-      const runId = runner.start('acme', { prompt: 'e2e freeze bridged', grantId: 'G2', missionId: 'm2', maxTurns: 5, model: MODEL, maxBudgetUsd: 1, idempotencyKey: 'freeze-bridge' });
-      const end = Date.now() + 3000;
-      while (Date.now() < end && sessions() === before) await sleep(20);
-      frozeOk = (await cliAsync(['freeze', '--reason', 'e2e halt', ...H])).code === 0;
-      const st = await runner.wait(runId);
-      runner.close();
-      r.status = st; r.runId = runId;
-    }
     t.assert(frozeOk, '`sdk-holding freeze` from another process while the session runs');
     t.eq(fold().frozen, true, 'ledger frozen');
-    const status = r.status || {};
-    if (!r.bridged) t.assert(/frozen/.test(r.out), `run reports frozen (${r.out.trim()})`);
-    else t.eq(status.terminalReason, 'frozen', 'session landed: terminal reason frozen');
+    t.assert(/frozen/.test(r.out), `run reports frozen (${r.out.trim()})`);
     const af = events().filter(e => e.type === 'draw' && e.after_freeze === true);
     t.eq(af.length, 1, 'the pre-freeze session\'s draw is accepted, marked after_freeze');
     t.eq(af[0] && af[0].grant_id, 'G2', 'after_freeze draw counts against its grant');
