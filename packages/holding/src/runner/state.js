@@ -96,6 +96,26 @@ function releaseLock(lockFile, runId) {
   try { if (readJson(lockFile).run_id === runId) fs.unlinkSync(lockFile); } catch { /* not ours or already gone */ }
 }
 
+/** The terminal reason of a run refused at (re-)pre-flight, before it spawned. */
+function reasonForRefusal(code) {
+  if (code === 'LEDGER_FROZEN') return 'frozen';
+  if (code === 'TRANCHE_EXHAUSTED') return 'tranche_exhausted';
+  return 'error';
+}
+
+/** Wait on a run another process owns: poll its record until terminal. */
+function pollUntilTerminal(load, runId, everyMs = 100) {
+  return new Promise((resolve, reject) => {
+    const tick = () => {
+      const rec = load();
+      if (!rec) return reject(new RunnerError('UNKNOWN_RUN', `no run ${runId}`));
+      if (TERMINAL_STATES.has(rec.state)) return resolve(statusOf(rec));
+      setTimeout(tick, everyMs);
+    };
+    tick();
+  });
+}
+
 function statusOf(rec) {
   const st = { runId: rec.run_id, company: rec.company, state: rec.state, terminalReason: rec.terminal_reason || null };
   if (rec.waiting_for) st.waitingFor = rec.waiting_for;
@@ -106,4 +126,5 @@ function statusOf(rec) {
 module.exports = {
   RECORD_SCHEMA_VERSION, ESTIMATE_CAVEAT, STATES, TERMINAL_REASONS, TERMINAL_STATES, RunnerError, fail, isNonEmptyString, sha256,
   writeJsonAtomic, readJson, createRecordExclusive, writeRunState, ensureSecureDir, syncFreezeFlag, acquireLock, releaseLock, statusOf,
+  reasonForRefusal, pollUntilTerminal,
 };

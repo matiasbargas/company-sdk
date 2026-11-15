@@ -37,6 +37,7 @@ const handlers = {
   ...require('./fold/config-events'),
   ...require('./fold/grant-events'),
   ...require('./fold/spend-events'),
+  ...require('./fold/commons-events'),
 };
 
 /** Apply one stored event (envelope included) to the context. Throws LedgerError if invalid. */

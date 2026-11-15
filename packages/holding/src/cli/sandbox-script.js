@@ -124,6 +124,31 @@ sudo -u "$SANDBOX_USER" /bin/test -x "$CLAUDE_BIN" || { echo "$SANDBOX_USER cann
 sudo -u "$SANDBOX_USER" /bin/test -w "$COMPANY_DIR" || { echo "$SANDBOX_USER cannot write $COMPANY_DIR (a parent is not traversable?)" >&2; exit 1; }
 sudo -u "$SANDBOX_USER" /bin/test -r "$SESSIONS_DIR" || { echo "$SANDBOX_USER cannot read $SESSIONS_DIR" >&2; exit 1; }
 
+# 9. Prove the installed hook DENIES as $SANDBOX_USER (Guardian N1). Reachable is not enough: a hook that
+#    runs but stays silent lets a landing session keep writing. A synthetic landing state, one Write:
+#    the hook must answer permissionDecision "deny", or this script stops here and names why.
+# --- hook probe (begin)
+PROBE_DIR=$(mktemp -d /tmp/sdk-holding-probe.XXXXXX)
+trap 'rm -rf "$PROBE_DIR"' EXIT
+chmod 755 "$PROBE_DIR"
+cat > "$PROBE_DIR/state.json" <<EOF
+{"run_id":"setup-probe","budget_fu":1,"spent_fu":1,"estimate":true,"landing":true,"landing_reason":"sandbox setup probe","freeze_flag":"$PROBE_DIR/FROZEN","status_files":["current-status.md"]}
+EOF
+chmod 644 "$PROBE_DIR/state.json"
+PROBE_IN='{"hook_event_name":"PreToolUse","tool_name":"Write","tool_input":{"file_path":"/tmp/sdk-holding-probe-target","content":"x"}}'
+if ! PROBE_OUT=$(cd / && printf '%s' "$PROBE_IN" | sudo -u "$SANDBOX_USER" "$NODE_PATH" "$RUNTIME_DIR/landing-hook.js" --state "$PROBE_DIR/state.json" 2>"$PROBE_DIR/stderr"); then
+  echo "ABORT: the installed hook could not run as $SANDBOX_USER ($NODE_PATH $RUNTIME_DIR/landing-hook.js): $(head -c 400 "$PROBE_DIR/stderr" 2>/dev/null)" >&2
+  echo "       Claude Code treats a hook that fails as non-blocking, so landing and freeze would fail OPEN." >&2
+  exit 1
+fi
+case "$PROBE_OUT" in
+  *'"permissionDecision":"deny"'*) echo "ok: the installed hook denies a Write in landing mode as $SANDBOX_USER" ;;
+  *) echo "ABORT: the installed hook ran as $SANDBOX_USER but did NOT deny a Write in landing mode (output: \${PROBE_OUT:-<empty>})." >&2
+     echo "       $RUNTIME_DIR/landing-hook.js is not the landing hook sdk-holding ships: rerun sdk-holding sandbox setup, then this script." >&2
+     exit 1 ;;
+esac
+# --- hook probe (end)
+
 echo "sandbox ready for $SANDBOX_USER."
 echo "As $OWNER (not root): git config --global --add safe.directory $COMPANY_DIR"
 echo "Then check everything: sdk-holding sandbox doctor"

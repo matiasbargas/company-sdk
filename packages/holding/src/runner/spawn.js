@@ -57,9 +57,23 @@ function buildLaunch({ sandbox, key, claudeBin, args, env, runId }) {
   };
 }
 
+/** Wire a session's pipes: raw chunks, complete stdout lines (the tail flushed on close), stderr, exit. */
+function pipeSession(child, { onChunk, onLine, onStderr, onError, onClose }) {
+  let buf = '';
+  child.stdout.on('data', (chunk) => {
+    onChunk(chunk);
+    buf += chunk.toString('utf8');
+    let nl;
+    while ((nl = buf.indexOf('\n')) >= 0) { onLine(buf.slice(0, nl)); buf = buf.slice(nl + 1); }
+  });
+  child.stderr.on('data', (chunk) => onStderr(chunk.toString('utf8')));
+  child.on('error', onError);
+  child.on('close', (code, signal) => { if (buf) onLine(buf); onClose(code, signal); });
+}
+
 function killGroup(child, signal) {
   if (!child) return;
   try { process.kill(-child.pid, signal); } catch { try { child.kill(signal); } catch { /* gone */ } }
 }
 
-module.exports = { ENV_ALLOWLIST, baseEnv, checkVersion, buildLaunch, spawnSession, killGroup };
+module.exports = { ENV_ALLOWLIST, baseEnv, checkVersion, buildLaunch, spawnSession, pipeSession, killGroup };

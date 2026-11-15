@@ -164,6 +164,21 @@ async function run() {
     t.eq(wrong.code, 1, 'run for another mission refused');
   }
 
+  // @covers cap-po-killswitch-001 @covers cap-po-firstrun-001 — run --landing-timeout <s> reaches runner.start as landingTimeoutSec
+  {
+    t.assert(!('landingTimeoutSec' in runner.calls.find(c => c[0] === 'start')[2]), 'without the flag the runner decides (first-run limit or default)');
+    const n = runner.calls.length;
+    const r = await cli(['run', 'acme', '--grant', grantId, '--mission', 'm1', '--prompt', 'x', '--landing-timeout', '45', ...RUN, ...H], { runner });
+    t.eq(r.code, 0, `run --landing-timeout succeeds (${r.err})`);
+    const start = runner.calls.slice(n).find(c => c[0] === 'start');
+    t.eq(start && start[2].landingTimeoutSec, 45, 'runner.start({ landingTimeoutSec: 45 })');
+    for (const bad of ['0', '-3', 'soon']) {
+      const b = await cli(['run', 'acme', '--grant', grantId, '--mission', 'm1', '--prompt', 'x', '--landing-timeout', bad, ...RUN, ...H], { runner });
+      t.eq(b.code, 2, `--landing-timeout ${bad} is a usage error`);
+    }
+    t.eq(runner.calls.slice(n).filter(c => c[0] === 'start').length, 1, 'no session started for a bad --landing-timeout');
+  }
+
   // proof from the company repo + automatic release
   {
     commitSurface(repo, 'SURFACE-1', 'under-verification');

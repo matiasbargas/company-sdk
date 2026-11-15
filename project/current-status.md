@@ -11,6 +11,13 @@
 
 ## Phase
 
+**Portfolio Orchestrator v0.2 built (2026-11-15, multi-agent pipeline):**
+- D1 first-run hardening (hook proof, integrity pre-flight, 60 s first-run landing).
+- D2 Commons (cross-company verified admission, consent and PII scan, lockfile, revoke).
+- D3 second-company design.
+
+**Owner decisions pending:** ratify CHARTER v0.2; then the proposed holding-Owner/company-Owner amendment (`second-company/charter-amendment-proposal.md`); check provider spend-cap locations (`second-company/provider-caps.md`).
+
 **Portfolio Orchestrator v0 (single company): Implementation GRADUATED (2026-11-15, cycle 3).** `packages/holding` / `sdk-holding` is ready for its first real run once the Owner completes setup: run the sandbox sudo script and pass `doctor`, set the key, price table, pin and floor, approve a budget, and set a provider spend limit. The first run should be multi-turn with a Task subagent, to verify C1–C4. See `history.md` → "Portfolio Orchestrator v0 — Implementation GRADUATED".
 
 **Portfolio Orchestrator — Discovery GRADUATED (2026-11-14, cycle 2).** The holding runs parallel team-sdk companies on a fuel (API-token) protocol. Owner decisions are logged in `history.md`; the synthesis and the §36 draft are in `context/intent/portfolio-orchestrator/`. The problem model and 15 planned capabilities (the v0 backlog) are in `context/spec/portfolio-orchestrator/`. **Mario gate: APPROVED WITH CONDITIONS C1–C14 (2026-11-14); D7 = dedicated sandbox OS user.** Two-company run blocked until C4, C12, C13 and C14 hold. **SDK:** 189/199 capabilities pinned (95%), 0 open defects (2026-11-14). **Orchestrator core built test-first** (`packages/holding`: ledger, meter, validator, grants; 9 capabilities). **Next:** then a test-first build of the two-instance proof. **Specs outlive implementations** (§30) is in force: built capabilities are pinned by `@covers` tests, and refactors are triggered discussions.

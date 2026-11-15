@@ -6,8 +6,11 @@
  * `runner` actor (draw / overrun / unmetered; after_freeze retry; refused draws kept as unmetered).
  */
 
+const fs = require('fs');
+const path = require('path');
 const { LedgerError } = require('../ledger');
-const { priceFu, toLedgerEvents } = require('../meter');
+const { priceFu, toLedgerEvents, meterStream } = require('../meter');
+const { ESTIMATE_CAVEAT } = require('./state');
 
 /**
  * Fold one assistant message into the run's live usage (deduped by message id) and return the
@@ -145,4 +148,33 @@ function recordUsage(ledger, run, records) {
   return { usage, pending, warnings };
 }
 
-module.exports = { liveEstimate, trackToolUses, hookErrorOf, denialSummary, lastResult, terminalOf, recordUsage };
+/**
+ * After the session exits: meter its stream (pinned version, C5), record usage as the runner,
+ * classify the terminal state. Returns { state, fields } for the run record (ended_at excluded).
+ */
+function settleSession({ ledger, run, code, signal, spawnErr, companyPath }) {
+  const text = run.streamFile && fs.existsSync(run.streamFile) ? fs.readFileSync(run.streamFile, 'utf8') : '';
+  const result = lastResult(text);
+  const warnings = [];
+  let records = [];
+  let usage = { fu_drawn: 0, fu_overrun: 0, unmetered: 0, records: 0 };
+  let pending = [];
+  if (!spawnErr) {
+    records = meterStream(text, { pinnedVersion: run.cfg.pinnedVersion });
+    const r = recordUsage(ledger, run, records);
+    usage = r.usage; pending = r.pending; warnings.push(...r.warnings);
+  }
+  if (fs.existsSync(path.join(companyPath, '.git', 'index.lock'))) warnings.push(`${companyPath}/.git/index.lock remains after the session`);
+  const denials = denialSummary(run, result);
+  const [state, terminalReason] = spawnErr ? ['failed', 'error'] : terminalOf(run, code, signal, result, denials);
+  const error = spawnErr ? spawnErr.message : run.modelMismatch ? `MODEL_MISMATCH: ${run.modelMismatch}`
+    : (state === 'failed' && run.stderr ? run.stderr.slice(-2000) : null);
+  return { state, fields: {
+    terminal_reason: terminalReason, exit_code: code, signal: signal || null, error,
+    usage, usage_events: records, ledger_pending: pending, warnings, ...denials,
+    live_estimate: { spent_fu: run.spentFu ?? null, estimate: true, caveat: ESTIMATE_CAVEAT },
+    landing_forced: !!run.landingForced, hook_errors: run.hookErrors,
+  } };
+}
+
+module.exports = { liveEstimate, trackToolUses, hookErrorOf, denialSummary, lastResult, terminalOf, recordUsage, settleSession };

@@ -1,0 +1,149 @@
+# PROPOSED Layer B capabilities — second-company / second-Owner gate (D3.5)
+#
+# Status: PROPOSAL. Not part of context/spec until Greg merges these into
+# context/spec/portfolio-orchestrator/claims.yaml. Every entry is `status: planned`
+# with no conformance tests yet. Same schema as claims.yaml: id, kind, status,
+# statement, acceptance (given/when/then against public interfaces), sources, conformance.
+#
+# Design: second-company/isolation.md (D3.1), provider-caps.md (D3.2),
+#         charter-amendment-proposal.md (D3.3), gate-checklist.md (D3.4, rows G1–G25).
+# Mario conditions: variables.yaml → mario_conditions C4, C7, C11, C12, C13, C14.
+
+claims:
+  - id: cap-po-second-owner-001
+    kind: capability
+    status: planned
+    statement: "Each company runs as its own sandbox OS user and group; the runner selects the user from that company's `sandbox` ledger event and refuses a run when the company has none or when two companies share a user, group, home or session root."
+    acceptance:
+      - given: "companies A and B registered, and only A has a `sandbox` event"
+        when: "a run for B is started"
+        then: "it is refused with SANDBOX_REQUIRED naming company B, and no process is spawned"
+      - given: "A and B whose `sandbox` events name the same OS user (or the same home or session root)"
+        when: "a run for either is started"
+        then: "it is refused with SANDBOX_SHARED naming both companies and the shared field"
+      - given: "A and B with distinct sandbox users _sdkco_a and _sdkco_b"
+        when: "a run for B is started"
+        then: "the spawn is `sudo -n -u _sdkco_b -H --preserve-env=...` and never names _sdkco_a"
+    sources: [{file: intent/portfolio-orchestrator/second-company/isolation.md, section: "4. How the runner selects the user per company"}]
+    conformance: []
+
+  - id: cap-po-second-owner-002
+    kind: capability
+    status: planned
+    statement: "No company's sandbox user can reach another company's clone, home, session root or temp folder, nor holding/; the pre-flight checks it from file modes and the setup script proves it live as each user; run files are private to their company."
+    acceptance:
+      - given: "company B's clone is readable by the other class (o+r on the clone and every parent)"
+        when: "a run for A is started"
+        then: "it is refused with SANDBOX_CROSS_REACH naming A, B and the path"
+      - given: "a holding with A configured and B being added"
+        when: "`sdk-holding sandbox setup --company b` writes the setup script"
+        then: "the script contains, for every path of A, a `sudo -u _sdkco_b /bin/test -r <path>` that aborts the script with the path named if it succeeds"
+      - given: "a sandboxed run for company A"
+        when: "the runner writes the run's settings and landing state"
+        then: "they live under a session root owned by the Owner with group _sdkco_a and mode 0750, the files are 0640, and the spawn passes a TMPDIR that is private to _sdkco_a"
+    sources: [{file: intent/portfolio-orchestrator/second-company/isolation.md, section: "3. Mechanisms (macOS)"}, {file: intent/portfolio-orchestrator/second-company/isolation.md, section: "6. What stays unreachable across companies"}]
+    conformance: []
+
+  - id: cap-po-second-owner-003
+    kind: capability
+    status: planned
+    statement: "Every company has its own provider key, different from every other company's, stored Owner-only inside holding/ and unreachable by every sandbox user."
+    acceptance:
+      - given: "holding/keys/a.key and holding/keys/b.key with identical content"
+        when: "a run for A or B is started"
+        then: "it is refused with KEY_SHARED naming both companies, and no key material appears in the output"
+      - given: "a holding with two companies"
+        when: "`sdk-holding sandbox doctor` runs"
+        then: "for each sandbox user it reports whether that user can reach any file under holding/keys, and fails naming the user and the path when it can"
+    sources: [{file: intent/portfolio-orchestrator/second-company/isolation.md, section: "5. How keys stay per company (C14)"}]
+    conformance: []
+
+  - id: cap-po-second-owner-004
+    kind: capability
+    status: planned
+    statement: "A company's session environment (and the key in it) is not visible to another company's sandbox user, and the key is not persisted outside the company's private home; both are proven, not assumed."
+    acceptance:
+      - given: "two configured sandbox users _sdkco_a and _sdkco_b"
+        when: "the generated setup script for B runs"
+        then: "it starts a probe process as _sdkco_a with a random variable in its environment, runs `ps -E -ww -p <pid>` as _sdkco_b, and aborts naming the probe if the variable is visible"
+      - given: "a holding whose first sandboxed run for a second-Owner company has finished"
+        when: "the registry evaluates gate G17"
+        then: "it is unmet until a signed `gate_attest` record for G17 states the result of searching the company home for the key suffix"
+    sources: [{file: intent/portfolio-orchestrator/second-company/isolation.md, section: "5. How keys stay per company (C14)"}]
+    conformance: []
+
+  - id: cap-po-second-owner-005
+    kind: capability
+    status: planned
+    statement: "The location and scope of each company's provider spend cap is recorded as a holding-Owner `provider_caps` event; in a holding with two or more companies a run is refused without one (infinite fuel included), and companies whose cap scope is a workspace must name different workspaces."
+    acceptance:
+      - given: "a holding with two companies and no `provider_caps` event for company B"
+        when: "a run for B is started"
+        then: "it is refused with PROVIDER_CAP_UNVERIFIED naming B, also when envelopePerCycle is null"
+      - given: "`provider_caps` events for A and B with scope workspace and the same workspace id"
+        when: "a run for either is started"
+        then: "it is refused with WORKSPACE_SHARED"
+      - given: "a `provider_caps` event with scope org or enforcement alert"
+        when: "a company of a different Owner is added"
+        then: "it is refused naming gate G18 and the outcome (O4 or O5)"
+    sources: [{file: intent/portfolio-orchestrator/second-company/provider-caps.md, section: "3. Decision table"}]
+    conformance: []
+
+  - id: cap-po-second-owner-006
+    kind: capability
+    status: planned
+    statement: "Where a company Owner is not the holding Owner, every Owner act recorded by software (grant acceptance, adoption approval, consent record, judgment rating, CHARTER ratification, gate attestation) counts only with a signature that verifies against that Owner's public key in the registry; the holding Owner cannot sign as the company Owner."
+    acceptance:
+      - given: "company B with Owner bob and bob's public key in the registry"
+        when: "`commons pull b --approve` is given an approval signed by the holding Owner's key"
+        then: "it is refused naming the expected signer, and nothing is copied"
+      - given: "a judgment rating for a bet of B carrying no signature"
+        when: "it is recorded"
+        then: "it is refused, and the bet remains unrated (it still counts as divergent)"
+      - given: "a single-Owner holding (every company Owner is the holding Owner)"
+        when: "the same acts are recorded without signatures"
+        then: "they are accepted as today"
+    sources: [{file: intent/portfolio-orchestrator/second-company/charter-amendment-proposal.md, section: "A. New section — Owners (Proof of an Owner's act)"}]
+    conformance: []
+
+  - id: cap-po-second-owner-007
+    kind: capability
+    status: planned
+    statement: "The second-Owner gate is computed, not flagged: the registry recomputes every code row of the gate checklist and reads every attestation row from signed `gate_attest` ledger events; `second_owner_gates` booleans in portfolio.json no longer satisfy any gate."
+    acceptance:
+      - given: "portfolio.json with every second_owner_gates flag set true and no gate_attest events"
+        when: "a company with a different Owner is added"
+        then: "it is refused, naming every unmet row (G-number, condition, and whether it is a code check or an attestation)"
+      - given: "a gate_attest event for G4 signed by someone other than the holding Owner"
+        when: "the registry evaluates G4"
+        then: "G4 is unmet and the wrong signer is named"
+    sources: [{file: intent/portfolio-orchestrator/second-company/gate-checklist.md, section: "Checklist"}]
+    conformance: []
+
+  - id: cap-po-second-owner-008
+    kind: capability
+    status: planned
+    statement: "The registry refuses a second Owner until the holding's CHARTER carries a ratified Owners section defining the holding Owner and the company Owner."
+    acceptance:
+      - given: "the holding CHARTER.md has a signed ratification line but no `## Owners` section"
+        when: "a company with a different Owner is added"
+        then: "it is refused naming gate G1 and the missing section"
+      - given: "the holding CHARTER.md has an `## Owners` section but its ratification line is unsigned"
+        when: "a company with a different Owner is added"
+        then: "it is refused naming gate G1 and the unsigned line"
+    sources: [{file: intent/portfolio-orchestrator/second-company/charter-amendment-proposal.md, section: "Proposed text"}]
+    conformance: []
+
+  - id: cap-po-second-owner-009
+    kind: capability
+    status: planned
+    statement: "In a holding with two or more companies, every company's key is reconciled against provider usage every cycle; a company left unreconciled at cycle close cannot draw its next tranche until it is reconciled."
+    acceptance:
+      - given: "two companies and a cycle closed with a `reconcile` event for A only"
+        when: "a run for B is started in the next cycle"
+        then: "it is refused with UNRECONCILED naming B and the cycle, and a run for A is not affected"
+      - given: "the same holding after `sdk-holding reconcile --company b --period <cycle> ...`"
+        when: "a run for B is started"
+        then: "the reconciliation refusal no longer applies"
+    sources: [{file: intent/portfolio-orchestrator/second-company/provider-caps.md, section: "3. Decision table (O7)"}, {file: intent/portfolio-orchestrator/second-company/isolation.md, section: "8. Mapping to Mario's conditions"}]
+    conformance: []

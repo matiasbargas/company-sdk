@@ -47,17 +47,22 @@ function stubExec({ userUid = process.getuid(), sudoOut = null } = {}) {
 const dir = (mode, uid = 0, gid = 0) => ({ mode: 0o040000 | mode, uid, gid, isDirectory: () => true });
 const file = (mode, uid = 0, gid = 0) => ({ mode: 0o100000 | mode, uid, gid, isDirectory: () => false });
 const RUNTIME = '/Users/Shared/sdkco-runtime';
+const OWNER_UID = process.getuid();
+const HOOK_SRC = path.join(__dirname, '..', 'src', 'landing-hook.js');
+// The installed hook (a synthetic path) reads as the repo copy unless a test swaps it.
+let installedHook = null;
+const readFile = (p) => (p === `${RUNTIME}/landing-hook.js` ? (installedHook ?? fs.readFileSync(HOOK_SRC)) : fs.readFileSync(p));
 const SYN = {
   '/': dir(0o755), '/opt': dir(0o755), '/opt/claude': dir(0o755), '/opt/claude/bin': dir(0o755), [CLAUDE]: file(0o755),
-  '/Users': dir(0o755), '/Users/Shared': dir(0o1777), [RUNTIME]: dir(0o755, 501), [`${RUNTIME}/landing-hook.js`]: file(0o644, 501),
-  [`${RUNTIME}/node`]: file(0o755, 501),
+  '/Users': dir(0o755), '/Users/Shared': dir(0o1777), [RUNTIME]: dir(0o755, OWNER_UID), [`${RUNTIME}/landing-hook.js`]: file(0o644, OWNER_UID),
+  [`${RUNTIME}/node`]: file(0o755, OWNER_UID),
 };
 const layeredStat = (p) => {
   if (SYN[p]) return SYN[p];
   const st = fs.statSync(p);
   return { mode: st.mode, uid: st.uid, gid: st.gid, isDirectory: () => st.isDirectory() };
 };
-const ACCESS = { accessStat: layeredStat, realpath: (p) => p, execPath: '/Users/ada/.local/node/bin/node' };
+const ACCESS = { accessStat: layeredStat, realpath: (p) => p, readFile, execPath: '/Users/ada/.local/node/bin/node' };
 const SUDO_OK = (user) => `Matching Defaults entries for ada on host:\n    env_keep+="ANTHROPIC_API_KEY HOLDING_RUN_ID"\n\nUser ada may run the following commands on host:\n    (${user}) NOPASSWD: ${CLAUDE}\n`;
 
 async function run() {
@@ -105,6 +110,57 @@ async function run() {
     t.eq((await cli(['sandbox', 'setup', '--user', 'Bad User', '--home', home, '--claude-bin', CLAUDE, ...H], { exec })).code, 1, 'invalid user refused');
   }
 
+  // @covers cap-po-sandbox-001 @covers cap-po-hook-integrity-001 — the setup script proves, as the sandbox user, that the installed hook DENIES (N1)
+  {
+    const script = fs.readFileSync(path.join(root, 'holding/sandbox/setup-_sdkco.sh'), 'utf8');
+    const begin = script.indexOf('# --- hook probe (begin)');
+    const end = script.indexOf('# --- hook probe (end)');
+    t.assert(begin > 0 && end > begin, 'the script has a delimited hook probe step');
+    t.assert(begin > script.indexOf('install -m 0644 -o "$OWNER" "$HOOK_SRC"'), 'the probe runs after the hook is installed');
+    t.assert(begin < script.indexOf('echo "sandbox ready'), 'and before the script declares the sandbox ready');
+    const probe = script.slice(begin, end);
+    t.assert(/sudo -u "\$SANDBOX_USER" "\$NODE_PATH" "\$RUNTIME_DIR\/landing-hook\.js" --state/.test(probe), 'the probe runs the installed hook as the sandbox user');
+    t.assert(/"landing":true/.test(probe) && /"tool_name":"Write"/.test(probe), 'with a synthetic landing state and a Write');
+    // Run the probe for real: `sudo -u <user>` is a stub that only drops the user (no sudo, no root).
+    const runProbe = (hookBody, nodePath = process.execPath) => {
+      const rt = tmpDir('probe-rt-');
+      if (hookBody === null) fs.copyFileSync(HOOK_SRC, path.join(rt, 'landing-hook.js'));
+      else fs.writeFileSync(path.join(rt, 'landing-hook.js'), hookBody);
+      const sh = `set -eu\nsudo() { [ "$1" = -u ] || exit 99; shift 2; "$@"; }\nSANDBOX_USER=_sdkco\nNODE_PATH='${nodePath}'\nRUNTIME_DIR='${rt}'\n${probe}\necho PROBE-PASSED\n`;
+      const r = require('child_process').spawnSync('/bin/sh', ['-c', sh], { encoding: 'utf8' });
+      return { code: r.status, out: r.stdout, err: r.stderr };
+    };
+    const good = runProbe(null);
+    t.eq(good.code, 0, `the shipped hook passes the probe (${good.err})`);
+    t.assert(/denies a Write/.test(good.out) && /PROBE-PASSED/.test(good.out), 'and the script says so and continues');
+    const allows = runProbe("process.exit(0);\n");
+    t.eq(allows.code, 1, 'a hook that stays silent (allows) aborts the script');
+    t.assert(/did NOT deny a Write/.test(allows.err) && !/PROBE-PASSED/.test(allows.out), 'naming the cause: the hook did not deny');
+    const crashes = runProbe("process.stderr.write('boom: cannot read state'); process.exit(3);\n");
+    t.eq(crashes.code, 1, 'a hook that cannot run aborts the script');
+    t.assert(/could not run as _sdkco/.test(crashes.err) && /boom: cannot read state/.test(crashes.err) && /fail OPEN/.test(crashes.err),
+      'naming the cause (its stderr) and why it matters (fail open)');
+    const noNode = runProbe(null, '/nonexistent/node');
+    t.eq(noNode.code, 1, 'a node the sandbox user cannot exec aborts the script');
+    t.assert(/could not run as _sdkco/.test(noNode.err), 'naming the cause');
+  }
+
+  // @covers cap-po-sandbox-001 — `sandbox help` / the sandbox usage list every setup flag, --runtime-dir and --node included
+  {
+    for (const args of [['sandbox', 'help'], ['sandbox', 'nope']]) {
+      const r = await cli([...args, ...H]);
+      const text = `${r.out}\n${r.err}`;
+      for (const f of ['--user', '--home', '--session-dir', '--runtime-dir', '--node', '--company', '--claude-bin']) {
+        t.assert(text.includes(f), `${args.join(' ')} lists ${f}`);
+      }
+    }
+    t.eq((await cli(['sandbox', 'help', ...H])).code, 0, 'sandbox help exits 0');
+    const sh = await cli(['sandbox', 'setup', '--help']);   // D1.4: works with no holding at all
+    t.eq(sh.code, 0, '`sandbox setup --help` exits 0 without a holding');
+    t.eq(/--runtime-dir/.test(sh.out) && /--node/.test(sh.out), true, '`sandbox setup --help` lists --runtime-dir and --node');
+    t.eq((await cli(['report', '--help'])).code, 0, '`<command> --help` prints usage without a holding');
+  }
+
   // @covers cap-po-sandbox-001 — key set: 0600 under holding/keys, read from stdin, never echoed, never from argv
   {
     const r = await cli(['key', 'set', 'acme', '--from-stdin', ...H], { stdin: `${KEY}\n` });
@@ -132,6 +188,9 @@ async function run() {
     for (const name of ['sandbox recorded', 'sandbox user exists', 'holding/ is 0700', 'company clone writable', 'session dir', 'company key file is 0600', 'sudo rule']) {
       t.assert(new RegExp(`ok\\s+${name.replace(/[/.]/g, '\\$&')}`).test(r.out), `check passes: ${name}`);
     }
+    // @covers cap-po-sandbox-001 @covers cap-po-hook-integrity-001 — doctor: the installed hook matches the repo copy and only the Owner can write it
+    t.assert(/ok\s+installed landing hook matches the repo copy/.test(r.out), 'check passes: hook sha256 matches the repo');
+    t.assert(/ok\s+_sdkco cannot write the landing hook or its folder/.test(r.out), 'check passes: hook not writable by the sandbox user');
     for (const name of ['node \\(hook runtime\\)', 'landing hook', 'claude binary', 'company clone', 'session dir']) {
       t.assert(new RegExp(`ok\\s+_sdkco can reach the ${name}`).test(r.out), `access check passes: ${name}`);
     }
@@ -156,6 +215,17 @@ async function run() {
     t.assert(/FAIL session dir is Owner-owned, not group\/other-writable/.test(r.out) && /fix: sudo mkdir -p .* && sudo chmod 755/.test(r.out),
       'a group/other-writable session dir fails (the runner refuses SESSION_DIR_INSECURE on the same rule)');
     t.assert(/\d+ check\(s\) failed/.test(r.err), 'summary counts the failures');
+    // @covers cap-po-sandbox-001 @covers cap-po-hook-integrity-001 — doctor: a stale or writable installed hook fails with its fix
+    installedHook = Buffer.from('// an older hook\n');
+    const stale = await cli(['sandbox', 'doctor', ...H], { exec, ownerUid: process.getuid(), ...ACCESS });
+    t.assert(/FAIL installed landing hook matches the repo copy/.test(stale.out) && /HOOK_STALE/.test(stale.out) && /fix: .*install -m 0644/.test(stale.out),
+      'stale hook → HOOK_STALE with the reinstall command');
+    installedHook = null;
+    SYN[`${RUNTIME}/landing-hook.js`] = file(0o666, OWNER_UID);
+    const wr = await cli(['sandbox', 'doctor', ...H], { exec, ownerUid: process.getuid(), ...ACCESS });
+    t.assert(/FAIL _sdkco cannot write the landing hook or its folder/.test(wr.out) && /HOOK_WRITABLE/.test(wr.out) && /fix: .*chmod go-w/.test(wr.out),
+      'writable hook → HOOK_WRITABLE with the fix');
+    SYN[`${RUNTIME}/landing-hook.js`] = file(0o644, OWNER_UID);
     fs.chmodSync(sessionDir, 0o755);
     fs.chmodSync(path.join(root, 'holding'), 0o700);
     fs.chmodSync(path.join(root, 'holding/keys/acme.key'), 0o600);

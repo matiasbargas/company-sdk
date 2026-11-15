@@ -42,6 +42,7 @@ const commands = {
   ...require('./views'),
   ...require('./reconcile'),
   ...require('./sandbox').commands,
+  commons: require('./commons').commons,
 };
 
 /**
@@ -75,6 +76,11 @@ async function main(argv, deps = {}) {
         + `session ${env.HOLDING_RUN_ID} (HOLDING_RUN_ID is set). Run it from your own terminal. (A tripwire, not a barrier: the OS sandbox user is the barrier.)`, 1);
     }
     if (cmd === 'init') { await fn(args, io); return 0; }
+    // `<command> --help` never needs a holding: commands print their own usage from flags.help.
+    if (args.flags.help !== undefined) {
+      if (cmd === 'sandbox') await fn(args, io, null, deps); else io.out(USAGE);
+      return 0;
+    }
     const root = path.resolve(args.flags.holding || env.SDK_HOLDING || deps.cwd || process.cwd());
     const h = openHolding(root);
     await fn(args, io, h, deps);

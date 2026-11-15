@@ -13,7 +13,11 @@
  * lets the Owner run ONLY the absolute claude path as the sandbox user, NOPASSWD, keeping only
  * ANTHROPIC_API_KEY and HOLDING_RUN_ID from the environment (no SETENV).
  *
- * `sandbox doctor` makes read-only checks and names the fix for each. All commands go through an
+ * The script ends by running the installed hook as the sandbox user on a synthetic landing state and
+ * aborts unless it denies a Write (Guardian N1).
+ *
+ * `sandbox doctor` makes read-only checks and names the fix for each, including the runner's hook
+ * pre-flight (runner/sandbox.js: HOOK_STALE, HOOK_WRITABLE). All commands go through an
  * injectable exec (deps.exec(cmd, args) → { status, stdout, stderr }) so tests never touch sudo.
  * `key set <company> --from-stdin` stores the company key at holding/keys/<company>.key, 0600,
  * never echoed and never accepted on argv.
@@ -26,6 +30,7 @@ const { spawnSync } = require('child_process');
 const { refuse, usage, need, writeJson } = require('./common');
 const { generateSetupScript } = require('./sandbox-script');
 const { checkSandboxAccess, resolveUserGroups } = require('../sandbox-access');
+const { hookStaleProblem, hookWritableProblem } = require('../runner/sandbox');
 
 const KEY_RE = /^\S{20,}$/;
 
@@ -39,6 +44,12 @@ const DEFAULT_RUNTIME_DIR = '/Users/Shared/sdkco-runtime';
 const HOOK_SRC = path.resolve(__dirname, '..', 'landing-hook.js');
 const NODE_CANDIDATES = ['/opt/homebrew/bin/node', '/usr/local/bin/node'];
 const { builtinModules } = require('module');
+const SETUP_USAGE = 'sandbox setup --user <name> --home <abs> [--session-dir <abs>] [--runtime-dir <abs>] [--node <abs>] [--company <id>] '
+  + '[--claude-bin <abs>] [--owner <name>]';
+const SANDBOX_USAGE = `sandbox supports: ${SETUP_USAGE} | sandbox doctor [--company <id>] [--claude-bin <abs>] | sandbox show | sandbox help
+  --session-dir  Owner-owned 0755 dir for per-run settings/state (default ${DEFAULT_SESSION_DIR})
+  --runtime-dir  Owner-owned 0755 dir the hook runtime is installed in (default ${DEFAULT_RUNTIME_DIR})
+  --node         the node the sandbox user runs the hook with (default: a world-traversable node, else a copy into --runtime-dir)`;
 
 /** landing-hook.js must run from a copy outside the repo: node built-ins only, no relative requires. */
 function assertHookSelfContained(src) {
@@ -84,7 +95,7 @@ function resolveClaudeBin(h, flags, exec) {
 
 
 /** Read-only checks. Returns [{ name, ok, detail, fix }]. */
-function runDoctor(h, { company, claudeBin, exec, ownerUid, accessStat, realpath }) {
+function runDoctor(h, { company, claudeBin, exec, ownerUid, accessStat, realpath, readFile, hookSrc }) {
   const out = [];
   const check = (name, ok, detail, fix) => out.push({ name, ok: !!ok, detail, fix: ok ? null : fix });
   const sb = h.ledger().fold().sandbox;
@@ -145,6 +156,16 @@ function runDoctor(h, { company, claudeBin, exec, ownerUid, accessStat, realpath
     check(`${sb.user} can reach the ${a.label} (${a.need})`, !bad, bad ? bad.reason : results.map(r => r.reason).join('; '), fix);
   }
 
+  // The runner's hook pre-flight (runner/sandbox.js), asked ahead of a run.
+  if (sb.hookPath) {
+    const repoHook = hookSrc || HOOK_SRC;
+    const stale = hookStaleProblem({ hookPath: sb.hookPath, repoHook, readFile: readFile || fs.readFileSync });
+    check('installed landing hook matches the repo copy', !stale, stale ? `HOOK_STALE: ${stale.detail}` : `${sb.hookPath} sha256 = ${repoHook}`, stale && stale.fix);
+    const writable = hookWritableProblem({ hookPath: sb.hookPath, ownerUid, stat: accessStat || fs.statSync, realpath });
+    check(`${sb.user} cannot write the landing hook or its folder`, !writable,
+      writable ? `HOOK_WRITABLE: ${writable.detail}` : 'hook, folder and parents Owner/root-owned and not group/other-writable (sticky parents allowed)', writable && writable.fix);
+  }
+
   const sr = exec('sudo', ['-n', '-l']);
   const rule = claudeBin && new RegExp(`\\(${sb.user}\\)\\s+NOPASSWD:\\s+${claudeBin.replace(/[.+]/g, '\\$&')}(\\s|$)`, 'm');
   const ruleOk = sr.status === 0 && rule && rule.test(sr.stdout);
@@ -161,6 +182,7 @@ const commands = {
   sandbox({ pos, flags }, io, h, deps) {
     const exec = deps.exec || defaultExec;
     const sub = pos[0];
+    if (flags.help !== undefined) { io.out(SANDBOX_USAGE); return; } // `--help` once the parser treats it as boolean
     if (sub === 'setup') {
       const user = need(flags, 'user', 'sandbox setup');
       const home = need(flags, 'home', 'sandbox setup');
@@ -194,7 +216,7 @@ const commands = {
       const company = h.ledger().fold().sandbox ? pickCompany(h, flags.company) : null; // no sandbox: say that first
       const ownerUid = deps.ownerUid ?? process.getuid();
       const checks = runDoctor(h, { company, claudeBin: resolveClaudeBin(h, flags, exec), exec, ownerUid,
-        accessStat: deps.accessStat, realpath: deps.realpath || fs.realpathSync });
+        accessStat: deps.accessStat, realpath: deps.realpath || fs.realpathSync, readFile: deps.readFile, hookSrc: deps.hookSrc });
       for (const c of checks) {
         io.out(`${c.ok ? 'ok  ' : 'FAIL'} ${c.name}: ${c.detail}`);
         if (!c.ok) io.out(`     fix: ${c.fix}`);
@@ -205,7 +227,8 @@ const commands = {
       return;
     }
     if (sub === 'show' || sub === undefined) { io.out(JSON.stringify(h.ledger().fold().sandbox, null, 2)); return; }
-    usage('sandbox supports: sandbox setup --user <name> --home <abs> [--session-dir <abs>] [--company <id>] [--claude-bin <abs>] | sandbox doctor | sandbox show');
+    if (sub === 'help') { io.out(SANDBOX_USAGE); return; }
+    usage(SANDBOX_USAGE);
   },
 
   key({ pos, flags }, io, h, deps) {
@@ -229,4 +252,4 @@ const commands = {
   },
 };
 
-module.exports = { commands, generateSetupScript, runDoctor, chooseNode, assertHookSelfContained, DEFAULT_SESSION_DIR, DEFAULT_RUNTIME_DIR };
+module.exports = { commands, generateSetupScript, runDoctor, chooseNode, assertHookSelfContained, DEFAULT_SESSION_DIR, DEFAULT_RUNTIME_DIR, SANDBOX_USAGE };

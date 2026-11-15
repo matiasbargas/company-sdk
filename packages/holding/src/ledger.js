@@ -29,7 +29,7 @@ const { GENESIS_SHA256, LedgerError, createFoldContext, applyEvent, drawIdemKey,
 const SCHEMA_VERSION = 1;
 const EVENT_TYPES = ['fund', 'grant', 'release', 'draw', 'proof', 'proof_revert', 'overrun', 'reclaim',
   'return', 'close', 'freeze', 'unfreeze', 'unmetered', 'checkpoint', 'ratify', 'judgment', 'cycle_close',
-  'limits', 'price_table', 'runner_pin', 'sandbox', 'reconcile'];
+  'limits', 'price_table', 'runner_pin', 'sandbox', 'reconcile', 'commons_publish', 'commons_admit', 'commons_revoke'];
 const HOLDING_OWNER = 'holding-owner';
 const RUNNER = 'runner';
 const ACTORS_BY_TYPE = {
@@ -45,6 +45,8 @@ const ACTORS_BY_TYPE = {
   release: [HOLDING_OWNER, RUNNER], proof: [HOLDING_OWNER, RUNNER], proof_revert: [HOLDING_OWNER, RUNNER],
   close: [HOLDING_OWNER, RUNNER], return: [HOLDING_OWNER, RUNNER], reclaim: [HOLDING_OWNER, RUNNER],
   checkpoint: [HOLDING_OWNER, RUNNER],
+  // commons (D2): a company Owner may publish its own item; only the holding Owner admits or revokes
+  commons_publish: [HOLDING_OWNER, 'company-owner'], commons_admit: [HOLDING_OWNER], commons_revoke: [HOLDING_OWNER],
 };
 // Fields the ledger writes itself; a caller may not supply them.
 const ENVELOPE = ['schema_version', 'seq', 'prev_sha256', 'sha256', 'ts'];

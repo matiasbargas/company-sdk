@@ -32,15 +32,19 @@ init → add-company → sandbox setup (run the script) → key set → price-ta
 
 Do these in order. Each step either names its result or refuses with the fix.
 
-1. **Sandbox (D7).** Run `sdk-holding sandbox setup --user _sdkco --home /Users/Shared/sdkco [--session-dir /Users/Shared/sdkco-sessions] [--runtime-dir /Users/Shared/sdkco-runtime] --claude-bin $(which claude)`.
+1. **Sandbox (D7).** Run `sdk-holding sandbox setup --user _sdkco --home /Users/Shared/sdkco [--session-dir /Users/Shared/sdkco-sessions] [--runtime-dir /Users/Shared/sdkco-runtime] [--node <abs>] --claude-bin $(which claude)`. `sdk-holding sandbox help` lists every flag.
    - It records the `sandbox` event and writes `holding/sandbox/setup-_sdkco.sh`. **Read the script**, then run `sudo sh holding/sandbox/setup-_sdkco.sh`.
    - The script creates a hidden user and group and gives the company clone to that user.
    - It sets `holding/` to 0700 under you, and the session dir to 0755 under you.
    - It installs a sudoers drop-in, validated with `visudo -cf`, that lets you run *only* that claude path as `_sdkco`. The environment is reset except `ANTHROPIC_API_KEY` and `HOLDING_RUN_ID`.
    - **Hook runtime.** It copies `landing-hook.js` (node built-ins only) into an Owner-owned 0755 runtime dir. It uses an existing node whose every parent is world-traversable (`/opt/homebrew/bin/node`, `/usr/local/bin/node`); if there is none, it copies your node next to the hook.
    - Why the runtime matters: the landing/freeze hook runs *as `_sdkco`*. A hook that user cannot execute exits non-zero, Claude Code treats that as non-blocking, and **landing and freeze fail open**.
-   - The script ends by proving reachability as `_sdkco` with `sudo -u _sdkco test`: node, hook, claude, the clone and the session dir.
+   - The script proves reachability as `_sdkco` with `sudo -u _sdkco test`: node, hook, claude, the clone and the session dir.
+   - **It then proves the hook denies.** It runs the installed hook as `_sdkco` on a synthetic landing state with one `Write` and expects `permissionDecision: "deny"`. If the hook cannot run, the script aborts with the hook's stderr. If it runs but does not deny, the script aborts and says the installed file is not the shipped hook. Either way nothing is declared ready.
    - Then, as yourself, run `git config --global --add safe.directory <company clone>` and `sdk-holding sandbox doctor`. Every check must say `ok`.
+   - **Hook integrity, before every run.** The runner pre-flight (and doctor) refuses:
+     - `HOOK_STALE` when the installed hook is missing or its sha256 differs from the repo's `src/landing-hook.js` (after you pull a new version, for example). Fix: `sudo install -m 0644 -o $(id -un) <repo>/packages/holding/src/landing-hook.js <runtime-dir>/landing-hook.js`, or rerun `sandbox setup` and its script.
+     - `HOOK_WRITABLE` when `_sdkco` could change or swap the hook. The hook and its folder must be owned by you (or root) and not group/other-writable. Every directory above them must be too, unless it is sticky like `/Users/Shared`. Fix: `chmod go-w <path>` (and `chown` back to you), as the refusal names.
    - **Access checks.** Doctor walks every parent directory of node, the hook, claude, the clone and the session dir. It names any directory `_sdkco` cannot traverse, for example a `drwxr-x---` Owner home it is not in the group of, and gives the fix: move the path under `/Users/Shared`, or `chmod o+x` on that one directory.
    - **Keep the company clone outside your home** (e.g. `/Users/Shared/<company>`) unless you grant traverse on it.
 2. **Key.** Run `sdk-holding key set <company> --from-stdin < keyfile`, then delete keyfile. The key is stored 0600 and never echoed. The runner passes it to the session through the environment, never on the command line.
@@ -56,6 +60,8 @@ Do these in order. Each step either names its result or refuses with the fix.
 6. **Soft cap warning.** `--max-budget-usd` is checked *after* a turn, so it **overshoots**: the spike set $0.02 and spent $0.085. The only hard ceiling is the spend limit you set at the provider account for this key. Set it before running.
 7. **Run small.** Run `sdk-holding run <company> --grant <id> --mission <id> --prompt "..." --model <id> --max-budget-usd <usd> --max-turns 5` (or fewer turns).
    - Concurrency is 1.
+   - **Landing deadline.** Once a session is told to land (budget spent, freeze, `stop`, hook failure), the runner hard-kills it if it has not ended by the deadline. Until the company has **one completed real run** (state `done`, metered), the deadline is the ledger limit `firstRunLandingTimeoutSec`, **default 60 s**. After that it is the runner's normal default, 5 minutes. `--landing-timeout <s>` sets it for one run and overrides both. The run record names the value and its source (`landing_timeout_sec`, `landing_timeout_source`: `run`, `first_run` or `default`).
+   - To change the first-run limit, record it in a `limits` event (`firstRunLandingTimeoutSec`, positive integer seconds). A later `limits` event without the key returns it to 60 s.
    - Afterwards run `sdk-holding report`, then `sdk-holding reconcile --company <id> --provider-usd <console amount> --period <cycle> --evidence <ref>`.
 
 ## What a run's `terminalReason` means
@@ -92,7 +98,7 @@ Do these in order. Each step either names its result or refuses with the fix.
 - `src/fold.js` is the reducer facade. The reducer itself is in `src/fold/` (core plus one file per event family: config, grant, spend).
 - `src/ledger.js` holds the chain, lock and append.
 - `src/preflight.js` is the one run pre-flight, shared by the runner and the CLI.
-- `src/runner/` is the LocalRunner. `src/landing-hook.js` is its landing hook.
+- `src/runner/` is the LocalRunner: `index.js` (lifecycle), `config`, `state` (files), `settings` (permissions + argv), `spawn` (process), `stream` (metering), `sandbox` (D7 pre-flight: access, hook sha256 and writability) and `landing` (landing and its deadline). `src/landing-hook.js` is its landing hook.
 - `src/meter.js` turns stream-json `modelUsage` into FU.
 - `src/proofs.js` checks proofs in the company repo at a commit SHA.
 - `src/cycle.js` closes a cycle (reclaim, envelope top-up).

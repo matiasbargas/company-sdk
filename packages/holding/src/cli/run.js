@@ -12,6 +12,7 @@ const { buildReport, formatReport } = require('../report');
 const { preflightRun, readiness } = require('../preflight');
 const { LIMIT_KEYS, validateLimits } = require('../fold');
 const { canonicalize } = require('../canonical');
+const { MAX_LANDING_TIMEOUT_SEC } = require('../runner/landing');
 const {
   SDK_ROOT, KIND_ALIASES, BOOLEAN_FLAGS, DEFAULT_FUEL_LIMITS, TERMINAL, LIMIT_KEYS_DOC, DEFAULT_MAX_TURNS, USAGE, Refusal, usage, refuse, parseArgs, need, posInt, writeJson, openHolding, writeLimits, parseLimitValue, importSettingsConfig, companyMap, qualify, grantOrRefuse, scanAll,
 } = require('./common');
@@ -23,6 +24,9 @@ const commands = {
     const missionId = need(flags, 'mission', 'run');
     const prompt = need(flags, 'prompt', 'run');
     const maxTurns = flags['max-turns'] === undefined ? DEFAULT_MAX_TURNS : posInt(flags['max-turns'], '--max-turns');
+    // The landing deadline (cap-po-firstrun-001): without the flag the runner applies the ledger's
+    // firstRunLandingTimeoutSec (default 60 s) until the company's first completed run, then its default.
+    const landingTimeoutSec = flags['landing-timeout'] === undefined ? undefined : landingSeconds(flags['landing-timeout']);
     const co = (h.portfolio.companies || []).find(c => c.id === company) || refuse(`company ${company} is not registered`);
     const L = h.ledger();
     // 1. The ledger's answer first (frozen, ratified, mission, tranche, reserves): the same
@@ -40,7 +44,8 @@ const commands = {
     preflightRun(L.fold(), { companyId: company, grantId, missionId, model, maxBudgetUsd, requireConfig: true });
     const left = (() => { const g = L.fold().grants[grantId]; return g.released_fu - g.drawn_fu; })();
     const runner = deps.runner || makeRunner(h);
-    const runId = await runner.start(co.id, { grantId, missionId, prompt, maxTurns, model, maxBudgetUsd });
+    const runId = await runner.start(co.id, { grantId, missionId, prompt, maxTurns, model, maxBudgetUsd,
+      ...(landingTimeoutSec !== undefined ? { landingTimeoutSec } : {}) });
     io.out(`run ${runId} started for ${company} (grant ${grantId}, ${left} FU open)`);
     let status = null;
     if (typeof runner.wait === 'function') status = await runner.wait(runId);
@@ -77,6 +82,14 @@ const commands = {
     io.out('ledger unfrozen');
   },
 };
+
+function landingSeconds(raw) {
+  const n = Number(raw);
+  if (raw === '' || !Number.isFinite(n) || n <= 0 || n > MAX_LANDING_TIMEOUT_SEC) {
+    usage(`--landing-timeout must be a positive number of seconds (at most ${MAX_LANDING_TIMEOUT_SEC}), got ${JSON.stringify(raw)}`);
+  }
+  return n;
+}
 
 function makeRunner(h) {
   let mod;

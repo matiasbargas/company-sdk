@@ -46,7 +46,12 @@ module.exports = {
   },
 
   limits(ctx, e) {
+    // Optional (D1.3, N3): the landing deadline in seconds until the company has one completed real run.
+    // Absent → the runner's default (60 s). Not in LIMIT_KEYS, so older events stay valid.
+    const firstRun = e.limits && typeof e.limits === 'object' ? e.limits.firstRunLandingTimeoutSec : undefined;
+    if (firstRun !== undefined && !isPosInt(firstRun)) fail('LIMITS_INVALID', 'firstRunLandingTimeoutSec must be a positive integer (seconds)');
     applyLimits(ctx, validateLimits(e.limits, 'limits event'), e.seq);
+    if (firstRun !== undefined) ctx.state.limits.firstRunLandingTimeoutSec = firstRun;
   },
 
   price_table(ctx, e) {

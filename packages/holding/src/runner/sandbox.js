@@ -10,14 +10,20 @@
  *   - src/sandbox-access.js must confirm the sandbox user (uid and groups resolved with `id`) can reach
  *     nodePath (x), hookPath (r), the claude binary (x), the company clone (rwx) and sessionDir (rx),
  *     through every parent directory. Every failing check refuses the run with SANDBOX_ACCESS naming
- *     its path; an unknown user or a missing checker refuses too (fail closed).
+ *     its path; an unknown user or a missing checker refuses too (fail closed);
+ *   - the installed hook (hookPath) is byte-for-byte the repo's landing-hook.js (sha256, HOOK_STALE),
+ *     and the sandbox user cannot change it (HOOK_WRITABLE): the hook and its folder are owned by the
+ *     Owner (or root) and not group/other-writable; every directory above is too, unless sticky
+ *     (/Users/Shared, /tmp: others cannot rename an Owner-owned entry). ACLs are out of scope.
  * Injectable seam (tests): opts.checkSandboxAccess(user, [{ label, path, need }]) → { ok, problems: [...] }.
  */
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { spawnSync } = require('child_process');
 const { fail, ensureSecureDir } = require('./state');
+const { HOOK_SCRIPT } = require('./settings');
 
 const USER_RE = /^_?[a-z][a-z0-9_-]{0,30}$/i;
 const PATH_FIELDS = ['home', 'sessionDir', 'nodePath', 'hookPath'];
@@ -95,9 +101,61 @@ function verifyAccess(checker, sandbox, checks) {
   }
 }
 
+const sha256Of = (buf) => crypto.createHash('sha256').update(buf).digest('hex');
+const REINSTALL = (repoHook, hookPath) => `sudo install -m 0644 -o $(id -un) ${repoHook} ${hookPath}   (or rerun sdk-holding sandbox setup and review+run its script)`;
+
+/** HOOK_STALE: the installed hook is missing, or its sha256 differs from the repo copy. Returns null or { code, detail, fix }. */
+function hookStaleProblem({ hookPath, repoHook = HOOK_SCRIPT, readFile = fs.readFileSync }) {
+  let installed;
+  try { installed = readFile(hookPath); } catch (err) {
+    return { code: 'HOOK_STALE', detail: `no installed landing hook at ${hookPath} (${err.code || err.message})`, fix: REINSTALL(repoHook, hookPath) };
+  }
+  const got = sha256Of(installed);
+  const want = sha256Of(readFile(repoHook));
+  if (got === want) return null;
+  return { code: 'HOOK_STALE', fix: REINSTALL(repoHook, hookPath),
+    detail: `the installed hook ${hookPath} (sha256 ${got.slice(0, 16)}…) differs from the repo copy ${repoHook} (sha256 ${want.slice(0, 16)}…)` };
+}
+
+/**
+ * HOOK_WRITABLE: the sandbox user could change or swap the hook. The hook and its folder must be owned by
+ * the Owner or root and not group/other-writable; every directory above too, unless it is sticky.
+ */
+function hookWritableProblem({ hookPath, ownerUid = process.getuid(), stat = fs.statSync, realpath = fs.realpathSync }) {
+  let real = hookPath;
+  try { real = realpath(hookPath); } catch { /* stat below reports it */ }
+  const folder = path.dirname(real);
+  const targets = [{ p: real, strict: true }, { p: folder, strict: true }];
+  for (let d = path.dirname(folder); ; d = path.dirname(d)) { targets.push({ p: d, strict: false }); if (d === path.dirname(d)) break; }
+  for (const { p, strict } of targets) {
+    let st;
+    try { st = stat(p); } catch { return { code: 'HOOK_WRITABLE', detail: `cannot stat ${p}`, fix: `rerun sdk-holding sandbox setup and review+run its script` }; }
+    const mode = st.mode & 0o7777;
+    if (st.uid !== ownerUid && st.uid !== 0) {
+      return { code: 'HOOK_WRITABLE', detail: `${p} is owned by uid ${st.uid}, not the Owner (${ownerUid}) or root: its owner can replace the hook`,
+        fix: `sudo chown $(id -un) ${p} && chmod go-w ${p}` };
+    }
+    if ((mode & 0o022) && (strict || !(mode & 0o1000))) {
+      return { code: 'HOOK_WRITABLE', detail: `${p} has mode ${(mode & 0o777).toString(8)}: group/others can ${strict ? 'change' : 'swap'} the hook`,
+        fix: `chmod go-w ${p}` };
+    }
+  }
+  return null;
+}
+
+/** Is the installed hook the repo's, and out of the sandbox user's reach? null or the first problem. Seams: stat, readFile, realpath. */
+const hookIntegrityProblem = (o) => hookStaleProblem(o) || hookWritableProblem(o);
+
+/** Throws HOOK_STALE / HOOK_WRITABLE naming the fix; returns { ok: true } otherwise. */
+function checkHookIntegrity(o) {
+  const problem = hookIntegrityProblem(o);
+  if (problem) fail(problem.code, `${problem.detail}; fix: ${problem.fix}`);
+  return { ok: true };
+}
+
 /**
  * The sandbox for one run, or null (tests only, allowUnsandboxed). Throws SANDBOX_REQUIRED, SANDBOX_INVALID,
- * SANDBOX_KEY_*, SESSION_DIR_*, SANDBOX_ACCESS. Returns { sandbox, key }.
+ * SANDBOX_KEY_*, SESSION_DIR_*, SANDBOX_ACCESS, HOOK_STALE, HOOK_WRITABLE. Returns { sandbox, key }.
  */
 function resolveSandbox({ state, readSandbox, allowUnsandboxed, holdingDir, companyId, companyPath, claudeBin, checkAccess }) {
   const sb = readSandbox(state);
@@ -109,7 +167,9 @@ function resolveSandbox({ state, readSandbox, allowUnsandboxed, holdingDir, comp
   const key = readCompanyKey(holdingDir, companyId);
   ensureSecureDir(sandbox.sessionDir);
   verifyAccess(loadChecker(checkAccess), sandbox, accessChecks(sandbox, claudeBin, companyPath));
+  checkHookIntegrity({ hookPath: sandbox.hookPath });
   return { sandbox, key };
 }
 
-module.exports = { checkSandbox, readCompanyKey, accessChecks, verifyAccess, resolveSandbox };
+module.exports = { checkSandbox, readCompanyKey, accessChecks, verifyAccess, hookStaleProblem, hookWritableProblem, hookIntegrityProblem, checkHookIntegrity,
+  resolveSandbox };

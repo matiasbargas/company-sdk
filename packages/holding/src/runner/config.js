@@ -8,6 +8,19 @@
 
 const { canonicalize } = require('../canonical');
 const { fail, isNonEmptyString } = require('./state');
+const { checkExtraArgs } = require('./settings');
+
+/** Constructor options the runner refuses before touching the ledger. Returns { extraArgs, legacyLimits }. */
+function checkRunnerOpts(opts) {
+  if (!isNonEmptyString(opts.holdingDir)) fail('INVALID_OPTION', 'holdingDir is required');
+  if (!Array.isArray(opts.companies)) fail('INVALID_OPTION', 'companies [{ id, path }] is required');
+  const extraArgs = opts.extraArgs || [];
+  checkExtraArgs(extraArgs);
+  if (opts.limits && opts.limits.concurrency !== undefined && (!Number.isSafeInteger(opts.limits.concurrency) || opts.limits.concurrency < 1)) {
+    fail('INVALID_OPTION', 'limits.concurrency must be a positive integer');
+  }
+  return { extraArgs, legacyLimits: opts.limits && 'envelopePerCycle' in opts.limits ? opts.limits : undefined };
+}
 
 /** Runner config from the folded ledger, legacy opts only where the ledger has nothing. */
 function resolveRunnerConfig(state, opts) {
@@ -61,4 +74,4 @@ function validateStart(o, opts, cfg) {
   return model;
 }
 
-module.exports = { resolveRunnerConfig, validateStart };
+module.exports = { checkRunnerOpts, resolveRunnerConfig, validateStart };

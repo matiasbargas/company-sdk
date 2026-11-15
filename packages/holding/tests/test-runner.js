@@ -667,6 +667,38 @@ async function main() {
       'company clone': `${s.cos[0].path}:rwx`, sessionDir: `${SESS}:rx` }, 'node x, hook r, claude x, clone rwx, sessionDir rx');
     accessProblems = [];
 
+    // @covers cap-po-sandbox-001 @covers cap-po-hook-integrity-001 — the installed hook is the repo's (sha256) and the sandbox user cannot write it
+    const RT = path.dirname(RUNTIME.hookPath);
+    const eMissing = codeOf(() => s.runner.start('acme', startOpts('acme', { idempotencyKey: 'sb-h0' })));
+    t.eq(eMissing && eMissing.code, 'HOOK_STALE', 'no installed hook → HOOK_STALE');
+    t.assert(eMissing && /sandbox setup/.test(eMissing.message), 'the refusal names the fix (rerun sandbox setup and its script)');
+    fs.mkdirSync(RT, { recursive: true }); fs.chmodSync(RT, 0o755);
+    fs.writeFileSync(RUNTIME.hookPath, `${fs.readFileSync(HOOK, 'utf8')}\n// edited after install\n`, { mode: 0o644 }); fs.chmodSync(RUNTIME.hookPath, 0o644);
+    const eStale = codeOf(() => s.runner.start('acme', startOpts('acme', { idempotencyKey: 'sb-h1' })));
+    t.eq(eStale && eStale.code, 'HOOK_STALE', 'an installed hook that differs from the repo copy → HOOK_STALE');
+    t.assert(eStale && eStale.message.includes(RUNTIME.hookPath) && eStale.message.includes(HOOK) && /sha256/.test(eStale.message),
+      'names both copies and the hash');
+    t.assert(eStale && eStale.message.includes('install -m 0644'), 'and the reinstall command');
+    fs.copyFileSync(HOOK, RUNTIME.hookPath); fs.chmodSync(RUNTIME.hookPath, 0o666);
+    const eW = codeOf(() => s.runner.start('acme', startOpts('acme', { idempotencyKey: 'sb-h2' })));
+    t.eq(eW && eW.code, 'HOOK_WRITABLE', 'a group/other-writable hook → HOOK_WRITABLE');
+    t.assert(eW && eW.message.includes(RUNTIME.hookPath) && /chmod go-w/.test(eW.message), 'names the path and the fix');
+    fs.chmodSync(RUNTIME.hookPath, 0o644); fs.chmodSync(RT, 0o777);
+    const eD = codeOf(() => s.runner.start('acme', startOpts('acme', { idempotencyKey: 'sb-h3' })));
+    t.eq(eD && eD.code, 'HOOK_WRITABLE', 'a writable hook folder (the hook could be swapped) → HOOK_WRITABLE');
+    t.assert(eD && eD.message.includes(RT), 'names the folder');
+    fs.chmodSync(RT, 0o755);
+    t.eq(calls.length, 0, 'no session spawned while the hook is stale or writable');
+    const { checkHookIntegrity } = require('../src/runner/sandbox');
+    const own = (mode, uid) => ({ mode, uid, isDirectory: () => true });
+    const eU = codeOf(() => checkHookIntegrity({ hookPath: RUNTIME.hookPath, ownerUid: process.getuid(),
+      stat: (p) => (p === real(RUNTIME.hookPath) ? own(0o100644, 4242) : own(0o040755, process.getuid())) }));
+    t.eq(eU && eU.code, 'HOOK_WRITABLE', 'a hook owned by another uid (e.g. the sandbox user) → HOOK_WRITABLE');
+    t.eq(checkHookIntegrity({ hookPath: RUNTIME.hookPath, ownerUid: process.getuid(),
+      stat: (p) => (p === real(sbxRoot) ? own(0o041777, 0) : fs.statSync(p)) }).ok, true, 'a sticky world-writable ancestor (/Users/Shared, /tmp) is fine');
+    t.eq(codeOf(() => checkHookIntegrity({ hookPath: RUNTIME.hookPath, ownerUid: process.getuid(),
+      stat: (p) => (p === real(sbxRoot) ? own(0o040777, 0) : fs.statSync(p)) })).code, 'HOOK_WRITABLE', 'a non-sticky world-writable ancestor is not');
+
     const runId = s.runner.start('acme', startOpts('acme', { idempotencyKey: 'sb3' }));
     await s.runner.wait(runId);
     t.eq(calls.length, 1, 'one spawn');
@@ -780,6 +812,66 @@ async function main() {
     fs.writeFileSync(path.join(dir, 'FROZEN'), 'x');
     t.eq(hook(stateFile, 'Bash', { command: 'git config core.hooksPath /tmp/h' }).decision, 'deny', 'frozen: git config denied');
     t.eq(hook(stateFile, 'Bash', { command: 'git stash' }).decision, 'none', 'frozen: git stash passes');
+  }
+
+  // @covers cap-po-killswitch-001 @covers cap-po-firstrun-001 — the landing deadline: --landing-timeout, else the ledger's
+  // firstRunLandingTimeoutSec (default 60 s) until the company has one completed real run, else the normal default
+  {
+    const { DEFAULT_FIRST_RUN_LANDING_TIMEOUT_SEC: D, DEFAULT_LANDING_TIMEOUT_MS: N, resolveLandingTimeout: res } = require('../src/runner/landing');
+    t.eq(D, 60, 'first-run default is 60 s');
+    t.eq(N, 300000, 'normal default is 5 min');
+    t.deepEq(res({ firstRun: true, normalMs: N }), { ms: 60000, source: 'first_run' }, 'first run, no limit recorded → 60 s');
+    t.deepEq(res({ firstRun: true, limitSec: 20, normalMs: N }), { ms: 20000, source: 'first_run' }, 'first run → the ledger limit');
+    t.deepEq(res({ firstRun: false, limitSec: 20, normalMs: N }), { ms: N, source: 'default' }, 'after a completed run → the normal default');
+    t.deepEq(res({ firstRun: true, runSec: 90, normalMs: N }), { ms: 90000, source: 'run' }, '--landing-timeout wins (the Owner chose it)');
+    t.deepEq(res({ firstRun: true, normalMs: 150 }), { ms: 150, source: 'default' }, 'the first-run limit never lengthens a shorter runner deadline');
+
+    // the limit lives in the ledger's `limits` event (optional; positive integer seconds)
+    const LIM = { envelopePerCycle: null, reclaimCyclesWithoutProof: 1, smallBetReserve: 0, smallBetMax: null, overrunReserve: 0, proofRevertCommits: 10, concurrency: 1 };
+    const s = setup({ scenario: 'sleep', extraEnv: { FAKE_CLAUDE_SLEEP_MS: '8000' } });
+    t.eq(codeOf(() => s.L.append({ type: 'limits', actor: 'holding-owner', idem_key: 'lim-bad', limits: { ...LIM, firstRunLandingTimeoutSec: 0 } })).code,
+      'LIMITS_INVALID', 'firstRunLandingTimeoutSec must be a positive integer');
+    s.L.append({ type: 'limits', actor: 'holding-owner', idem_key: 'lim-fr', limits: { ...LIM, firstRunLandingTimeoutSec: 1 } });
+    t.eq(s.L.fold().limits.firstRunLandingTimeoutSec, 1, 'the fold carries firstRunLandingTimeoutSec in state.limits');
+    const rec = (id) => JSON.parse(fs.readFileSync(path.join(s.holdingDir, 'runs', `${id}.json`), 'utf8'));
+    const running = (r, runner) => waitFor(() => runner.status(r).state === 'running', `${r} running`);
+
+    // 1. first run: the 1 s first-run deadline bounds a landing the session never honours
+    const r1 = s.runner.start('acme', startOpts('acme', { idempotencyKey: 'fr1' }));
+    await running(r1, s.runner);
+    t.deepEq([rec(r1).landing_timeout_sec, rec(r1).landing_timeout_source], [1, 'first_run'], 'first run: deadline from firstRunLandingTimeoutSec');
+    const t0 = Date.now();
+    s.runner.stop(r1, { mode: 'landing' });
+    const st1 = await s.runner.wait(r1);
+    t.assert(Date.now() - t0 < 4000, `first-run landing bounded by 1 s, not the 5 min default (${Date.now() - t0} ms)`);
+    t.eq(rec(r1).landing_forced, true, 'the deadline hard-killed it');
+    t.eq(st1.state, 'interrupted', 'an interrupted run is not a completed run');
+    s.runner.close();
+
+    // 2. a completed real run (done, metered) ends the first-run rule for this company
+    const ok = s.mk({ env: { FAKE_CLAUDE_SCENARIO: 'ok', FAKE_CLAUDE_LOG: s.log } });
+    const r2 = ok.start('acme', startOpts('acme', { idempotencyKey: 'fr2' }));
+    t.deepEq([(await ok.wait(r2)).state, rec(r2).landing_timeout_source], ['done', 'first_run'], 'the completed run itself still had the first-run deadline');
+    ok.close();
+    const sl = s.mk({ env: { FAKE_CLAUDE_SCENARIO: 'sleep', FAKE_CLAUDE_SLEEP_MS: '8000', FAKE_CLAUDE_LOG: s.log } });
+    const r3 = sl.start('acme', startOpts('acme', { idempotencyKey: 'fr3' }));
+    await running(r3, sl);
+    t.deepEq([rec(r3).landing_timeout_sec, rec(r3).landing_timeout_source], [300, 'default'], 'after one completed run: the normal default');
+    sl.stop(r3, { mode: 'hard' });
+    await sl.wait(r3);
+
+    // 3. --landing-timeout (start option landingTimeoutSec) overrides both
+    t.eq(codeOf(() => sl.start('acme', startOpts('acme', { idempotencyKey: 'fr-bad', landingTimeoutSec: 0 }))).code, 'INVALID_OPTION', 'landingTimeoutSec must be positive');
+    const r4 = sl.start('acme', startOpts('acme', { idempotencyKey: 'fr4', landingTimeoutSec: 0.3 }));
+    await running(r4, sl);
+    t.deepEq([rec(r4).landing_timeout_sec, rec(r4).landing_timeout_source], [0.3, 'run'], 'an explicit per-run deadline wins');
+    const t4 = Date.now();
+    sl.stop(r4, { mode: 'landing' });
+    await sl.wait(r4);
+    t.assert(Date.now() - t4 < 3000 && rec(r4).landing_forced === true, 'and bounds the landing');
+    t.eq(codeOf(() => sl.start('acme', startOpts('acme', { idempotencyKey: 'fr4', landingTimeoutSec: 5 }))).code, 'IDEM_CONFLICT',
+      'the deadline is part of the idempotent start parameters');
+    sl.close();
   }
 
   return t.done();

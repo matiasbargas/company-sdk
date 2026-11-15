@@ -35,6 +35,7 @@ const preflight = require('./preflight');
 const health = require('./health');
 const fold = require('./fold');
 const sandboxAccess = require('./sandbox-access');
+const commons = require('./commons');
 
 module.exports = {
   // canonical JSON
@@ -105,4 +106,7 @@ module.exports = {
   checkSandboxAccess: sandboxAccess.checkSandboxAccess,
   resolveUserGroups: sandboxAccess.resolveUserGroups,
   resolveUserUid: sandboxAccess.resolveUserUid,
+
+  // commons (D2): publish / admit / pull / revoke, content addressing, secret/PII scan
+  commons,
 };

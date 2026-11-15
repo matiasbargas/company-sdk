@@ -14,7 +14,7 @@ const { canonicalize } = require('../canonical');
 const SDK_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const KIND_ALIASES = { surface: 'verified_surface', cycle: 'graduated_cycle', ship: 'owner_approved_ship',
   verified_surface: 'verified_surface', graduated_cycle: 'graduated_cycle', owner_approved_ship: 'owner_approved_ship' };
-const BOOLEAN_FLAGS = new Set(['json', 'infinite', 'from-stdin']);
+const BOOLEAN_FLAGS = new Set(['json', 'infinite', 'from-stdin', 'help']);
 const DEFAULT_FUEL_LIMITS = {
   envelopePerCycle: null, trancheSize: null, tranchesPerGrant: null, reclaimCyclesWithoutProof: 1,
   smallBetReserve: 0.2, smallBetMax: null, overrunReserve: 0.05, proofRevertCommits: 10, concurrency: 1,
@@ -42,7 +42,7 @@ const USAGE = `usage: sdk-holding <command> [--holding <dir>]
   report [--json] [--cycle <n>]
   verify
   reconcile --company <id> --provider-usd <usd> --period <cycle> [--evidence <ref>]
-  sandbox setup --user <name> --home <abs> [--session-dir <abs>] [--company <id>] [--claude-bin <abs>] | sandbox doctor | sandbox show
+  sandbox setup --user <name> --home <abs> [--session-dir <abs>] [--runtime-dir <abs>] [--node <abs>] [--company <id>] [--claude-bin <abs>] | sandbox doctor | sandbox show
   key set <company> --from-stdin
 Owner commands refuse with RUN_CONTEXT when HOLDING_RUN_ID is set (inside a session).`;
 

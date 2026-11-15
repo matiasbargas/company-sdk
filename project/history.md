@@ -721,3 +721,31 @@ Path:
 - use a short landing deadline for run 1.
 
 **Carry-forwards:** N1 (the setup script runs the hook as the sandbox user and expects a deny), N2 (the hook's sha256 and non-writability checked before each run), N3 (run-1 deadline). **The first real run verifies:** C1 (the real hook-error event shape), C2 (sudo keeps the two environment variables), C3 (metering of Task subagents), C4 (reconcile against the provider bill before a second run).
+
+---
+
+## SDK-CHANGE — Portfolio Orchestrator v0.2 built by a multi-agent pipeline (2026-11-15)
+**Made by:** Greg (CEO), Owner-directed ("run a pipeline to build this; define deliverables") · **Release:** v2026.Q2.3 · **Tag:** SDK-CHANGE
+**Contract:** `context/intent/portfolio-orchestrator/v0.2-deliverables.md`, with acceptance tables D1–D3.
+**Pipeline:** each deliverable went build → independent adversarial verify → one fix round → re-verify, followed by an integration check. 9 agents, no errors; no tokens spent on real sessions, no sudo, no commits by agents.
+**Results:**
+- **D1, first-run hardening (Guardian N1–N3):**
+  - The setup script proves, as the sandbox user, that the installed hook denies.
+  - The pre-flight refuses HOOK_STALE (sha256 mismatch) and HOOK_WRITABLE.
+  - `run --landing-timeout`, with a 60 s first-run landing default (`firstRunLandingTimeoutSec`).
+  - `runner/index.js` cut to 347 lines; README updated.
+  - Verified 5/6. The remaining item (`sandbox setup --help`) sat at a scope boundary (`cli/common.js`); Greg fixed it so `<command> --help` works without a holding, and pinned it with tests.
+- **D2, Commons:** verified 6/6.
+  - Content-addressed publish into quarantine, with a forbidden-carrier denylist.
+  - Admission only through a verified surface whose roster includes another company plus the CISO (self-verification refused; qualified surface ids).
+  - Pull needs Owner approval, writes a lockfile, and never overwrites local edits.
+  - Published context needs a consent record and passes secret and PII scans.
+  - Revoke without rewriting history.
+  - Ledger events: `commons_publish`, `commons_admit`, `commons_revoke`. Greg updated the ledger test's expected event set.
+- **D3, second-company design (documents only):** verified 5/5 in `second-company/`:
+  - isolation design (per-company users; C12/C14);
+  - provider-cap verification plan, with every unverified fact marked UNKNOWN (C13);
+  - CHARTER amendment for holding Owner vs company Owner, a **PROPOSAL** the Owner ratifies, recommended after v0.2 is ratified;
+  - gate checklist;
+  - 9 planned `cap-po-second-owner-*` capabilities, merged into claims.yaml.
+**Totals:** `packages/holding` 1225 assertions (15 suites). Behaviour coverage 210 of 220 (95%). All source files are under 400 lines.

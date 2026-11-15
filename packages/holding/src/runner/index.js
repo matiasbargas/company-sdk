@@ -4,7 +4,7 @@
  * runner — LocalRunner, the v0 Runner contract (cap-po-runner-001…005, cap-po-killswitch-001; Mario gate C2, C5, C8, C9).
  *
  * Contract (RUNNER_CONTRACT_VERSION):
- *   start(companyId, { prompt, grantId, missionId, maxTurns, model?, maxBudgetUsd, idempotencyKey? }) → runId
+ *   start(companyId, { prompt, grantId, missionId, maxTurns, model?, maxBudgetUsd, idempotencyKey?, testCommand?, landingTimeoutSec? }) → runId
  *     (throws RunnerError on refusal)
  *   stop(runId, { mode: 'landing' | 'hard' })
  *   status(runId) → { runId, company, state, terminalReason, waitingFor?, error? }
@@ -24,15 +24,20 @@
  *     the runner updates the state file's live burn estimate so the hook lands the session once the
  *     working budget (the open tranche's FU) is spent; the ledger's `frozen` is mirrored into
  *     <runs>/FROZEN while runs are active (kill switch);
+ *   - any landing arms a deadline (landing.js): start({ landingTimeoutSec }), else the ledger's
+ *     limits.firstRunLandingTimeoutSec (default 60 s) until the company has one completed real run,
+ *     else opts.landingTimeoutMs (default 5 min); the run record names it (landing_timeout_sec/_source);
  *   - clean env, model pinned and checked at system:init (model_mismatch → hard stop, no draw);
  *     with state.sandbox set the session runs as the D7 sandbox user (spawn.js: sudo --preserve-env,
- *     key in env only); without one, start refuses SANDBOX_REQUIRED unless opts.allowUnsandboxed (tests);
+ *     key in env only) after the sandbox pre-flight (sandbox.js: access, hook sha256 + not writable);
+ *     without one, start refuses SANDBOX_REQUIRED unless opts.allowUnsandboxed (tests);
  *   - runner-owned settings carry an explicit permission profile (settings.js); permission_denials
  *     are recorded, and denials with no successful tool use end as no_work_denied;
  *   - after exit the stream is metered (meter.js, pinned version, C5) and appended as the `runner`
  *     (stream.js): draw (+ overrun above the cap) or unmetered; a pre-freeze session's draw is
  *     retried as after_freeze; burn is never hidden.
- * Modules: config, state (files), settings (permissions + argv), spawn (process), stream (metering), index (lifecycle).
+ * Modules: config, state (files), settings (permissions + argv), spawn (process), stream (metering),
+ * sandbox (D7 pre-flight), landing (landing + deadline), index (lifecycle).
  */
 
 const fs = require('fs');
@@ -41,22 +46,16 @@ const crypto = require('crypto');
 const { openLedger, LedgerError } = require('../ledger');
 const { preflightRun } = require('../preflight');
 const { hashCanonical } = require('../canonical');
-const { meterStream } = require('../meter');
 const S = require('./state');
-const { resolveRunnerConfig, validateStart } = require('./config');
-const { checkExtraArgs, buildSettings, buildArgs } = require('./settings');
-const { ENV_ALLOWLIST, baseEnv, checkVersion, buildLaunch, spawnSession, killGroup } = require('./spawn');
-const { liveEstimate, trackToolUses, hookErrorOf, denialSummary, lastResult, terminalOf, recordUsage } = require('./stream');
+const { checkRunnerOpts, resolveRunnerConfig, validateStart } = require('./config');
+const { buildSettings, buildArgs } = require('./settings');
+const { ENV_ALLOWLIST, baseEnv, checkVersion, buildLaunch, spawnSession, pipeSession } = require('./spawn');
+const { liveEstimate, trackToolUses, hookErrorOf, settleSession } = require('./stream');
 const { resolveSandbox } = require('./sandbox');
+const LD = require('./landing');
 
-const { RunnerError, fail, isNonEmptyString, sha256, TERMINAL_STATES } = S;
+const { RunnerError, fail, sha256, TERMINAL_STATES } = S;
 const RUNNER_CONTRACT_VERSION = 1;
-
-function reasonForRefusal(code) {
-  if (code === 'LEDGER_FROZEN') return 'frozen';
-  if (code === 'TRANCHE_EXHAUSTED') return 'tranche_exhausted';
-  return 'error';
-}
 
 /**
  * opts: { holdingDir, companies: [{ id, path }], model?, claudeBin?: string | [cmd, ...prefixArgs], extraArgs?, env?,
@@ -68,14 +67,7 @@ function reasonForRefusal(code) {
  *         legacy fallback while the ledger lacks the event: limits (genesis), priceTable, pinnedVersion, sessionFloorUsd }
  */
 function createLocalRunner(opts = {}) {
-  if (!isNonEmptyString(opts.holdingDir)) fail('INVALID_OPTION', 'holdingDir is required');
-  if (!Array.isArray(opts.companies)) fail('INVALID_OPTION', 'companies [{ id, path }] is required');
-  const extraArgs = opts.extraArgs || [];
-  checkExtraArgs(extraArgs);
-  const legacyLimits = opts.limits && 'envelopePerCycle' in opts.limits ? opts.limits : undefined;
-  if (opts.limits && opts.limits.concurrency !== undefined && (!Number.isSafeInteger(opts.limits.concurrency) || opts.limits.concurrency < 1)) {
-    fail('INVALID_OPTION', 'limits.concurrency must be a positive integer');
-  }
+  const { extraArgs, legacyLimits } = checkRunnerOpts(opts);
 
   const holdingDir = path.resolve(opts.holdingDir);
   const runsDir = opts.runsDir || path.join(holdingDir, 'runs');
@@ -96,8 +88,7 @@ function createLocalRunner(opts = {}) {
   const env = baseEnv(opts.env || {});
   const freezePollMs = opts.freezePollMs ?? 1000;
   const lockRetryMs = opts.lockRetryMs ?? 1000;
-  const landingTimeoutMs = opts.landingTimeoutMs ?? 5 * 60 * 1000; // forced hard kill after any landing (fail closed if the hook never runs)
-  const hardKillGraceMs = opts.hardKillGraceMs ?? 2000;
+  const landingTimeoutMs = opts.landingTimeoutMs ?? LD.DEFAULT_LANDING_TIMEOUT_MS; // after a completed real run (landing.js)
   const statusFiles = opts.statusFiles || ['current-status.md'];
   const now = opts.now || (() => new Date().toISOString());
   const companies = new Map(opts.companies.map(c => [c.id, c]));
@@ -117,6 +108,7 @@ function createLocalRunner(opts = {}) {
   const lockFile = (company) => path.join(runsDir, `${company}.lock`);
   const persist = (run) => S.writeJsonAtomic(recFile(run.id), run.record);
   const setState = (run, state, extra = {}) => { Object.assign(run.record, { state, ...extra }); persist(run); };
+  const { enterLanding, hardKill } = LD.createLandingControl({ setState, stateCtx, hardKillGraceMs: opts.hardKillGraceMs ?? 2000 });
   const syncFreezeFlag = (frozen) => {
     S.syncFreezeFlag(freezeFlag, frozen, now);
     for (const run of active) if (run.freezeFlag && run.freezeFlag !== freezeFlag) S.syncFreezeFlag(run.freezeFlag, frozen, now);
@@ -135,31 +127,13 @@ function createLocalRunner(opts = {}) {
     if (!fs.existsSync(company.path)) fail('COMPANY_PATH_MISSING', `company ${companyId} clone ${company.path} does not exist`);
     const { sandbox, key } = resolveSandbox({ state, readSandbox, allowUnsandboxed: opts.allowUnsandboxed, holdingDir, companyId,
       companyPath: company.path, claudeBin, checkAccess: opts.checkSandboxAccess });
-    return { availableFu, cfg, sandbox, key };
+    return { availableFu, cfg, sandbox, key, firstRunLimitSec: state.limits.firstRunLandingTimeoutSec };
   }
 
   function ensureVersion() {
     if (versionOk === cfg.pinnedVersion) return;
     checkVersion(claudeBin, env, cfg.pinnedVersion);
     versionOk = cfg.pinnedVersion;
-  }
-
-  // Any landing (budget, freeze, stop, hook failure) arms a deadline: if the session has not ended when it
-  // expires, the process group is hard-killed (landing_forced). Bounds a hook that never runs (fail closed).
-  function enterLanding(run, reason) {
-    if (!run.landing) { run.landing = true; run.landingReason = reason; S.writeRunState(run, stateCtx(run)); }
-    if (run.record.state === 'running') setState(run, 'landing');
-    if (!run.landingTimer && !run.finalized) {
-      run.landingTimer = setTimeout(() => { run.landingForced = true; hardKill(run); }, landingTimeoutMs);
-      run.landingTimer.unref();
-    }
-  }
-
-  function hardKill(run) {
-    run.stopRequested = 'hard';
-    if (!run.finalized) killGroup(run.child, 'SIGTERM');
-    run.killTimer = setTimeout(() => { if (!run.finalized) killGroup(run.child, 'SIGKILL'); }, hardKillGraceMs);
-    run.killTimer.unref();
   }
 
   function onLine(run, line) {
@@ -219,7 +193,7 @@ function createLocalRunner(opts = {}) {
         pf.sessionDir = pf.sandbox ? S.ensureSecureDir(path.join(pf.sandbox.sessionDir, run.id)) : sessionDir;
       } catch (err) {
         if (!(err instanceof RunnerError)) throw err;
-        finishWithoutSpawn(run, 'failed', reasonForRefusal(err.code), err.message);
+        finishWithoutSpawn(run, 'failed', S.reasonForRefusal(err.code), err.message);
         continue;
       }
       if (!S.acquireLock(lockFile(run.company), run.id, now)) {
@@ -234,8 +208,11 @@ function createLocalRunner(opts = {}) {
     if (waitingForLock && !retryTimer) retryTimer = setTimeout(() => { retryTimer = null; pump(); }, lockRetryMs);
   }
 
-  function launch(run, { availableFu, sandbox, key, sessionDir: dir }) {
+  function launch(run, { availableFu, sandbox, key, sessionDir: dir, firstRunLimitSec }) {
     const company = companies.get(run.company);
+    const deadline = LD.resolveLandingTimeout({ runSec: run.record.landing_timeout_sec_requested ?? undefined,
+      firstRun: !LD.hasCompletedRealRun(runsDir, run.company), limitSec: firstRunLimitSec, normalMs: landingTimeoutMs });
+    run.landingTimeoutMs = deadline.ms;
     run.capFu = availableFu;
     run.spentFu = 0;
     run.freezeFlag = path.join(dir, 'FROZEN');
@@ -260,18 +237,15 @@ function createLocalRunner(opts = {}) {
     } catch (err) { finalize(run, null, null, err); return; }
     run.child = child;
     setState(run, 'running', { waiting_for: null, started_at: now(), pid: child.pid, cap_fu: run.capFu, run_started_seq: run.startedSeq ?? null,
-      sandbox_user: sandbox ? sandbox.user : null,
+      sandbox_user: sandbox ? sandbox.user : null, landing_timeout_sec: deadline.ms / 1000, landing_timeout_source: deadline.source,
       settings_file: run.settingsFile, state_file: run.stateFile, stream_file: run.streamFile });
-    let buf = '';
-    child.stdout.on('data', (chunk) => {
-      fs.writeSync(run.streamFd, chunk);
-      buf += chunk.toString('utf8');
-      let nl;
-      while ((nl = buf.indexOf('\n')) >= 0) { onLine(run, buf.slice(0, nl)); buf = buf.slice(nl + 1); }
+    pipeSession(child, {
+      onChunk: (chunk) => fs.writeSync(run.streamFd, chunk),
+      onLine: (line) => onLine(run, line),
+      onStderr: (text) => { if (run.stderr.length < 64 * 1024) run.stderr += text; },
+      onError: (err) => finalize(run, null, null, err),
+      onClose: (code, signal) => finalize(run, code, signal, null),
     });
-    child.stderr.on('data', (chunk) => { if (run.stderr.length < 64 * 1024) run.stderr += chunk.toString('utf8'); });
-    child.on('error', (err) => finalize(run, null, null, err));
-    child.on('close', (code, signal) => { if (buf) onLine(run, buf); finalize(run, code, signal, null); });
     startPolling();
   }
 
@@ -284,28 +258,8 @@ function createLocalRunner(opts = {}) {
     active.delete(run);
     busy.delete(run.company);
     S.releaseLock(lockFile(run.company), run.id);
-    const text = run.streamFile && fs.existsSync(run.streamFile) ? fs.readFileSync(run.streamFile, 'utf8') : '';
-    const result = lastResult(text);
-    const warnings = [];
-    let records = [];
-    let usage = { fu_drawn: 0, fu_overrun: 0, unmetered: 0, records: 0 };
-    let pending = [];
-    if (!spawnErr) {
-      records = meterStream(text, { pinnedVersion: run.cfg.pinnedVersion });
-      const r = recordUsage(ledger, run, records);
-      usage = r.usage; pending = r.pending; warnings.push(...r.warnings);
-    }
-    const companyPath = companies.get(run.company).path;
-    if (fs.existsSync(path.join(companyPath, '.git', 'index.lock'))) warnings.push(`${companyPath}/.git/index.lock remains after the session`);
-    const denials = denialSummary(run, result);
-    const [state, terminalReason] = spawnErr ? ['failed', 'error'] : terminalOf(run, code, signal, result, denials);
-    setState(run, state, {
-      terminal_reason: terminalReason, exit_code: code, signal: signal || null, ended_at: now(),
-      error: spawnErr ? spawnErr.message : run.modelMismatch ? `MODEL_MISMATCH: ${run.modelMismatch}` : (state === 'failed' && run.stderr ? run.stderr.slice(-2000) : null),
-      usage, usage_events: records, ledger_pending: pending, warnings, ...denials,
-      live_estimate: { spent_fu: run.spentFu ?? null, estimate: true, caveat: S.ESTIMATE_CAVEAT },
-      landing_forced: !!run.landingForced, hook_errors: run.hookErrors,
-    });
+    const { state, fields } = settleSession({ ledger, run, code, signal, spawnErr, companyPath: companies.get(run.company).path });
+    setState(run, state, { ...fields, ended_at: now() });
     settle(run);
     pump();
   }
@@ -320,10 +274,12 @@ function createLocalRunner(opts = {}) {
     if (!companies.has(companyId)) fail('UNKNOWN_COMPANY', `company ${JSON.stringify(companyId)} is not registered with this runner`);
     cfg = resolveConfig(foldOrFail());
     const model = validateStart(o, opts, cfg);
+    LD.checkLandingTimeoutSec(o.landingTimeoutSec);
     const key = o.idempotencyKey || crypto.randomUUID();
     const runId = `run-${sha256(`${companyId}\0${key}`).slice(0, 24)}`;
     const params = hashCanonical({ company: companyId, prompt: o.prompt, grantId: o.grantId, missionId: o.missionId, maxTurns: o.maxTurns,
-      model, maxBudgetUsd: o.maxBudgetUsd, ...(o.testCommand ? { testCommand: o.testCommand } : {}) });
+      model, maxBudgetUsd: o.maxBudgetUsd, ...(o.testCommand ? { testCommand: o.testCommand } : {}),
+      ...(o.landingTimeoutSec !== undefined ? { landingTimeoutSec: o.landingTimeoutSec } : {}) });
     const same = (rec) => {
       if (rec.params_sha256 !== params) fail('IDEM_CONFLICT', `idempotencyKey ${JSON.stringify(key)} already started ${runId} with different parameters`);
       return runId;
@@ -336,7 +292,7 @@ function createLocalRunner(opts = {}) {
     const record = {
       schema_version: S.RECORD_SCHEMA_VERSION, runner_contract_version: RUNNER_CONTRACT_VERSION, run_id: runId,
       company: companyId, grant_id: o.grantId, mission_id: o.missionId, max_turns: o.maxTurns, idempotency_key: key,
-      model, max_budget_usd: o.maxBudgetUsd, test_command: o.testCommand || null,
+      model, max_budget_usd: o.maxBudgetUsd, test_command: o.testCommand || null, landing_timeout_sec_requested: o.landingTimeoutSec ?? null,
       params_sha256: params, prompt_sha256: sha256(o.prompt), claude_code_version_pinned: cfg.pinnedVersion,
       price_table_version: cfg.priceTable.version,
       state: 'queued', terminal_reason: null, waiting_for: null, created_at: now(),
@@ -377,15 +333,7 @@ function createLocalRunner(opts = {}) {
       if (TERMINAL_STATES.has(run.record.state)) return Promise.resolve(S.statusOf(run.record));
       return new Promise(resolve => run.waiters.push(resolve));
     }
-    return new Promise((resolve, reject) => {
-      const tick = () => {
-        const rec = loadRecord(runId);
-        if (!rec) return reject(new RunnerError('UNKNOWN_RUN', `no run ${runId}`));
-        if (TERMINAL_STATES.has(rec.state)) return resolve(S.statusOf(rec));
-        setTimeout(tick, 100);
-      };
-      tick();
-    });
+    return S.pollUntilTerminal(() => loadRecord(runId), runId);
   }
 
   function close() {
