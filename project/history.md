@@ -749,3 +749,11 @@ Path:
   - gate checklist;
   - 9 planned `cap-po-second-owner-*` capabilities, merged into claims.yaml.
 **Totals:** `packages/holding` 1225 assertions (15 suites). Behaviour coverage 210 of 220 (95%). All source files are under 400 lines.
+
+**Company brain + human collaboration: design proposal (2026-11-15).** The Owner asked how the companies' memory/brain should work and how a human team should collaborate with the agents through an API. Greg synthesized CTO, CDO, Designer and CISO consultations into `context/intent/company-brain/design.md`. In brief:
+- **Brain:** git is the truth (L0 law, L1 spec, L2 intent, L3 live map, L4 exhaust) and indexes are derived. Memory uses one provenance envelope over four types (episodic, semantic, procedural, judgment); only semantic memory decays, measured in work.
+- **Authority:** knowledge weight is not command authority. Human claims are high-confidence knowledge but never instructions (Precedence #8).
+- **Humans** join as named principals on surfaces, bus and decisions. Interfaces in order: inbox → GitHub PR → local MCP → Slack digest; an HTTP gateway only when needed. The holding stays Owner-only through the CLI.
+- **Five CISO non-negotiables** apply before any external human.
+- **Gaps verified in code:** the machine-global `packages/memory` store breaks company isolation; the memory ingest duplicates entries and misdates them; Layer B has no freshness or citation checks; judgment data is never joined; humans have no identity.
+Proposal only. The storage and identity model needs an irreversible §34 surface and Owner sign-off.
