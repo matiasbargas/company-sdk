@@ -700,3 +700,24 @@ Affects natural persons: NO
 - **Session folder** is read from the ledger.
 - **Persistence route closed:** Edit/Write is denied on `.git/**` and `.claude/**`, and git hooks/config flags are refused.
 - 993 holding assertions.
+
+---
+
+## Portfolio Orchestrator v0 (single company) — Implementation GRADUATED (2026-11-15, cycle 3)
+**Made by:** Implementation Guardian (verdict); recorded by Greg (CEO) on the Owner's explicit approval, because the Guardian's own write was blocked by the session permission check · **Release:** v2026.Q2.3 · **Tag:** SDK-CHANGE
+Path:
+- Discovery graduated in cycle 2.
+- The Mario gate approved with conditions C1–C14; D7 is the sandbox user.
+- Implementation ran 3 cycles: cycle 1 ITERATE (5 fails), cycle 2 ITERATE (the hook failed open under D7), cycle 3 GRADUATE (6/6).
+- `packages/holding` has 993 assertions and spends zero tokens; SDK behaviour coverage is 204 of 214 (95%).
+
+**Ready means:** the single-company lifecycle works end to end (grant → ratify → run → meter → land/kill/freeze → proof → report → reconcile → cycle) under the sandbox user. It fails closed when the hook cannot run, and it refuses to start until the Owner's setup is complete.
+
+**Before the first real run, the Owner must:**
+- review and run the generated sudo script (`sdk-holding sandbox setup`), then pass `sandbox doctor`;
+- `key set` the company key;
+- set the price table, the pin and the session floor;
+- approve a budget and set a **provider-side spend limit** (`--max-budget-usd` is soft);
+- use a short landing deadline for run 1.
+
+**Carry-forwards:** N1 (the setup script runs the hook as the sandbox user and expects a deny), N2 (the hook's sha256 and non-writability checked before each run), N3 (run-1 deadline). **The first real run verifies:** C1 (the real hook-error event shape), C2 (sudo keeps the two environment variables), C3 (metering of Task subagents), C4 (reconcile against the provider bill before a second run).
