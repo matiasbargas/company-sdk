@@ -70,3 +70,24 @@ claims:
     status: built
     statement: "Every built capability is covered by at least one test that runs in `npm test`, so capabilities cannot be lost silently across rewrites."
     conformance: [cap-sdk-capabilities-001]
+
+  - id: cap-sdk-claims-citation-001
+    kind: capability
+    status: built
+    statement: "`sdk-health` reports every active Layer B claim source that does not resolve (relative to context/, the project, or the repo root; a `*` glob resolves when it matches) or whose `lines:` range falls outside the file, naming the claim, the source and, for renamed folders, the current path."
+    sources: [{file: scripts/lib/claims-quality.js}, {file: intent/company-brain/deliverables.md, section: "B2 — Layer B quality checks (gap 3)"}]
+    conformance: [cap-sdk-claims-citation-001]
+
+  - id: cap-sdk-claims-stale-001
+    kind: capability
+    status: built
+    statement: "A valid claim is reported for re-confirmation when more than `limits.claimStaleCommits` (default 20) commits touched its cited source files since its claims file last changed; committing the claims file re-confirms it. Measured in commits, never days."
+    sources: [{file: scripts/lib/claims-quality.js}, {file: scripts/lib/limits.js}]
+    conformance: [cap-sdk-claims-stale-001]
+
+  - id: cap-sdk-claims-supersede-001
+    kind: capability
+    status: built
+    statement: "Every `superseded_by` / `retired_by` id names an existing claim in the spec corpus, and supersession links never form a cycle; `sdk-health` names the dangling id or the cycle path."
+    sources: [{file: scripts/lib/claims-quality.js}, {file: spec/README.md, section: "Claim schema"}]
+    conformance: [cap-sdk-claims-supersede-001]

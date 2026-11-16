@@ -34,6 +34,11 @@ const DEFAULT_LIMITS = {
   // acknowledged size that makes it due again (§30, "Specs outlive implementations").
   refactorReviewLines: 400,
   refactorReviewGrowthPct: 25,
+  // Layer B claims-stale: commits touching a claim's cited source files since its claims file last
+  // changed before sdk-health asks for re-confirmation. Work-based (§2 timing).
+  claimStaleCommits: 20,
+  // sdk-doc inbox: decision cards shown per principal. The overflow is counted and named, never hidden.
+  inboxMaxCards: 5,
 };
 
 // Renamed keys still accepted with a pointer to the new name.

@@ -2,10 +2,14 @@
 'use strict';
 
 /**
- * memory.js — CLI for the cross-project memory corpus.
+ * memory.js — CLI for a company's memory corpus.
  *
- * Usage:
- *   sdk-memory ingest <project-dir>            # Ingest from a project
+ * The store is per company: <project-dir>/.team-sdk/memory (derived, gitignored). Cross-company
+ * memory travels through the holding commons, never a shared store. `--global` opts in to the
+ * machine-wide ~/.team-sdk/memory, which is a cross-company leak risk (packages/memory README).
+ *
+ * Usage (every command takes [--dir <project-dir>] (default: cwd) or --global):
+ *   sdk-memory ingest <project-dir>            # Ingest from a project (into that project's store)
  *   sdk-memory query "what about auth?"         # Search the corpus
  *   sdk-memory stats                            # Corpus overview
  *   sdk-memory list                             # List ingested projects
@@ -24,11 +28,24 @@ function getFlag(name) {
   return args[idx + 1] || null;
 }
 
-const store = createMemoryStore();
+// Positional args, with flag values (--dir <x>, --project <x>, --class <x>) removed.
+const VALUE_FLAGS = new Set(['--dir', '--project', '--class']);
+const positional = [];
+for (let i = 1; i < args.length; i++) {
+  if (VALUE_FLAGS.has(args[i])) { i++; continue; }
+  if (!args[i].startsWith('--')) positional.push(args[i]);
+}
+const ingestTarget = command === 'ingest' ? positional[0] : null;
+// Created lazily, so a usage error never writes a store directory.
+let storeInstance = null;
+const storeOf = () => storeInstance || (storeInstance = createMemoryStore(args.includes('--global')
+  ? { global: true }
+  : { projectDir: require('path').resolve(getFlag('dir') || ingestTarget || process.cwd()) }));
+const store = new Proxy({}, { get: (_, k) => { const s = storeOf(); const v = s[k]; return typeof v === 'function' ? v.bind(s) : v; } });
 
 switch (command) {
   case 'ingest': {
-    const projectDir = args[1];
+    const projectDir = ingestTarget;
     if (!projectDir) {
       console.error('Usage: sdk-memory ingest <project-dir>');
       process.exit(1);
@@ -40,7 +57,7 @@ switch (command) {
   }
 
   case 'query': {
-    const question = args.slice(1).filter(a => !a.startsWith('--')).join(' ');
+    const question = positional.join(' ');
     if (!question) {
       console.error('Usage: sdk-memory query "your question"');
       process.exit(1);

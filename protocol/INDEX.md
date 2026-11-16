@@ -21,7 +21,7 @@ Load one section by number (`protocol/NN-*.md`) instead of the whole of `protoco
 | §13 | Session Continuity | [13-session-continuity.md](13-session-continuity.md) | 44 |
 | §14 | Sub-Role Creation | [14-sub-role-creation.md](14-sub-role-creation.md) | 39 |
 | §15 | Ideation Cycle and Shipping Cycle | [15-ideation-cycle-and-shipping-cycle.md](15-ideation-cycle-and-shipping-cycle.md) | 113 |
-| §16 | Consultation Mode & Spawning Policy | [16-consultation-mode-spawning-policy.md](16-consultation-mode-spawning-policy.md) | 90 |
+| §16 | Consultation Mode & Spawning Policy | [16-consultation-mode-spawning-policy.md](16-consultation-mode-spawning-policy.md) | 92 |
 | §17 | Business Unit (BU) Communication Protocol | [17-business-unit-bu-communication-protocol.md](17-business-unit-bu-communication-protocol.md) | 85 |
 | §18 | Research Chapter Protocol | [18-research-chapter-protocol.md](18-research-chapter-protocol.md) | 66 |
 | §19 | Context Request Protocol | [19-context-request-protocol.md](19-context-request-protocol.md) | 75 |

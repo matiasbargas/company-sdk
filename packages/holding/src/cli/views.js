@@ -1,6 +1,6 @@
 'use strict';
 
-/** cli/views.js — ledger views: cycle close, report, verify. */
+/** cli/views.js — ledger views: cycle close, report, calibration, verify. */
 
 const fs = require('fs');
 const path = require('path');
@@ -9,6 +9,7 @@ const { validatePortfolio, loadPortfolio } = require('../portfolio');
 const { recordProof, scanReverts } = require('../proofs');
 const { closeCycle, endGrant } = require('../cycle');
 const { buildReport, formatReport } = require('../report');
+const { buildCalibration, formatCalibration, readCompanyHistories } = require('../calibration');
 const { preflightRun, readiness } = require('../preflight');
 const { LIMIT_KEYS, validateLimits } = require('../fold');
 const { canonicalize } = require('../canonical');
@@ -35,6 +36,14 @@ const commands = {
     const r = buildReport(L.fold(), { cycle: flags.cycle ? posInt(flags.cycle, '--cycle') : undefined, portfolio: h.portfolio,
       runs: readRunRecords(h.files.dir) });
     io.out(flags.json ? JSON.stringify(r, null, 2) : formatReport(r));
+  },
+
+  // Read-only judgment join (cap-po-calibration-001/002): no revert scan, no append, no lock.
+  calibration({ flags }, io, h) {
+    const L = h.ledger();
+    const cal = buildCalibration({ state: L.fold(), events: L.read(), portfolio: h.portfolio,
+      histories: readCompanyHistories(h.portfolio), cycle: flags.cycle !== undefined ? posInt(flags.cycle, '--cycle') : undefined });
+    io.out(flags.json ? JSON.stringify(cal, null, 2) : formatCalibration(cal));
   },
 
   verify(_args, io, h) {

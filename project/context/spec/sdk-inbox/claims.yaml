@@ -1,0 +1,91 @@
+# Layer B capabilities — sdk-inbox (`sdk-doc inbox`, the first human interface)
+#
+# What `sdk-doc inbox` promises, stated against its public interface (args, exit codes, stdout, the
+# files an answer writes), independent of scripts/commands/inbox.js.
+# Intent: project/context/intent/company-brain/design.md §5-6; contract: deliverables.md B4.1-B4.4.
+#
+# Conformance: scripts/lib/test-cap-inbox.js (black-box, fixture projects in os.tmpdir()).
+# `built` ⇒ a `@covers <id>` block in that file passes.
+
+claims:
+  - id: cap-inbox-001
+    kind: capability
+    status: built
+    statement: "`sdk-doc inbox <project-dir> [--for <principal>] [--json]` builds decision cards only from existing primitives, with no new store: open DECISION NEEDED / BLOCKER Bus messages addressed to the principal or the Owner; under-verification / reconciling surfaces with an unfilled roster slot for the principal (an irreversible `blocked` surface is a card for the Owner); an unsigned CHARTER ratification line; overdue `DECISION BY:` items; and holding-health issues when a holding exists. The default principal is the Owner."
+    acceptance:
+      - given: "a project with an Owner-addressed DECISION NEEDED (BOUNDARY cited), an INFO message, a CTO-addressed ask, an unsigned CHARTER, an overdue current-status item and a broken holding ledger"
+        when: "sdk-doc inbox <dir> --json"
+        then: "cards of kind bus, charter, overdue and holding; no INFO card; no CTO-only card; exit 0; no file is written"
+      - given: "a surface in under-verification with roster [CFO, human:ana] and a CFO verification block"
+        when: "sdk-doc inbox <dir> --for ana / --for CFO"
+        then: "ana gets one surface card; CFO gets none (slot filled); a verified surface is never a card"
+      - given: "a missing project dir"
+        when: "sdk-doc inbox <missing>"
+        then: "stderr 'not found'; exit 1"
+    sources:
+      - file: scripts/commands/inbox.js
+      - file: scripts/lib/overdue.js
+      - file: packages/holding/src/health.js
+    conformance: [cap-inbox-001]
+
+  - id: cap-inbox-002
+    kind: capability
+    status: built
+    statement: "Every card carries dissent (shown first), the question, the boundary it hits (a §34.7 bullet or a CHARTER Autonomy Limit, resolved to its text), the options, what proceeds meanwhile, the cost of delay, the deadline and the source path:line. A missing dissent or meanwhile is stated explicitly, never blank. Over-asking guard: an ask that cites no known boundary is rejected by the linter (`lintCard`) and listed under 'Rejected (over-asking guard)' with its source, never shown as a card and never hidden."
+    acceptance:
+      - given: "a Bus ask with BOUNDARY, DISSENT, OPTIONS, MEANWHILE and COST OF DELAY lines"
+        when: "sdk-doc inbox <dir> (text) and --json"
+        then: "text prints Dissent before Question, Boundary, Options, Meanwhile, Cost of delay, Deadline, Source; JSON key dissent precedes question"
+      - given: "asks with no BOUNDARY, or an unknown one, or a reversible surface with no declared boundary"
+        when: "sdk-doc inbox <dir> --json"
+        then: "they are in `rejected` with a boundary reason and their source, not in `cards`"
+      - given: "an irreversible surface with a no-go verification block"
+        when: "the inbox is built"
+        then: "boundary Autonomy Limit 4; dissent quotes the no-go; options pass | concern | no-go"
+    sources:
+      - file: scripts/commands/inbox.js
+      - file: protocol.md
+        section: "34.7"
+      - file: CHARTER.md
+        section: "Autonomy Limits"
+    conformance: [cap-inbox-002]
+
+  - id: cap-inbox-003
+    kind: capability
+    status: built
+    statement: "At most `limits.inboxMaxCards` (default 5, `.sdkrc` overridable, validated) cards are shown per principal. The overflow is counted and named (id + question) in both text and JSON. Cards are ordered blocking first (BLOCKER, reconciling/blocked surface, holding error), then by deadline ascending (none last)."
+    acceptance:
+      - given: "eight Owner asks, one BLOCKER with the latest deadline"
+        when: "sdk-doc inbox <dir> --json"
+        then: "5 cards, BLOCKER first, then ascending deadlines; overflow.count 3 with each overflowed card named"
+      - given: ".sdkrc limits.inboxMaxCards 2"
+        when: "the inbox is built"
+        then: "2 cards, overflow.count 6"
+    sources:
+      - file: scripts/commands/inbox.js
+      - file: scripts/lib/limits.js
+    conformance: [cap-inbox-003]
+
+  - id: cap-inbox-004
+    kind: capability
+    status: built
+    statement: "`sdk-doc inbox <dir> answer <card-id> --decision <...> --reason \"<why>\" [--for <principal>]` appends a provenance-stamped block (Card id, source, commit, LOOP-PROVENANCE SHA256) onto the card's source: a §34.2 verification block on a surface (state untouched), a Bus reply from the principal to the sender, or a history.md decision (CHARTER, overdue status item, holding issue). An empty or missing reason is refused (rubber-stamp guard), as are a missing decision, a decision outside the card's options, an unknown card and a card addressed to someone else; refusals write nothing. Answering never edits CHARTER.md or current-status.md. An answered card leaves the inbox; a card closes only on a stamped answer block whose SHA256 verifies and whose own marker line names it, so a `Card: <id>` mention inside a reason, or an unstamped hand-written marker, closes nothing (one answer closes exactly one card). Dates and Bus timestamps use the local calendar, not UTC."
+    acceptance:
+      - given: "an open Bus card"
+        when: "answer with --reason '   '"
+        then: "exit 1 naming the rubber-stamp guard; bus-log.md unchanged"
+      - given: "an open Bus card"
+        when: "answer --decision adopt --reason '...'"
+        then: "bus-log.md gains a reply FROM Owner TO the sender with DECISION, REASON, Card and LOOP-PROVENANCE; the card is gone"
+      - given: "two open Bus cards A and B"
+        when: "answer A with --reason 'ok see Card: <B-id> · Source: x'"
+        then: "A leaves the inbox; B stays open; an unstamped '- Card: <id>' line appended by hand closes nothing"
+      - given: "a surface slot card for human:ana"
+        when: "answer --for ana --decision pass --reason '...'"
+        then: "a '### Verification — human:ana' block with Verdict pass and LOOP-PROVENANCE <surface-id>; state unchanged"
+      - given: "a CHARTER card"
+        when: "answer --decision amend --reason '...'"
+        then: "a history.md 'Inbox decision' entry; CHARTER.md unchanged; a reminder to sign personally"
+    sources:
+      - file: scripts/commands/inbox.js
+    conformance: [cap-inbox-004]

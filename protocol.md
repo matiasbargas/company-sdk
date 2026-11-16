@@ -859,6 +859,8 @@ Every amount or limit in this protocol is a key under `"limits"` in the project'
 | `statusStaleCommits` | `5` | Commits that may land without `current-status.md` changing before `sdk-health` flags it. |
 | `refactorReviewLines` | `400` | Source-file size that makes a refactor discussion due (§30). |
 | `refactorReviewGrowthPct` | `25` | Growth past the acknowledged size that makes it due again. |
+| `claimStaleCommits` | `20` | Commits touching a claim's cited sources without re-confirmation before `sdk-health` reports the claim stale (Layer B quality). |
+| `inboxMaxCards` | `5` | Decision cards per principal in `sdk-doc inbox`; overflow is counted and named, never hidden. |
 | `charterReviewEvery` | `10` | Agent iterations (closed §32 loops + graduated §31 cycles) between CHARTER reviews. `sdk-health` flags a review as due. |
 
 **Staleness is measured in work, not time.** Agents do not experience days (§2), and file mtimes reset on every clone, so every staleness threshold counts commits or iterations (`scripts/lib/activity.js`).

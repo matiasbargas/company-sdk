@@ -1,0 +1,83 @@
+# Layer B capabilities — sdk-memory (@team-sdk/memory, per-company decision corpus)
+#
+# B1 Memory integrity (project/context/intent/company-brain/deliverables.md, design.md §2 + gaps 1-2).
+# Stated against the package's public interface (packages/memory/src/index.js exports), not its internals.
+#
+# Conformance: packages/memory/tests/test-integrity.js (fixture projects in os.tmpdir(); local git only).
+# `built` ⇒ the `@covers <id>` block in that file passes under `node packages/memory/tests/run.js`.
+
+claims:
+  - id: cap-mem-ids-001
+    kind: capability
+    status: built
+    statement: "Entry ids are deterministic from {project, source_file, content hash of the entry block, anchor}; anchors are heading text or Bus header plus an occurrence ordinal (never line numbers). Re-ingesting the same project twice yields zero new entries, and prepending a history entry adds exactly one."
+    acceptance:
+      - given: "a project with history.md and bus-log.md"
+        when: "createMemoryStore({ projectDir }).ingest() runs twice"
+        then: "the second run reports added: 0 and the same total"
+    sources:
+      - file: packages/memory/src/schema.js
+        lines: 44-72
+      - file: packages/memory/src/ingest.js
+        lines: 31-40
+    conformance: [cap-mem-ids-001]
+
+  - id: cap-mem-dates-001
+    kind: capability
+    status: built
+    statement: "Entry dates come from the source (history **Date:**/plain Date:/Date of work:, else a date in the heading; Bus [YYYY-MM-DD HH:MM] header or legacy TIMESTAMP/DATE field). A source with no date yields date null, never the ingest day; validateEntry accepts null and rejects malformed or absent dates."
+    acceptance:
+      - given: "a history entry without a date and a Bus message with a header timestamp"
+        when: "parseHistory / parseBusLog run"
+        then: "the history entry has date null; the Bus entry has the header date and timestamp"
+    sources:
+      - file: packages/memory/src/ingest.js
+        lines: 79-84
+      - file: packages/memory/src/ingest.js
+        lines: 247-296
+    conformance: [cap-mem-dates-001]
+
+  - id: cap-mem-outcome-001
+    kind: capability
+    status: built
+    statement: "A challenge with no recorded outcome is `unresolved`, never `overridden`; only explicit accepted/approved/upheld or overridden/overruled/rejected text (an **Outcome:** field first, else Status) sets accepted/overridden."
+    acceptance:
+      - given: "a challenge heading with Status: Open, or no status"
+        when: "parseHistory runs"
+        then: "outcome is unresolved"
+    sources:
+      - file: packages/memory/src/schema.js
+        lines: 97-106
+    conformance: [cap-mem-outcome-001]
+
+  - id: cap-mem-envelope-001
+    kind: capability
+    status: built
+    statement: "Every ingested entry carries author {kind: human|agent|unknown, id, role}, sources[] {file, anchor, content_hash, lines}, commit_sha (HEAD when the source is tracked and clean in git, else null) and confidence (high|medium|low by provenance gaps). Pre-v2 stores load with unknown provenance, flagged legacy: true, confidence low; stats() counts them."
+    acceptance:
+      - given: "an old store file with v1 entries"
+        when: "createMemoryStore({ storeDir }) loads it"
+        then: "entries have author.kind unknown, provenance unknown, legacy true; stats().legacyEntries counts them"
+    sources:
+      - file: packages/memory/src/schema.js
+        lines: 74-126
+      - file: packages/memory/src/schema.js
+        lines: 222-262
+      - file: packages/memory/src/provenance.js
+        lines: 32-46
+    conformance: [cap-mem-envelope-001]
+
+  - id: cap-mem-store-001
+    kind: capability
+    status: built
+    statement: "The default store is per company at <projectDir>/.team-sdk/memory, self-gitignored and marked derived. createMemoryStore() with no configuration is refused (MEMORY_STORE_UNCONFIGURED); ~/.team-sdk/memory is opt-in only ({ global: true } or TEAM_SDK_MEMORY_GLOBAL=1), refused even as storeDir, and flagged leakRisk. A company store refuses another company's project (CROSS_COMPANY_INGEST). Cross-company memory goes through the commons (packages/memory/src/README.md)."
+    acceptance:
+      - given: "no configuration"
+        when: "createMemoryStore() is called"
+        then: "it throws MEMORY_STORE_UNCONFIGURED and writes nothing under $HOME"
+    sources:
+      - file: packages/memory/src/store.js
+        lines: 23-95
+      - file: packages/memory/src/README.md
+        lines: 1-30
+    conformance: [cap-mem-store-001]

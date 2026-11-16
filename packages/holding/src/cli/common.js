@@ -40,6 +40,7 @@ const USAGE = `usage: sdk-holding <command> [--holding <dir>]
   cycle close
   freeze [--reason "<why>"] | unfreeze
   report [--json] [--cycle <n>]
+  calibration [--json] [--cycle <n>]
   verify
   reconcile --company <id> --provider-usd <usd> --period <cycle> [--evidence <ref>]
   sandbox setup --user <name> --home <abs> [--session-dir <abs>] [--runtime-dir <abs>] [--node <abs>] [--company <id>] [--claude-bin <abs>] | sandbox doctor | sandbox show

@@ -16,6 +16,7 @@
  *   proofs     — deterministic proof checks in a company repo (commit SHA + state) and revert detection
  *   cycle      — Betting-cycle close (reclaim, envelope top-up) and grant close/kill
  *   report     — ledger report: fully loaded VOF, suppression, judgment column, divergence, revisit trigger
+ *   calibration — read-only judgment join: VOF, Owner rating, kills, §29 disagreements, confident misses
  *   preflight  — the one run pre-flight + readiness, shared by the runner and sdk-holding
  *   health     — holdingHealth(holdingDir): read-only issues for scripts/health.js
  *   sandbox-access — can the D7 sandbox user reach a path (every parent x, target bits)
@@ -31,6 +32,7 @@ const runner = require('./runner');
 const proofs = require('./proofs');
 const cycle = require('./cycle');
 const report = require('./report');
+const calibration = require('./calibration');
 const preflight = require('./preflight');
 const health = require('./health');
 const fold = require('./fold');
@@ -94,6 +96,11 @@ module.exports = {
   buildReport: report.buildReport,
   formatReport: report.formatReport,
   VOF_WEIGHTS: report.WEIGHTS,
+
+  // calibration (judgment join): VOF × Owner rating × kills × §29 disagreements, read-only
+  buildCalibration: calibration.buildCalibration,
+  formatCalibration: calibration.formatCalibration,
+  parseDisagreements: calibration.parseDisagreements,
 
   // limits in the chain, pre-flight, health
   LIMIT_KEYS: fold.LIMIT_KEYS,

@@ -144,3 +144,5 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+# derived per-company memory store (packages/memory)
+.team-sdk/

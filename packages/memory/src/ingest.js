@@ -1,16 +1,24 @@
 'use strict';
 
 /**
- * ingest.js — Parse history.md and bus-log.md to extract memory entries.
+ * ingest.js — Parse history.md and bus-log.md into memory entries (schema v2).
  *
- * Reads project files and produces structured entries for the memory store.
- * Uses @team-sdk/context markdown utilities for section parsing.
+ * Integrity rules (B1):
+ *   - ids are deterministic from {source_file, content hash, anchor} (see schema.entryId);
+ *     anchors are heading text / Bus header + an occurrence ordinal, never line numbers;
+ *   - dates come from the source (history **Date:**, Bus [timestamp] header); missing → null;
+ *   - a challenge with no recorded outcome is `unresolved`;
+ *   - every entry carries author/sources/commit_sha/confidence.
  */
 
 const { readFileSync, existsSync } = require('fs');
 const path = require('path');
-const { findSectionIndex, getSectionLevel, findSectionEnd } = require('../../context/src/markdown');
-const { normalizeEntry } = require('./schema');
+const { findSectionEnd } = require('../../context/src/markdown');
+const { normalizeEntry, resolveChallengeOutcome } = require('./schema');
+const { contentHash, commitShaFor, relSource } = require('./provenance');
+
+const KILL_CLASS_RE = /FRAMING_WRONG|SCOPE_OBSOLETE|PRIORITY_SHIFT|EXECUTION_STALLED/;
+const ISO_DATE_RE = /\b(\d{4}-\d{2}-\d{2})\b/;
 
 /**
  * Extract the project name from a project directory.
@@ -20,8 +28,18 @@ function projectName(projectDir) {
   return path.basename(resolved);
 }
 
+/** Occurrence counter so repeated anchors stay distinct and stable. */
+function anchorer() {
+  const seen = new Map();
+  return (key) => {
+    const n = (seen.get(key) || 0) + 1;
+    seen.set(key, n);
+    return `${key}#${n}`;
+  };
+}
+
 /**
- * Parse a history.md file into decision entries.
+ * Parse a history.md file into entries.
  *
  * History entries follow the protocol.md Section 10 format:
  *   ## [Title] — Description
@@ -31,16 +49,21 @@ function projectName(projectDir) {
  *   **Status:** ...
  *   **What happened:** ...
  *
- * Key decisions are in bulleted lists or in rationale blocks.
+ * @param {string} content
+ * @param {string} project
+ * @param {object} [opts]
+ * @param {string} [opts.sourceFile='history.md'] — path of the file relative to the project dir
+ * @param {string|null} [opts.commitSha=null]
  */
-function parseHistory(content, project) {
+function parseHistory(content, project, opts = {}) {
+  const sourceFile = opts.sourceFile || 'history.md';
+  const commitSha = opts.commitSha || null;
   const lines = content.split('\n');
   const entries = [];
+  const anchor = anchorer();
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-
-    // Find H2 entries (## Title)
     if (!line.startsWith('## ')) continue;
 
     const titleMatch = line.match(/^##\s+(?:\[([^\]]*)\]\s*—?\s*)?(.+)/);
@@ -48,44 +71,36 @@ function parseHistory(content, project) {
 
     const tag = titleMatch[1] || '';
     const title = titleMatch[2].trim();
+    if (title.includes('Future release entries')) continue;
+
     const end = findSectionEnd(lines, i);
     const sectionLines = lines.slice(i + 1, end);
     const sectionText = sectionLines.join('\n');
 
-    // Extract structured fields
-    const date = extractField(sectionText, 'Date') || '1970-01-01';
+    const dateField = extractField(sectionText, 'Date') || extractField(sectionText, 'Date of work') ||
+                      extractField(sectionText, 'Date decided');
+    // Source date only: a Date field, else a date written in the heading itself. Never "today".
+    const dateMatch = (dateField ? dateField.match(ISO_DATE_RE) : null) || title.match(ISO_DATE_RE);
+    const date = dateMatch ? dateMatch[1] : null;
     const madeBy = extractField(sectionText, 'Made by');
     const release = extractField(sectionText, 'Release');
     const status = extractField(sectionText, 'Status');
+    const outcomeField = extractField(sectionText, 'Outcome');
     const reversible = extractReversible(sectionText);
     const rationale = extractBlock(sectionText, 'Rationale') ||
                       extractBlock(sectionText, 'What happened');
 
-    // Skip placeholder entries
-    if (title.includes('Future release entries')) continue;
-
-    // Determine entry type
     let type = 'decision';
     const tags = [];
-
     if (tag) tags.push(tag);
-    if (/kill/i.test(title) || /cancelled/i.test(title)) {
-      // Check if it's a kill
-      const killClassMatch = sectionText.match(/FRAMING_WRONG|SCOPE_OBSOLETE|PRIORITY_SHIFT|EXECUTION_STALLED/);
-      if (killClassMatch) {
-        type = 'kill';
-      }
-    }
+    const killClassMatch = sectionText.match(KILL_CLASS_RE);
+    if ((/kill/i.test(title) || /cancelled/i.test(title)) && killClassMatch) type = 'kill';
+    if (/challenge|dissent|disagree/i.test(title)) type = 'challenge';
 
-    // Extract challenges from disagreement sections
-    if (/challenge|dissent|disagree/i.test(title)) {
-      type = 'challenge';
-    }
+    const heading = line.replace(/^##\s+/, '').trim();
+    const block = [line, ...sectionLines].join('\n');
 
-    // Extract domain tags from content
-    const affects = inferAffectedDomains(sectionText);
-
-    const entry = normalizeEntry({
+    const raw = {
       type,
       project,
       projectDir: null, // set by caller
@@ -95,84 +110,102 @@ function parseHistory(content, project) {
       summary: title,
       rationale: rationale ? rationale.slice(0, 500) : '',
       reversible,
-      affects,
+      affects: inferAffectedDomains(sectionText),
       tags,
       status: status || '',
-    });
+      sources: [{
+        file: sourceFile,
+        anchor: anchor(`h2:${heading}`),
+        content_hash: contentHash(block),
+        lines: `${i + 1}-${end}`,
+      }],
+      commit_sha: commitSha,
+    };
 
-    // Add kill-specific fields
     if (type === 'kill') {
-      const killClassMatch = sectionText.match(/FRAMING_WRONG|SCOPE_OBSOLETE|PRIORITY_SHIFT|EXECUTION_STALLED/);
-      entry.killClass = killClassMatch ? killClassMatch[0] : 'PRIORITY_SHIFT';
+      raw.killClass = killClassMatch[0];
       const assumptionMatch = sectionText.match(/\*\*Assumption[^:]*:\*\*\s*(.+)/i);
-      entry.assumption = assumptionMatch ? assumptionMatch[1].trim() : '';
+      raw.assumption = assumptionMatch ? assumptionMatch[1].trim() : '';
     }
-
-    // Add challenge-specific fields
     if (type === 'challenge') {
-      entry.challenger = madeBy || 'Unknown';
-      entry.outcome = /accepted|approved/i.test(status) ? 'accepted' : 'overridden';
+      raw.challenger = madeBy || 'Unknown';
+      raw.outcome = resolveChallengeOutcome(outcomeField || status);
     }
 
-    entries.push(entry);
+    entries.push(normalizeEntry(raw));
   }
 
   return entries;
 }
 
 /**
- * Parse bus-log.md for kill entries and inter-agent decisions.
+ * Parse bus-log.md for kills and decision requests.
+ *
+ * Supports the canonical one-line header written by sdk-doc bus / sdk-kill:
+ *   [YYYY-MM-DD HH:MM] FROM: X → TO: Y | PRIORITY: P | TAG: T | RELEASE: R
+ *   <body lines>
+ * and the older multi-line form (FROM:/TO:/PRIORITY:/MESSAGE:, optional DATE:/TIMESTAMP:).
+ *
+ * @param {string} content
+ * @param {string} project
+ * @param {object} [opts] — { sourceFile='bus-log.md', commitSha=null }
  */
-function parseBusLog(content, project) {
-  const lines = content.split('\n');
+function parseBusLog(content, project, opts = {}) {
+  const sourceFile = opts.sourceFile || 'bus-log.md';
+  const commitSha = opts.commitSha || null;
   const entries = [];
+  const anchor = anchorer();
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+  for (const msg of splitBusMessages(content)) {
+    const { from, priority, tag, release, timestamp, body, block, startLine, endLine } = msg;
+    const date = timestamp ? timestamp.slice(0, 10) : null;
+    const tags = tag ? tag.split(',').map(t => t.trim()).filter(Boolean) : [];
+    const hash = contentHash(block);
+    const baseKey = `bus:${timestamp || '-'}|${from || '-'}`;
+    const source = (kind) => [{
+      file: sourceFile,
+      anchor: anchor(`${baseKey}|${kind}`),
+      content_hash: hash,
+      lines: `${startLine}-${endLine}`,
+    }];
 
-    // Look for Bus message blocks (FROM: ...)
-    if (!line.startsWith('FROM:') && !line.match(/^\*\*FROM:\*\*/)) continue;
-
-    const end = findNextBusMessage(lines, i + 1);
-    const block = lines.slice(i, end).join('\n');
-
-    // Extract Bus fields
-    const from = extractBusField(block, 'FROM');
-    const to = extractBusField(block, 'TO');
-    const priority = extractBusField(block, 'PRIORITY');
-    const message = extractBusField(block, 'MESSAGE') || '';
-    const solutionClass = extractBusField(block, 'SOLUTION_CLASS');
-    const tagField = extractBusField(block, 'TAG');
-
-    // Only ingest meaningful Bus messages (decisions, kills, challenges)
-    if (/POD KILLED/i.test(message) || /KILL/i.test(tagField || '')) {
-      const killClassMatch = message.match(/FRAMING_WRONG|SCOPE_OBSOLETE|PRIORITY_SHIFT|EXECUTION_STALLED/);
-      const entry = normalizeEntry({
+    if (/POD KILLED/i.test(body) || /KILL/i.test(tag || '')) {
+      const killClassMatch = body.match(KILL_CLASS_RE);
+      const assumption = (body.match(/^\s*Assumption:\s*(.+)$/im) || [])[1] || '';
+      entries.push(normalizeEntry({
         type: 'kill',
         project,
-        date: new Date().toISOString().slice(0, 10),
+        date,
+        timestamp: timestamp || null,
+        release: release || '',
         madeBy: from || 'Unknown',
-        summary: message.slice(0, 200),
+        summary: summarize(body),
+        // A kill must carry a class; when the source records none the default is a provenance gap.
         killClass: killClassMatch ? killClassMatch[0] : 'PRIORITY_SHIFT',
-        assumption: '',
-        tags: tagField ? tagField.split(',').map(t => t.trim()) : [],
+        killClassDefaulted: killClassMatch ? undefined : true,
+        assumption: assumption.trim(),
+        tags,
         affects: [],
-      });
-      entries.push(entry);
+        sources: source('kill'),
+        commit_sha: commitSha,
+      }, { extraGaps: killClassMatch ? 0 : 1 }));
     }
 
     if (priority === 'DECISION NEEDED' || priority === 'BLOCKER') {
-      const entry = normalizeEntry({
+      entries.push(normalizeEntry({
         type: 'decision',
         project,
-        date: new Date().toISOString().slice(0, 10),
+        date,
+        timestamp: timestamp || null,
+        release: release || '',
         madeBy: from || 'Unknown',
-        summary: message.slice(0, 200),
+        summary: summarize(body),
         rationale: '',
-        tags: tagField ? tagField.split(',').map(t => t.trim()) : [],
+        tags,
         affects: [],
-      });
-      entries.push(entry);
+        sources: source('decision'),
+        commit_sha: commitSha,
+      }));
     }
   }
 
@@ -181,36 +214,25 @@ function parseBusLog(content, project) {
 
 /**
  * Ingest all entries from a project directory.
+ * Source paths in the envelope are relative to `projectDir`.
  */
 function ingestProject(projectDir) {
   const resolved = path.resolve(projectDir);
   const project = projectName(resolved);
   const entries = [];
 
-  // Try history.md in the project dir itself, or as a subdirectory named 'project'
-  const historyPaths = [
-    path.join(resolved, 'history.md'),
-    path.join(resolved, 'project', 'history.md'),
+  const sources = [
+    { names: ['history.md', path.join('project', 'history.md')], parse: parseHistory },
+    { names: ['bus-log.md', path.join('project', 'bus-log.md')], parse: parseBusLog },
   ];
-  for (const hp of historyPaths) {
-    if (existsSync(hp)) {
-      const content = readFileSync(hp, 'utf8');
-      const parsed = parseHistory(content, project);
-      parsed.forEach(e => { e.projectDir = resolved; });
-      entries.push(...parsed);
-      break;
-    }
-  }
-
-  // Try bus-log.md
-  const busLogPaths = [
-    path.join(resolved, 'bus-log.md'),
-    path.join(resolved, 'project', 'bus-log.md'),
-  ];
-  for (const bp of busLogPaths) {
-    if (existsSync(bp)) {
-      const content = readFileSync(bp, 'utf8');
-      const parsed = parseBusLog(content, project);
+  for (const { names, parse } of sources) {
+    for (const name of names) {
+      const abs = path.join(resolved, name);
+      if (!existsSync(abs)) continue;
+      const parsed = parse(readFileSync(abs, 'utf8'), project, {
+        sourceFile: relSource(resolved, abs),
+        commitSha: commitShaFor(abs),
+      });
       parsed.forEach(e => { e.projectDir = resolved; });
       entries.push(...parsed);
       break;
@@ -222,10 +244,76 @@ function ingestProject(projectDir) {
 
 // --- Helpers ---
 
+const BUS_HEADER_RE = /^\[(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}(?::\d{2})?))?[^\]]*\]\s*FROM:\s*(.+?)\s*(?:→|->)\s*TO:\s*([^|]+?)\s*(?:\|(.*))?$/;
+const isLegacyFrom = (l) => l.startsWith('FROM:') || /^\*\*FROM:\*\*/.test(l);
+
+function splitBusMessages(content) {
+  const lines = content.split('\n');
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    const header = lines[i].match(BUS_HEADER_RE);
+    if (header) {
+      let end = i + 1;
+      while (end < lines.length && !BUS_HEADER_RE.test(lines[end]) && lines[end].trim() !== '---' && !isLegacyFrom(lines[end])) end++;
+      const fields = parsePipeFields(header[5] || '');
+      const bodyLines = lines.slice(i + 1, end);
+      out.push({
+        from: header[3].trim(),
+        to: header[4].trim(),
+        priority: fields.PRIORITY || null,
+        tag: fields.TAG || null,
+        release: fields.RELEASE || null,
+        timestamp: header[2] ? `${header[1]} ${header[2]}` : header[1],
+        body: bodyLines.join('\n').trim(),
+        block: lines.slice(i, end).join('\n'),
+        startLine: i + 1,
+        endLine: end,
+      });
+      i = end - 1;
+      continue;
+    }
+    if (isLegacyFrom(lines[i])) {
+      const end = findNextBusMessage(lines, i + 1);
+      const block = lines.slice(i, end).join('\n');
+      const ts = extractBusField(block, 'TIMESTAMP') || extractBusField(block, 'DATE');
+      const tsMatch = ts ? ts.match(/(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}))?/) : null;
+      out.push({
+        from: extractBusField(block, 'FROM'),
+        to: extractBusField(block, 'TO'),
+        priority: extractBusField(block, 'PRIORITY'),
+        tag: extractBusField(block, 'TAG'),
+        release: extractBusField(block, 'RELEASE'),
+        timestamp: tsMatch ? (tsMatch[2] ? `${tsMatch[1]} ${tsMatch[2]}` : tsMatch[1]) : null,
+        body: extractBusField(block, 'MESSAGE') || '',
+        block,
+        startLine: i + 1,
+        endLine: end,
+      });
+      i = end - 1;
+    }
+  }
+  return out;
+}
+
+function parsePipeFields(s) {
+  const fields = {};
+  for (const part of s.split('|')) {
+    const m = part.match(/^\s*([A-Z_ ]+?):\s*(.*?)\s*$/);
+    if (m) fields[m[1].trim()] = m[2];
+  }
+  return fields;
+}
+
+function summarize(body) {
+  return body.split('\n').map(l => l.trim()).filter(Boolean).join(' — ').slice(0, 200);
+}
+
+/** `**Field:** value` anywhere, or a plain `Field: value` at the start of a line. */
 function extractField(text, fieldName) {
-  const re = new RegExp(`\\*\\*${fieldName}:\\*\\*\\s*(.+)`, 'i');
-  const match = text.match(re);
-  return match ? match[1].trim() : null;
+  const bold = text.match(new RegExp(`\\*\\*${fieldName}:\\*\\*\\s*(.+)`, 'i'));
+  if (bold) return bold[1].trim();
+  const plain = text.match(new RegExp(`(?:^|\\n)${fieldName}:\\s*(.+)`, 'i'));
+  return plain ? plain[1].trim() : null;
 }
 
 function extractReversible(text) {
@@ -248,17 +336,11 @@ function extractBusField(block, field) {
 
 function findNextBusMessage(lines, startIdx) {
   for (let i = startIdx; i < lines.length; i++) {
-    if (lines[i].startsWith('FROM:') || lines[i].match(/^\*\*FROM:\*\*/)) {
-      return i;
-    }
-    // Empty line after a block could be separator
+    if (isLegacyFrom(lines[i]) || BUS_HEADER_RE.test(lines[i])) return i;
     if (lines[i].trim() === '' && i > startIdx + 2) {
-      // Check if next non-empty line starts a new Bus message
       for (let j = i + 1; j < lines.length; j++) {
         if (lines[j].trim() === '') continue;
-        if (lines[j].startsWith('FROM:') || lines[j].match(/^---/) || lines[j].startsWith('#')) {
-          return i;
-        }
+        if (isLegacyFrom(lines[j]) || lines[j].match(/^---/) || lines[j].startsWith('#')) return i;
         break;
       }
     }
@@ -281,9 +363,7 @@ function inferAffectedDomains(text) {
     people: ['hiring', 'chro', 'team', 'culture'],
   };
   for (const [domain, keywords] of Object.entries(map)) {
-    if (keywords.some(k => lower.includes(k))) {
-      domains.push(domain);
-    }
+    if (keywords.some(k => lower.includes(k))) domains.push(domain);
   }
   return domains;
 }

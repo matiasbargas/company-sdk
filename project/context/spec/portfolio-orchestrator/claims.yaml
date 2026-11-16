@@ -541,3 +541,26 @@ claims:
         then: "the reconciliation refusal no longer applies"
     sources: [{file: intent/portfolio-orchestrator/second-company/provider-caps.md, section: "3. Decision table (O7)"}, {file: intent/portfolio-orchestrator/second-company/isolation.md, section: "8. Mapping to Mario's conditions"}]
     conformance: []
+
+  - id: cap-po-calibration-001
+    kind: capability
+    status: built
+    statement: "`sdk-holding calibration [--json]` joins, per bet, VOF, the company Owner's rating, kills and §29 disagreements linked to the grant or mission; it is read-only and never writes the ledger."
+    acceptance:
+      - given: "a ledger with funded, rated, killed and disputed bets"
+        when: "calibration runs"
+        then: "each bet row shows VOF, rating (or unrated), kill class and linked disagreements; the ledger is byte-identical afterwards"
+    sources: [{file: intent/company-brain/deliverables.md, section: "B3"}]
+    conformance: [cap-po-calibration-001]
+
+  - id: cap-po-calibration-002
+    kind: capability
+    status: built
+    statement: "Calibration reports where agent-confident bets (high VOF) were rated flat or regressed by the Owner, per bet class, next to the divergence rule; unrated bets are shown as unrated, never defaulted."
+    acceptance:
+      - given: "a bet class where above-median-VOF bets were rated flat"
+        when: "calibration runs"
+        then: "those bets are listed as agent-confident / human-flat"
+    sources: [{file: intent/company-brain/deliverables.md, section: "B3"}]
+    conformance: [cap-po-calibration-002]
+

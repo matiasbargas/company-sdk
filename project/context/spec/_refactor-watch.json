@@ -14,6 +14,27 @@
       "decision": "defer",
       "prerequisite": "Write its capabilities into context/spec/sdk-core (scaffold, squad/type maps, harness copy, .sdkrc + limits, settings + hooks) with covering tests before any rewrite.",
       "by": "Greg (CEO), baseline at adoption of the refactor watch"
+    },
+    "scripts/commands/inbox.js": {
+      "lines": 546,
+      "date": "2026-11-15",
+      "decision": "split next iteration",
+      "prerequisite": "Capabilities cap-inbox-* are built and pinned (scripts/lib/test-cap-inbox.js), so the split is safe: separate card sources (bus, surfaces, charter, overdue, holding) from rendering and the answer path.",
+      "by": "Greg (CEO), refactor-review at pipeline integration"
+    },
+    "scripts/ops.js": {
+      "lines": 412,
+      "date": "2026-11-15",
+      "decision": "defer",
+      "prerequisite": "Pinned by cap-sess-ops-* (test-cap-session.js). Split per check family when next touched; the 4 text-date checks (cap-sess-ops-006) are the first candidates.",
+      "by": "Greg (CEO), refactor-review at pipeline integration"
+    },
+    "scripts/health.js": {
+      "lines": 411,
+      "date": "2026-11-15",
+      "decision": "defer",
+      "prerequisite": "Pinned by cap-sess-health-* (test-cap-session.js). Move each numbered check into scripts/lib/health-checks/<name>.js when the next check is added; no new inline checks.",
+      "by": "Greg (CEO), refactor-review at pipeline integration"
     }
   }
 }

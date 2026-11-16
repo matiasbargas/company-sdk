@@ -3,3 +3,5 @@ node_modules/
 .env
 *.log
 sessions/temp/
+# derived per-company memory store (packages/memory)
+.team-sdk/

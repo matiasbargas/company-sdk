@@ -30,3 +30,8 @@ holding pod, implementation cycle 2: ITERATE. All cycle-1 items closed; one new 
 ---
 [2026-11-15 17:20] FROM: Implementation Guardian → TO: Coordinator | PRIORITY: INFO | TAG: ITERATION-GRADUATED | RELEASE: v2026.Q2.3
 holding pod GRADUATED at implementation cycle 3 (6/6). Single-company v0 orchestrator ready for its first real run after Owner setup (sudo script review+run, key, price table, pin, floor, approved budget, provider spend limit). Carry-forwards N1-N3, first-run checks C1-C4 in project/iterations/implementation/holding/iter-003.md.
+
+---
+[2026-11-16 00:22] FROM: CTO → TO: Owner | PRIORITY: BLOCKER | SOL: HYBRID | RELEASE: v2026.Q2.3
+SURFACE-20261115-brain-identity-storage-001 (irreversible) is blocked on a CISO no-go and awaits the Owner's decision: brain truth location, principal id format, signature/verification scheme, transport sequence. See the surface's 'Decision for the Owner' section.
+ESCALATION: CEO

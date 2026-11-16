@@ -927,25 +927,25 @@ function gateProject(name, o = {}) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// sdk-memory (store lives under $HOME/.team-sdk/memory — HOME is the temp dir here)
+// sdk-memory (store is per company: <project>/.team-sdk/memory; --dir selects the company)
 // ═════════════════════════════════════════════════════════════════════════════
 
 // @covers cap-sess-memory-001
 {
   const d = mkdir('memory-proj');
   write(d, 'history.md', '# History\n\n## [DECISION] Use Postgres for storage\n**Date:** 2026-10-01\n**Made by:** CTO\n**Rationale:** Relational data and auth needs.\n\n## Kill: mobile pod\n**Date:** 2026-10-05\n**Made by:** CEO\nFRAMING_WRONG — users are on desktop\n');
-  assert(/No projects ingested yet/.test(run('memory.js', ['list']).out), 'list on an empty corpus says so');
+  assert(/No projects ingested yet/.test(run('memory.js', ['list', '--dir', d]).out), 'list on an empty corpus says so');
   const i1 = run('memory.js', ['ingest', d]);
   assert(i1.code === 0 && /Added: 2, Skipped: 0, Total corpus: 2/.test(i1.out), 'ingest adds decisions and kills from history.md');
   assert(/Added: 0, Skipped: 2, Total corpus: 2/.test(run('memory.js', ['ingest', d]).out), 're-ingest is idempotent');
-  assert(fs.existsSync(path.join(HOME, '.team-sdk', 'memory', 'decisions.json')) && fs.existsSync(path.join(HOME, '.team-sdk', 'memory', 'kill-log.md')), 'the corpus is written under $HOME/.team-sdk/memory');
-  const st = run('memory.js', ['stats']).out;
+  assert(fs.existsSync(path.join(d, '.team-sdk', 'memory', 'decisions.json')) && !fs.existsSync(path.join(HOME, '.team-sdk', 'memory', 'decisions.json')), 'the corpus is written in the company (<project>/.team-sdk/memory), never under $HOME');
+  const st = run('memory.js', ['stats', '--dir', d]).out;
   assert(/Memory Corpus: 2 entries across 1 project/.test(st) && /By type: decision: 1, kill: 1/.test(st), 'stats summarises entries by type and project');
-  assert(new RegExp(`${path.basename(d)} — 2 entries`).test(run('memory.js', ['list']).out), 'list shows ingested projects with entry counts');
-  assert(/Found 1 match/.test(run('memory.js', ['query', 'postgres']).out) && /No matches found\./.test(run('memory.js', ['query', 'zzqqxx']).out), 'query searches the corpus');
-  assert(/1 decision:/.test(run('memory.js', ['decisions']).out), 'decisions lists decisions');
-  assert(/1 kill:/.test(run('memory.js', ['kills', '--class', 'FRAMING_WRONG']).out) && /0 kills:/.test(run('memory.js', ['kills', '--class', 'SCOPE_OBSOLETE']).out), 'kills filters by --class');
-  assert(run('memory.js', ['query']).code === 1 && run('memory.js', ['ingest']).code === 1, 'query/ingest without an argument exit 1');
+  assert(new RegExp(`${path.basename(d)} — 2 entries`).test(run('memory.js', ['list', '--dir', d]).out), 'list shows ingested projects with entry counts');
+  assert(/Found 1 match/.test(run('memory.js', ['query', 'postgres', '--dir', d]).out) && /No matches found\./.test(run('memory.js', ['query', 'zzqqxx', '--dir', d]).out), 'query searches the corpus');
+  assert(/1 decision:/.test(run('memory.js', ['decisions', '--dir', d]).out), 'decisions lists decisions');
+  assert(/1 kill:/.test(run('memory.js', ['kills', '--class', 'FRAMING_WRONG', '--dir', d]).out) && /0 kills:/.test(run('memory.js', ['kills', '--class', 'SCOPE_OBSOLETE', '--dir', d]).out), 'kills filters by --class');
+  assert(run('memory.js', ['query', '--dir', d]).code === 1 && run('memory.js', ['ingest']).code === 1, 'query/ingest without an argument exit 1');
   assert(/sdk-memory — Cross-project decision corpus/.test(run('memory.js', []).out), 'no command prints help');
 }
 

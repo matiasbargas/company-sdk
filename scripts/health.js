@@ -370,6 +370,13 @@ function gitOut(args, cwd) {
   if (!list.length) notices.push('holding: ledger chain verified, no open holding issues ✓');
 })();
 
+// 14. Layer B quality (context/spec claims): citations resolve, claims re-confirmed after their
+//     sources moved on (limits.claimStaleCommits), supersede/retire links exist and never cycle.
+(function claimsQualityCheck() {
+  const q = require('./lib/claims-quality').claimsQuality(projectDir, readLimits(projectDir));
+  issues.push(...q.issues); notices.push(...q.notices);
+})();
+
 // ─── Output ───────────────────────────────────────────────────────────────────
 
 const healthy = issues.length === 0;

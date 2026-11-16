@@ -2,9 +2,9 @@
   epic: idea-execution-v0.2
   statement: "Before cycle open, the CISO 5-dimension rubric is calibrated against 20 held-out critique lines (10 known-sycophantic, 10 known-bold) scored independently by CISO Amara Lagos, Mario, and a freshly-spawned CISO instance, with inter-rater variance and class-separation logged as the baseline entry in _audit-log.md."
   sources:
-    - file: intent-spec/idea-execution-v0.2/shaped-brief.md
+    - file: intent/idea-execution-v0.2/shaped-brief.md
       lines: 70-92
-    - file: intent-spec/idea-execution-v0.2/sdd-v2.md
+    - file: intent/idea-execution-v0.2/sdd-v2.md
       lines: 1-220
   tags:
     - bu:team-sdk
@@ -24,9 +24,9 @@
   epic: idea-execution-v0.2
   statement: "Any phase mid-run can call spawn_loop(pattern, target, weakness_hypothesis) and receives a structured response of shape {artifact_path, provenance_hash, status}, with a documented error path implementing asymmetric termination (budget default, unilateral early-stop, countersigned extension)."
   sources:
-    - file: intent-spec/idea-execution-v0.2/shaped-brief.md
+    - file: intent/idea-execution-v0.2/shaped-brief.md
       lines: 30-42
-    - file: intent-spec/idea-execution-v0.2/sdd-v2.md
+    - file: intent/idea-execution-v0.2/sdd-v2.md
       lines: 40-90
   tags:
     - bu:team-sdk
@@ -46,9 +46,9 @@
   epic: idea-execution-v0.2
   statement: "Every loop open requires a WEAKNESS_HYPOTHESIS field that is both schema-enforced (required, maxLength) and content-audited by an inline rubric check at open time; hypotheses scoring ≤2/15 on falsifiability and specificity cause the loop to refuse to open and return a structured error."
   sources:
-    - file: intent-spec/idea-execution-v0.2/shaped-brief.md
+    - file: intent/idea-execution-v0.2/shaped-brief.md
       lines: 32-44
-    - file: intent-spec/idea-execution-v0.2/sdd-v2.md
+    - file: intent/idea-execution-v0.2/sdd-v2.md
       lines: 50-95
   tags:
     - bu:team-sdk
@@ -68,9 +68,9 @@
   epic: idea-execution-v0.2
   statement: "Critique lines scoring ≤5/15 on the CISO 5-dimension rubric fail closed: revision stops and a critic-only retry runs under a different agent, with no per-line human override path in v0.2."
   sources:
-    - file: intent-spec/idea-execution-v0.2/shaped-brief.md
+    - file: intent/idea-execution-v0.2/shaped-brief.md
       lines: 46-58
-    - file: intent-spec/idea-execution-v0.2/sdd-v2.md
+    - file: intent/idea-execution-v0.2/sdd-v2.md
       lines: 100-145
   tags:
     - bu:team-sdk
@@ -90,9 +90,9 @@
   epic: idea-execution-v0.2
   statement: "If the pre-cycle calibration breaks the rubric-reliability assumption, Addition 4 ships in modified form with a calibration-drift escalation path — a line scoring ≤5/15 with ≥3-point retry-agent disagreement triggers two-CISO countersign plus Mario read before fail-closing — and Addition 1 ships independently while strict-form Addition 4 slips to v0.2.1."
   sources:
-    - file: intent-spec/idea-execution-v0.2/shaped-brief.md
+    - file: intent/idea-execution-v0.2/shaped-brief.md
       lines: 60-95
-    - file: intent-spec/idea-execution-v0.2/sdd-v2.md
+    - file: intent/idea-execution-v0.2/sdd-v2.md
       lines: 130-160
   tags:
     - bu:team-sdk
@@ -112,9 +112,9 @@
   epic: idea-execution-v0.2
   statement: "Every artifact emitted by a v0.2 loop carries a LOOP-PROVENANCE hash and is written append-only under intent-spec/idea-execution-v0.2/, observable via git log showing no silent overwrites."
   sources:
-    - file: intent-spec/idea-execution-v0.2/shaped-brief.md
+    - file: intent/idea-execution-v0.2/shaped-brief.md
       lines: 36-50
-    - file: intent-spec/idea-execution-v0.2/sdd-v2.md
+    - file: intent/idea-execution-v0.2/sdd-v2.md
       lines: 60-110
   tags:
     - bu:team-sdk
@@ -134,9 +134,9 @@
   epic: idea-execution-v0.2
   statement: "The Dialectic phase, if shipped, strips per-message authorship attribution during debate while preserving cultural-profile reasoning signal in-message, with names restored at synthesis time."
   sources:
-    - file: intent-spec/idea-execution-v0.2/shaped-brief.md
+    - file: intent/idea-execution-v0.2/shaped-brief.md
       lines: 38-50
-    - file: intent-spec/idea-execution-v0.2/sdd-v2.md
+    - file: intent/idea-execution-v0.2/sdd-v2.md
       lines: 145-180
   tags:
     - bu:team-sdk

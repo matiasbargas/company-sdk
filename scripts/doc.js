@@ -20,7 +20,7 @@ const filePath = args[1];
 const projectDirCommands = [
   'spawn', 'dissolve', 'manifest', 'index', 'study',
   'session', 'domain', 'bus', 'cockpit', 'discovery',
-  'disagreement', 'history', 'iteration', 'status',
+  'disagreement', 'history', 'iteration', 'status', 'inbox',
 ];
 
 if (!command || (!filePath && !projectDirCommands.includes(command)) || command === '--help' || command === '-h') {
@@ -53,6 +53,7 @@ const commands = {
   'disagreement': require('./commands/disagreement'),
   'history':      require('./commands/history'),
   'iteration':    require('./commands/iteration'),
+  'inbox':        require('./commands/inbox'),
 };
 
 // ─── Dispatch ───────────────────────────────────────────────────────────────
@@ -107,6 +108,8 @@ Commands:
   disagreement <project-dir> open --topic "..." --positions "A:...,B:..."  Open a structured disagreement
   history      <project-dir> [--domain X] [--search Y] [--reversible Z]  Query structured decisions
   iteration    <project-dir> create|review|list|graduate --loop <type>   Iteration Loop cycles (protocol §31)
+  inbox       <project-dir> [--for <principal>] [--json]    Decision cards for a principal (default Owner), max limits.inboxMaxCards
+  inbox       <project-dir> answer <card-id> --decision <...> --reason "<why>" [--for <principal>]  Record an answer on the card's source
   domain      <project-dir> add --name <name> --lead <role>  Create a new project domain
                      [--summary "..."] [--spawn-when "..."]
                      [--context-provides "..."]

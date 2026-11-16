@@ -757,3 +757,16 @@ Path:
 - **Five CISO non-negotiables** apply before any external human.
 - **Gaps verified in code:** the machine-global `packages/memory` store breaks company isolation; the memory ingest duplicates entries and misdates them; Layer B has no freshness or citation checks; judgment data is never joined; humans have no identity.
 Proposal only. The storage and identity model needs an irreversible §34 surface and Owner sign-off.
+
+---
+
+## SDK-CHANGE — Company brain pipeline: B1–B4 built, B5 prepared for the Owner (2026-11-15)
+**Made by:** Greg (CEO), Owner-directed · **Release:** v2026.Q2.3 · **Tag:** SDK-CHANGE
+**Contract:** `context/intent/company-brain/deliverables.md`. **Pipeline:** 15 agents (build → refuting verify → fix → re-verify, then integration), no errors.
+- **B1, memory integrity:** deterministic ids (re-ingest adds zero); dates from the source, never the ingest day; an unresolved challenge is `unresolved`; a provenance envelope on every entry; **the store is per company** (`<project>/.team-sdk/memory`), with the machine-global store opt-in only and flagged as a leak risk. Greg fixed the `sdk-memory` CLI (per-company store, `--dir`, `--global` opt-in, lazy store so usage errors write nothing) and its pinned test.
+- **B2, Layer B quality:** sdk-health reports claims-citation, claims-stale (work-based) and claims-supersede. The README matches reality. It found 41 broken citations: 24 were folder renames (fixed), and **17 cite line ranges that no longer exist** (`idea-execution-v0.2/sdd-v2.md` was rewritten shorter); those stay flagged for re-confirmation.
+- **B3, calibration:** `sdk-holding calibration` joins VOF, Owner ratings, kills and disagreements, and shows agent-confident bets rated flat by humans. Read-only.
+- **B4, `sdk-doc inbox`:** decision cards from existing primitives, with dissent first, a cited boundary on every card, at most 5 cards, and a provenance-stamped answer with a required reason. The verifier found a reason could forge the "answered" marker; it was fixed and re-verified.
+- **B5, irreversible decision package (prepared, not decided):** `surfaces/SURFACE-20261115-brain-identity-storage-001.md` is **blocked** on a CISO no-go (with CFO, Mario and CLO concerns), with a "Decision for the Owner" section. The Owner was notified via a Bus BLOCKER, and an improvement signal was emitted. The four verification blocks were written by one agent reasoning from each role file, not by separate verifier sessions; that is disclosed in the surface.
+- **Integration:** two new suites added to npm test; calibration capabilities merged; protocol §16.1 gains `claimStaleCommits` and `inboxMaxCards`; `.team-sdk/` is gitignored; refactor-watch decisions recorded for `inbox.js` (split next iteration), `ops.js` and `health.js` (defer, behaviour pinned).
+**Totals:** behaviour coverage 224 of 234 (96%); holding 1302 assertions, memory 246.
