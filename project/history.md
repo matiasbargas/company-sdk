@@ -783,3 +783,20 @@ The single-agent B5 verification blocks were re-run as four independent sessions
 - CHARTER Limit 5 has no legal-compulsion carve-out, and DPAs are needed now (CLO).
 - Formats should be signed now and the human write path built only on a named-human trigger (CFO).
 `decision-options.md` §4 is now **sheet v2**: formats now (D1, D2 grammar, envelope v1 with the binding rule, the gate), build triggers later (D3 deferred to the build). The surface stays `blocked`. The CHARTER Limit 5 carve-out is owed as a separate Layer A ratification.
+
+---
+
+## SDK-CHANGE — inbox.js split; Layer B citations re-confirmed (2026-11-16)
+**Made by:** Greg (CEO), Owner-directed · **Release:** v2026.Q2.3 · **Tag:** SDK-CHANGE
+- **Split `scripts/commands/inbox.js` (546 → 69 lines)**, as the refactor watch decided. The code moved verbatim into `scripts/lib/inbox/`:
+  - `boundaries.js`: boundaries and the over-asking guard;
+  - `card.js`: ids, principal matching, closed-card check;
+  - `sources.js`: bus, surface, charter, overdue, holding;
+  - `build.js`: order, cap, render;
+  - `answer.js`: the rubber-stamp guard and the stamped write.
+  The public exports are unchanged. `test-cap-inbox.js` passes unchanged (97 assertions). The refactor-watch entry is updated to "split done".
+- **Claims citations: 17 → 0.** Each one was re-confirmed against the current text, not clamped blindly:
+  - 5 retro paths renamed `intent-spec/` → `intent/`.
+  - 2 idea-execution claims (001 calibration baseline, 005 drift escalation) are no longer supported by the rewritten `sdd-v2.md`. They are re-cited to `_red-team.md`, where that content now lives.
+  - 6 claims are re-pointed to the lines that hold their content (idea-execution 004 and 007; protocol-32 003, 004, 005 and 007).
+  - 4 whole-file review citations (protocol-32 011 ×3 and 012) are bounded to their files' actual length.

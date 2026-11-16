@@ -10,7 +10,7 @@ claims:
       PROCEED while a documented v0.1-paired-critic pivot meant a failing result
       would not have stranded the team.
     sources:
-      - intent-spec/protocol-32-generative-loops/_retrospective.md
+      - intent/protocol-32-generative-loops/_retrospective.md
     added_in_workflow_run: 2026-06-19-protocol-32-generative-loops-retro-001
 
   - id: claim-retro-protocol-32-generative-loops-002
@@ -26,7 +26,7 @@ claims:
       shaping the spec; otherwise the gate stays open rather than passing on
       synthetic data.
     sources:
-      - intent-spec/protocol-32-generative-loops/_retrospective.md
+      - intent/protocol-32-generative-loops/_retrospective.md
     added_in_workflow_run: 2026-06-19-protocol-32-generative-loops-retro-001
 
   - id: claim-retro-protocol-32-generative-loops-003
@@ -42,7 +42,7 @@ claims:
       should be reworded to name the enforcement as convention with a return
       ticket.
     sources:
-      - intent-spec/protocol-32-generative-loops/_retrospective.md
+      - intent/protocol-32-generative-loops/_retrospective.md
     added_in_workflow_run: 2026-06-19-protocol-32-generative-loops-retro-001
 
   - id: claim-retro-protocol-32-generative-loops-004
@@ -57,7 +57,7 @@ claims:
       the change cannot pass until checked or explicitly downgraded by the owner
       with a logged reason.
     sources:
-      - intent-spec/protocol-32-generative-loops/_retrospective.md
+      - intent/protocol-32-generative-loops/_retrospective.md
     added_in_workflow_run: 2026-06-19-protocol-32-generative-loops-retro-001
 
   - id: claim-retro-protocol-32-generative-loops-005
@@ -76,5 +76,5 @@ claims:
       term-of-art collisions and domain-applicability gaps that would be expensive
       to discover post-seal in a discoverable corpus.
     sources:
-      - intent-spec/protocol-32-generative-loops/_retrospective.md
+      - intent/protocol-32-generative-loops/_retrospective.md
     added_in_workflow_run: 2026-06-19-protocol-32-generative-loops-retro-001

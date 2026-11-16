@@ -4,8 +4,8 @@
   sources:
     - file: intent/idea-execution-v0.2/shaped-brief.md
       lines: 70-92
-    - file: intent/idea-execution-v0.2/sdd-v2.md
-      lines: 1-220
+    - file: intent/idea-execution-v0.2/_red-team.md
+      lines: 29-37
   tags:
     - bu:team-sdk
     - area:ideation
@@ -71,7 +71,7 @@
     - file: intent/idea-execution-v0.2/shaped-brief.md
       lines: 46-58
     - file: intent/idea-execution-v0.2/sdd-v2.md
-      lines: 100-145
+      lines: 50-52,70
   tags:
     - bu:team-sdk
     - area:audit
@@ -92,8 +92,8 @@
   sources:
     - file: intent/idea-execution-v0.2/shaped-brief.md
       lines: 60-95
-    - file: intent/idea-execution-v0.2/sdd-v2.md
-      lines: 130-160
+    - file: intent/idea-execution-v0.2/_red-team.md
+      lines: 41-45
   tags:
     - bu:team-sdk
     - area:audit
@@ -137,7 +137,7 @@
     - file: intent/idea-execution-v0.2/shaped-brief.md
       lines: 38-50
     - file: intent/idea-execution-v0.2/sdd-v2.md
-      lines: 145-180
+      lines: 56-60,89
   tags:
     - bu:team-sdk
     - area:dialectic

@@ -16,11 +16,11 @@
       "by": "Greg (CEO), baseline at adoption of the refactor watch"
     },
     "scripts/commands/inbox.js": {
-      "lines": 546,
-      "date": "2026-11-15",
-      "decision": "split next iteration",
-      "prerequisite": "Capabilities cap-inbox-* are built and pinned (scripts/lib/test-cap-inbox.js), so the split is safe: separate card sources (bus, surfaces, charter, overdue, holding) from rendering and the answer path.",
-      "by": "Greg (CEO), refactor-review at pipeline integration"
+      "lines": 69,
+      "date": "2026-11-16",
+      "decision": "split done",
+      "prerequisite": "Split into scripts/lib/inbox/{boundaries,card,sources,build,answer}.js; blocks moved verbatim. Behaviour pinned by test-cap-inbox.js (97 assertions, unchanged and green).",
+      "by": "Greg (CEO), refactor-review"
     },
     "scripts/ops.js": {
       "lines": 412,

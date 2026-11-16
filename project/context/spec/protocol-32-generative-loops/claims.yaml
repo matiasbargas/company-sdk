@@ -55,7 +55,7 @@ claims:
       - file: intent/protocol-32-generative-loops/shaped-brief.md
         lines: 40-66
       - file: intent/protocol-32-generative-loops/sdd-v2.md
-        lines: 50-100
+        lines: 36,45,67
     tags:
       - bu:team-sdk
       - area:loops
@@ -76,7 +76,7 @@ claims:
       - file: intent/protocol-32-generative-loops/shaped-brief.md
         lines: 34-72
       - file: intent/protocol-32-generative-loops/sdd-v2.md
-        lines: 60-110
+        lines: 31,43,66
     tags:
       - bu:team-sdk
       - area:loops
@@ -98,7 +98,7 @@ claims:
       - file: intent/protocol-32-generative-loops/shaped-brief.md
         lines: 36-78
       - file: intent/protocol-32-generative-loops/sdd-v2.md
-        lines: 80-120
+        lines: 32,68,75
     tags:
       - bu:team-sdk
       - area:loops
@@ -141,7 +141,7 @@ claims:
     statement: "If the de-risk test breaks the assumption that good-faith and adversarial constitutional lines are distinguishable, v0.1 pivots to v0.1-minimal (drop anti-sycophancy framing, ship as deliberation-termination protocol) or to v0.1-paired-critic (replace guardrail lines with mandatory cross-domain critic pairing, Appetite extends to L)."
     sources:
       - file: intent/protocol-32-generative-loops/shaped-brief.md
-        lines: 108-130
+        lines: 119-123
     tags:
       - bu:team-sdk
       - area:loops
@@ -228,11 +228,11 @@ claims:
     statement: "Cross-domain review (UXR + Designer + CLO) produced 3 fix bundles, all severity should_be_addressed and none blocks_seal. All three bundles were baked into the sealed §32 text before the v4.4 bump landed in protocol.md."
     sources:
       - file: intent/protocol-32-generative-loops/_review-uxr.md
-        lines: 1-80
+        lines: 1-64
       - file: intent/protocol-32-generative-loops/_review-designer.md
-        lines: 1-80
+        lines: 1-75
       - file: intent/protocol-32-generative-loops/_review-clo.md
-        lines: 1-120
+        lines: 1-67
     tags:
       - bu:team-sdk
       - area:loops
@@ -255,7 +255,7 @@ claims:
       - file: intent/protocol-32-generative-loops/_seal-fix-list.md
         lines: 1-60
       - file: intent/protocol-32-generative-loops/_review-clo.md
-        lines: 1-120
+        lines: 1-67
     tags:
       - bu:team-sdk
       - area:loops
