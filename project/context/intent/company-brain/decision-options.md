@@ -49,22 +49,33 @@ D4 does not need to wait for this decision.
 | L2 | CLO | A written contributor term (content IP to the company, notice that the handle and signature are permanent) before a second human writes. | Second human |
 | L3 | CLO | A DPA with the IdP vendor, contributor terms and a breach process (GDPR 72-hour clock) before any external human. | (b) |
 
-## 4. Signature sheet
+## 4. Signature sheet (v2, after independent re-verification 2026-11-15)
+
+*v1 is superseded. The four independent verifiers found that v1's D3 treated `valid-before` as revocation (it is not: the signer controls the commit timestamp), left the `principal` trailer self-asserted, put a random spawn name into a permanent id, and left the Owner's own key unprotected. See the surface, "Independent re-verification".*
 
 Tick one option. If you choose (c), each line below is part of what you sign. Strike out any line you reject and give a reason; the reason is logged beside your decision.
 
-- [ ] **(c) hybrid** (recommended)
-  1. D1: each company's brain truth is its own git repository; everything else is derived.
-  2. D2: principals are `human:<handle>` / `agent:<role>:<name>`, scoped per company, registered in `## Principals` in `team.md`, with no names or emails.
-  3. D3: SSH commit signing with touch-required, non-exportable keys. `allowed_signers` is generated from the registry, and revocation uses `valid-before` only. I enable the GitHub ruleset and the CI check myself (a push, Autonomy Limit 1).
-  4. Envelope: `principal`, `signed_by`, `attested_by?`, `kind`.
-  5. No human verdict counts until the CISO withdraws the no-go on evidence of C1–C4.
-  6. The (b) trigger: a named external human who needs write access and cannot use git. Reaching it reopens this decision with a CFO budget and CLO blockers L3.
-- [ ] **(a) only.** Internal humans only; no external path planned.
-- [ ] **(b) now.** Requires a CFO budget and the CLO L3 blockers first. The CFO would record a no-go.
+- [ ] **(c) hybrid, formats now, build on trigger** (recommended)
+  - *Part 1. Formats (irreversible):*
+    1. D1: each company's brain truth is its own git repository; everything else is derived.
+    2. D2: principal ids use the grammar `<kind>:<id>` (lowercase ASCII, length cap, reserved words) with an open kind set: `human`, `agent`, `gateway`. Agents are `agent:<role>`; the session id is a separate envelope field. Handles are pseudonymous (never a real name or GitHub username), immutable and never reused, scoped per company, never a cross-company join key. The registry location is an implementation choice, not part of this signature.
+    3. Envelope v1: `Provenance-Version: 1`, `principal`, `signed_by`, `attested_by?`, `kind`. Binding rule: a `human:` principal counts only when the signing key maps to that principal in `allowed_signers`; an unsigned or mismatched commit is **unattributed**. GitHub's web-flow merge key is either named as an attester or UI merges are forbidden.
+    4. No human verdict counts until the CISO withdraws the no-go on evidence of C1–C4. C1 includes the Owner's own key: touch-required, non-exportable, PIN-verified, and unreachable from agent sessions; Owner and human keys sign only explicit `-S` commits, never through a global `commit.gpgsign`.
+  - *Part 2. Build triggers (nothing is built on signature):*
+    5. Human write path (signing scheme D3, CI, ruleset, MCP server, scan wiring): built only when a named non-Owner internal human will write to a brain. It reopens with a CTO costed estimate (C1–C4, M1–M4, CI) and a CFO budget. D3 is decided then and must include push-time revocation (CI rejects new commits from a revoked key whatever their date) plus a first-seen anchor; `valid-before` is only a validity window. Agent commits reach `main` by a path that never uses a human key.
+    6. (b) gateway: a named external human who needs write access and cannot use git, **or** one person active in enough companies that per-company revocation becomes a burden. Reopens with a CFO budget and the CLO blockers.
+- [ ] **(a) only.** Internal humans only; no external path planned. (Part 1 still applies.)
+- [ ] **(b) now.** Requires a CFO budget and the CLO blockers first. The CFO records a no-go.
 - [ ] **None.** The brain stays agent-and-Owner only; revisit when: ______
 
-Dissent acknowledged: CISO no-go (C1–C4) · CFO concern (F1, F2) · Mario concern (M1–M4) · CLO concern (L1–L3)
+**Outside this signature, owed separately:**
+- A CHARTER amendment adding a legal-compulsion exception to Autonomy Limit 5: an Owner-only, logged history rewrite that leaves a tombstone (CLO). Layer A, so you ratify it on its own.
+- Before the first non-Owner human enrols: Art. 13 notice, a legitimate-interest and Art. 17(3) assessment, contributor terms, confirmed DPAs for GitHub and the LLM provider **[LAWYER]** (CLO).
+- F2 / A3 / A4: does the GitHub plan support signed-commit rulesets on this repo, and are Actions minutes metered? Any cost is a Limit 2 approval (CFO).
+
+**How to sign:** make the signature a signed commit with your own key (`git commit -S`), or record it outside the identity the agents use. A checkbox in an unsigned commit is weak evidence for an Autonomy Limit 4 act (CLO, CISO).
+
+Dissent acknowledged: CISO no-go (C1–C4 + binding rule + push-time revocation) · CFO concern (split; costed estimate; F2) · Mario concern (D2 grammar; envelope version; agent commit path) · CLO concern (Limit 5 carve-out; DPAs; contributor terms)
 
 **Decided by:** __________________________ (Owner) **on** __________
 

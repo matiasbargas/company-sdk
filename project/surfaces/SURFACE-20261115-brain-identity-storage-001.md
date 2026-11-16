@@ -226,6 +226,31 @@ I flag exposure. Whether to accept it is the CEO's and the Owner's call. This is
 
 LOOP-PROVENANCE: SURFACE-20261115-brain-identity-storage-001 + SHA256(b165e83631c2000f369766c06280107a5a682274e09f70c24224453f18ce3968)
 
+## Independent re-verification (2026-11-15, four separate sessions)
+
+The blocks above were written by one agent during the pipeline run. They were re-run as four **independent** sessions (CFO, CISO, Mario, CLO), each told to ignore the prior block and form its own view first. **The verdicts did not change. The substance did:** each verifier found defects in the text the Owner would sign.
+
+| Verifier | Verdict | Agrees with prior block? |
+|---|---|---|
+| CISO | **no-go** | Same verdict, different substance |
+| Mario | concern (approve (c) with sheet changes) | Same verdict, different substance |
+| CLO | concern | Same verdict, different substance |
+| CFO | concern | Same verdict, different reason |
+
+### Convergent findings (found by two or more verifiers)
+- **`valid-before` is not revocation (CISO + Mario).** Git checks the window against the commit's own timestamp, which the signer controls. A stolen key can backdate commits and still verify. Revocation must be enforced at push time (CI/ruleset rejects any new commit signed by a revoked key, whatever its date), plus a first-seen anchor per pushed commit.
+- **The `principal` trailer is self-asserted (CISO + Mario).** The decision text must state the binding rule: a `human:` principal counts only when the signing key maps to that principal in `allowed_signers`. Otherwise the commit is **unattributed**, never "unverified human".
+- **The Owner's key is the weak trust root (CISO + Mario).** C2 roots trust in Owner-signed commits, but C1 only covered "human keys". Agents commit as the Owner today; a global `commit.gpgsign` would train habit-touching, so agent writes inherit Owner authority. Owner and human keys sign only explicit `-S` ratification commits, outside agent sessions (no reachable `SSH_AUTH_SOCK` / `-sk` handle, `verify-required` PIN). Agent commits need their own path to `main`.
+- **The Owner's signature on *this* decision (CLO + CISO).** A checkbox in an unsigned commit, under the identity agents also use, is weak evidence for the act Autonomy Limit 4 requires.
+
+### Single-verifier findings
+- **CISO:** no local or server controls exist today: `protect-files.js` does not cover `team.md`/`allowed_signers` or Bash; `.claude/settings.json` denies `git push --force` / `-f` but not `git push origin +main`; no ruleset, no `.github/`. Extra C4 red-team cases: trailer spoofing, backdated revoked-key commits, agent-initiated signing prompt.
+- **Mario:** `agent:<role>:<name>` puts a random spawn name in a permanent id (this repo's `team.md` lists Chief Engineer as "Ravi Colombo"; reviews sign "Mario"). Use `<kind>:<id>` grammar with an open kind set (`human`, `agent`, `gateway`), `agent:<role>` with the session id in a separate field, handles immutable and never reused. Strike the registry *location* from the irreversible text. Add `Provenance-Version: 1`. Name or forbid GitHub's web-flow merge key. At 10x, per-company revocation repeats N times: a second quantitative trigger for (b).
+- **CLO:** pseudonymous handles are still personal data while the Owner holds the mapping; the realistic position is Art. 17(3)(b)/(e) retention plus a legitimate-interest assessment and an Art. 13 notice **[LAWYER]**. **CHARTER Limit 5 (never rewrite history) has no legal-compulsion carve-out**; signing D1–D3 as irreversible locks that in. DPAs are needed now for GitHub and the LLM provider, not only for (b). Contributor terms start at the *first* non-Owner human and must cover third-party-content warranties, the commons licence and per-company confidentiality. Human performance data (ratings, calibration, the under-30s signal) must not "never decay".
+- **CFO:** the real cost of (c)-now is 2–3x the CTO's "medium" (CI from nothing, C2 server checks, scan wiring, a §32 red-team, M1–M4, contributor terms) plus Owner hours; possible recurring lines (GitHub plan for signed-commit rulesets on a private repo, Actions minutes) are Limit 2 items. **Recommendation: split the signature. Sign the formats now; build the human write path only on a named-internal-human trigger.** Per-company sandbox isolation for the orchestrator comes first, because it also closes CISO NN2.
+
+**Effect:** the original signature sheet is superseded by **sheet v2** in `decision-options.md` §4. The surface stays `blocked`.
+
 ## State: `blocked`
 
 **Path:** `authored → under-verification → reconciling → blocked`.
@@ -254,13 +279,19 @@ LOOP-PROVENANCE: SURFACE-20261115-brain-identity-storage-001 + SHA256(b165e83631
   - agents carry `agent:<role>:<name>` principals too.
 - **CLO, concern.** Pseudonymous handles only, with the person mapping kept outside git. Contributor IP terms before a second human writes. DPA, contributor terms and a breach process are hard blockers before any external human.
 
-**Exactly what you sign** (the full text with checkboxes is in `project/context/intent/company-brain/decision-options.md` → "Signature sheet"):
-1. **D1:** each company's brain truth is its own git repository. Everything else is derived. *Irreversible.*
-2. **D2:** the principal id format is `human:<handle>` / `agent:<role>:<name>`, scoped per company, never a cross-company join key. The registry is `## Principals` in `team.md`, with no names or emails in it. *Irreversible.*
-3. **D3:** SSH commit signing with non-exportable, touch-required keys. `allowed_signers` is generated from the registry; revocation uses `valid-before` and lines are never deleted. Server-side verification by GitHub ruleset plus CI, which **you** enable, because it is a push (Limit 1).
-4. **The envelope:** `principal`, `signed_by`, `attested_by?`, `kind`, in commit trailers and in block provenance.
-5. **The gate:** no human verdict counts as a verdict until the CISO withdraws the no-go on evidence of C1–C4.
-6. **The trigger for (b):** a named external human who needs write access and cannot use git. Reaching it reopens this decision with a CFO budget and CLO hard blockers. It never starts a build automatically.
+**Exactly what you sign: sheet v2** (full text with checkboxes in `project/context/intent/company-brain/decision-options.md` §4). It follows the CFO split: **formats now, build on trigger**.
+
+*Part 1. Formats (irreversible, sign now):*
+1. **D1:** each company's brain truth is its own git repository. Everything else is derived.
+2. **D2:** principal ids use the grammar `<kind>:<id>` with an open kind set (`human`, `agent`, `gateway`). Agents are `agent:<role>` (session id in a separate field). Handles are pseudonymous, immutable and never reused, scoped per company, never a cross-company join key. *(Registry location is an implementation choice, not signed.)*
+3. **Envelope v1:** `Provenance-Version: 1`, `principal`, `signed_by`, `attested_by?`, `kind`. **Binding rule:** a `human:` principal counts only if the signing key maps to that principal in `allowed_signers`; otherwise the commit is unattributed.
+4. **The gate:** no human verdict counts until the CISO withdraws the no-go on evidence of C1–C4 (C1 now includes the Owner's own key).
+
+*Part 2. Build triggers (sign now, nothing is built yet):*
+5. **Human write path (MCP, CI, signing, scan):** built only when a named non-Owner internal human will write to a brain. It reopens with a CTO costed estimate and a CFO budget. D3 (signing scheme) is decided then, with push-time revocation, not `valid-before` alone.
+6. **(b) gateway:** a named external human who needs write access and cannot use git, **or** one person active in enough companies that per-company revocation becomes a burden. Reopens with a CFO budget and the CLO blockers.
+
+*Also needed, but not part of this signature:* a CHARTER amendment for a legal-compulsion exception to Limit 5 (Layer A, so you ratify it separately); your signature on this decision made as a signed commit, or recorded outside the agents' identity.
 
 You may instead choose (a) or (b), or reject all three. Any of those is logged as your decision, with the dissent above recorded beside it.
 

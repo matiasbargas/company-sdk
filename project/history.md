@@ -770,3 +770,16 @@ Proposal only. The storage and identity model needs an irreversible §34 surface
 - **B5, irreversible decision package (prepared, not decided):** `surfaces/SURFACE-20261115-brain-identity-storage-001.md` is **blocked** on a CISO no-go (with CFO, Mario and CLO concerns), with a "Decision for the Owner" section. The Owner was notified via a Bus BLOCKER, and an improvement signal was emitted. The four verification blocks were written by one agent reasoning from each role file, not by separate verifier sessions; that is disclosed in the surface.
 - **Integration:** two new suites added to npm test; calibration capabilities merged; protocol §16.1 gains `claimStaleCommits` and `inboxMaxCards`; `.team-sdk/` is gitignored; refactor-watch decisions recorded for `inbox.js` (split next iteration), `ops.js` and `health.js` (defer, behaviour pinned).
 **Totals:** behaviour coverage 224 of 234 (96%); holding 1302 assertions, memory 246.
+
+---
+
+## DECISION-PREP — B5 independently re-verified; signature sheet v2 (2026-11-15)
+**Made by:** Greg (CEO) · **Release:** v2026.Q2.3 · **Tag:** DECISION-PREP · **Reversible:** YES (preparation only; nothing signed)
+The single-agent B5 verification blocks were re-run as four independent sessions (CFO, CISO, Mario, CLO). **The verdicts held:** CISO no-go; CFO, Mario and CLO concern. **The substance changed:** sheet v1 would have signed defects.
+- `valid-before` is not revocation, because the signer controls the commit timestamp. Revocation must happen at push time (CISO + Mario).
+- The `principal` trailer was self-asserted, so a binding rule was added (CISO + Mario).
+- The Owner's own key is the weak trust root, and agents commit as the Owner (CISO + Mario).
+- `agent:<role>:<name>` put a random spawn name into a permanent id (Mario).
+- CHARTER Limit 5 has no legal-compulsion carve-out, and DPAs are needed now (CLO).
+- Formats should be signed now and the human write path built only on a named-human trigger (CFO).
+`decision-options.md` §4 is now **sheet v2**: formats now (D1, D2 grammar, envelope v1 with the binding rule, the gate), build triggers later (D3 deferred to the build). The surface stays `blocked`. The CHARTER Limit 5 carve-out is owed as a separate Layer A ratification.
